@@ -20,16 +20,17 @@
 
 <p align="center">
   <a href="https://github.com/kyawzin19997/coolermaster/releases/latest/download/MasterDeck-windows-x64-setup.exe"><img alt="Download for Windows" src="https://img.shields.io/badge/Download%20for%20Windows-x64-2563eb?style=for-the-badge"></a>
+  <a href="https://github.com/kyawzin19997/coolermaster/releases/download/v1.0.0/MasterDeck-macOS-Universal.dmg"><img alt="Download for macOS" src="https://img.shields.io/badge/Download%20for%20macOS-Universal-333940?style=for-the-badge"></a>
 </p>
 
 <p align="center">
-  <a href="https://github.com/Przemotar/hubdeck/releases">macOS downloads (upstream)</a> ·
-  <a href="https://przemotar.github.io/hubdeck/">Website</a> ·
+  <a href="https://github.com/kyawzin19997/coolermaster/releases">Releases</a> ·
+  <a href="https://przemotar.github.io/hubdeck/">Upstream project</a> ·
   <a href="#documentation">Docs</a> ·
   <a href="#faq">FAQ</a>
 </p>
 
-![MasterDeck: the deck drawn live with its LED colors, a key selected and what it does on the right](docs/images/hubdeck-main.png)
+![MasterDeck with the action library on the right and the selected key's settings below the deck](docs/images/masterdeck-workspace.png)
 
 ![MasterDeck in 23 seconds: a key pressed on the deck gets an action picked in the window, the dial changes its face, ready decks switch with a click](docs/images/hubdeck-film.gif)
 
@@ -39,7 +40,7 @@
 
 ## Quick start
 
-1. [Download for Windows](https://github.com/kyawzin19997/coolermaster/releases/latest/download/MasterDeck-windows-x64-setup.exe) or choose a macOS installer from the [upstream releases](https://github.com/Przemotar/hubdeck/releases) ([installation guide](#install)).
+1. [Download for Windows](https://github.com/kyawzin19997/coolermaster/releases/latest/download/MasterDeck-windows-x64-setup.exe) or [download for macOS](https://github.com/kyawzin19997/coolermaster/releases/download/v1.0.0/MasterDeck-macOS-Universal.dmg) ([installation guide](#install)).
 2. Quit the official MasterHUB app: two apps cannot drive the deck at once.
 3. Open MasterDeck from the tray and click **Show me on my deck**: one question, and in about five
    minutes your deck is set up for your modules and apps. No account and no AI needed.
@@ -154,8 +155,8 @@ In **MasterDeck → Settings → Updates**, check for new releases and choose **
 
 ### macOS 12 or later (Apple silicon and Intel)
 
-Choose a `.dmg` on the [upstream releases page](https://github.com/Przemotar/hubdeck/releases), then open it and drag MasterDeck to Applications.
-The app is not notarised by Apple yet, so the first time macOS says it "could not verify" MasterDeck.
+[Download the universal DMG](https://github.com/kyawzin19997/coolermaster/releases/download/v1.0.0/MasterDeck-macOS-Universal.dmg), open it, and drag MasterDeck to Applications.
+The app is ad hoc signed. macOS may ask you to approve the app because it has no Apple notarization.
 Once only:
 
 1. Click *Done* (not *Move to Trash*).
@@ -188,7 +189,7 @@ Close the official MasterHUB app first: two apps cannot drive the deck at once.
 | System | Every release | On a real deck |
 |---|---|---|
 | Windows 10 and 11 (x64) | GitHub release workflow with installation and uninstall checks | MasterHUB supported |
-| macOS 12 or later | Universal DMG available from the manual Desktop installers workflow | MasterHUB supported |
+| macOS 12 or later | Universal DMG built and verified in the Desktop installers workflow | MasterHUB supported |
 | Linux (experimental) | Source builds and tests in CI | Use `hubdeck cli doctor` to check system integrations |
 
 Maintainers can follow the [Windows release guide](docs/windows-release.md) to configure updates and publish a new version.

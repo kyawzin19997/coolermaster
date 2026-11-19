@@ -10,6 +10,7 @@ Your project lives in [kyawzin19997/coolermaster](https://github.com/kyawzin1999
 | [Actions](https://github.com/kyawzin19997/coolermaster/actions) | Builds and tests. Open a run, then open the failed step to read its log. |
 | [Releases](https://github.com/kyawzin19997/coolermaster/releases) | Published versions, release notes, and downloads. |
 | [Download for Windows](https://github.com/kyawzin19997/coolermaster/releases/latest/download/MasterDeck-windows-x64-setup.exe) | The latest Windows installer. This is the link to share with users. |
+| [Download for macOS](https://github.com/kyawzin19997/coolermaster/releases/download/v1.0.0/MasterDeck-macOS-Universal.dmg) | The universal disk image for MasterDeck 1.0.0. |
 
 A **commit** saves a group of changes in Git. A **push** sends commits to GitHub. The **main** branch is your normal line of work. A **tag** such as `v1.0.1` names the exact commit GitHub should build and publish. You only need a tag when you want a public installer.
 
@@ -62,6 +63,12 @@ git push origin refs/tags/v1.0.1
 ```
 
 Watch **Windows release** in Actions. When it passes, open **Releases** and download `MasterDeck-windows-x64-setup.exe`. The existing Download for Windows link will serve the latest release automatically. Users already running MasterDeck can go to **Settings → Updates** and choose **Download and install**.
+
+## Add a Mac download to a release
+
+1. Open **Actions → Desktop installers → Run workflow**. Select `macos` under **Installer to build** and enter the published tag, such as `v1.0.1`, under **Git branch or tag to package**.
+2. After the build passes, open the run and download **MasterDeck-macOS-Universal** under **Artifacts**. Extract the ZIP. Keep the `.dmg` filename and rename `SHA256.txt` to `SHA256-macos.txt`.
+3. Open the same version under **Releases**, choose **Edit**, attach the disk image and its checksum, then save. Update the macOS download links in the README to point to that version's disk image.
 
 ## If a release fails
 
