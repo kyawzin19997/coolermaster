@@ -1000,8 +1000,6 @@ export const SAVER_SCENES: { id: string; color: string; gpu: boolean; hidden?: b
  * first touch only wakes the deck). */
 export const SAVER_FROM_LOOK = "preset";
 export const saverPreset = (effect: string) => (effect.startsWith("preset:") ? effect.slice(7) : null);
-/** HubDeck's Discord server, through the project site's one address (`site/discord/`). */
-export const DISCORD = "https://przemotar.github.io/hubdeck/discord";
 
 /** The presets Deck look offers (the rest are kept for profiles that still wear them). */
 export const PRESETS_HIDDEN = new Set(["halloween-night", "halloween-lanterns", "halloween-spooky", "poland-hunt", "japan-sakura", "japan-koi", "poland-autumn-up", "matrix-rain-up", "neon-synthwave-up", "neon-circuit-up", "space-nebula-up", "music-spectrum-up", "dev-editor", "studio-ink", "studio-impasto", "space-orbit", "music-vinyl"]);

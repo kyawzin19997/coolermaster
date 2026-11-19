@@ -2,18 +2,18 @@
 :root {
   --font: "IBM Plex Sans", system-ui, "Segoe UI", sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
-  --bg0: #131419;
-  --bg1: #191b21;
-  --bg2: #22252d;
-  --bg3: #2c3039;
+  --bg0: #12161d;
+  --bg1: #191e27;
+  --bg2: #222a36;
+  --bg3: #2b3443;
   --hov: rgba(255, 255, 255, 0.045);
-  --ln: #2a2d36;
-  --ln2: #383d49;
+  --ln: #2b3440;
+  --ln2: #3d495c;
   --tx: #f0f2f6;
   --tx2: #b9bfcc;
   --tx3: #999faf;
-  --acc: #b5c8f2;
-  --acc2: #c9d7f7;
+  --acc: #b6cbf6;
+  --acc2: #d0defd;
   --acctx: #162238;
   --accbg: #263146;
   --accln: #4b6085;
@@ -36,7 +36,11 @@
   --prish: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 1px 2px rgba(0, 0, 0, 0.4);
   --popbg: #23262f;
   --popsh: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 12px 32px rgba(0, 0, 0, 0.5);
-  --stagebg: #1d2027;
+  --stagebg: #1a2029;
+  --glass: color-mix(in srgb, var(--bg1) 86%, transparent);
+  --glass-pop: color-mix(in srgb, var(--popbg) 88%, transparent);
+  --glass-line: color-mix(in srgb, var(--ln2) 80%, var(--acc) 20%);
+  --glass-sheen: inset 0 1px 0 rgb(210 230 255 / 0.09);
   --errtx: #ffd2da;
   --hover-acc: #d1defb;
 

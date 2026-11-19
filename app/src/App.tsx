@@ -16,10 +16,8 @@ import { Inspector, type InspectorHandle } from "./components/Inspector";
 import { ActionLibrary } from "./components/ActionChooser";
 import { ControlDock } from "./components/ControlDock";
 import type { SettingsSection } from "./components/Panels";
-import { WhatsNew } from "./components/WhatsNew";
-import { ArrangePanel, Banner, ControlMenu, BaseTurnPicker, DeckTools, EdgePanel, SaverPanel, MusicPanel, ShareArrangement, ForAppPanel, GalleryPanel, GamesPanel, LeftPanel, PageBar, PluginFileSheet, ProfilePanel, SettingsPanel, Sheet, TopBar } from "./components/Panels";
+import { ArrangePanel, Banner, ControlMenu, BaseTurnPicker, DeckTools, EdgePanel, SaverPanel, MusicPanel, ForAppPanel, GamesPanel, LeftPanel, PageBar, PluginFileSheet, ProfilePanel, SettingsPanel, Sheet, TopBar } from "./components/Panels";
 import { listen } from "@tauri-apps/api/event";
-import { Guide, guideSeen } from "./components/Guide";
 import { askAssistant } from "./components/Assistant";
 import { Icon } from "./components/Icon";
 import { CalibrationPanel } from "./components/Calibration";
@@ -88,12 +86,12 @@ export default function App() {
     setPluginsOpen(true);
     setSettingsOpen(false);
     setGamesOpen(false);
-    setGalleryOpen(false);
+
     setForAppOpen(false);
   }, []);
   // "Use it" in the Plugins tab: the deck, with the library open at that plugin's actions
   const [focusPlugin, setFocusPlugin] = useState<{ id: string; at: number } | null>(null);
-  const [galleryOpen, setGalleryOpen] = useState(DEMO_PANEL === "gallery");
+
   const [newRequest, setNewRequest] = useState(0);
   const [profileLibrary, setProfileLibrary] = useState<LeftTab | null>(null);
   const [modulesOpen, setModulesOpen] = useState(false);
@@ -116,7 +114,6 @@ export default function App() {
     return () => window.removeEventListener("hubdeck:open-saver", open);
   }, []);
   // a profile just made for an app: the inspector suggests next steps until something is picked
-  const [fresh, setFresh] = useState<string | null>(DEMO_PANEL === "fresh" ? "demo-obs" : null);
   const { saved, save } = usePlacements();
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef<number | undefined>(undefined);
@@ -125,7 +122,7 @@ export default function App() {
     window.clearTimeout(toastTimer.current);
     toastTimer.current = window.setTimeout(() => setToast(null), ms);
   }, []);
-  const { dropAction, moveKey, openControl, copy, paste, pasteLook, clear, isSet, canPaste, opensPage } = useEditing(view, selected, notify);
+  const { dropAction, moveKey, openControl, copy, pasteLook, clear, isSet, canPaste, opensPage } = useEditing(view, selected, notify);
   // a ready-made profile tried and left without Add (Back, or another profile picked) is thrown away
   const tried = useRef<string | null>(null);
   useEffect(() => {
@@ -147,7 +144,7 @@ export default function App() {
     setProfileOpen(false);
     setSettingsOpen(false);
     setGamesOpen(false);
-    setGalleryOpen(false);
+
     setForAppOpen(false);
   };
   useEffect(() => {
@@ -163,16 +160,6 @@ export default function App() {
   const [builderOpen, setBuilderOpen] = useState(DEMO_PANEL === "builder");
   // the tour (show, then ask, then build): a page of its own
   const [tourOpen, setTourOpen] = useState(DEMO_PANEL === "tour" || DEMO_PANEL === "welcome" || demoParam("demo") === "welcome");
-  // where things are, after "Use as my home deck" (owner's pick 2a): once, over the main window
-  const [guideOpen, setGuideOpen] = useState(DEMO_PANEL === "guide");
-  const startGuide = () => {
-    if (guideSeen()) return;
-    // a key is picked so the inspector shows its editor with "What should it do?"
-    const keys = live.deck.modules.find((m) => m.kind === "keys");
-    if (keys) setSelected({ module: keys.id, kind: keys.kind, index: 0 } as ControlRef);
-    showInspector();
-    setGuideOpen(true);
-  };
   // plugin files opened with HubDeck (a double click, Open with) or dropped on the window: one at a
   // time, each asked about before it installs
   const [pluginFiles, setPluginFiles] = useState<string[]>(DEMO_PANEL === "pluginfile" ? ["C:\Users\you\Downloads\com.fredemmott.audiooutputswitch.streamDeckPlugin"] : []);
@@ -295,15 +282,15 @@ export default function App() {
         newRequest={newRequest}
         live={live}
         view={view}
-        onOpenProfile={() => (setProfileOpen((o) => !o), setSettingsOpen(false), setGalleryOpen(false))}
-        onOpenGallery={() => (setGalleryOpen(true), setSettingsOpen(false), setProfileOpen(false))}
-        onOpenForApp={() => (setForAppOpen(true), setGalleryOpen(false), setSettingsOpen(false), setProfileOpen(false))}
+        onOpenProfile={() => (setProfileOpen((o) => !o), setSettingsOpen(false))}
+
+        onOpenForApp={() => (setForAppOpen(true), setSettingsOpen(false), setProfileOpen(false))}
         onOpenProfileLibrary={() => setProfileLibrary("profiles")}
         onOpenAssistant={() => setProfileLibrary("assistant")}
-        onOpenTour={() => (setTourOpen(true), setPluginsOpen(false), setStudio(null), setLivingOpen(false), setSettingsOpen(false), setGalleryOpen(false), setForAppOpen(false), setProfileOpen(false))}
+        onOpenTour={() => (setTourOpen(true), setPluginsOpen(false), setStudio(null), setLivingOpen(false), setSettingsOpen(false), setForAppOpen(false), setProfileOpen(false))}
         setupPending={setupPending && !tourOpen && !builderOpen}
-        onOpenSettings={() => (setSettingsOpen((o) => !o), setPluginsOpen(false), setGamesOpen(false), setGalleryOpen(false), setForAppOpen(false))}
-        onOpenPlugins={() => (setPluginsOpen((o) => !o), setSettingsOpen(false), setGamesOpen(false), setGalleryOpen(false), setForAppOpen(false))}
+        onOpenSettings={() => (setSettingsOpen((o) => !o), setPluginsOpen(false), setGamesOpen(false), setForAppOpen(false))}
+        onOpenPlugins={() => (setPluginsOpen((o) => !o), setSettingsOpen(false), setGamesOpen(false), setForAppOpen(false))}
         onOpenGames={() => (setGamesOpen((o) => !o), setSettingsOpen(false))}
       />
       <Banner
@@ -322,7 +309,7 @@ export default function App() {
             onPlace={save}
             deskCheck={setupPending}
             onArrange={toggleArrange}
-            onClose={(home) => (setTourOpen(false), home && startGuide())}
+            onClose={() => setTourOpen(false)}
             onBuild={() => (setTourOpen(false), setBuilderOpen(true))}
             onAsk={(message) => (setTourOpen(false), setProfileLibrary("assistant"), askAssistant(message))}
           />
@@ -352,7 +339,14 @@ export default function App() {
         </main>
       ) : settingsOpen && !calibrating ? (
         <main className="workspace">
-          <SettingsPanel live={live} view={view} section={settingsSection} onSection={setSettingsSection} onClose={() => setSettingsOpen(false)} onCalibrate={() => (setCalibrating(true), setSettingsOpen(false))} onTour={() => (setTourOpen(true), setSettingsOpen(false))} onBuild={() => (setBuilderOpen(true), setSettingsOpen(false))} onBrowsePlugins={() => (setPluginsOpen(true), setSettingsOpen(false))} />
+          <SettingsPanel
+            live={live} view={view} section={settingsSection} onSection={setSettingsSection}
+            onClose={() => setSettingsOpen(false)}
+            onCalibrate={() => { setCalibrating(true); setSettingsOpen(false); }}
+            onBrowsePlugins={() => { setPluginsOpen(true); setSettingsOpen(false); }}
+            onOpenEdge={() => setEdgeOpen(true)}
+            onOpenScenes={() => { setSaverOpen(false); setMusicOpen(false); setLivingOpen(true); }}
+          />
         </main>
       ) : (
       <main className={`workspace deck-workspace${arranging ? " is-arranging" : ""}`}>
@@ -366,17 +360,15 @@ export default function App() {
                 <Icon name={arranging ? "check" : "layout-grid"} />
                 {t("stage.doneLayout")}
               </button>
-            ) : <DeckTools
+            ) : <>
+            <button type="button" className="tool ghost" onClick={() => { setSettingsSection("lights"); setSettingsOpen(true); }}><Icon name="sun" />{t("settings.lighting")}</button>
+            <DeckTools
               canArrange={live.deck.modules.length > 0}
               modulesOpen={modulesOpen}
               onModules={() => setModulesOpen((open) => !open)}
               onArrange={toggleArrange}
               onBuild={() => setBuilderOpen(true)}
-              onEdge={() => setEdgeOpen(true)}
-              onLiving={() => (setSaverOpen(false), setMusicOpen(false), setLivingOpen(true))}
-              onSaver={() => (setLivingOpen(false), setMusicOpen(false), setSaverOpen(true))}
-              onMusic={() => (setLivingOpen(false), setSaverOpen(false), setMusicOpen(true))}
-            />}
+            /></>}
           </div>
           {(view.state?.trying || saverOn) && <div className="stage-bar">
             {/* a draft the assistant or the user put on the deck for a try: say so, and the way back */}
@@ -432,7 +424,10 @@ export default function App() {
             profile={view.profile}
             page={view.state?.page ?? null}
             onDropAction={(c, action) => {
-              if (dropAction(c, action, () => inspector.current?.flush())) setSelected(c);
+              if (dropAction(c, action, "tap", () => inspector.current?.flush())) {
+                inspector.current?.selectTrigger("tap");
+                setSelected(c);
+              }
             }}
             onMoveKey={(from, to) => {
               moveKey(from, to);
@@ -450,7 +445,7 @@ export default function App() {
               canPaste={canPaste()}
               opensPage={opensPage(ctlMenu.c)}
               onCopy={() => copy(ctlMenu.c)}
-              onPaste={() => paste(ctlMenu.c)}
+
               onPasteLook={() => pasteLook(ctlMenu.c)}
               onClear={() => clear(ctlMenu.c)}
               onOpenPage={() => openControl(ctlMenu.c)}
@@ -458,11 +453,10 @@ export default function App() {
             />
           )}
           {arranging && <BaseTurnPicker live={live} />}
-          {arranging && <ShareArrangement live={live} saved={saved} />}
           </div>
-          {!arranging && !calibrating && (selected || (fresh && fresh === view.state?.active)) && (
+          {!arranging && !calibrating && selected && (
             <ControlDock>
-              <Inspector ref={inspector} live={live} selected={selected} view={view} fresh={!!fresh && fresh === view.state?.active} onDismissFresh={() => setFresh(null)} onOpenPlugins={openPluginCatalog} onOpenStudio={setStudio} />
+              <Inspector ref={inspector} selected={selected} view={view} onDropAction={(control, action, gesture) => dropAction(control, action, gesture, () => inspector.current?.flush())} onOpenStudio={setStudio} />
             </ControlDock>
           )}
           {toast && (
@@ -496,7 +490,7 @@ export default function App() {
               onBuild={() => (setProfileLibrary(null), setBuilderOpen(true))}
               onTour={() => (setProfileLibrary(null), setTourOpen(true), setSettingsOpen(false))}
               onNewProfile={() => (setProfileLibrary(null), setNewRequest((n) => n + 1))}
-              onOpenProfile={() => (setProfileLibrary(null), setProfileOpen(true), setSettingsOpen(false), setGalleryOpen(false), setForAppOpen(false))}
+              onOpenProfile={() => (setProfileLibrary(null), setProfileOpen(true), setSettingsOpen(false), setForAppOpen(false))}
             />
           </div>
         </Sheet>
@@ -507,14 +501,12 @@ export default function App() {
         </Sheet>
       )}
       {/* panels open over the window, so a touch on a control still shows its editor (docs/FLOWS.md, difference 4) */}
-      {!tourShown && !arranging && !calibrating && (forAppOpen || galleryOpen || gamesOpen || profileOpen || edgeOpen) && (
-        <Sheet onClose={() => (setForAppOpen(false), setGalleryOpen(false), setGamesOpen(false), setProfileOpen(false), setEdgeOpen(false))}>
+      {!tourShown && !arranging && !calibrating && (forAppOpen || gamesOpen || profileOpen || edgeOpen) && (
+        <Sheet onClose={() => (setForAppOpen(false), setGamesOpen(false), setProfileOpen(false), setEdgeOpen(false))}>
           {edgeOpen ? (
             <EdgePanel view={view} onClose={() => setEdgeOpen(false)} onAll={() => (setEdgeOpen(false), setSettingsSection("lights"), setSettingsOpen(true))} />
           ) : forAppOpen ? (
-            <ForAppPanel view={view} kinds={kinds} onClose={() => setForAppOpen(false)} onMade={(id) => (setForAppOpen(false), setFresh(id), setSelected(null))} />
-          ) : galleryOpen ? (
-            <GalleryPanel live={live} saved={saved} onClose={() => setGalleryOpen(false)} />
+            <ForAppPanel view={view} kinds={kinds} onClose={() => setForAppOpen(false)} onMade={() => (setForAppOpen(false), setSelected(null))} />
           ) : gamesOpen ? (
             <GamesPanel view={view} onClose={() => setGamesOpen(false)} />
           ) : (
@@ -522,8 +514,6 @@ export default function App() {
           )}
         </Sheet>
       )}
-      {guideOpen && !tourShown && <Guide onClose={() => setGuideOpen(false)} />}
-      {!tourShown && <WhatsNew onOpenLook={() => (setSelected(null), setSaverOpen(false), setMusicOpen(false), setSettingsOpen(false), setLivingOpen(true))} />}
       <ConfirmHost />
       {pluginFiles.length > 0 && <PluginFileSheet key={pluginFiles[0]} path={pluginFiles[0]} onClose={() => setPluginFiles((now) => now.slice(1))} />}
       {dropping && (

@@ -2,8 +2,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import type { DeckEvent, LiveState, ModuleInfo, ModuleKind } from "../deck";
-import { api, DISCORD } from "../engine";
-import { told } from "../confirm";
 import { osName, useAppVersion } from "../update";
 import { t, useLanguage, type Key } from "../i18n";
 import { Icon } from "./Icon";
@@ -19,7 +17,6 @@ import { ModuleThumb } from "./DeckView";
  * paste on the Discord or GitHub. Nothing is written to the module's memory.
  */
 
-const REPO = "https://github.com/Przemotar/hubdeck";
 const inTauri = () => "__TAURI_INTERNALS__" in window;
 
 interface Read {
@@ -149,6 +146,15 @@ export function DiagnosticsSettings({ live }: { live: LiveState }) {
   const [picked, setPicked] = useState<string | null>(null);
   const m = modules.find((x) => x.id === picked) ?? modules[0];
   const [notes, setNotes] = useState<Notes>({ notes: [], counts: [] });
+  const [exported, setExported] = useState("");
+  const header = (
+    <div className="row between">
+      <h3 className="sec-title">{t("diag.title")}</h3>
+      <button type="button" className="tool small" onClick={() => {
+        invoke("diagnostics_save").then(() => setExported(t("diag.exported")), (error) => setExported(String(error)));
+      }}><Icon name="download" />{t("diag.export")}</button>
+    </div>
+  );
 
   useEffect(() => {
     if (!inTauri()) return;
@@ -167,14 +173,16 @@ export function DiagnosticsSettings({ live }: { live: LiveState }) {
   if (!m)
     return (
       <section className="sec">
-        <h3 className="sec-title">{t("diag.title")}</h3>
+        {header}
+        {exported && <p className="help" role="status">{exported}</p>}
         <p className="help">{t("diag.none")}</p>
       </section>
     );
 
   return (
     <section className="sec diag">
-      <h3 className="sec-title">{t("diag.title")}</h3>
+      {header}
+      {exported && <p className="help" role="status">{exported}</p>}
       <p className="help">{t("diag.help")}</p>
       <div className="diag-body">
         <nav className="diag-list" aria-label={t("diag.modules")}>
@@ -313,19 +321,6 @@ function ModuleCheck({ m, live, notes, version, unresponsive }: { m: ModuleInfo;
     return m.serial ? lines.join("\n").split(m.serial).join("…") : lines.join("\n");
   };
   const copy = () => navigator.clipboard.writeText(report()).then(() => setCopied(true), () => {});
-  const onDiscord = () =>
-    navigator.clipboard
-      .writeText(report())
-      .catch(() => {})
-      .then(() => {
-        api.openLink(DISCORD).catch(() => {});
-        void told(t("help.discordReportCopied"), t("diag.discordText"));
-      });
-  const onGitHub = () => {
-    const field = `&version=${encodeURIComponent(`MasterDeck ${version ?? "?"}, ${osName()}`)}&diagnostics=${encodeURIComponent(report())}`;
-    api.openLink(`${REPO}/issues/new?template=bug.yml${field}`).catch(() => {});
-  };
-
   return (
     <div className="diag-check">
       <div className="diag-head">
@@ -489,14 +484,6 @@ function ModuleCheck({ m, live, notes, version, unresponsive }: { m: ModuleInfo;
         <button className="tool" onClick={copy}>
           <Icon name="copy" />
           {copied ? t("diag.copied") : t("diag.copy")}
-        </button>
-        <button className="tool" onClick={onDiscord}>
-          <Icon name="users" />
-          {t("help.discordReport")}
-        </button>
-        <button className="tool ghost" onClick={onGitHub}>
-          <Icon name="alert" />
-          {t("diag.github")}
         </button>
       </div>
     </div>

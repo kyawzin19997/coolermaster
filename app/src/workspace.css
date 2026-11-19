@@ -624,3 +624,250 @@
     padding-block: 9px;
   }
 }
+
+/* Frosted chrome stays separate from the live hardware preview and scrolling lists. */
+.topbar,
+.settings-head,
+.studio-bar,
+.workbench-title {
+  background: var(--glass);
+  box-shadow: var(--glass-sheen);
+}
+
+.popover,
+.sheet,
+.confirm {
+  background: var(--glass-pop);
+  border-color: var(--glass-line);
+  box-shadow: var(--glass-sheen), var(--popsh);
+  backdrop-filter: blur(16px) saturate(125%);
+}
+
+.topbar .tool.ghost,
+.settings-nav .settings-nav-item {
+  min-height: 33px;
+}
+
+.workbench-title {
+  gap: 9px;
+}
+
+.settings-nav {
+  padding: 10px 8px;
+}
+
+.settings-content > .sec {
+  padding-block: 14px;
+}
+
+.action-sidebar .chooser-controls {
+  gap: 8px;
+  padding: 12px 13px 10px;
+}
+
+.action-sidebar .chooser-results {
+  padding: 4px 8px 8px;
+}
+
+.action-sidebar .chooser-groups {
+  border: 0;
+  border-radius: 0;
+}
+
+.action-sidebar .chooser-group + .chooser-group {
+  border-top: 1px solid var(--ln);
+}
+
+.action-sidebar .chooser-group-head,
+.action-sidebar .chooser-item {
+  min-height: 39px;
+  padding-inline: 8px;
+}
+
+.action-sidebar .chooser-group-head[aria-expanded="true"] {
+  background: var(--bg2);
+  border-radius: var(--r);
+}
+
+.action-sidebar .chooser-item .library-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.action-sidebar .chooser-item:hover,
+.action-sidebar .chooser-item:focus-visible {
+  background: var(--hov);
+}
+
+.action-sidebar .chooser-browse.is-nudged {
+  color: var(--acc2);
+  animation: none;
+}
+
+.control-dock {
+  background: var(--bg1);
+}
+
+.control-dock:not(:has(.control-fields > *, .control-look-pane)) {
+  height: auto;
+}
+
+.control-dock:not(:has(.control-fields > *, .control-look-pane)) .control-dock-handle,
+.control-fields:empty {
+  display: none;
+}
+
+.control-inspector .insp-head {
+  background: transparent;
+  box-shadow: none;
+  border-bottom: 0;
+}
+
+.trigger-row {
+  display: flex;
+  min-width: 0;
+  flex: none;
+  gap: 6px;
+  padding: 0 12px 9px;
+  border-bottom: 1px solid var(--ln);
+}
+
+.trigger-slot {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 252px;
+  min-height: 43px;
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--ln2);
+  border-radius: var(--r);
+  background: var(--bg0);
+}
+
+.trigger-slot.is-selected {
+  background: var(--bg2);
+  border-color: var(--glass-line);
+  box-shadow: var(--glass-sheen);
+}
+
+.trigger-slot.is-drag-over {
+  border-color: var(--acc);
+  background: var(--accbg);
+}
+
+.trigger-choice {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  width: 100%;
+  min-height: 42px;
+  padding: 4px 6px 4px 7px;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-radius: var(--r);
+}
+
+.trigger-choice .library-icon {
+  width: 19px;
+  height: 19px;
+}
+
+.trigger-label {
+  display: grid;
+  min-width: 0;
+  color: var(--tx2);
+  line-height: 1.25;
+  font-size: 11px;
+}
+
+.trigger-label strong {
+  color: var(--tx);
+  font-size: 12px;
+  font-weight: 500;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.trigger-choice:has(strong:not([data-action])) .trigger-label strong {
+  color: var(--tx2);
+}
+
+.trigger-clear.icon-btn {
+  width: 24px;
+  height: 26px;
+  margin-right: 3px;
+  flex: none;
+}
+
+.trigger-clear .i {
+  width: 13px;
+  height: 13px;
+}
+
+.control-error {
+  margin: 4px 12px;
+  color: var(--errtx);
+}
+
+.control-fields > .field,
+.control-fields > .more-opts {
+  max-width: 720px;
+}
+
+.control-fields .more-opts,
+.dial-face-options,
+.lighting-advanced {
+  border-top: 1px solid var(--ln);
+  padding-top: 7px;
+}
+
+.lighting-destinations {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.lighting-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 170px) minmax(0, 420px);
+  align-items: center;
+  gap: 12px;
+  min-height: 39px;
+}
+
+.lighting-row > label {
+  color: var(--tx2);
+}
+
+.lighting-range {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.lighting-range .range {
+  min-width: 0;
+  flex: 1;
+}
+
+.lighting-range output {
+  min-width: 3em;
+  text-align: right;
+  color: var(--tx2);
+}
+
+.lighting-advanced > :not(summary) {
+  margin-top: 8px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tool, .tab, .chooser-item, .sheet, .popover {
+    transition: none;
+    animation: none;
+  }
+}

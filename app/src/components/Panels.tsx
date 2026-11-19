@@ -2,7 +2,7 @@ import { Fragment, useCallback, useEffect, useLayoutEffect, useRef, useState } f
 import { askInWindow, confirmed, open, save, told } from "../confirm";
 import { invoke } from "@tauri-apps/api/core";
 import type { ControlRef, LiveState, ModuleKind } from "../deck";
-import { api, withUpright, type FrameCost, FX_OPTIONS, FX_TINT, fxName, GPU_KINDS, type FxKind, type FxLayer, SKIN_MOTION, type Skin, type Look, GAMES_ENABLED, pageReachable, setPreviewSalt, type AppInfo, type AppsState, type CrashReport, type LightSettings, LED_EFFECTS, METRICS, type EngineView, type GameSummary, type Imported, type Metric, type Moved, type PluginInfo, type LocalPlugin, type InstalledItem, type PresetSummary, type Profile, type ProfileSummary, type Screens, triedPresets, DISCORD, SAVER_SCENES, saverOf, knownScreens, SAVER_FROM_LOOK, saverPreset, PRESETS_HIDDEN, presetThumb, THEMES, themeTitle, layersOf } from "../engine";
+import { api, withUpright, type FrameCost, FX_OPTIONS, FX_TINT, fxName, GPU_KINDS, type FxKind, type FxLayer, SKIN_MOTION, type Skin, type Look, GAMES_ENABLED, pageReachable, setPreviewSalt, type AppInfo, type AppsState, type CrashReport, type LightSettings, LED_EFFECTS, METRICS, type EngineView, type GameSummary, type Imported, type Metric, type Moved, type PluginInfo, type LocalPlugin, type InstalledItem, type PresetSummary, type Profile, type ProfileSummary, type Screens, triedPresets, SAVER_SCENES, saverOf, knownScreens, SAVER_FROM_LOOK, saverPreset, PRESETS_HIDDEN, presetThumb, THEMES, themeTitle, layersOf } from "../engine";
 import { Icon } from "./Icon";
 import { NoneThumb, Thumb } from "./Thumb";
 import { AssistantPanel, refreshNudge, useNudge, useSetUp } from "./Assistant";
@@ -11,10 +11,10 @@ import { ModuleThumb } from "./DeckView";
 import { DiagnosticsSettings } from "./Diagnostics";
 import { demoParam } from "../demo/params";
 import { setTheme, useTheme, type Theme } from "../theme";
-import { osName, updates, useAppVersion, useUpdateAvailable, type UpdateInfo } from "../update";
-import { share, type GalleryEntry } from "../share";
-import { detachedKinds, keysOfKind, MODULE_KINDS, ownedKey, placeModules, type Placement } from "../layout";
+import { updates, useAppVersion, useUpdateAvailable, type UpdateInfo } from "../update";
+import { keysOfKind, MODULE_KINDS, ownedKey, type Placement } from "../layout";
 import { BUILT_IN_LANGUAGES, getLanguage, languageTemplate, localizeError, localizeGame, localizePreset, t, useLanguage, type Key } from "../i18n";
+import masterdeckIcon from "../../src-tauri/icons/masterdeck.svg";
 
 // macOS has no listening to the music yet (engine/beat.rs: Windows only)
 const IS_MAC = typeof navigator !== "undefined" && navigator.userAgent.includes("Mac");
@@ -62,15 +62,7 @@ export function movedNote(moved: Moved[] | undefined, pages: Profile["pages"] = 
   return t("profile.moved", { list });
 }
 
-/** Six keys on the same tile used for the desktop app icon. */
-export const Logo = () => (
-  <svg className="logo" viewBox="0 0 64 64" aria-hidden="true">
-    <rect width="64" height="64" rx="12" fill="var(--acc)" />
-    {[0, 1].map((r) =>
-      [0, 1, 2].map((c) => <rect key={`${r}${c}`} x={10 + c * 16} y={17 + r * 16} width={12} height={13} rx={2.5} fill="var(--acctx)" />),
-    )}
-  </svg>
-);
+export const Logo = () => <img className="logo" src={masterdeckIcon} alt="" />;
 
 export type LeftTab = "profiles" | "assistant";
 
@@ -410,7 +402,7 @@ function ProfileMenu({ profile, x, y, count, onSetHome, onClose }: { profile: Pr
 
 /** A control's right-click menu in the drawing, as Stream Deck's ("Right-click keys to copy,
  * delete or move them"; owner's 1a, 2026-10-20): what the shortcuts do, with the shortcuts shown. */
-export function ControlMenu({ title, x, y, isSet, canPaste, opensPage, onCopy, onPaste, onPasteLook, onClear, onOpenPage, onClose }: { title: string; x: number; y: number; isSet: boolean; canPaste: boolean; opensPage: boolean; onCopy: () => void; onPaste: () => void; onPasteLook: () => void; onClear: () => void; onOpenPage: () => void; onClose: () => void }) {
+export function ControlMenu({ title, x, y, isSet, canPaste, opensPage, onCopy, onPasteLook, onClear, onOpenPage, onClose }: { title: string; x: number; y: number; isSet: boolean; canPaste: boolean; opensPage: boolean; onCopy: () => void; onPasteLook: () => void; onClear: () => void; onOpenPage: () => void; onClose: () => void }) {
   useLanguage();
   const ref = useRef<HTMLDivElement>(null);
   useDismiss(true, ref, onClose);
@@ -430,7 +422,6 @@ export function ControlMenu({ title, x, y, isSet, canPaste, opensPage, onCopy, o
       <div className="menu-list">
         {opensPage && row("folder-open", t("ctl.openPage"), null, onOpenPage, true)}
         {row("copy", t("ctl.copy"), `${mod}C`, onCopy, isSet)}
-        {row("file-plus", t("ctl.paste"), `${mod}V`, onPaste, canPaste)}
         {row("palette", t("ctl.pasteLook"), mod === "⌘" ? "⇧⌘V" : "Ctrl+Shift+V", onPasteLook, canPaste && isSet)}
         {row("trash", t("ctl.clear"), "Delete", onClear, isSet, true)}
       </div>
@@ -681,7 +672,7 @@ export function ForAppPanel({ view, kinds, onClose, onMade }: { view: EngineView
 }
 
 /** Profile tabs that fit the top bar; the rest go into a "More" menu (the active one always shows). */
-function ProfileTabs({ view, onOpenProfile, onOpenGallery, onOpenForApp, onOpenAssistant, onOpenTour, kinds, newRequest }: { view: EngineView; onOpenProfile: () => void; onOpenGallery: () => void; onOpenForApp: () => void; onOpenAssistant: () => void; onOpenTour: () => void; kinds?: string[]; newRequest?: number }) {
+function ProfileTabs({ view, onOpenProfile, onOpenForApp, onOpenAssistant, onOpenTour, kinds, newRequest }: { view: EngineView; onOpenProfile: () => void; onOpenForApp: () => void; onOpenAssistant: () => void; onOpenTour: () => void; kinds?: string[]; newRequest?: number }) {
   const state = view.state;
   const all = state?.profiles ?? [];
   // the bar: profiles shown in it, the home profile and the active one
@@ -885,23 +876,6 @@ function ProfileTabs({ view, onOpenProfile, onOpenGallery, onOpenForApp, onOpenA
                     <b>{t("newDeck.empty")}</b>
                   </span>
                 </button>
-                {GALLERY_ONLINE && (
-                  <button
-                    className="menu-row"
-                    onClick={() => {
-                      setAdding(false);
-                      onOpenGallery();
-                    }}
-                  >
-                    <span className="menu-ic is-plain">
-                      <Icon name="globe" />
-                    </span>
-                    <span className="menu-text">
-                      <b>{t("gallery.browse")}</b>
-                      <small>{t("gallery.browseHelp")}</small>
-                    </span>
-                  </button>
-                )}
               </div>
             )}
           </span>
@@ -959,7 +933,6 @@ export function TopBar({
   onOpenSettings,
   onOpenPlugins,
   onOpenGames,
-  onOpenGallery,
   onOpenForApp,
   kinds,
   newRequest,
@@ -974,7 +947,6 @@ export function TopBar({
   onOpenForApp: () => void;
   live: LiveState;
   view: EngineView;
-  onOpenGallery: () => void;
   onOpenProfile: () => void;
   onOpenProfileLibrary: () => void;
   onOpenSettings: () => void;
@@ -997,7 +969,7 @@ export function TopBar({
         <Icon name="layers" />
         <span className="tb-label">{t("profiles.title")}</span>
       </button>
-      <ProfileTabs view={view} onOpenProfile={onOpenProfile} onOpenGallery={onOpenGallery} onOpenForApp={onOpenForApp} onOpenAssistant={onOpenAssistant} onOpenTour={onOpenTour} kinds={kinds} newRequest={newRequest} />
+      <ProfileTabs view={view} onOpenProfile={onOpenProfile} onOpenForApp={onOpenForApp} onOpenAssistant={onOpenAssistant} onOpenTour={onOpenTour} kinds={kinds} newRequest={newRequest} />
       {state?.autoApp && <TakeoverMark app={state.autoApp} focused={focused} />}
       {state && (
         <label className="check auto-switch" title={state.pinned ? t("topbar.autoOffHelp", { profile: state.profiles.find((p) => p.id === state.active)?.name ?? "" }) : t("topbar.autoOnHelp")}>
@@ -1012,7 +984,6 @@ export function TopBar({
           {t("topbar.games")}
         </button>
       )}
-      <HelpMenu />
       <button className="tool ghost" onClick={onOpenPlugins} title={t("topbar.plugins")}>
         <Icon name="plug" />
         <span className="tb-label">{t("topbar.plugins")}</span>
@@ -1030,16 +1001,12 @@ export function TopBar({
   );
 }
 
-export function DeckTools({ canArrange, modulesOpen, onModules, onArrange, onBuild, onEdge, onLiving, onSaver, onMusic }: {
+export function DeckTools({ canArrange, modulesOpen, onModules, onArrange, onBuild }: {
   canArrange: boolean;
   modulesOpen: boolean;
   onModules: () => void;
   onArrange: () => void;
   onBuild: () => void;
-  onEdge: () => void;
-  onLiving: () => void;
-  onSaver: () => void;
-  onMusic: () => void;
 }) {
   useLanguage();
   const [open, setOpen] = useState(false);
@@ -1050,10 +1017,6 @@ export function DeckTools({ canArrange, modulesOpen, onModules, onArrange, onBui
     { label: t("stage.editLayout"), icon: "layout-grid", run: onArrange, disabled: !canArrange },
     { label: t("builder.title"), icon: "pencil", run: onBuild },
     { label: t(modulesOpen ? "stage.hideModules" : "stage.showModules"), icon: "layers", run: onModules },
-    { label: t("deck.edge"), icon: "sun", run: onEdge },
-    { label: t("effects.title"), icon: "image", run: onLiving },
-    { label: t("saver.title"), icon: "moon", run: onSaver },
-    { label: t("music.chip"), icon: "music", run: onMusic },
   ];
   return (
     <span className="pop-anchor deck-tools" ref={ref}>
@@ -1070,101 +1033,6 @@ export function DeckTools({ canArrange, modulesOpen, onModules, onArrange, onBui
               {label}
             </button>
           ))}
-        </div>
-      )}
-    </span>
-  );
-}
-
-/** Help and feedback in the top bar (owner's pick 1a, 2026-10-16: "Report a problem" was only in
- * Settings): a bug report with the short diagnostics filled in (his 2a), a feature idea, a
- * question. Its button says Feedback, the owner's pick of three (C, 2026-10-16: people should report). */
-function HelpMenu() {
-  useLanguage();
-  const version = useAppVersion();
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLSpanElement>(null);
-  const close = useCallback(() => setOpen(false), []);
-  useDismiss(open, ref, close);
-  const go = (url: string) => {
-    setOpen(false);
-    api.openLink(url).catch(() => {});
-  };
-  const report = () => {
-    const versionField = `&version=${encodeURIComponent(`MasterDeck ${version ?? "?"}, ${osName()}`)}`;
-    share
-      .diagnosticsBrief()
-      .catch(() => "")
-      .then((brief) => go(`${REPO}/issues/new?template=bug.yml${versionField}${brief ? `&diagnostics=${encodeURIComponent(brief)}` : ""}`));
-  };
-  // without a GitHub account (owner's "1 a", 2026-11-01: the account is the biggest barrier to
-  // reports): the same short diagnostics go to the clipboard, the Discord opens, it is pasted in #help
-  const reportOnDiscord = () => {
-    const head = `MasterDeck ${version ?? "?"}, ${osName()}`;
-    share
-      .diagnosticsBrief()
-      .catch(() => "")
-      .then((brief) => navigator.clipboard.writeText(brief ? `${head}
-${brief}` : head).catch(() => {}))
-      .then(() => {
-        go(DISCORD);
-        void told(t("help.discordReportCopied"), t("help.discordReportCopiedText"));
-      });
-  };
-  return (
-    <span className="pop-anchor help-menu" ref={ref}>
-      <button className="tool ghost" aria-haspopup="menu" aria-expanded={open} title={t("help.title")} onClick={() => setOpen((o) => !o)}>
-        <Icon name="message-square" />
-        <span className="tb-label">{t("help.button")}</span>
-      </button>
-      {open && (
-        <div className="popover help-pop" role="menu">
-          <div className="pop-label">{t("help.title")}</div>
-          <div className="menu-list">
-            <button role="menuitem" className="menu-row compact" onClick={report}>
-              <Icon name="alert" />
-              <span className="menu-text">
-                <b>{t("help.report")}</b>
-                <small>{t("help.reportHelp")}</small>
-              </span>
-            </button>
-            <button role="menuitem" className="menu-row compact" onClick={() => go(`${REPO}/issues/new?template=feature.yml`)}>
-              <Icon name="sparkles" />
-              <span className="menu-text">
-                <b>{t("help.suggest")}</b>
-              </span>
-            </button>
-            <button role="menuitem" className="menu-row compact" onClick={() => go(`${REPO}/discussions`)}>
-              <Icon name="message-square" />
-              <span className="menu-text">
-                <b>{t("help.ask")}</b>
-              </span>
-            </button>
-          </div>
-          <p className="help">{t("help.menuText")}</p>
-          {/* the server's one address (owner's "7. tak dodaj", 2026-10-30): no GitHub account needed */}
-          <div className="menu-list">
-            <button role="menuitem" className="menu-row compact" onClick={() => (setOpen(false), window.dispatchEvent(new CustomEvent("hubdeck:whats-new")))}>
-              <Icon name="sparkles" />
-              <span className="menu-text">
-                <b>{t("whatsNew.menu")}</b>
-              </span>
-            </button>
-            <button role="menuitem" className="menu-row compact" onClick={reportOnDiscord}>
-              <Icon name="alert" />
-              <span className="menu-text">
-                <b>{t("help.discordReport")}</b>
-                <small>{t("help.discordReportHelp")}</small>
-              </span>
-            </button>
-            <button role="menuitem" className="menu-row compact" onClick={() => go(DISCORD)}>
-              <Icon name="users" />
-              <span className="menu-text">
-                <b>{t("help.discord")}</b>
-                <small>{t("help.discordHelp")}</small>
-              </span>
-            </button>
-          </div>
         </div>
       )}
     </span>
@@ -1467,7 +1335,7 @@ export function EdgePanel({ view, onClose, onAll }: { view: EngineView; onClose:
     api.saveProfile(next).catch((e) => setMessage(String(e)));
   };
   const mode = !draft.edge ? "follow" : draft.edgeEffect ? "effect" : "color";
-  const styleName = style === "rainbow" ? t("lights.rainbow") : style === "color" ? t("lights.oneColor") : style === "profile" ? t("lights.profileColor") : style === "off" ? t("lights.off") : "";
+  const styleName = style === "rainbow" ? t("lights.rainbow") : style === "color" ? t("lights.oneColor") : style === "profile" ? t("lights.profileColor") : style === "off" ? t("lights.off") : style === "music" ? t("lights.music") : "";
   const pick = (next: "follow" | "color" | "effect") => {
     if (next === "follow") commit({ ...draft, edge: undefined, edgeEffect: undefined, edgeSpeed: undefined });
     else if (next === "color") commit({ ...draft, edge: draft.edge ?? draft.color ?? "#8b7cf6", edgeEffect: undefined, edgeSpeed: undefined });
@@ -2195,7 +2063,7 @@ export function ProfilePanel({ view, onClose }: { view: EngineView; onClose: () 
 }
 
 /** Settings of the whole app: language, look, screens, profiles folder, backups, connections, updates, help, about. */
-export type SettingsSection = "general" | "lights" | "screens" | "text" | "connections" | "plugins" | "backups" | "updates" | "diagnostics" | "help";
+export type SettingsSection = "general" | "lights" | "screens" | "text" | "connections" | "plugins" | "backups" | "updates" | "diagnostics";
 
 const SETTINGS_SECTIONS: { id: SettingsSection; icon: string; label: Key }[] = [
   { id: "general", icon: "settings", label: "settings.general" },
@@ -2209,12 +2077,21 @@ const SETTINGS_SECTIONS: { id: SettingsSection; icon: string; label: Key }[] = [
   { id: "updates", icon: "download", label: "updates.title" },
   // check one module (owner, 2026-11-02, after a faders user's light stuck red)
   { id: "diagnostics", icon: "gauge", label: "diag.title" },
-  { id: "help", icon: "info", label: "settings.help" },
 ];
 
 /** Settings as a page of its own over the whole window (owner, 2026-10-13: a panel in the right
  *  column covered the key editor): sections on the left, one section's content on the right. */
-export function SettingsPanel({ live, view, section, onSection, onClose, onCalibrate, onTour, onBuild, onBrowsePlugins }: { live: LiveState; view: EngineView; section: SettingsSection; onSection: (s: SettingsSection) => void; onClose: () => void; onCalibrate: () => void; onTour?: () => void; onBuild?: () => void; onBrowsePlugins?: () => void }) {
+export function SettingsPanel({ live, view, section, onSection, onClose, onCalibrate, onBrowsePlugins, onOpenEdge, onOpenScenes }: {
+  live: LiveState;
+  view: EngineView;
+  section: SettingsSection;
+  onSection: (section: SettingsSection) => void;
+  onClose: () => void;
+  onCalibrate: () => void;
+  onBrowsePlugins: () => void;
+  onOpenEdge: () => void;
+  onOpenScenes: () => void;
+}) {
   useLanguage();
   return (
     <div className="settings-page">
@@ -2234,7 +2111,7 @@ export function SettingsPanel({ live, view, section, onSection, onClose, onCalib
             </button>
           ))}
         </nav>
-        <div className="settings-content sectioned" key={section}>
+        <div className={`settings-content sectioned${section === "lights" || section === "screens" ? " lighting-settings" : ""}`} key={section}>
           {section === "general" && (
             <>
               <LanguageSettings />
@@ -2246,7 +2123,7 @@ export function SettingsPanel({ live, view, section, onSection, onClose, onCalib
           )}
           {(section === "lights" || section === "screens") && (
             <>
-              <LightsSettings />
+              <LightsSettings onOpenEdge={onOpenEdge} onOpenScenes={onOpenScenes} />
               <ScreensSettings />
               {live.deck.modules.some((m) => m.kind === "keys") && (
                 <section className="sec">
@@ -2266,32 +2143,6 @@ export function SettingsPanel({ live, view, section, onSection, onClose, onCalib
           {section === "backups" && <Backups />}
           {section === "updates" && <UpdatesSettings />}
           {section === "diagnostics" && <DiagnosticsSettings live={live} />}
-          {section === "help" && (
-            <>
-              {(onTour || onBuild) && (
-                <section className="sec">
-                  <h3 className="sec-title">{t("help.startTitle")}</h3>
-                  <p className="help">{t("help.startHelp")}</p>
-                  <div className="btn-grid">
-                    {onTour && (
-                      <button className="tool" onClick={onTour}>
-                        <Icon name="play" />
-                        {t("assistant.showMe")}
-                      </button>
-                    )}
-                    {onBuild && (
-                      <button className="tool" onClick={onBuild}>
-                        <Icon name="layers" />
-                        {t("assistant.buildYourself")}
-                      </button>
-                    )}
-                  </div>
-                </section>
-              )}
-              <HelpFeedback />
-              <About />
-            </>
-          )}
         </div>
       </div>
     </div>
@@ -2358,16 +2209,32 @@ function SwitchingSettings({ view }: { view: EngineView }) {
 }
 
 /** System, dark or light. */
-function LightsSettings() {
+function LightsSettings({ onOpenEdge, onOpenScenes }: { onOpenEdge: () => void; onOpenScenes: () => void }) {
   useLanguage();
   const [l, setL] = useState<LightSettings | null>(null);
-  useEffect(() => {
-    api.lights().then(setL, () => {});
+  const [error, setError] = useState("");
+  const pending = useRef<LightSettings | null>(null);
+  const timer = useRef<number | undefined>(undefined);
+  const saving = useRef(Promise.resolve());
+  const flush = useCallback(() => {
+    window.clearTimeout(timer.current);
+    const next = pending.current;
+    if (!next) return;
+    pending.current = null;
+    saving.current = saving.current.then(() => api.setLights(next)).then(() => { setError(""); }, (e) => { setError(String(e)); });
   }, []);
-  if (!l) return null;
-  const save = (next: LightSettings) => {
+  useEffect(() => {
+    let active = true;
+    api.lights().then((value) => { if (active) setL(value); }, (e) => { if (active) setError(String(e)); });
+    return () => { active = false; flush(); };
+  }, [flush]);
+  if (!l) return error ? <p className="sec help" role="alert">{error}</p> : null;
+  const save = (next: LightSettings, delay = 0) => {
     setL(next);
-    api.setLights(next).catch(() => {});
+    pending.current = next;
+    window.clearTimeout(timer.current);
+    if (delay) timer.current = window.setTimeout(flush, delay);
+    else flush();
   };
   const reactions: [keyof LightSettings["react"] & ("mic" | "live" | "agents" | "timer" | "call"), Key][] = [
     ["call", "lights.reactCall"],
@@ -2377,10 +2244,18 @@ function LightsSettings() {
     ["timer", "lights.reactTimer"],
   ];
   return (
-    <section className="sec">
-      <h3 className="sec-title">{t("lights.title")}</h3>
-      <div className="row wrap">
-        <select className="input" aria-label={t("lights.style")} value={l.style} onChange={(e) => save({ ...l, style: e.target.value })}>
+    <section className="sec lighting-controls">
+      <h3 className="sec-title">{t("settings.lighting")}</h3>
+      <div className="lighting-destinations">
+        <button type="button" className="tool" onClick={onOpenScenes}><Icon name="image" />{t("lighting.scenes")}</button>
+        <button type="button" className="tool" onClick={onOpenEdge}><Icon name="sun" />{t("lighting.profileEdge")}</button>
+        <button type="button" className="tool" onClick={() => window.dispatchEvent(new CustomEvent("hubdeck:open-music"))}><Icon name="music" />{t("music.chip")}</button>
+        <button type="button" className="tool" onClick={() => window.dispatchEvent(new CustomEvent("hubdeck:open-saver"))}><Icon name="moon" />{t("screens.saver")}</button>
+      </div>
+      <div className="lighting-row">
+        <label htmlFor="lights-mode">{t("lights.style")}</label>
+        <div className="row wrap">
+        <select id="lights-mode" className="input" value={l.style} onChange={(e) => save({ ...l, style: e.target.value })}>
           <option value="rainbow">{t("lights.rainbow")}</option>
           <option value="color">{t("lights.oneColor")}</option>
           <option value="profile">{t("lights.profileColor")}</option>
@@ -2389,13 +2264,16 @@ function LightsSettings() {
         </select>
         {l.style === "color" && (
           <label className="color">
-            <input type="color" value={l.color} aria-label={t("look.color")} onChange={(e) => setL({ ...l, color: e.target.value })} onBlur={() => save(l)} />
+            <input type="color" value={l.color} aria-label={t("look.color")} onChange={(e) => save({ ...l, color: e.target.value }, 120)} />
           </label>
         )}
+        </div>
       </div>
-      <label htmlFor="lights-brightness" className="label">
-        {t("lights.brightness")}
+      <div className="lighting-row">
+      <label htmlFor="lights-brightness" title={t("lights.brightness")}>
+        {t("lighting.ledBrightness")}
       </label>
+      <div className="lighting-range">
       <input
         id="lights-brightness"
         className="range"
@@ -2405,18 +2283,13 @@ function LightsSettings() {
         step={5}
         value={l.brightness}
         style={{ "--fill": `${l.brightness}%` } as React.CSSProperties}
-        onChange={(e) => setL({ ...l, brightness: Number(e.target.value) })}
-        onPointerUp={() => save(l)}
-        onKeyUp={() => save(l)}
+        onChange={(e) => save({ ...l, brightness: Number(e.target.value) }, 120)}
       />
-      {/* lights to the music sit under the deck now, beside the living deck and the screensaver
-          (owner's "3 a", 2026-10-30: "zeby to bylo obok siebie a nie schowane w opcjach") */}
-      <div className="row between">
-        <span className="help">{t("music.moved")}</span>
-        <button className="tool small" onClick={() => window.dispatchEvent(new CustomEvent("hubdeck:open-music"))}>
-          {t("settings.saverOpen")}
-        </button>
+      <output htmlFor="lights-brightness" className="mono">{l.brightness}%</output>
       </div>
+      </div>
+      <details className="lighting-advanced">
+        <summary>{t("lighting.reactions")}</summary>
       {l.style === "rainbow" && (
         <label className="check" title={t("lights.hubRainbowHelp")}>
           <input type="checkbox" checked={l.hubRainbow ?? true} onChange={(e) => save({ ...l, hubRainbow: e.target.checked })} />
@@ -2435,8 +2308,7 @@ function LightsSettings() {
               type="color"
               value={l.react[key].color}
               aria-label={t("look.color")}
-              onChange={(e) => setL({ ...l, react: { ...l.react, [key]: { ...l.react[key], color: e.target.value } } })}
-              onBlur={() => save(l)}
+              onChange={(e) => save({ ...l, react: { ...l.react, [key]: { ...l.react[key], color: e.target.value } } }, 120)}
             />
           </label>
         </div>
@@ -2445,7 +2317,8 @@ function LightsSettings() {
         <input type="checkbox" checked={l.react.levels} onChange={(e) => save({ ...l, react: { ...l.react, levels: e.target.checked } })} />
         {t("lights.reactLevels")}
       </label>
-      <p className="help">{t("lights.help")}</p>
+      </details>
+      {error && <p className="help" role="alert">{error}</p>}
     </section>
   );
 }
@@ -2577,6 +2450,7 @@ function UpdateCard({ info }: { info: UpdateInfo }) {
 /** Look for a new version at start or now; install only on request. */
 function UpdatesSettings() {
   useLanguage();
+  const version = useAppVersion();
   const [cfg, setCfg] = useState<[boolean, boolean, boolean] | null>(null);
   const [result, setResult] = useState<"checking" | "latest" | UpdateInfo | { error: string } | null>(null);
   useEffect(() => {
@@ -2589,12 +2463,14 @@ function UpdatesSettings() {
     return (
       <section className="sec">
         <h3 className="sec-title">{t("updates.title")}</h3>
+        {version && <p className="help">MasterDeck {version}</p>}
         <p className="help">{t("updates.notSetUp")}</p>
       </section>
     );
   return (
     <section className="sec">
       <h3 className="sec-title">{t("updates.title")}</h3>
+      {version && <p className="help">MasterDeck {version}</p>}
       <label className="check">
         <input
           type="checkbox"
@@ -2678,96 +2554,6 @@ function GoBack() {
 }
 
 /** The shared profiles gallery (repo `hubdeck-profiles`) is not online yet: its entry stays hidden. */
-const GALLERY_ONLINE = false;
-
-const REPO = "https://github.com/Przemotar/hubdeck";
-const CONTACT = "przemotar+hubdeck@gmail.com";
-
-/** Opens a web or mail link in the system's browser or mail app. */
-function ExternalLink({ href, children }: { href: string; children: React.ReactNode }) {
-  return (
-    <a
-      className="link"
-      href={href}
-      onClick={(e) => {
-        e.preventDefault();
-        api.openLink(href).catch((err) => console.error("open", href, err));
-      }}
-    >
-      {children}
-    </a>
-  );
-}
-
-/** Report a problem or suggest a feature: GitHub issue forms with the version filled in. */
-function HelpFeedback() {
-  useLanguage();
-  const version = useAppVersion();
-  const [saved, setSaved] = useState<string | null>(null);
-  const form = (template: string, extra = "") => `${REPO}/issues/new?template=${template}${extra}`;
-  const versionField = `&version=${encodeURIComponent(`MasterDeck ${version ?? "?"}, ${osName()}`)}`;
-  return (
-    <section className="sec">
-      <h3 className="sec-title">{t("help.title")}</h3>
-      <div className="btn-grid">
-        <button className="tool" onClick={() => api.openLink(form("bug.yml", versionField)).catch(() => {})}>
-          <Icon name="alert" />
-          {t("help.report")}
-        </button>
-        <button className="tool" onClick={() => api.openLink(form("feature.yml")).catch(() => {})}>
-          <Icon name="sparkles" />
-          {t("help.suggest")}
-        </button>
-      </div>
-      <p className="help">{t("help.text")}</p>
-      <p className="hint">
-        <Icon name="info" />
-        {t("help.diagnostics")}
-      </p>
-      <button className="tool align-start" onClick={() => share.saveDiagnostics().then(() => setSaved(t("help.diagnosticsSaved")), (e) => setSaved(String(e)))}>
-        <Icon name="download" />
-        {t("help.saveDiagnostics")}
-      </button>
-      {saved && <p className="help">{saved}</p>}
-    </section>
-  );
-}
-
-/** Version, author, contact, source, licence and credits. */
-function About() {
-  useLanguage();
-  const version = useAppVersion();
-  return (
-    <section className="sec about">
-      <div className="about-head">
-        <Logo />
-        <div>
-          <b>MasterDeck</b>
-          <span className="mono">{version ? `v${version}` : ""}</span>
-        </div>
-      </div>
-      <dl className="facts">
-        <dt>{t("about.madeBy")}</dt>
-        <dd className="plain">Przemysław Tarkowski</dd>
-        <dt>{t("about.contact")}</dt>
-        <dd>
-          <ExternalLink href={`mailto:${CONTACT}`}>{CONTACT}</ExternalLink>
-        </dd>
-        <dt>{t("about.source")}</dt>
-        <dd>
-          <ExternalLink href={REPO}>github.com/Przemotar/hubdeck</ExternalLink>
-        </dd>
-        <dt>{t("about.licence")}</dt>
-        <dd>MIT OR Apache-2.0</dd>
-      </dl>
-      <p className="help">{t("about.notAffiliated")}</p>
-      <p className="help">{t("about.credits")}</p>
-      <p className="help">{t("about.gameIcons")}</p>
-    </section>
-  );
-}
-
-/** A newer version found at start: a calm banner; installs only when asked. */
 /** macOS: without Accessibility, shortcuts and typed text from the deck do nothing; say so and
  *  lead to the switch. Checked again every few seconds until it is on. */
 function AccessibilityBanner() {
@@ -2801,7 +2587,6 @@ function CrashBanner() {
   useLanguage();
   const [report, setReport] = useState<CrashReport | null>(null);
   const [copied, setCopied] = useState(false);
-  const appVersion = useAppVersion();
   useEffect(() => {
     api.crashReport().then(setReport, () => setReport(null));
   }, []);
@@ -2815,20 +2600,6 @@ function CrashBanner() {
       <button className="tool small" onClick={() => navigator.clipboard.writeText(details).then(() => setCopied(true), () => {})}>
         <Icon name="copy" />
         {copied ? t("crash.copied") : t("crash.copy")}
-      </button>
-      <button
-        className="tool small primary"
-        onClick={() => {
-          // the moment people report most willingly (owner's pick 1a, 2026-10-16); the log is
-          // scrubbed by crash_report, cut to what the form's address takes
-          const head = [`MasterDeck ended without quitting at ${report.at}${report.restarted ? " (started again by its guard)" : ""}.`, report.panic ?? ""];
-          const brief = [...head, ...report.log.slice(-25).map((l) => l.slice(0, 220))].join("\n").slice(0, 5000);
-          const version = `&version=${encodeURIComponent(`MasterDeck ${appVersion ?? "?"}, ${osName()}`)}`;
-          api.openLink(`${REPO}/issues/new?template=bug.yml&title=${encodeURIComponent(`MasterDeck stopped at ${at}`)}${version}&diagnostics=${encodeURIComponent(brief)}`).catch(() => {});
-        }}
-      >
-        <Icon name="alert" />
-        {t("crash.report")}
       </button>
       <button className="tool small" onClick={() => (api.crashSeen(), setReport(null))}>
         {t("crash.ok")}
@@ -2986,22 +2757,6 @@ export function BaseTurnPicker({ live }: { live: LiveState }) {
  * Arrange mode: share the modules the user placed by hand (slot, position, turn) on a GitHub issue
  * form, so slots not yet verified on hardware get right for everyone. Nothing else goes along.
  */
-export function ShareArrangement({ live, saved }: { live: LiveState; saved: Record<string, Placement> }) {
-  useLanguage();
-  const version = useAppVersion();
-  const placed = placeModules(live.deck.modules, saved).filter((p) => p.source === "user" && p.module.slot);
-  if (!placed.length) return null;
-  const lines = [`base turned ${live.deck.turn}°`, ...placed.map((p) => `${p.module.kind} slot ${p.module.slot}: column ${p.col}, row ${p.row}, turned ${p.rotation}°`)];
-  const url = `${REPO}/issues/new?template=slots.yml&modules=${encodeURIComponent(lines.join("\n"))}&version=${encodeURIComponent(`MasterDeck ${version ?? "?"}, ${osName()}`)}`;
-  return (
-    <button className="tool small ghost" title={t("arrange.shareHelp")} onClick={() => api.openLink(url).catch(() => {})}>
-      <Icon name="globe" />
-      {t("arrange.share")}
-    </button>
-  );
-}
-
-/** Key pages of the active profile: the deck shows the selected one. */
 export function PageBar({ view }: { view: EngineView }) {
   useLanguage();
   const profile = view.profile;
@@ -3118,15 +2873,6 @@ function ScreensSettings() {
         </select>
       </div>
       <p className="help">{t("screens.help")}</p>
-      {/* the screensaver moved to its own panel under the deck (owner, 2026-10-26) */}
-      <div className="field">
-        <span className="label">{t("screens.saver")}</span>
-        <p className="help">{t("settings.saverMoved")}</p>
-        <button className="tool small align-start" onClick={() => window.dispatchEvent(new CustomEvent("hubdeck:open-saver"))}>
-          <Icon name="moon" />
-          {t("settings.saverOpen")}
-        </button>
-      </div>
       <div className="field">
         <label htmlFor="app-icons" className="label">
           {t("screens.appIcons")}
@@ -3933,9 +3679,6 @@ function PluginsList({ onBrowse }: { onBrowse?: () => void }) {
   return (
     <>
       <section className="sec">
-        <p className="help">
-          {t("plugins.help")} <ExternalLink href={`${REPO}/blob/main/docs/PLUGINS.md`}>{t("plugins.howTo")}</ExternalLink>
-        </p>
         <div className="row wrap">
           <button
             className="tool primary align-start"
@@ -4180,128 +3923,6 @@ export function PluginFileSheet({ path, onClose }: { path: string; onClose: () =
   );
 }
 
-const KINDS = ["keys", "faders", "dial", "knobs", "rollers"] as const;
-
-/** Profiles other people share (the gallery): preview, modules it needs, Add. */
-export function GalleryPanel({ live, saved, onClose }: { live: LiveState; saved: Record<string, Placement>; onClose: () => void }) {
-  useLanguage();
-  const [entries, setEntries] = useState<GalleryEntry[] | null>(null);
-  const [failed, setFailed] = useState(false);
-  const [state, setState] = useState<Record<string, "adding" | "added" | string>>({});
-  // what was copied to fit the user's modules, per added entry
-  const [notes, setNotes] = useState<Record<string, string>>({});
-  const load = () => {
-    setFailed(false);
-    setEntries(null);
-    share.gallery().then(setEntries, () => setFailed(true));
-  };
-  useEffect(load, []);
-  // the user's modules: attached ones and the ones on the shelf
-  const owned = new Set<string>([...live.deck.modules.map((m) => m.kind), ...detachedKinds(live.deck.modules, saved)]);
-  const add = (e: GalleryEntry) => {
-    setState((s) => ({ ...s, [e.id]: "adding" }));
-    share.add(e.package).then(
-      async (p) => {
-        if (!(await keepImported(p))) return setState((s) => ({ ...s, [e.id]: "" }));
-        setState((s) => ({ ...s, [e.id]: "added" }));
-        setNotes((n) => ({ ...n, [e.id]: movedNote(p.moved, p.pages) }));
-        api.activate(p.id);
-      },
-      (err) => setState((s) => ({ ...s, [e.id]: String(err) })),
-    );
-  };
-  return (
-    <aside className="inspector sectioned side-panel">
-      <PanelHead title={t("gallery.title")} crumb={t("gallery.crumb")} icon="layers" onClose={onClose} />
-      {failed ? (
-        <div className="empty">
-          <span className="eic">
-            <Icon name="globe" />
-          </span>
-          <b>{t("gallery.offlineTitle")}</b>
-          <span>{t("gallery.offline")}</span>
-          <button className="tool small" onClick={load}>
-            <Icon name="refresh-cw" />
-            {t("gallery.retry")}
-          </button>
-        </div>
-      ) : entries === null ? (
-        <div className="empty">
-          <span className="eic spin">
-            <Icon name="refresh-cw" />
-          </span>
-          <span>{t("gallery.loading")}</span>
-        </div>
-      ) : entries.length === 0 ? (
-        <div className="empty">
-          <span className="eic">
-            <Icon name="layers" />
-          </span>
-          <b>{t("gallery.emptyTitle")}</b>
-          <span>{t("gallery.offline")}</span>
-        </div>
-      ) : (
-        <section className="sec">
-          <ul className="cards">
-            {entries.map((e) => {
-              const missing = e.kinds.filter((k) => !owned.has(k));
-              const st = state[e.id];
-              return (
-                <li key={e.id} className="card gallery-card">
-                  <div className="gallery-preview">
-                    {e.preview ? (
-                      <img src={e.preview} alt="" loading="lazy" />
-                    ) : (
-                      <span className="gallery-kinds">
-                        {KINDS.filter((k) => e.kinds.includes(k)).map((k) => (
-                          <ModuleThumb key={k} kind={k} muted={!owned.has(k)} />
-                        ))}
-                      </span>
-                    )}
-                  </div>
-                  <div className="row">
-                    <div className="grow">
-                      <strong>{e.name}</strong>
-                      {e.author && <div className="help">{t("gallery.by", { author: e.author })}</div>}
-                    </div>
-                    <button className={`tool small${st === "added" ? "" : " primary"}`} disabled={st === "adding" || st === "added"} onClick={() => add(e)}>
-                      <Icon name={st === "added" ? "check" : "download"} />
-                      {st === "adding" ? t("gallery.adding") : st === "added" ? t("gallery.added") : t("gallery.add")}
-                    </button>
-                  </div>
-                  {e.description && <p className="gallery-desc">{e.description}</p>}
-                  <div className="perm">
-                    {t("gallery.needs")}
-                    {KINDS.filter((k) => e.kinds.includes(k)).map((k) => (
-                      <span key={k} className={`pill${owned.has(k) ? "" : " is-missing"}`} title={owned.has(k) ? undefined : t("gallery.missing")}>
-                        {t(`kind.${k}`)}
-                      </span>
-                    ))}
-                    {e.tags.map((tag) => (
-                      <span key={tag} className="tag">
-                        #{tag}
-                      </span>
-                    ))}
-                  </div>
-                  {missing.length > 0 && <p className="help">{t("gallery.missingHelp", { list: missing.map((k) => t(`kind.${k as ModuleKind}`)).join(", ") })}</p>}
-                  {st && st !== "adding" && st !== "added" && <p className="help">{st}</p>}
-                  {notes[e.id] && <p className="help">{notes[e.id]}</p>}
-                </li>
-              );
-            })}
-          </ul>
-        </section>
-      )}
-      <section className="sec end">
-        <p className="help">
-          {t("gallery.share")} <ExternalLink href={`${REPO}/blob/main/docs/SHARING.md`}>{t("gallery.howTo")}</ExternalLink>
-        </p>
-      </section>
-    </aside>
-  );
-}
-
-/** The five kinds of module as tiles: attached ones ticked and fixed, the others toggle "I own one". */
 function OwnedKinds({ live, saved, onPlace }: { live: LiveState; saved: Record<string, Placement>; onPlace: (key: string, placement: Placement | null) => void }) {
   const attached = new Set(live.deck.modules.map((m) => m.kind));
   return (

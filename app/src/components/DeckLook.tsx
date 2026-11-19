@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { api, baseKind, DISCORD, presetLights, presetThumb, PRESETS_HIDDEN, SAVER_FROM_LOOK, themeTitle, controlId, FX_GROUPS, FX_PENDING, FX_RETIRED, GPU_KINDS, fxName, layersOf, SKINS, THEMES, useKeysFrame, type DeckEffects, type EngineView, type FrameCost, type FxKind, type FxLayer, type MyLook, type Profile, type Skin } from "../engine";
+import { api, baseKind, presetLights, presetThumb, PRESETS_HIDDEN, SAVER_FROM_LOOK, themeTitle, controlId, FX_GROUPS, FX_PENDING, FX_RETIRED, GPU_KINDS, fxName, layersOf, SKINS, THEMES, useKeysFrame, type DeckEffects, type EngineView, type FrameCost, type FxKind, type FxLayer, type MyLook, type Profile, type Skin } from "../engine";
 import { t, useLanguage, type Key } from "../i18n";
 import { Icon } from "./Icon";
 import { NoneThumb, Thumb } from "./Thumb";
@@ -551,7 +551,7 @@ export function DeckLook({ view, keysModule, keysCount = 15, keysTurn = 0, onClo
                       <button key={th.id} className={`dl-tile${sel ? " is-sel" : ""}`} onClick={() => choosePreset(th.id)} title={themeName(th.id)}>
                         {/* an upright copy lying draws what its original draws: the same thumbnail; one
                             drawn anew (Fuji, koi, the mushroom hunt) has its own */}
-                        <Thumb id={presetThumb(th.id)} moving={sel} />
+                        <Thumb id={presetThumb(th.id)} />
                         {/* no mark on the tile: the thumbnail says it (owner, 2026-10-30: "nie potrzebujemy już ikonek na presetach") */}
                         <span className="dl-row">
                           <span className="dl-name">{shortName(th.id)}</span>
@@ -560,13 +560,6 @@ export function DeckLook({ view, keysModule, keysCount = 15, keysTurn = 0, onClo
                     );
                   })}
                 </div>
-                {/* one line, where people want to say something about a preset (owner's "2 a", 2026-10-30) */}
-                <p className="help dl-discord">
-                  {t("look.discord")}{" "}
-                  <button type="button" className="link-btn" onClick={() => api.openLink(DISCORD).catch(() => {})}>
-                    {t("look.discordLink")}
-                  </button>
-                </p>
               </div>
               <div className="field dl-keys">
                 <span className="label">{t("look.keys")}</span>

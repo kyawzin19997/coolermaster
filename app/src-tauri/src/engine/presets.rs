@@ -1049,7 +1049,7 @@ pub fn catalog() -> Vec<PresetInfo> {
     vec![
         PresetInfo {
             id: "demo",
-            name: "Discover MasterDeck",
+            name: "Starter deck",
             description: "A tour on the deck: seven tabs of what HubDeck can do (the bottom-right key goes on), the dial as a gallery of its looks; press a key and the window says what it is and how to set it.",
             build: super::demo::discover,
             test: false,

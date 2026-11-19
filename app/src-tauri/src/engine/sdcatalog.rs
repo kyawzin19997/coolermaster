@@ -14,7 +14,6 @@ use serde_json::Value;
 
 /// The catalog built by `scripts/plugins/catalog.mjs`; `HUBDECK_PLUGIN_CATALOG` (a file) replaces it
 /// on a test copy.
-const HOSTED: &str = "https://przemotar.github.io/hubdeck/plugins.json";
 const CATALOG: &str = "https://openactionapi.github.io/plugins/catalogue.json";
 /// Plugin icons: `<ICONS><id>.png`.
 const ICONS: &str = "https://openactionapi.github.io/plugins/icons/";
@@ -311,22 +310,25 @@ fn catalog() -> Result<Vec<Entry>, String> {
     {
         return Ok(list.clone());
     }
-    let hosted = match std::env::var_os("HUBDECK_PLUGIN_CATALOG") {
-        Some(file) => std::fs::read(file).map_err(|e| e.to_string()),
-        None => super::share::download(HOSTED, 8 * 1024 * 1024),
-    };
-    let list = match hosted.and_then(|b| parse_hosted(&b)) {
-        Ok(list) if !list.is_empty() => list,
-        failed => {
-            if let Err(e) = failed {
-                log::warn!("plugin catalog: {e}; the OpenAction and Elgato lists instead");
-            }
-            let elgato = std::thread::spawn(elgato_top);
-            let mut list = parse(&super::share::download(CATALOG, 4 * 1024 * 1024)?)?;
-            merge_elgato(&mut list, elgato.join().unwrap_or_default());
-            list
+    if let Some(file) = std::env::var_os("HUBDECK_PLUGIN_CATALOG") {
+        match std::fs::read(file).map_err(|e| e.to_string()).and_then(|bytes| parse_hosted(&bytes)) {
+            Ok(list) if !list.is_empty() => return Ok(runnable(list)),
+            Err(e) => log::warn!("plugin catalog: local catalog could not be read: {e}"),
+            _ => {}
+        }
+    }
+    let elgato = std::thread::spawn(elgato_top);
+    let open_action = super::share::download(CATALOG, 4 * 1024 * 1024).and_then(|bytes| parse(&bytes));
+    let elgato = elgato.join().unwrap_or_default();
+    let mut list = match open_action {
+        Ok(list) => list,
+        Err(e) if elgato.is_empty() => return Err(e),
+        Err(e) => {
+            log::warn!("plugin catalog: OpenAction unavailable: {e}");
+            Vec::new()
         }
     };
+    merge_elgato(&mut list, elgato);
     let list = runnable(list);
     *CACHE.lock().unwrap_or_else(|e| e.into_inner()) = Some((Instant::now(), list.clone()));
     Ok(list)

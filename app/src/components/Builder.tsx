@@ -3,10 +3,10 @@ import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import type { ControlRef, LiveState } from "../deck";
-import { actionFits, api, controlId, newBinding, svgDataUrl, type Binding, type EngineView, type Profile } from "../engine";
+import { api, controlId, svgDataUrl, type Binding, type EngineView, type Gesture, type Profile } from "../engine";
+import { actionFitsTrigger, bindingForDrop } from "../editing";
 import { actionName, t, useLanguage } from "../i18n";
 import type { Placement } from "../layout";
-import { withTemplate } from "../lookTemplates";
 import { ActionLibrary } from "./ActionChooser";
 import { ControlDock } from "./ControlDock";
 import { DeckView } from "./DeckView";
@@ -145,26 +145,25 @@ export function Builder({ live, view, saved, onPlace, onClose }: { live: LiveSta
     setAt(index);
   };
 
-  const assignKey = async (control: ControlRef, actionId: string) => {
-    if (!draft || control.kind !== "keys") return;
+  const assignKey = (control: ControlRef, actionId: string, gesture: Gesture = "tap") => {
+    if (!draft || control.kind !== "keys") return false;
     const action = view.catalog?.actions.find((item) => item.id === actionId);
-    if (!action) return;
-    if (!actionFits(action, control.kind)) {
+    if (!action) return false;
+    if (!actionFitsTrigger(action, control.kind, gesture)) {
       setError(t("edit.notOn", { action: actionName(action), control: t("on.keys") }));
-      return;
+      return false;
     }
     setError(null);
-    try {
+    const assign = async () => {
       await inspector.current?.flush();
       if (!activeDraft) await api.tryProfile(draft.id);
-      const binding = newBinding(action);
-      const style = (activeDraft ?? draft).keyStyle;
-      if (style) binding.look = withTemplate(binding.look, style);
-      await api.setBinding(draft.id, controlId(control.kind, control.index, null), binding);
+      const latest = await api.profile(draft.id);
+      const id = controlId(control.kind, control.index, null, gesture);
+      await api.setBinding(draft.id, id, bindingForDrop(action, latest, control, id));
       setEditingKey(control);
-    } catch (e) {
-      setError(String(e));
-    }
+    };
+    void assign().catch((error) => setError(String(error)));
+    return true;
   };
 
   const all = step.kind ? options[step.kind] ?? [] : [];
@@ -209,7 +208,9 @@ export function Builder({ live, view, saved, onPlace, onClose }: { live: LiveSta
               }
             }}
             onDeselect={() => setEditingKey(null)}
-            onDropAction={editingKey ? assignKey : undefined}
+            onDropAction={editingKey ? (control, action) => {
+              if (assignKey(control, action)) inspector.current?.selectTrigger("tap");
+            } : undefined}
             saved={saved}
             onPlace={onPlace}
             arranging={false}
@@ -221,7 +222,7 @@ export function Builder({ live, view, saved, onPlace, onClose }: { live: LiveSta
           </div>
           {selection && activeDraft && (
             <ControlDock>
-              <Inspector ref={inspector} live={live} selected={selection} view={{ ...view, profile: activeDraft, state: view.state && { ...view.state, page: null } }} />
+              <Inspector ref={inspector} selected={selection} view={{ ...view, profile: activeDraft, state: view.state && { ...view.state, page: null } }} onDropAction={assignKey} />
             </ControlDock>
           )}
         </section>

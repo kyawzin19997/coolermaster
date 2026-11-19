@@ -1,17 +1,17 @@
-import { withTemplate } from "../lookTemplates";
-import { useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState, type Ref } from "react";
+import { useCallback, useEffect, useImperativeHandle, useRef, useState, type Ref } from "react";
 import { createPortal } from "react-dom";
 import { open } from "../confirm";
 import { invoke } from "@tauri-apps/api/core";
-import type { ControlRef, LiveState } from "../deck";
+import type { ControlRef } from "../deck";
 import { KeyDesigner, type OtherKey } from "./KeyDesigner";
 import { withLook } from "../editing";
-import { themeTitle, actionFits, ADVANCED_PARAMS, api, BACKGROUNDS, COMMON_SHORTCUTS, controlId, hasState, inWindow, newBinding, pressable, TURN_PARAMS, usePreview, type ActionDef, type Binding, type DialFace, type EngineView, type Gesture, type AppInfo, type InstalledItem, type Look, type Mode, type ParamDef, type Step, STEP_CONDITIONS } from "../engine";
+import { themeTitle, ADVANCED_PARAMS, api, BACKGROUNDS, COMMON_SHORTCUTS, controlId, hasState, inWindow, newBinding, pressable, TURN_PARAMS, usePreview, type ActionDef, type Binding, type DialFace, type EngineView, type Gesture, type AppInfo, type InstalledItem, type Look, type Mode, type ParamDef, type Step, STEP_CONDITIONS } from "../engine";
 import { actionName, localizeAction, specialKeyName, t, useLanguage, type Key } from "../i18n";
 import { Icon } from "./Icon";
 import { IconPicker } from "./IconPicker";
 import { EffectFields, Sheet } from "./Panels";
-import { ActionChooser, ActionIcon } from "./ActionChooser";
+import { ActionIcon } from "./ActionChooser";
+import { ACTION_MIME } from "./DeckView";
 import { demoParam } from "../demo/params";
 
 // `?demo&gesture=hold` opens the hold tab of the selected control (screenshots)
@@ -1157,41 +1157,33 @@ function LookEditor({ look, onChange, screen, view, idPrefix = "look", program, 
   );
 }
 
-const GESTURES: [Gesture, Key, Key | null][] = [
-  ["tap", "gesture.tap", null],
-  ["hold", "gesture.hold", "gesture.holdHelp"],
-  ["double", "gesture.double", "gesture.doubleHelp"],
+const GESTURES: [Gesture, Key][] = [
+  ["tap", "gesture.tap"],
+  ["hold", "gesture.hold"],
+  ["double", "gesture.double"],
 ];
 
-/** What the dial can look like (the same looks the dial gallery shows on the deck); a click sets one. */
-function DialLooks({ bound, onPick }: { bound: boolean; onPick: (b: Binding) => void }) {
+function DialLooks({ onPick }: { onPick: (look: Look) => void }) {
   const { lang } = useLanguage();
   const [faces, setFaces] = useState<DialFace[]>([]);
   useEffect(() => {
-    api.dialGallery().then(setFaces, () => setFaces([]));
+    let current = true;
+    api.dialGallery().then((items) => { if (current) setFaces(items); }, () => {});
+    return () => { current = false; };
   }, []);
   if (!faces.length) return null;
-  const grid = (
-    <div className="dial-looks">
-      {faces.map((f) => (
-        <button key={f.id} className="dial-look" onClick={() => onPick(f.binding)} title={lang === "pl" ? f.captionPl : f.caption}>
-          <span className="dial-look-face" dangerouslySetInnerHTML={{ __html: inWindow(f.svg) }} />
-          <span className="sugg-label">{lang === "pl" ? f.captionPl : f.caption}</span>
-        </button>
-      ))}
-    </div>
-  );
-  return bound ? (
-    <details className="sugg-more">
+  return (
+    <details className="dial-face-options">
       <summary>{t("dialLooks.more")}</summary>
-      {grid}
+      <div className="dial-looks">
+        {faces.map((face) => (
+          <button key={face.id} type="button" className="dial-look" onClick={() => onPick(face.binding.look)} title={lang === "pl" ? face.captionPl : face.caption}>
+            <span className="dial-look-face" dangerouslySetInnerHTML={{ __html: inWindow(face.svg) }} />
+            <span className="sugg-label">{lang === "pl" ? face.captionPl : face.caption}</span>
+          </button>
+        ))}
+      </div>
     </details>
-  ) : (
-    <div className="field">
-      <span className="label">{t("dialLooks.title")}</span>
-      {grid}
-      <p className="help">{t("dialLooks.help")}</p>
-    </div>
   );
 }
 
@@ -1222,10 +1214,19 @@ function SdInspector({ control, action, settings }: { control: string; action: s
   );
 }
 
-export type InspectorHandle = { flush: () => Promise<void> | undefined };
+export type InspectorHandle = {
+  flush: () => Promise<void> | undefined;
+  selectTrigger: (gesture: Gesture) => void;
+};
 
-export function Inspector({ ref, live, selected, view, fresh, onDismissFresh, onOpenPlugins, onOpenStudio }: { ref?: Ref<InspectorHandle>; live: LiveState; selected: ControlRef | null; view: EngineView; fresh?: boolean; onDismissFresh?: () => void; onOpenPlugins?: () => void; onOpenStudio?: (control: string) => void }) {
-  const { lang } = useLanguage();
+export function Inspector({ ref, selected, view, onDropAction, onOpenStudio }: {
+  ref?: Ref<InspectorHandle>;
+  selected: ControlRef | null;
+  view: EngineView;
+  onDropAction: (control: ControlRef, action: string, gesture: Gesture) => boolean;
+  onOpenStudio?: (control: string) => void;
+}) {
+  useLanguage();
   const profile = view.profile;
   const page = view.state?.page ?? null;
   const [gesture, setGesture] = useState<Gesture>("tap");
@@ -1234,11 +1235,7 @@ export function Inspector({ ref, live, selected, view, fresh, onDismissFresh, on
   const control = selected ? controlId(selected.kind, selected.index, page, activeGesture) : null;
   const stored = control && profile ? profile.controls[control] ?? null : null;
   const [draft, setDraft] = useState<Binding | null>(stored);
-  const selectedKind = selected?.kind;
-  const fitting = useMemo(
-    () => selectedKind ? (view.catalog?.actions ?? []).filter((a) => activeGesture === "tap" ? actionFits(a, selectedKind) : a.inputs.includes("press")).map(localizeAction) : [],
-    [view.catalog, selectedKind, activeGesture, lang],
-  );
+  const [writeError, setWriteError] = useState("");
   // the other keys of this page that do something: where "Apply this look to other keys" can go
   const otherKeys: OtherKey[] =
     selected?.kind === "keys" && profile
@@ -1253,13 +1250,16 @@ export function Inspector({ ref, live, selected, view, fresh, onDismissFresh, on
             return { id, name: `${n}. ${b.look?.label?.trim() || (def ? actionName(def) : last.charAt(0).toUpperCase() + last.slice(1))}` };
           })
       : [];
-  // "Change": the chooser over a control that already does something
-  const [choosing, setChoosing] = useState(false);
   const [appearance, setAppearance] = useState(false);
   const saver = useDebouncedSave((b) => {
-    if (profile && control) return api.setBinding(profile.id, control, b).then(() => {}, (e) => console.error("binding_set", e));
+    if (profile && control) return api.setBinding(profile.id, control, b).then(() => setWriteError(""), (error) => setWriteError(String(error)));
   });
-  useImperativeHandle(ref, () => ({ flush: saver.flush }), [saver.flush]);
+
+  useImperativeHandle(ref, () => ({
+    flush: saver.flush,
+    selectTrigger: (next) => { setGesture(next); setAppearance(false); },
+  }), [saver.flush]);
+  const [draggedOver, setDraggedOver] = useState<Gesture | null>(null);
   const actionPane = useRef<HTMLDivElement>(null);
   const lookPane = useRef<HTMLDivElement>(null);
 
@@ -1267,7 +1267,8 @@ export function Inspector({ ref, live, selected, view, fresh, onDismissFresh, on
   useEffect(() => {
     saver.flush();
     setDraft(stored);
-    setChoosing(false);
+    setDraggedOver(null);
+    setWriteError("");
     setAppearance(false);
     if (actionPane.current) actionPane.current.scrollTop = 0;
     if (lookPane.current) lookPane.current.scrollTop = 0;
@@ -1282,57 +1283,7 @@ export function Inspector({ ref, live, selected, view, fresh, onDismissFresh, on
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(stored)]);
 
-  if (!selected || !control) {
-    if (fresh && profile) {
-      // a profile just made: what to do next
-      const app = profile.apps[0]?.split(":")[0].replace(/.exe$/i, "");
-      const steps: [string, string, string][] = [
-        ["pointer", t("fresh.dragTitle"), t("fresh.drag")],
-        ["image", t("fresh.lookTitle"), t("fresh.look")],
-        ["sparkles", t("fresh.lightsTitle"), t("fresh.lights")],
-        ["app-window", t("fresh.switchTitle"), app ? t("fresh.switch", { app }) : t("fresh.switchNone")],
-      ];
-      return (
-        <aside className="inspector sectioned control-inspector side-panel" data-guide="control-editor">
-          <div className="welcome-hero">
-            <span className="eic">
-              <Icon name="check" />
-            </span>
-            <h2>{t("fresh.title", { name: profile.name })}</h2>
-            <p>{t("fresh.subtitle")}</p>
-          </div>
-          <ol className="wsteps">
-            {steps.map(([icon, title, text]) => (
-              <li key={title} className="wstep">
-                <span className="wnum">
-                  <Icon name={icon} />
-                </span>
-                <div className="wbody">
-                  <b>{title}</b>
-                  <p className="help">{text}</p>
-                </div>
-              </li>
-            ))}
-          </ol>
-          <div className="sec end">
-            <button className="tool wide" onClick={onDismissFresh}>
-              {t("fresh.done")}
-            </button>
-          </div>
-        </aside>
-      );
-    }
-    return (
-      <aside className="inspector sectioned control-inspector is-empty" data-guide="control-editor" aria-label={t("inspector.panelTitle")}>
-        <div className="insp-head"><Icon name="sliders-horizontal" /><h2>{t("inspector.panelTitle")}</h2></div>
-        <div className="control-empty">
-          <span className="control-empty-icon"><Icon name="pointer" /></span>
-          <div><strong>{t("inspector.nothingSelected")}</strong><p>{t("inspector.empty")}</p></div>
-        </div>
-      </aside>
-    );
-  }
-  const module = live.deck.modules.find((m) => m.id === selected.module);
+  if (!selected || !control) return null;
   const name = selected.kind === "dial" && selected.index === 0 ? t("control.dial") : `${t(`control.${selected.kind}`)} ${selected.index + 1}`;
   const found = draft ? view.catalog?.actions.find((a) => a.id === draft.action) : undefined;
   const action: ActionDef | undefined = found && localizeAction(found);
@@ -1348,31 +1299,6 @@ export function Inspector({ ref, live, selected, view, fresh, onDismissFresh, on
   const isAdvanced = (p: ParamDef) => ADVANCED_PARAMS.has(p.key) || ADVANCED_PARAMS.has(`${draft?.action}:${p.key}`);
   const basic = shownParams.filter((p) => !isAdvanced(p));
   const advanced = shownParams.filter(isAdvanced);
-  // what this deck's other controls do and fits here: copied as it is, look and all
-  const others: Binding[] = [];
-  if (!draft || choosing) {
-    const names = new Map(fitting.map((a) => [a.id, a.name]));
-    const seen = new Set<string>();
-    for (const [id, b] of Object.entries(profile?.controls ?? {})) {
-      if (id === control || !names.has(b.action)) continue;
-      const k = (b.look.label || names.get(b.action) || b.action).replace(/\s+/g, " ").trim().toLowerCase();
-      if (seen.has(k)) continue;
-      seen.add(k);
-      others.push(b);
-      if (others.length === 8) break;
-    }
-  }
-  const pickAction = (def: ActionDef) => {
-    const fresh = newBinding(def);
-    // a key starts in the profile's own style, when it has one (the full key editor sets it)
-    if (selected.kind === "keys" && profile?.keyStyle) fresh.look = withTemplate(fresh.look, profile.keyStyle);
-    // the label and icon say what the control does, so they follow the new action; the
-    // colors, style and picture the user picked stay (Ctrl+Z brings the old label back)
-    update({ ...fresh, look: draft ? { ...draft.look, label: fresh.look.label, icon: fresh.look.icon } : fresh.look }, 0);
-    setChoosing(false);
-  };
-  const gestureHelp = GESTURES.find(([g]) => g === activeGesture)?.[2];
-  const showGestureTabs = activeGesture !== "tap" || (["hold", "double"] as Gesture[]).some((g) => !!profile?.controls[controlId(selected.kind, selected.index, page, g)]);
   const canAccel = !!action?.inputs.includes("turn") && selected.kind !== "faders" && selected.kind !== "keys" && activeGesture === "tap";
   // Mochi is one pet: a Mochi control without a body picture of its own shows and changes the one
   // set elsewhere, first on the key that put it on the dial (owner, 2026-10-18: the dial showed his
@@ -1388,7 +1314,7 @@ export function Inspector({ ref, live, selected, view, fresh, onDismissFresh, on
       : null;
   // on a dial or knob the first tab holds what turning does too
   const turns = selected.kind === "dial" || selected.kind === "knobs";
-  const canEditAppearance = !!draft && !choosing && activeGesture === "tap";
+  const canEditAppearance = !!draft && activeGesture === "tap";
   const showLook = appearance && canEditAppearance;
 
   return (
@@ -1405,101 +1331,65 @@ export function Inspector({ ref, live, selected, view, fresh, onDismissFresh, on
           </div>
         )}
       </div>
+
+      <div className="trigger-row" role="group" aria-label={t("inspector.gesture")}>
+        {(canGesture ? GESTURES : GESTURES.slice(0, 1)).map(([trigger, label]) => {
+          const slot = controlId(selected.kind, selected.index, page, trigger);
+          const binding = trigger === activeGesture ? draft : profile?.controls[slot];
+          const def = view.catalog?.actions.find((item) => item.id === binding?.action);
+          const display = def ? actionName(def) : binding?.action || t("inspector.dropAction");
+          const title = trigger === "tap" ? t(turns ? "gesture.turnPress" : selected.kind === "faders" ? "gesture.slide" : selected.kind === "rollers" ? "gesture.turn" : label) : t(label);
+          const current = activeGesture === trigger;
+          return (
+            <div key={trigger} data-trigger={trigger}
+              className={`trigger-slot${current ? " is-selected" : ""}${draggedOver === trigger ? " is-drag-over" : ""}`}
+              onDragOver={(event) => {
+                if (!event.dataTransfer.types.includes(ACTION_MIME)) return;
+                event.preventDefault();
+                event.dataTransfer.dropEffect = "copy";
+                setDraggedOver(trigger);
+              }}
+              onDragLeave={(event) => {
+                if (!(event.relatedTarget instanceof Node) || !event.currentTarget.contains(event.relatedTarget)) setDraggedOver(null);
+              }}
+              onDrop={(event) => {
+                const dropped = event.dataTransfer.getData(ACTION_MIME);
+                if (!dropped) return;
+                event.preventDefault();
+                event.stopPropagation();
+                setDraggedOver(null);
+                if (onDropAction(selected, dropped, trigger)) {
+                  setGesture(trigger);
+                  setAppearance(false);
+                }
+              }}>
+              <button type="button" className="trigger-choice" aria-pressed={current} onClick={() => { setGesture(trigger); setAppearance(false); }}>
+                {def && <ActionIcon action={def} icons={view.icons} />}
+                <span className="trigger-label">
+                  <span>{title}</span>
+                  <strong id={current && binding?.action ? "action-name" : undefined} data-action={current ? binding?.action : undefined} title={def?.description}>{display}</strong>
+                </span>
+              </button>
+              {binding?.action && profile && <button type="button" className="icon-btn trigger-clear" title={t("inspector.removeAction", { trigger: title })} aria-label={t("inspector.removeAction", { trigger: title })}
+                onClick={async () => {
+                  try {
+                    await saver.flush();
+                    await api.setBinding(profile.id, slot, null);
+                  } catch (error) {
+                    setWriteError(String(error));
+                  }
+                }}><Icon name="x" /></button>}
+            </div>
+          );
+        })}
+      </div>
+      {writeError && <p className="control-error" role="alert">{writeError}</p>}
       <div className="control-editor-body">
         <div className="control-action-pane" ref={actionPane} hidden={showLook}>
-      <div className="sec">
-
-      {draft?.look.note && (
-        <div className="note-box" role="note">
-          <Icon name="info" />
-          <div>
-            <b>{t("inspector.note")}</b>
-            <p>{draft.look.note.startsWith("demo:") ? t(`demo.${draft.look.note.slice(5)}` as Key) : draft.look.note}</p>
-          </div>
-        </div>
-      )}
-      {/* hold and double press as tabs only once one is set or open (owner's pick 7a); else links under the action */}
-      {canGesture && showGestureTabs && (
-        <div className="gesture-tabs seg" role="tablist" aria-label={t("inspector.gesture")}>
-          {GESTURES.map(([g, label]) => {
-            const bound = !!profile?.controls[controlId(selected.kind, selected.index, page, g)];
-            return (
-              <button key={g} role="tab" aria-selected={activeGesture === g} className={`tab${activeGesture === g ? " is-active" : ""}`} onClick={() => setGesture(g)}>
-                {g === "tap" && turns ? t("gesture.turnPress") : t(label)}
-                {bound && g !== "tap" && <span className="bound-dot" aria-label={t("inspector.gestureSet")} />}
-              </button>
-            );
-          })}
-        </div>
-      )}
-      {gestureHelp && (
-        <p className="hint">
-          <Icon name="info" />
-          {t(gestureHelp)}
-        </p>
-      )}
-
-      {profile && activeGesture === "tap" && selected.kind === "dial" && <DialLooks bound={!!draft} onPick={(b) => update(b, 0)} />}
-
-      <div className="field">
-        {draft && !choosing ? (
-          <div className="action-card">
-            {action ? (
-              <ActionIcon action={action} view={view} />
-            ) : (
-              <span className="library-icon" aria-hidden="true">
-                <Icon name="zap" />
-              </span>
-            )}
-            <div className="grow">
-              <b id="action-name" data-action={draft.action}>
-                {action ? action.name : draft.action ? t("inspector.missingOption", { id: draft.action }) : t("inspector.nothing")}
-              </b>
-              {action && <small className="action-description" title={action.description}>{action.description}</small>}
-            </div>
-            <button type="button" className="tool" onClick={() => setChoosing(true)}>
-              {t("chooser.change")}
-            </button>
-          </div>
-        ) : (
-          <ActionChooser
-            view={view}
-            kind={selected.kind}
-            gesture={activeGesture}
-            fitting={fitting}
-            current={draft?.action}
-            others={others}
-            onPick={pickAction}
-            onCopy={(b) => (update(structuredClone(b), 0), setChoosing(false))}
-            onIdea={(idea) => {
-              setChoosing(false);
-              // power keys go on the hold, so a brush of the key does not shut the computer down
-              if (idea.hold && profile) {
-                api.setBinding(profile.id, controlId(selected.kind, selected.index, page, "hold"), structuredClone(idea.binding)).then(() => setGesture("hold"), (e) => console.error(e));
-              } else update(structuredClone(idea.binding), 0);
-            }}
-            onClear={draft ? () => (update(null, 0), setChoosing(false)) : undefined}
-            onCancel={draft ? () => setChoosing(false) : undefined}
-            onOpenPlugins={onOpenPlugins}
-          />
-        )}
-        {/* an empty action is a look without an action (made so by an assistant), not a missing plugin */}
-        {draft && draft.action && !action && view.catalog && <div className="banner-inline">{t("inspector.missing", { plugin: draft.action.split("/")[0] })}</div>}
-        {canGesture && !showGestureTabs && (draft ? !choosing : true) && (
-          <div className="row wrap gesture-links">
-            <button className="link-btn" onClick={() => setGesture("hold")}>
-              {t("gesture.addHold")}
-            </button>
-            <button className="link-btn" onClick={() => setGesture("double")}>
-              {t("gesture.addDouble")}
-            </button>
-          </div>
-        )}
-      </div>
-
-      {draft &&
-        !choosing &&
-        basic.map((p) => (
+          {draft && <div className="sec control-fields">
+            {draft.look.note && <p className="help" role="note">{draft.look.note.startsWith("demo:") ? t(`demo.${draft.look.note.slice(5)}` as Key) : draft.look.note}</p>}
+            {draft.action && !action && view.catalog && <div className="banner-inline">{t("inspector.missing", { plugin: draft.action.split("/")[0] })}</div>}
+            {basic.map((p) => (
             <ParamField
               key={p.key}
               def={p}
@@ -1513,7 +1403,7 @@ export function Inspector({ ref, live, selected, view, fresh, onDismissFresh, on
           ))}
 
       {/* a Stream Deck plugin's own settings page */}
-      {draft && !choosing && control && draft.action.includes("/") && <SdInspector key={`${control}|${draft.action}`} control={control} action={draft.action} settings={draft.params} />}
+      {draft && control && draft.action.includes("/") && <SdInspector key={`${control}|${draft.action}`} control={control} action={draft.action} settings={draft.params} />}
       {draft && selected && selected.kind !== "keys" && draft.action.includes("/") && action?.inputs.includes("turn") && (
         <label className="check" title={t("inspector.swapTurnsHelp")}>
           <input type="checkbox" checked={!!draft.swapTurns} onChange={(e) => update({ ...draft, swapTurns: e.target.checked || undefined }, 0)} />
@@ -1522,7 +1412,7 @@ export function Inspector({ ref, live, selected, view, fresh, onDismissFresh, on
       )}
 
       {/* every rarely changed option in one place, also "speed up when turned fast" */}
-      {draft && !choosing && (advanced.length > 0 || canAccel) && (
+      {draft && (advanced.length > 0 || canAccel) && (
         <details className="more-opts" open={!!draft.accel || advanced.some((p) => draft.params[p.key] !== undefined && JSON.stringify(draft.params[p.key]) !== JSON.stringify(p.default)) || undefined}>
           <summary>{t("inspector.moreOptions")}</summary>
           {advanced.map((p) => (
@@ -1537,17 +1427,7 @@ export function Inspector({ ref, live, selected, view, fresh, onDismissFresh, on
         </details>
       )}
 
-      </div>
-
-      <details className="sec end module-info">
-        <summary>{t("inspector.moduleInfo")}</summary>
-        <dl className="facts">
-          <dt>{t("inspector.serial")}</dt>
-          <dd>{module?.serial ?? "–"}</dd>
-          <dt>{t("inspector.firmware")}</dt>
-          <dd>{module?.firmware ?? "–"}</dd>
-        </dl>
-      </details>
+          </div>}
         </div>
       {draft && showLook && (
         <div className="control-look-pane" ref={lookPane}>
@@ -1559,6 +1439,7 @@ export function Inspector({ ref, live, selected, view, fresh, onDismissFresh, on
           onChange={(look) => update({ ...draft, look })}
         />}
 
+      {selected.kind === "dial" && <DialLooks onPick={(look) => update({ ...draft, look })} />}
       {draft && hasScreen && activeGesture === "tap" && (
         <LookEditor
           key={control}

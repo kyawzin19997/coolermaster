@@ -98,7 +98,7 @@ const PL: &[(&str, &str)] = &[
     ("Discord & meetings", "Discord i spotkania"),
     ("Discord deafen", "Discord bez dźwięku"),
     ("Discord mute", "Discord wycisz"),
-    ("Discover MasterDeck", "Poznaj HubDeck"),
+    ("Starter deck", "Poznaj HubDeck"),
     ("Disk free", "Wolne miejsce"),
     ("Drop", "Wyrzuć"),
     ("Duplicate", "Duplikuj"),

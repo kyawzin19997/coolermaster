@@ -1,11 +1,27 @@
 import { withTemplate } from "./lookTemplates";
 import { useEffect, useRef } from "react";
-import type { ControlRef } from "./deck";
+import type { ControlRef, ModuleKind } from "./deck";
 import { actionName, t } from "./i18n";
-import { actionFits, api, controlId, newBinding, type Binding, type EngineView, type Gesture, type Look, type Profile } from "./engine";
+import { actionFits, api, controlId, newBinding, pressable, type ActionDef, type Binding, type EngineView, type Gesture, type Look, type Profile } from "./engine";
 
 const GESTURES: Gesture[] = ["tap", "hold", "double"];
 const HISTORY = 50;
+
+export function actionFitsTrigger(action: ActionDef, kind: ModuleKind, trigger: Gesture) {
+  return trigger === "tap" ? actionFits(action, kind) : pressable(kind) && action.inputs.includes("press");
+}
+
+export function bindingForDrop(action: ActionDef, profile: Profile, control: ControlRef, id: string): Binding {
+  const previous = profile.controls[id];
+  if (previous?.action === action.id) return previous;
+  const binding = newBinding(action);
+  if (previous) {
+    binding.look = { ...previous.look, label: binding.look.label, icon: binding.look.icon };
+  } else if (control.kind === "keys" && profile.keyStyle) {
+    binding.look = withTemplate(binding.look, profile.keyStyle);
+  }
+  return binding;
+}
 
 /** What "Paste look" carries: colors, the LED and its effect, the key's style and the icon
  * editor's background, finish, label effect, frame and badge color; not the label, icon, picture
@@ -34,7 +50,7 @@ const inField = (e: KeyboardEvent) => {
  * change to the profile.
  */
 export function useEditing(view: EngineView, selected: ControlRef | null, notify: (text: string) => void) {
-  const clipboard = useRef<{ bindings: Partial<Record<Gesture, Binding>>; from: string } | null>(null);
+  const clipboard = useRef<Binding | null>(null);
   const history = useRef<Profile[]>([]);
   const last = useRef<Profile | null>(null);
   const undoing = useRef(false);
@@ -52,20 +68,18 @@ export function useEditing(view: EngineView, selected: ControlRef | null, notify
 
   const page = view.state?.page ?? null;
 
-  const dropAction = (c: ControlRef, actionId: string, flush: () => Promise<void> | undefined) => {
+  const dropAction = (c: ControlRef, actionId: string, gesture: Gesture, flush: () => Promise<void> | undefined) => {
     const def = view.catalog?.actions.find((a) => a.id === actionId);
     const profile = view.profile;
     if (!def || !profile || profile.id !== view.state?.active) return false;
-    if (!actionFits(def, c.kind)) {
+    if (!actionFitsTrigger(def, c.kind, gesture)) {
       notify(t("edit.notOn", { action: actionName(def), control: t(`on.${c.kind}`) }));
       return false;
     }
-    const fresh = newBinding(def);
-    // a key starts in the profile's own style, when it has one (the full key editor sets it)
-    if (c.kind === "keys" && profile.keyStyle) fresh.look = withTemplate(fresh.look, profile.keyStyle);
-    const write = () => api.setBinding(profile.id, controlId(c.kind, c.index, page), fresh);
+    const id = controlId(c.kind, c.index, page, gesture);
+    const write = (current: Profile) => api.setBinding(profile.id, id, bindingForDrop(def, current, c, id));
     const pending = flush();
-    (pending ? pending.then(write) : write()).catch((e) => notify(String(e)));
+    (pending ? pending.then(() => api.profile(profile.id)).then(write) : write(profile)).catch((e) => notify(String(e)));
     return true;
   };
 
@@ -85,49 +99,26 @@ export function useEditing(view: EngineView, selected: ControlRef | null, notify
   };
   const canPaste = () => !!clipboard.current;
 
-  /** Copy a control's press, hold and double press; false when it does nothing. */
-  const copy = (c: ControlRef) => {
+  /** Use the press look, then fall back to another assigned trigger. */
+  const copy = (control: ControlRef) => {
     const { view, page, notify } = now.current;
     const profile = view.profile;
-    if (!profile) return false;
-    const ids = gestureIds(c, page);
-    const bindings: Partial<Record<Gesture, Binding>> = {};
-    for (const g of GESTURES) if (profile.controls[ids[g]]) bindings[g] = profile.controls[ids[g]];
-    if (!bindings.tap && !bindings.hold && !bindings.double) {
+    if (!profile) return;
+    const ids = gestureIds(control, page);
+    const binding = GESTURES.map((gesture) => profile.controls[ids[gesture]]).find(Boolean);
+    if (!binding) {
       notify(t("edit.empty"));
-      return false;
+      return;
     }
-    clipboard.current = { bindings, from: c.kind };
+    clipboard.current = structuredClone(binding);
     notify(t("edit.copied"));
-    return true;
-  };
-
-  /** Paste what was copied; the parts that do not fit the control are left out. */
-  const paste = (c: ControlRef) => {
-    const { view, page, notify } = now.current;
-    const profile = view.profile;
-    if (!profile || !clipboard.current) return;
-    const ids = gestureIds(c, page);
-    const changes: Record<string, Binding | null> = {};
-    let skipped = 0;
-    for (const g of GESTURES) {
-      const b = clipboard.current.bindings[g];
-      const def = b && view.catalog?.actions.find((a) => a.id === b.action);
-      // a press gesture needs a pressable control; the tap must fit the control kind
-      if (!b || !def || (g === "tap" ? !actionFits(def, c.kind) : !(def.inputs.includes("press") && actionFits({ ...def, inputs: ["press"] }, c.kind)))) {
-        if (b) skipped++;
-        continue;
-      }
-      changes[ids[g]] = structuredClone(b);
-    }
-    api.setBindings(profile.id, changes).then(() => notify(skipped ? t("edit.pastedPartly") : t("edit.pasted")), (err) => notify(String(err)));
   };
 
   /** Paste only the look of what was copied onto the control's press: its action stays. */
   const pasteLook = (c: ControlRef) => {
     const { view, page, notify } = now.current;
     const profile = view.profile;
-    const from = clipboard.current?.bindings.tap ?? clipboard.current?.bindings.hold ?? clipboard.current?.bindings.double;
+    const from = clipboard.current;
     if (!profile || !from) return;
     const id = controlId(c.kind, c.index, page);
     const to = profile.controls[id];
@@ -168,9 +159,6 @@ export function useEditing(view: EngineView, selected: ControlRef | null, notify
       } else if (mod && e.shiftKey && key === "v" && clipboard.current) {
         e.preventDefault();
         pasteLook(selected);
-      } else if (mod && key === "v" && clipboard.current) {
-        e.preventDefault();
-        paste(selected);
       } else if ((key === "delete" || key === "backspace") && !mod) {
         if (!isSet(selected)) return;
         e.preventDefault();
@@ -226,5 +214,5 @@ export function useEditing(view: EngineView, selected: ControlRef | null, notify
     return a === "core.page" || a === "core.nextPage" || a === "core.previousPage";
   };
 
-  return { dropAction, moveKey, openControl, copy, paste, pasteLook, clear, isSet, canPaste, opensPage };
+  return { dropAction, moveKey, openControl, copy, pasteLook, clear, isSet, canPaste, opensPage };
 }

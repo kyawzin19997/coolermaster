@@ -2,7 +2,8 @@
 // Run with `pnpm test` in app/.
 
 import { describe, expect, it } from "vitest";
-import { controlId, hasState, hubRainbow, pageReachable, pressable, RAINBOW_MS } from "./engine";
+import { controlId, hasState, hubRainbow, pageReachable, pressable, RAINBOW_MS, type ActionDef, type Profile } from "./engine";
+import { actionFitsTrigger, bindingForDrop } from "./editing";
 import { clampToGrid, detachedKinds, keysOfKind, ownedKey, placeModules, rotatedSize } from "./layout";
 import { actionName, BUILT_IN_LANGUAGES, languageTemplate, localizeAction, localizeError, localizeGame, localizePreset, setLanguage, specialKeyName, t } from "./i18n";
 import type { ModuleInfo } from "./deck";
@@ -24,6 +25,29 @@ describe("control ids (mirror profile::control_id and Gesture::suffix)", () => {
     expect(hasState("core.mic")).toBe(true);
     expect(hasState("com.example.plugin/count")).toBe(true);
     expect(hasState("core.launch")).toBe(false);
+  });
+});
+
+describe("action drops", () => {
+  const press: ActionDef = { id: "core.mic", name: "Microphone", description: "", group: "Audio", icon: "mic", inputs: ["press"], params: [] };
+  const turn: ActionDef = { ...press, id: "core.scroll", inputs: ["turn"] };
+  const key = { kind: "keys", index: 0, module: "keys:test" } as const;
+
+  it("accepts hold and double press only on press-capable controls", () => {
+    expect(actionFitsTrigger(press, "keys", "hold")).toBe(true);
+    expect(actionFitsTrigger(press, "dial", "double")).toBe(true);
+    expect(actionFitsTrigger(press, "faders", "hold")).toBe(false);
+    expect(actionFitsTrigger(turn, "keys", "tap")).toBe(false);
+    expect(actionFitsTrigger(turn, "knobs", "tap")).toBe(true);
+    expect(actionFitsTrigger(turn, "knobs", "double")).toBe(false);
+  });
+
+  it("preserves custom appearance when replacing a trigger and keeps parameters on a no-op drop", () => {
+    const previous = { action: "core.hotkey", params: { keys: "Ctrl+A" }, look: { bg: "#123345", image: "saved.png" } };
+    const profile: Profile = { id: "work", name: "Work", version: 1, apps: [], controls: { "page/keys.0:hold": previous } };
+    expect(bindingForDrop(press, profile, key, "page/keys.0:hold")).toMatchObject({ action: press.id, look: { bg: "#123345", image: "saved.png" } });
+    expect(bindingForDrop({ ...press, id: previous.action }, profile, key, "page/keys.0:hold")).toBe(previous);
+    expect(profile.controls["page/keys.0:hold"]).toBe(previous);
   });
 });
 

@@ -7,22 +7,14 @@
 import { emit } from "@tauri-apps/api/event";
 import { mockIPC, mockWindows } from "@tauri-apps/api/mocks";
 import type { DeckSnapshot } from "../deck";
-import type { Binding, EngineState, Profile } from "../engine";
+import type { Binding, EngineState, LightSettings, Profile } from "../engine";
+import { version } from "../../package.json";
 import fixture from "./fixture.json";
 import { setLanguage } from "../i18n";
 import { demoParam } from "./params";
 
 // `&banner=paused,dial,error`: the deck paused, a module not responding, an action error
 const banners = (demoParam("banner") ?? "").split(",");
-
-/** A sample gallery made of fixture profiles (the real one: docs/SHARING.md). */
-const GALLERY_BASE = "https://raw.githubusercontent.com/Przemotar/hubdeck-profiles/main";
-const GALLERY = [
-  { id: "demo-obs", name: "OBS streaming", author: "Przemotar", description: "Scenes, record, stream and replay on the keys with live state; mic level on the dial; the OBS mixer on the faders.", kinds: ["keys", "dial", "faders"], tags: ["streaming", "obs"], preview: null, package: `${GALLERY_BASE}/obs-streaming/obs-streaming.hubdeck`, version: "1.0" },
-  { id: fixture.profiles[0].id, name: fixture.profiles[0].name, author: "Przemotar", description: "Media, copy and paste, app volumes on the faders, scrolling on the rollers.", kinds: ["keys", "faders", "rollers"], tags: ["everyday"], preview: null, package: `${GALLERY_BASE}/everyday/everyday.hubdeck`, version: "1.0" },
-  // by id, not by place in the fixture: the description must belong to the profile it names
-  { id: "demo-photoshop", name: fixture.profiles.find((p) => p.id === "demo-photoshop")?.name ?? "Photoshop", author: "a HubDeck user", description: "Tools on the keys, brush size on the dial, zoom and history on the knobs.", kinds: ["keys", "dial", "knobs"], tags: ["design", "adobe"], preview: null, package: `${GALLERY_BASE}/photoshop/photoshop.hubdeck`, version: "0.9" },
-];
 
 const UPDATE = {
   version: "0.2.0",
@@ -144,6 +136,12 @@ const sortedJson = (v: unknown) => JSON.stringify(v, (_k, x) => (x && typeof x =
 const changed = () => void emit("engine://state", state());
 
 let demoTemplates: { name: string; look: Record<string, unknown> }[] = [];
+let lights: LightSettings = {
+  style: "rainbow",
+  color: "#8b7cf6",
+  brightness: 100,
+  react: { mic: { on: true, color: "#ff2020" }, live: { on: true, color: "#ff2020" }, agents: { on: true, color: "#ff8a00" }, timer: { on: true, color: "#ffffff" }, call: { on: true, color: "#ff2020" }, levels: true },
+};
 const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
   engine_state: () => state(),
   deck_snapshot: () => deck,
@@ -237,20 +235,15 @@ const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
   calibration_set: () => null,
   calibration_stop: () => null,
   twitch_status: () => [false, false],
-  "plugin:app|version": () => "0.1.0",
+  "plugin:app|version": () => version,
   "plugin:opener|open_url": () => null,
   update_settings_get: () => [true, true, true],
   update_settings_set: () => null,
   // the key look editor's own templates, kept for the page's life
   look_templates_get: () => demoTemplates,
   look_templates_set: (a) => ((demoTemplates = (a.templates as typeof demoTemplates) ?? []), null),
-  lights_get: () => ({
-    style: "rainbow",
-    color: "#8b7cf6",
-    brightness: 100,
-    react: { mic: { on: true, color: "#ff2020" }, live: { on: true, color: "#ff2020" }, agents: { on: true, color: "#ff8a00" }, timer: { on: true, color: "#ffffff" }, call: { on: true, color: "#ff2020" }, levels: true },
-  }),
-  lights_set: () => null,
+  lights_get: () => lights,
+  lights_set: (args) => { lights = args.lights as LightSettings; },
   profile_check: () =>
     demoParam("check")
       ? [
@@ -531,19 +524,6 @@ const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
   sd_peek: () => ({ id: "com.fredemmott.audiooutputswitch", name: "Audio Switcher", author: "Fred Emmott", version: "3.2.1", icon: null, problem: null }),
   sd_opened: () => [],
   sd_install: ({ path }) => String(path),
-  gallery_list: () => {
-    if (demoParam("gallery") === "offline") throw new Error("offline");
-    return GALLERY;
-  },
-  gallery_add: ({ package: url }) => {
-    const entry = GALLERY.find((g) => g.package === url);
-    const source = entry && profiles.get(entry.id);
-    if (!source) throw new Error("not in the gallery");
-    const copy = { ...structuredClone(source), id: `gallery-${Date.now()}`, name: `${source.name} (shared)` };
-    profiles.set(copy.id, copy);
-    changed();
-    return copy;
-  },
   profiles_dir_get: () => [String.raw`C:\Users\you\AppData\Roaming\HubDeck\profiles`, false],
   spotify_status: () => ["", false],
   midi_ports: () => [],

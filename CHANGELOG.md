@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Simplified the key editor around separate Press, Hold, and Double press drop targets. Action parameters and appearance stay below the hardware preview.
+- Put brightness, profile edge color, scenes, music sync, and the screensaver under Lighting.
+- Refreshed the dark and light desktop surfaces and app icon. Removed public support, feedback, and community entry points, with local diagnostics and profile packages kept available.
+
 ## 1.0.0
 
 - MasterDeck brings the deck preview, Action Library, and selected-control settings into one workspace for the Cooler Master MasterHUB.
@@ -124,9 +130,6 @@
 Measured before the release (Windows, the release build, that deck): 12.0 % of one CPU core (7.2 %
 in 0.1.12: more pictures, in full colour), memory flat. With the graphics card in use HubDeck holds
 about 440 MB (64 MB in 0.1.12), most of it the card's driver.
-
-Join the [Discord](https://przemotar.github.io/hubdeck/discord) to rate the presets and vote on
-what comes next.
 
 ## 0.1.12
 
