@@ -54,7 +54,7 @@ class Recover extends React.Component<{ children: React.ReactNode }, { error: st
     return (
       <div style={{ padding: 32, fontFamily: "system-ui, sans-serif", color: "#e8e6f0", background: "#0c0b10", height: "100vh", boxSizing: "border-box" }}>
         <h2 style={{ marginTop: 0 }}>Something in the window went wrong</h2>
-        <p style={{ opacity: 0.7 }}>The deck keeps working. The error is in HubDeck's log.</p>
+        <p style={{ opacity: 0.7 }}>The deck keeps working. The error is in MasterDeck's log.</p>
         <p style={{ opacity: 0.5, fontSize: 12 }}>{this.state.error}</p>
         <button onClick={() => location.reload()} style={{ padding: "8px 16px", borderRadius: 8, border: 0, background: "#8b5cf6", color: "#fff", cursor: "pointer" }}>
           Reload the window

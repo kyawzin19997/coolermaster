@@ -578,7 +578,7 @@ pub async fn assistant_sketch_app(app: AppHandle, exe: String, name: String, lan
 }
 
 /// A personal HubDeck tour as a draft, made on this computer at once (it took the model ~6 min):
-/// "Discover HubDeck" with the user's own apps (their real icons) on the first page and a page of
+/// "Discover MasterDeck" with the user's own apps (their real icons) on the first page and a page of
 /// their games with covers. The model only walks them through it.
 pub fn personal_tour(app: &AppHandle, polish: bool) -> Result<String, String> {
     super::demo::set_language(if polish { "pl" } else { "en" });

@@ -73,7 +73,7 @@ export const ActionLibrary = memo(function ActionLibrary({
   selectedKind?: ModuleKind;
   focusPlugin: { id: string; at: number } | null;
   disabled: boolean;
-  onOpenPlugins: () => void;
+  onOpenPlugins?: () => void;
 }) {
   const { lang } = useLanguage();
   const [compatibleOnly, setCompatibleOnly] = useState(false);

@@ -1,4 +1,4 @@
-//! "Discover HubDeck" (owner, 2026-10-12): a tour on the deck itself. Seven tabs (key pages) show
+//! "Discover MasterDeck" (owner, 2026-10-12): a tour on the deck itself. Seven tabs (key pages) show
 //! what HubDeck can do; the bottom-right key goes to the next tab, the top-left key names the
 //! tab. Every key works (safely) and carries a note (`look.note`, `demo:<id>`) that the window
 //! shows when the key is pressed or picked: what it does and how to set it. The dial is the dial
@@ -111,7 +111,7 @@ fn put(p: &mut Profile, page: Option<&str>, keys: Vec<Binding>) {
 }
 
 pub fn discover() -> Profile {
-    let mut p = Profile::new(&tr("Discover HubDeck", "Poznaj HubDeck"));
+    let mut p = Profile::new(&tr("Discover MasterDeck", "Poznaj HubDeck"));
     p.color = Some("#8b7cf6".into());
     p.pages = vec![
         Page { id: "live".into(), name: tr("Live", "Na żywo") },

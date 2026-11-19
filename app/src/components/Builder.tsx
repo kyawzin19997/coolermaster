@@ -3,9 +3,11 @@ import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import type { ControlRef, LiveState } from "../deck";
-import { api, svgDataUrl, type Binding, type EngineView, type Profile } from "../engine";
-import { t, useLanguage } from "../i18n";
+import { actionFits, api, controlId, newBinding, svgDataUrl, type Binding, type EngineView, type Profile } from "../engine";
+import { actionName, t, useLanguage } from "../i18n";
 import type { Placement } from "../layout";
+import { withTemplate } from "../lookTemplates";
+import { ActionLibrary } from "./ActionChooser";
 import { ControlDock } from "./ControlDock";
 import { DeckView } from "./DeckView";
 import { Icon } from "./Icon";
@@ -143,6 +145,28 @@ export function Builder({ live, view, saved, onPlace, onClose }: { live: LiveSta
     setAt(index);
   };
 
+  const assignKey = async (control: ControlRef, actionId: string) => {
+    if (!draft || control.kind !== "keys") return;
+    const action = view.catalog?.actions.find((item) => item.id === actionId);
+    if (!action) return;
+    if (!actionFits(action, control.kind)) {
+      setError(t("edit.notOn", { action: actionName(action), control: t("on.keys") }));
+      return;
+    }
+    setError(null);
+    try {
+      await inspector.current?.flush();
+      if (!activeDraft) await api.tryProfile(draft.id);
+      const binding = newBinding(action);
+      const style = (activeDraft ?? draft).keyStyle;
+      if (style) binding.look = withTemplate(binding.look, style);
+      await api.setBinding(draft.id, controlId(control.kind, control.index, null), binding);
+      setEditingKey(control);
+    } catch (e) {
+      setError(String(e));
+    }
+  };
+
   const all = step.kind ? options[step.kind] ?? [] : [];
   const words = filter.trim().toLowerCase();
   const shown = words ? all.filter((o) => `${o.name} ${o.does} ${o.source} ${o.group}`.toLowerCase().includes(words)) : all;
@@ -185,6 +209,7 @@ export function Builder({ live, view, saved, onPlace, onClose }: { live: LiveSta
               }
             }}
             onDeselect={() => setEditingKey(null)}
+            onDropAction={editingKey ? assignKey : undefined}
             saved={saved}
             onPlace={onPlace}
             arranging={false}
@@ -200,6 +225,12 @@ export function Builder({ live, view, saved, onPlace, onClose }: { live: LiveSta
             </ControlDock>
           )}
         </section>
+        {editingKey ? (
+          <div className="editor-sidebar">
+            {error && <p className="help builder-notice" role="alert">{error}</p>}
+            <ActionLibrary catalog={view.catalog} icons={view.icons} selectedKind="keys" focusPlugin={null} disabled={false} />
+          </div>
+        ) : (
         <aside className="builder-main" aria-label={t("chooser.browseTitle")}>
           {error && <p className="help" role="alert">{error}</p>}
           {step.kind ? (
@@ -332,6 +363,7 @@ export function Builder({ live, view, saved, onPlace, onClose }: { live: LiveSta
             </div>
           )}
         </aside>
+        )}
       </div>
     </div>
   );

@@ -4609,7 +4609,7 @@ const actionTexts = (): Record<string, ActionText> | undefined => (lang === "pl"
 const groupTexts = (): Record<string, string> | undefined => (lang === "pl" ? GROUPS_PL : pack?.groups);
 
 export const actionName = (a: Pick<ActionDef, "id" | "name">) => actionTexts()?.[a.id]?.name || a.name;
-export const groupName = (g: string) => groupTexts()?.[g] || g;
+export const groupName = (g: string) => g === "HubDeck" ? "MasterDeck" : groupTexts()?.[g] || g;
 
 function localizeParam(actionId: string, p: ParamDef): ParamDef {
   const tr = actionTexts()?.[actionId]?.params?.[p.key];
@@ -4622,12 +4622,13 @@ function localizeParam(actionId: string, p: ParamDef): ParamDef {
 /** The action with its name, group, description and params in the current language. */
 export function localizeAction(a: ActionDef): ActionDef {
   const texts = actionTexts();
-  if (!texts && !groupTexts()) return a;
+  const group = groupName(a.group);
+  if (!texts && !groupTexts() && group === a.group) return a;
   const tr = texts?.[a.id];
   return {
     ...a,
     name: tr?.name ?? a.name,
-    group: groupName(a.group),
+    group,
     description: tr?.description ?? a.description,
     params: a.params.map((p) => localizeParam(a.id, p)),
   };
