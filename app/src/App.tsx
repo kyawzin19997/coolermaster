@@ -14,7 +14,6 @@ import { api, saverEnd, triedPresets, useEngine, useSaverShown } from "./engine"
 import { DeckView } from "./components/DeckView";
 import { Inspector, type InspectorHandle } from "./components/Inspector";
 import { ActionLibrary } from "./components/ActionChooser";
-import { ControlDock } from "./components/ControlDock";
 import type { SettingsSection } from "./components/Panels";
 import { ArrangePanel, Banner, ControlMenu, BaseTurnPicker, DeckTools, EdgePanel, SaverPanel, MusicPanel, ForAppPanel, GamesPanel, LeftPanel, PageBar, PluginFileSheet, ProfilePanel, SettingsPanel, Sheet, TopBar } from "./components/Panels";
 import { listen } from "@tauri-apps/api/event";
@@ -81,6 +80,7 @@ export default function App() {
   // the full key editor, on one key (owner's "2 a", 2026-10-25)
   const [studio, setStudio] = useState<string | null>(null);
   const [settingsSection, setSettingsSection] = useState<SettingsSection>(DEMO_PANEL === "plugins" ? "plugins" : "general");
+  const [updateCheckRequest, setUpdateCheckRequest] = useState(0);
   const [pluginsOpen, setPluginsOpen] = useState(DEMO_PANEL === "catalog");
   const openPluginCatalog = useCallback(() => {
     setPluginsOpen(true);
@@ -289,7 +289,17 @@ export default function App() {
         onOpenAssistant={() => setProfileLibrary("assistant")}
         onOpenTour={() => (setTourOpen(true), setPluginsOpen(false), setStudio(null), setLivingOpen(false), setSettingsOpen(false), setForAppOpen(false), setProfileOpen(false))}
         setupPending={setupPending && !tourOpen && !builderOpen}
-        onOpenSettings={() => (setSettingsOpen((o) => !o), setPluginsOpen(false), setGamesOpen(false), setForAppOpen(false))}
+        onOpenSettings={() => (setUpdateCheckRequest(0), setSettingsOpen((o) => !o), setPluginsOpen(false), setGamesOpen(false), setForAppOpen(false))}
+        onCheckUpdates={tourShown || builderOpen || calibrating || arranging || studio ? undefined : () => {
+          setPluginsOpen(false);
+          setGamesOpen(false);
+          setForAppOpen(false);
+          setProfileOpen(false);
+          setLivingOpen(false);
+          setSettingsSection("updates");
+          setSettingsOpen(true);
+          setUpdateCheckRequest((n) => n + 1);
+        }}
         onOpenPlugins={() => (setPluginsOpen((o) => !o), setSettingsOpen(false), setGamesOpen(false), setForAppOpen(false))}
         onOpenGames={() => (setGamesOpen((o) => !o), setSettingsOpen(false))}
       />
@@ -340,8 +350,9 @@ export default function App() {
       ) : settingsOpen && !calibrating ? (
         <main className="workspace">
           <SettingsPanel
-            live={live} view={view} section={settingsSection} onSection={setSettingsSection}
-            onClose={() => setSettingsOpen(false)}
+            live={live} view={view} section={settingsSection} updateCheckRequest={updateCheckRequest}
+            onSection={(section) => { setUpdateCheckRequest(0); setSettingsSection(section); }}
+            onClose={() => { setUpdateCheckRequest(0); setSettingsOpen(false); }}
             onCalibrate={() => { setCalibrating(true); setSettingsOpen(false); }}
             onBrowsePlugins={() => { setPluginsOpen(true); setSettingsOpen(false); }}
             onOpenEdge={() => setEdgeOpen(true)}
@@ -349,7 +360,7 @@ export default function App() {
           />
         </main>
       ) : (
-      <main className={`workspace deck-workspace${arranging ? " is-arranging" : ""}`}>
+      <main className={`workspace deck-workspace${arranging ? " is-arranging" : ""}${selected && !arranging && !calibrating ? " workspace-with-properties" : ""}`}>
         <section className="center">
           <div className="workbench-title">
             <h1>MasterHUB</h1>
@@ -454,17 +465,19 @@ export default function App() {
           )}
           {arranging && <BaseTurnPicker live={live} />}
           </div>
-          {!arranging && !calibrating && selected && (
-            <ControlDock>
-              <Inspector ref={inspector} selected={selected} view={view} onDropAction={(control, action, gesture) => dropAction(control, action, gesture, () => inspector.current?.flush())} onOpenStudio={setStudio} />
-            </ControlDock>
-          )}
           {toast && (
             <div className="toast" role="status">
               {toast}
             </div>
           )}
         </section>
+        {!arranging && !calibrating && selected && (
+          <Inspector
+            ref={inspector} selected={selected} view={view} onClose={() => setSelected(null)}
+            onDropAction={(control, action, gesture) => dropAction(control, action, gesture, () => inspector.current?.flush())}
+            onOpenStudio={setStudio}
+          />
+        )}
         <div className="editor-sidebar" hidden={arranging || calibrating}>
           <ActionLibrary catalog={view.catalog} icons={view.icons} selectedKind={selected?.kind} focusPlugin={focusPlugin} disabled={arranging || calibrating} onOpenPlugins={openPluginCatalog} />
         </div>

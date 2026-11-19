@@ -1219,12 +1219,13 @@ export type InspectorHandle = {
   selectTrigger: (gesture: Gesture) => void;
 };
 
-export function Inspector({ ref, selected, view, onDropAction, onOpenStudio }: {
+export function Inspector({ ref, selected, view, onDropAction, onOpenStudio, onClose }: {
   ref?: Ref<InspectorHandle>;
   selected: ControlRef | null;
   view: EngineView;
   onDropAction: (control: ControlRef, action: string, gesture: Gesture) => boolean;
   onOpenStudio?: (control: string) => void;
+  onClose?: () => void;
 }) {
   useLanguage();
   const profile = view.profile;
@@ -1316,12 +1317,14 @@ export function Inspector({ ref, selected, view, onDropAction, onOpenStudio }: {
   const turns = selected.kind === "dial" || selected.kind === "knobs";
   const canEditAppearance = !!draft && activeGesture === "tap";
   const showLook = appearance && canEditAppearance;
+  const panelTitle = t(selected.kind === "keys" ? "inspector.keySettings" : "inspector.panelTitle");
 
   return (
-    <aside className="inspector sectioned control-inspector" data-guide="control-editor" aria-label={t("inspector.panelTitle")}>
+    <aside className="inspector sectioned control-inspector" data-guide="control-editor" aria-label={panelTitle}>
       <div className="insp-head">
         <Icon name="sliders-horizontal" />
         <div className="grow">
+          <span className="control-panel-label">{panelTitle}</span>
           <h2>{name}</h2>
         </div>
         {canEditAppearance && (
@@ -1330,6 +1333,7 @@ export function Inspector({ ref, selected, view, onDropAction, onOpenStudio }: {
             <button type="button" className={`tab${showLook ? " is-active" : ""}`} aria-pressed={showLook} onClick={() => setAppearance(true)}>{t("inspector.look")}</button>
           </div>
         )}
+        {onClose && <button type="button" className="icon-btn control-panel-close" title={t("profile.close")} aria-label={t("profile.close")} onClick={onClose}><Icon name="x" /></button>}
       </div>
 
       <div className="trigger-row" role="group" aria-label={t("inspector.gesture")}>
@@ -1364,10 +1368,10 @@ export function Inspector({ ref, selected, view, onDropAction, onOpenStudio }: {
                 }
               }}>
               <button type="button" className="trigger-choice" aria-pressed={current} onClick={() => { setGesture(trigger); setAppearance(false); }}>
-                {def && <ActionIcon action={def} icons={view.icons} />}
-                <span className="trigger-label">
-                  <span>{title}</span>
-                  <strong id={current && binding?.action ? "action-name" : undefined} data-action={current ? binding?.action : undefined} title={def?.description}>{display}</strong>
+                <span className="trigger-label">{title}</span>
+                <span className="trigger-binding">
+                  {def && <ActionIcon action={def} icons={view.icons} />}
+                  <strong id={current && binding?.action ? "action-name" : undefined} data-action={current ? binding?.action : undefined} title={display}>{display}</strong>
                 </span>
               </button>
               {binding?.action && profile && <button type="button" className="icon-btn trigger-clear" title={t("inspector.removeAction", { trigger: title })} aria-label={t("inspector.removeAction", { trigger: title })}

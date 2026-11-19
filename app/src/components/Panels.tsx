@@ -931,6 +931,7 @@ export function TopBar({
   onOpenProfile,
   onOpenProfileLibrary,
   onOpenSettings,
+  onCheckUpdates,
   onOpenPlugins,
   onOpenGames,
   onOpenForApp,
@@ -950,6 +951,7 @@ export function TopBar({
   onOpenProfile: () => void;
   onOpenProfileLibrary: () => void;
   onOpenSettings: () => void;
+  onCheckUpdates?: () => void;
   onOpenPlugins: () => void;
   onOpenGames: () => void;
   setupPending: boolean;
@@ -992,6 +994,12 @@ export function TopBar({
         <Icon name="settings" />
         <span className="tb-label">{t("topbar.settings")}</span>
       </button>
+      {onCheckUpdates && (
+        <button type="button" className="tool ghost topbar-update" onClick={onCheckUpdates} aria-label={t("updates.checkNow")} title={t("updates.checkNow")}>
+          <Icon name="refresh-cw" />
+          <span className="tb-label">{t("updates.title")}</span>
+        </button>
+      )}
       <span className="sep" />
       <div className="status" title={orientation ? t("topbar.baseLies", { orientation: t(`orientation.${orientation}`) }) : undefined}>
         <span className={`dot${count > 0 ? " is-on" : ""}`} />
@@ -2081,10 +2089,11 @@ const SETTINGS_SECTIONS: { id: SettingsSection; icon: string; label: Key }[] = [
 
 /** Settings as a page of its own over the whole window (owner, 2026-10-13: a panel in the right
  *  column covered the key editor): sections on the left, one section's content on the right. */
-export function SettingsPanel({ live, view, section, onSection, onClose, onCalibrate, onBrowsePlugins, onOpenEdge, onOpenScenes }: {
+export function SettingsPanel({ live, view, section, updateCheckRequest, onSection, onClose, onCalibrate, onBrowsePlugins, onOpenEdge, onOpenScenes }: {
   live: LiveState;
   view: EngineView;
   section: SettingsSection;
+  updateCheckRequest: number;
   onSection: (section: SettingsSection) => void;
   onClose: () => void;
   onCalibrate: () => void;
@@ -2141,7 +2150,7 @@ export function SettingsPanel({ live, view, section, onSection, onClose, onCalib
           {section === "connections" && <Connections />}
           {section === "plugins" && <PluginsList onBrowse={onBrowsePlugins} />}
           {section === "backups" && <Backups />}
-          {section === "updates" && <UpdatesSettings />}
+          {section === "updates" && <UpdatesSettings checkRequest={updateCheckRequest} />}
           {section === "diagnostics" && <DiagnosticsSettings live={live} />}
         </div>
       </div>
@@ -2448,15 +2457,27 @@ function UpdateCard({ info }: { info: UpdateInfo }) {
 }
 
 /** Look for a new version at start or now; install only on request. */
-function UpdatesSettings() {
+function UpdatesSettings({ checkRequest }: { checkRequest: number }) {
   useLanguage();
   const version = useAppVersion();
   const [cfg, setCfg] = useState<[boolean, boolean, boolean] | null>(null);
   const [result, setResult] = useState<"checking" | "latest" | UpdateInfo | { error: string } | null>(null);
+  const [manualCheck, setManualCheck] = useState(0);
   useEffect(() => {
     updates.settings().then(setCfg, () => setCfg([false, false, false]));
   }, []);
-  if (!cfg) return null;
+  const canCheck = cfg?.[0] === true;
+  useEffect(() => {
+    if (!canCheck || (checkRequest === 0 && manualCheck === 0)) return;
+    let cancelled = false;
+    setResult("checking");
+    updates.check().then(
+      (info) => { if (!cancelled) setResult(info ?? "latest"); },
+      (error) => { if (!cancelled) setResult({ error: String(error) }); },
+    );
+    return () => { cancelled = true; };
+  }, [canCheck, checkRequest, manualCheck]);
+  if (!cfg) return <p className="help" role="status">{t("app.loadingPanel")}</p>;
   const [enabled, atStart, notify] = cfg;
   // a build without updates: say so, no switch and button that cannot work
   if (!enabled)
@@ -2499,23 +2520,17 @@ function UpdatesSettings() {
         <button
           className="tool"
           disabled={!enabled || result === "checking"}
-          onClick={() => {
-            setResult("checking");
-            updates.check().then(
-              (info) => setResult(info ?? "latest"),
-              (e) => setResult({ error: String(e) }),
-            );
-          }}
+          onClick={() => setManualCheck((n) => n + 1)}
         >
           <Icon name="refresh-cw" />
           {result === "checking" ? t("updates.checking") : t("updates.checkNow")}
         </button>
         {result === "latest" && (
-          <span className="pill is-ok">{t("updates.latest")}</span>
+          <span className="pill is-ok" role="status">{t("updates.latest")}</span>
         )}
       </div>
       {result && typeof result === "object" && "version" in result && <UpdateCard info={result} />}
-      {result && typeof result === "object" && "error" in result && <p className="help">{result.error}</p>}
+      {result && typeof result === "object" && "error" in result && <p className="help" role="alert" title={result.error}>{t("updates.checkFailed")}</p>}
       <p className="help">{enabled ? t("updates.help") : t("updates.notSetUp")}</p>
       <GoBack />
     </section>

@@ -2,7 +2,7 @@
 
 Desktop control software for the Cooler Master MasterHUB. MasterDeck supports LCD keys, the dial, knobs, faders, rollers, and the base lighting. Profiles and device settings are stored locally.
 
-[Windows installer](https://github.com/kyawzin19997/coolermaster/releases/latest/download/MasterDeck-windows-x64-setup.exe) · [macOS installer](https://github.com/kyawzin19997/coolermaster/releases/download/v1.0.0/MasterDeck-macOS-Universal.dmg) · [Releases and checksums](https://github.com/kyawzin19997/coolermaster/releases)
+[Download for Windows](https://github.com/kyawzin19997/coolermaster/releases/latest/download/MasterDeck-windows-x64-setup.exe) · [macOS 1.0.0 installer](https://github.com/kyawzin19997/coolermaster/releases/download/v1.0.0/MasterDeck-macOS-Universal.dmg) · [Releases and checksums](https://github.com/kyawzin19997/coolermaster/releases)
 
 ## Install
 
@@ -13,7 +13,8 @@ Quit the official MasterHUB app before connecting the deck. Only one application
 ## Use the deck editor
 
 - Drag an action from **Actions** directly onto a key to assign **Press**. Select a key to drop an action on **Hold** or **Double press** and edit the selected trigger's settings.
-- Open **Appearance** under a key to change its face. Profiles, pages, and local import/export are available from the profile controls.
+- Select a key to open **Key settings** beside the deck. Use **Appearance** to change the key’s face. Profiles, pages, and local import/export are available from the profile controls.
+- Select **Updates** in the toolbar to check for the latest Windows release. MasterDeck installs an update when you choose **Install and restart**.
 - Open **Lighting** for base brightness, profile edge color, music sync, and scenes. Advanced effects, presets, screen brightness, and the screensaver remain available there.
 - Configure OBS, Spotify, Twitch, Streamlabs, Home Assistant, and other integrations under **Settings → Connections**. Local diagnostic export is in **Settings → Diagnostics**.
 

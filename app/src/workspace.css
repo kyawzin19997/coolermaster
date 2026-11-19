@@ -69,11 +69,38 @@
   color: var(--tx2);
 }
 
-/* The editor and builder share a deck canvas and a compact tools column. */
+/* Keep the deck full height. The settings and actions share a column on smaller windows. */
 .deck-workspace,
 .builder-page {
   --action-pane: clamp(276px, 25vw, 368px);
   overflow: hidden;
+}
+
+.deck-workspace.workspace-with-properties,
+.builder-body.workspace-with-properties {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--action-pane);
+  grid-template-rows: minmax(0, 56fr) minmax(0, 44fr);
+  grid-template-areas: "deck properties" "deck actions";
+}
+
+.workspace-with-properties > :is(.center, .builder-canvas) { grid-area: deck; }
+.workspace-with-properties > .control-inspector { grid-area: properties; }
+.workspace-with-properties > :is(.editor-sidebar, .builder-main) {
+  grid-area: actions;
+  border-top: 1px solid var(--ln2);
+}
+
+@media (min-width: 1220px) {
+  .deck-workspace.workspace-with-properties,
+  .builder-body.workspace-with-properties {
+    --action-pane: clamp(276px, 21vw, 348px);
+    grid-template-columns: minmax(0, 1fr) clamp(292px, 24vw, 374px) var(--action-pane);
+    grid-template-rows: minmax(0, 1fr);
+    grid-template-areas: "deck properties actions";
+  }
+
+  .workspace-with-properties > :is(.editor-sidebar, .builder-main) { border-top: 0; }
 }
 
 .profile-library-sheet {
@@ -436,66 +463,18 @@
   background: var(--bg1);
 }
 
-/* The properties dock shares the left column with the deck. */
-.control-dock {
-  flex: none;
-  display: flex;
-  flex-direction: column;
-  height: clamp(178px, var(--dock-height), min(440px, calc(100% - 240px)));
-  min-height: 0;
-  border-top: 1px solid var(--ln2);
-  background: var(--bg1);
-}
-
-.control-dock-handle {
-  display: grid;
-  flex: none;
-  place-items: center;
-  height: 10px;
-  cursor: ns-resize;
-  touch-action: none;
-  background: var(--bg1);
-}
-
-.control-dock-handle::after {
-  content: "";
-  width: 34px;
-  height: 3px;
-  border-radius: 3px;
-  background: var(--ln2);
-}
-
-.control-dock-handle:hover::after,
-.control-dock-handle:focus-visible::after {
-  background: var(--acc2);
-}
-
-.control-dock-handle:focus-visible {
-  outline: 2px solid var(--acc);
-  outline-offset: -2px;
-}
-
-#control-dock-content {
-  display: flex;
-  flex: 1;
-  min-height: 0;
-}
-
-#control-dock-content > .inspector {
-  width: 100%;
+.workspace-with-properties > .control-inspector {
+  width: auto;
   min-width: 0;
-  border: 0;
-}
-
-#control-dock-content > .control-inspector:not(.side-panel) {
+  min-height: 0;
+  border-color: var(--ln2);
   overflow: hidden;
 }
 
 .control-inspector .insp-head {
   gap: 7px;
-  padding: 5px 14px;
-  min-height: 39px;
-  background: var(--bg1);
+  padding: 7px 10px;
+  min-height: 52px;
 }
 
 .control-inspector .insp-head > .i {
@@ -503,17 +482,27 @@
 }
 
 .control-inspector .insp-head .grow {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
   min-width: 0;
 }
 
+.control-panel-label {
+  display: block;
+  color: var(--tx2);
+  font-size: 11px;
+}
+
 .control-inspector .insp-head h2 {
+  margin: 0;
   font-size: 14px;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+
+.control-panel-close.icon-btn {
+  width: 25px;
+  height: 28px;
+  flex: none;
 }
 
 .control-mode .tab {
@@ -704,15 +693,6 @@
   animation: none;
 }
 
-.control-dock {
-  background: var(--bg1);
-}
-
-.control-dock:not(:has(.control-fields > *, .control-look-pane)) {
-  height: auto;
-}
-
-.control-dock:not(:has(.control-fields > *, .control-look-pane)) .control-dock-handle,
 .control-fields:empty {
   display: none;
 }
@@ -725,18 +705,17 @@
 
 .trigger-row {
   display: flex;
+  flex-direction: column;
   min-width: 0;
   flex: none;
-  gap: 6px;
+  gap: 4px;
   padding: 0 12px 9px;
   border-bottom: 1px solid var(--ln);
 }
 
 .trigger-slot {
-  flex: 1 1 0;
   min-width: 0;
-  max-width: 252px;
-  min-height: 43px;
+  min-height: 31px;
   display: flex;
   align-items: center;
   border: 1px solid var(--ln2);
@@ -756,13 +735,14 @@
 }
 
 .trigger-choice {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(84px, 0.8fr) minmax(0, 1.2fr);
   flex: 1;
   align-items: center;
   gap: 6px;
   min-width: 0;
   width: 100%;
-  min-height: 42px;
+  min-height: 30px;
   padding: 4px 6px 4px 7px;
   text-align: left;
   background: transparent;
@@ -776,14 +756,20 @@
 }
 
 .trigger-label {
-  display: grid;
   min-width: 0;
   color: var(--tx2);
   line-height: 1.25;
   font-size: 11px;
 }
 
-.trigger-label strong {
+.trigger-binding {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+}
+
+.trigger-binding strong {
   color: var(--tx);
   font-size: 12px;
   font-weight: 500;
@@ -792,7 +778,7 @@
   text-overflow: ellipsis;
 }
 
-.trigger-choice:has(strong:not([data-action])) .trigger-label strong {
+.trigger-binding strong:not([data-action]) {
   color: var(--tx2);
 }
 

@@ -8,7 +8,6 @@ import { actionFitsTrigger, bindingForDrop } from "../editing";
 import { actionName, t, useLanguage } from "../i18n";
 import type { Placement } from "../layout";
 import { ActionLibrary } from "./ActionChooser";
-import { ControlDock } from "./ControlDock";
 import { DeckView } from "./DeckView";
 import { Icon } from "./Icon";
 import { Inspector, type InspectorHandle } from "./Inspector";
@@ -192,7 +191,7 @@ export function Builder({ live, view, saved, onPlace, onClose }: { live: LiveSta
           ))}
         </nav>
       </header>
-      <div className="builder-body">
+      <div className={`builder-body${selection && activeDraft ? " workspace-with-properties" : ""}`}>
         <section className="builder-canvas" aria-label={t("builder.soFar")}>
           <div className="builder-deck">
           <DeckView
@@ -220,12 +219,13 @@ export function Builder({ live, view, saved, onPlace, onClose }: { live: LiveSta
             showStrip={false}
           />
           </div>
-          {selection && activeDraft && (
-            <ControlDock>
-              <Inspector ref={inspector} selected={selection} view={{ ...view, profile: activeDraft, state: view.state && { ...view.state, page: null } }} onDropAction={assignKey} />
-            </ControlDock>
-          )}
         </section>
+        {selection && activeDraft && (
+          <Inspector
+            ref={inspector} selected={selection} view={{ ...view, profile: activeDraft, state: view.state && { ...view.state, page: null } }}
+            onClose={editingKey ? () => setEditingKey(null) : undefined} onDropAction={assignKey}
+          />
+        )}
         {editingKey ? (
           <div className="editor-sidebar">
             {error && <p className="help builder-notice" role="alert">{error}</p>}

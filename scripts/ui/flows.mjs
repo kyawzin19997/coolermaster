@@ -156,8 +156,13 @@ for (const [label, viewport] of [['wide', { width: 1440, height: 900 }], ['half'
   await step(page, `${label}: another control's click keeps the editor`, async () => {
     const ctl = page.locator('.dk-ctl');
     await ctl.nth(Math.min(5, (await ctl.count()) - 1)).click();
-    await page.waitForTimeout(250);
-    return visible(page, '.control-inspector .trigger-slot');
+    const panel = page.locator('.deck-workspace > .control-inspector');
+    const deck = await page.locator('.deck-workspace > .center').boundingBox();
+    const settings = await panel.boundingBox();
+    const actions = await page.locator('.deck-workspace > .editor-sidebar').boundingBox();
+    if (!deck || !settings || !actions || settings.x < deck.x + deck.width - 1) return 'key settings must be beside the deck';
+    if (actions.width < 240 || actions.height < 200) return 'the Actions panel lost usable space';
+    return panel.locator('.trigger-slot').first().isVisible();
   });
   await step(page, `${label}: the right library assigns press, hold and double press independently`, async () => {
     const key = page.locator('.dk-front .dk-ctl[data-kind="keys"]').nth(7);
@@ -190,6 +195,12 @@ for (const [label, viewport] of [['wide', { width: 1440, height: 900 }], ['half'
     await page.waitForTimeout(250);
     return visible(page, '.control-inspector .trigger-slot');
   });
+  await step(page, `${label}: the toolbar checks for updates and offers installation`, async () => {
+    await page.locator('.topbar-update').click();
+    await page.locator('.update-card').getByRole('button', { name: 'Install and restart', exact: true }).waitFor();
+    await page.getByRole('button', { name: /Back to the deck/ }).click();
+    return visible(page, '.deck-workspace > .control-inspector');
+  });
   await step(page, `${label}: Deck Builder opens from Deck tools, a card can be picked, Back returns`, async () => {
     await page.getByRole('button', { name: 'Deck tools', exact: true }).click();
     await page.getByRole('menuitem', { name: 'Deck Builder', exact: true }).click();
@@ -203,8 +214,9 @@ for (const [label, viewport] of [['wide', { width: 1440, height: 900 }], ['half'
     await draftKey.click();
     const library = page.locator('.builder-page .action-sidebar');
     await library.locator('#library-search').fill('microphone');
-    await library.getByRole('button', { name: 'Microphone mute', exact: true }).dragTo(page.locator('.builder-canvas [data-trigger="hold"]'));
-    await page.locator('.builder-canvas #action-name[data-action="core.mic"]').waitFor();
+    const settings = page.locator('.builder-body > .control-inspector');
+    await library.getByRole('button', { name: 'Microphone mute', exact: true }).dragTo(settings.locator('[data-trigger="hold"]'));
+    await settings.locator('#action-name[data-action="core.mic"]').waitFor();
     await page.getByRole('button', { name: /Back to the deck/ }).click();
     await page.locator('.deck-area .dk-front .dk-ctl[data-kind="keys"]').nth(7).click();
     await page.locator('.deck-workspace [data-trigger="hold"]').getByText('Drop an action').waitFor();

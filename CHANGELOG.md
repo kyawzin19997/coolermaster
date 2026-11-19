@@ -1,8 +1,10 @@
 # Changelog
 
-## Unreleased
+## 1.1.0
 
-- Simplified the key editor around separate Press, Hold, and Double press drop targets. Action parameters and appearance stay below the hardware preview.
+- Key settings open in a dedicated panel beside the deck when you select a key. Press, Hold, and Double press keep separate drop targets, and the Actions library stays visible.
+- Use the toolbar’s Updates button to check for the latest release. Installing still requires confirmation.
+- Fixed the Windows Open action for OBS Studio by launching the executable from its own directory, where OBS expects to find its language files and other resources.
 - Put brightness, profile edge color, scenes, music sync, and the screensaver under Lighting.
 - Refreshed the dark and light desktop surfaces and app icon. Removed public support, feedback, and community entry points, with local diagnostics and profile packages kept available.
 

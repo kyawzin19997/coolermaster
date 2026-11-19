@@ -29,6 +29,7 @@ pub fn shell_open(target: &str) -> Result<(), String> {
 #[cfg(windows)]
 mod platform {
     use std::ffi::c_void;
+    use std::path::{Path, PathBuf};
 
     use base64::Engine as _;
     use windows::Win32::Foundation::{CloseHandle, ERROR_SUCCESS, HANDLE};
@@ -64,17 +65,54 @@ mod platform {
     }
 
     pub fn shell_open(target: &str) -> Result<(), String> {
-        let file = HSTRING::from(target);
+        let target = target.strip_prefix('"').and_then(|rest| rest.strip_suffix('"')).unwrap_or(target);
+        let program = executable_path(target).or_else(|| named_obs_path(target));
+        let file = program.as_deref().map_or_else(|| HSTRING::from(target), |path| HSTRING::from(path.as_os_str()));
+        // OBS and other programs can load resources relative to their executable's directory.
+        // Let shortcuts, documents and URL handlers keep their shell-provided launch context.
+        let directory = program.as_deref().and_then(Path::parent).map(|path| HSTRING::from(path.as_os_str()));
         let mut info = SHELLEXECUTEINFOW {
             cbSize: std::mem::size_of::<SHELLEXECUTEINFOW>() as u32,
             // no error dialog from the shell: the error goes to the app's banner instead
             fMask: SEE_MASK_FLAG_NO_UI,
             lpFile: PCWSTR(file.as_ptr()),
+            lpDirectory: directory.as_ref().map_or(PCWSTR::null(), |path| PCWSTR(path.as_ptr())),
             nShow: SW_SHOWNORMAL.0,
             ..Default::default()
         };
         // SAFETY: every pointer in `info` outlives the call; no process handle is asked for.
         unsafe { ShellExecuteExW(&mut info) }.map_err(|e| e.message())
+    }
+
+    fn executable_path(target: &str) -> Option<PathBuf> {
+        let path = Path::new(target);
+        if target.contains("://") || path.components().count() < 2 || !path.extension().is_some_and(|extension| extension.eq_ignore_ascii_case("exe")) {
+            return None;
+        }
+        std::path::absolute(path).ok()
+    }
+
+    fn named_obs_path(target: &str) -> Option<PathBuf> {
+        let file = match target.to_ascii_lowercase().as_str() {
+            "obs.exe" => "obs.exe",
+            "obs" | "obs studio" | "obs64" | "obs64.exe" => "obs64.exe",
+            _ => return None,
+        };
+        [file, "OBS Studio"]
+            .into_iter()
+            .find_map(|name| crate::engine::installed::target_named(name).as_deref().and_then(executable_path).filter(|path| path.is_file()))
+            .or_else(|| std::env::split_paths(&std::env::var_os("PATH")?).map(|directory| directory.join(file)).find(|path| path.is_absolute() && path.is_file()))
+    }
+
+    #[cfg(test)]
+    #[test]
+    fn executable_launch_uses_its_own_directory() {
+        let path = executable_path(r"C:\Program Files\obs-studio\bin\64bit\OBS64.EXE").unwrap();
+        assert_eq!(path.parent(), Some(Path::new(r"C:\Program Files\obs-studio\bin\64bit")));
+        assert!(executable_path(r"portable\bin\obs64.exe").unwrap().is_absolute());
+        for target in ["notepad.exe", r"C:\Tools\OBS Studio.lnk", "https://example.com/obs.exe", "ms-settings:"] {
+            assert!(executable_path(target).is_none(), "{target}");
+        }
     }
 
     pub fn restart_module(kind: mh_protocol::ModuleKind) -> Result<(), String> {
