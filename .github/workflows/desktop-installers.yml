@@ -38,6 +38,8 @@ jobs:
           toolchain: 1.100.0
           targets: ${{ matrix.os == 'windows-latest' && 'x86_64-pc-windows-msvc' || 'aarch64-apple-darwin,x86_64-apple-darwin' }}
       - uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
       - uses: pnpm/action-setup@v4
         with:
           version: 10.32.1
@@ -82,7 +84,7 @@ jobs:
           app="$mount/MasterDeck.app"
           executable="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$app/Contents/Info.plist")"
           binary="$app/Contents/MacOS/$executable"
-          lipo -verify_arch arm64 x86_64 "$binary"
+          lipo "$binary" -verify_arch arm64 x86_64
           codesign --verify --deep --strict "$app"
           "$binary" cli --help
           mkdir installers
@@ -93,4 +95,13 @@ jobs:
           name: ${{ matrix.os == 'windows-latest' && 'MasterDeck-Windows-x64' || 'MasterDeck-macOS-Universal' }}
           path: installers/
           if-no-files-found: error
+          compression-level: 0
+      - name: Keep the macOS build if verification fails
+        if: failure() && runner.os == 'macOS'
+        uses: actions/upload-artifact@v4
+        with:
+          name: MasterDeck-macOS-verification-candidate
+          path: target/universal-apple-darwin/release/bundle/dmg/*.dmg
+          if-no-files-found: ignore
+          retention-days: 3
           compression-level: 0
