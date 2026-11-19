@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- macOS asks the user with these words (Tauri merges this file into the app's Info.plist) -->
+	<key>NSAudioCaptureUsageDescription</key>
+	<string>MasterDeck sets the volume of each app from your knobs and faders: it plays each app's sound at the level you turn to. Nothing is recorded or sent anywhere.</string>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>MasterDeck shows what Spotify or Music plays (cover, title) and controls playback from your deck.</string>
+	<!-- .streamDeckPlugin files list MasterDeck under Open With; Elgato's Stream Deck app stays their app -->
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>Stream Deck plugin</string>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>streamDeckPlugin</string>
+			</array>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>LSHandlerRank</key>
+			<string>Alternate</string>
+		</dict>
+	</array>
+</dict>
+</plist>

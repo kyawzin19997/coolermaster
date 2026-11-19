@@ -1,0 +1,108 @@
+name: Windows release
+
+on:
+  push:
+    tags: ["v[0-9]*"]
+
+permissions: {}
+
+concurrency:
+  group: windows-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: ${{ !github.event.deleted }}
+    name: Build and verify Windows x64 setup
+    runs-on: windows-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    env:
+      CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_RUSTFLAGS: -C target-feature=+crt-static
+      TAURI_UPDATER_PUBLIC_KEY: ${{ vars.TAURI_UPDATER_PUBLIC_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.100.0
+          targets: x86_64-pc-windows-msvc
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.32.1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.19.0
+          cache: pnpm
+          cache-dependency-path: app/pnpm-lock.yaml
+      - name: Verify release inputs and run release tooling tests
+        shell: pwsh
+        run: |
+          node scripts/windows-release.mjs check
+          node --test scripts/windows-release.test.mjs
+          node scripts/windows-release.mjs updater-config "$env:RUNNER_TEMP/hubdeck-updater.json"
+      - name: Install locked frontend dependencies and test
+        working-directory: app
+        shell: pwsh
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm test
+      - name: Build offline NSIS installer and sign updater asset
+        working-directory: app
+        shell: pwsh
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: |
+          if (!$env:TAURI_SIGNING_PRIVATE_KEY -or !$env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD) {
+            throw 'Add TAURI_SIGNING_PRIVATE_KEY and TAURI_SIGNING_PRIVATE_KEY_PASSWORD to the repository Actions secrets.'
+          }
+          pnpm exec tauri build --target x86_64-pc-windows-msvc --bundles nsis --config src-tauri/tauri.installers.conf.json --config src-tauri/tauri.release.conf.json --config "$env:RUNNER_TEMP/hubdeck-updater.json" -- --locked
+      - name: Verify installer signature and generate GitHub update feed
+        shell: pwsh
+        run: node scripts/windows-release.mjs stage target/x86_64-pc-windows-msvc/release/bundle/nsis release-assets
+      - name: Test install, shortcuts, x64 binary and uninstall
+        shell: pwsh
+        run: ./scripts/smoke-windows-installer.ps1 ./release-assets/MasterDeck-windows-x64-setup.exe
+      - name: Save verified release files
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-release-files
+          path: release-assets/
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
+
+  publish:
+    name: Publish verified installer to GitHub Releases
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: windows-release-files
+          path: release-assets
+      - name: Upload assets and publish the version tag
+        shell: bash
+        working-directory: release-assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          sha256sum --check SHA256-windows.txt
+          existing="$(gh api --paginate "repos/$GITHUB_REPOSITORY/releases" --jq '.[].tag_name')"
+          if grep -Fxq -- "$GITHUB_REF_NAME" <<< "$existing"; then
+            echo "::error::A release already uses $GITHUB_REF_NAME. Inspect it in GitHub Releases. If an upload was interrupted, remove only the incomplete draft before rerunning."
+            exit 1
+          fi
+          gh release create "$GITHUB_REF_NAME" \
+            MasterDeck-windows-x64-setup.exe \
+            MasterDeck-windows-x64-setup.exe.sig \
+            SHA256-windows.txt \
+            latest.json \
+            --repo "$GITHUB_REPOSITORY" --verify-tag \
+            --title "MasterDeck $GITHUB_REF_NAME" --notes-file notes.md

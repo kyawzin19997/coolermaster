@@ -1,0 +1,43 @@
+name: Something does not work
+description: A bug, a crash, a module that is not found or behaves oddly.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time. The quickest way to a fix: **Feedback > Report a problem** in HubDeck's top bar fills in the diagnostics below; or **Settings > Help and feedback > Save diagnostics** (also in the tray icon menu) and attach that file (it has versions, modules and the log, with web addresses, keys and paths removed).
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+      placeholder: "I turned knob 2 (Volume, Spotify) and nothing changed; I expected Spotify to get quieter."
+    validations:
+      required: true
+  - type: dropdown
+    id: impact
+    attributes:
+      label: How much does it get in your way?
+      options:
+        - It stops me using HubDeck
+        - A feature I need does not work
+        - Annoying, but I can work around it
+        - A small thing
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to make it happen again
+      placeholder: |
+        1. ...
+        2. ...
+  - type: input
+    id: version
+    attributes:
+      label: HubDeck version and system
+      placeholder: "HubDeck 0.1.0, Windows 11 23H2 / macOS 15.5"
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics
+      description: Filled in when you use Feedback > Report a problem in HubDeck (version, system, modules, last warnings and errors; addresses, keys and paths removed). You can also drag the file from Settings > Help and feedback > Save diagnostics here.

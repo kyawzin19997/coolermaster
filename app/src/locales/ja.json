@@ -1,0 +1,3362 @@
+{
+"name": "日本語",
+"strings": {
+"library.panelTitle": "アクションライブラリ",
+"library.dragHint": "アクションをコントロールにドラッグします。",
+"library.compatible": "選択中のコントロールに対応",
+"library.compatibleShort": "対応するもののみ",
+"stage.tools": "デッキツール",
+"stage.setup": "デッキを設定",
+"stage.showModules": "予備モジュールを表示",
+"stage.hideModules": "予備モジュールを非表示",
+"builder.tips": "この手順のヘルプ",
+"library.clearSearch": "アクション検索をクリア",
+"library.browsePlugins": "プラグインを見る",
+"stage.editorTitle": "デッキエディター",
+"stage.shortcutHint": "ドラッグでキーを並べ替え · Ctrl+Z で取り消し",
+"app.loadingPanel": "パネルを開いています…",
+"inspector.panelTitle": "コントロールの設定",
+"inspector.resize": "コントロール設定パネルのサイズを変更",
+"profiles.searchShort": "プロファイルを検索",
+"profiles.options": "{name} のオプション",
+"profiles.makeHome": "ホームに設定",
+"module.base": "ベース",
+"module.keys": "15キーモジュール",
+"module.faders": "5フェーダーモジュール",
+"module.knobs": "3ノブモジュール",
+"module.rollers": "2ローラーモジュール",
+"module.dial": "ダイヤルモジュール",
+"control.base": "ベース",
+"control.keys": "キー",
+"control.faders": "フェーダー",
+"control.knobs": "ノブ",
+"control.rollers": "ローラー",
+"control.dial": "ダイヤル",
+"kind.base": "ベース",
+"kind.keys": "キー",
+"kind.faders": "フェーダー",
+"kind.knobs": "ノブ",
+"kind.rollers": "ローラー",
+"kind.dial": "ダイヤル",
+"on.base": "ベース",
+"on.keys": "キー",
+"on.faders": "フェーダー",
+"on.knobs": "ノブ",
+"on.rollers": "ローラー",
+"on.dial": "ダイヤル",
+"orientation.vertical": "縦置き",
+"orientation.horizontal": "横置き",
+"app.hintArranging": "図をデッキに合わせてください。キーの番号、ダイヤルの矢印、ノブとフェーダーの色がそろう必要があります。各ローラーを回して、ここで同じものが動くか確認してください。合うまでモジュールをドラッグまたは回転します。",
+"app.hint": "デッキ上のものを押す・回す・スライドすると選択されます。キーをドラッグすると移動、ページキーをダブルクリックするとそのページを開きます。Ctrl+C / Ctrl+V でコピー、Delete で消去、Ctrl+Z で元に戻します。",
+"edit.notOn": "{action} は {control} では使えません",
+"edit.nothingToUndo": "元に戻す操作はありません",
+"edit.undone": "元に戻しました",
+"edit.empty": "このコントロールにはまだ何も割り当てられていません",
+"edit.copied": "コピーしました",
+"stage.addProfile": "追加",
+"ctl.copy": "コピー",
+"ctl.paste": "貼り付け",
+"ctl.pasteLook": "見た目を貼り付け",
+"edit.lookPasted": "見た目を貼り付けました：色、ライト、スタイル",
+"edit.lookNeedsAction": "先にここにアクションを設定してから、見た目を貼り付けてください",
+"ctl.clear": "消去",
+"ctl.openPage": "ページを開く",
+"edit.pasted": "貼り付けました",
+"edit.pastedPartly": "貼り付けました（一部はこのコントロールに合いません）",
+"edit.cleared": "消去しました（Ctrl+Z で戻せます）",
+"edit.moved": "移動しました（Ctrl+Z で戻せます）",
+"edit.swapped": "入れ替えました（Ctrl+Z で戻せます）",
+"library.title": "アクション",
+"library.search": "アクションを検索",
+"library.hint": "アクションをコントロールにドラッグするか、コントロールを選んでアクションをクリックします。",
+"library.notOn": "{control} では使えません",
+"library.more": "プラグインでさらにアクションを追加できます。",
+"topbar.profiles": "プロファイル",
+"topbar.profileSettings": "プロファイル設定",
+"topbar.switchesFor": "{apps} で自動的に切り替わります",
+"topbar.activate": "有効にする",
+"topbar.newProfile": "新しいプロファイル",
+"topbar.emptyProfile": "空のプロファイル",
+"topbar.emptyProfileHelp": "何もない状態から始めて名前を付けます。",
+"topbar.fromPreset": "テンプレート",
+"topbar.profileName": "プロファイル名",
+"topbar.foreground": "前面: {app}",
+"topbar.inFront": "前面",
+"topbar.auto": "自動",
+"topbar.autoHelp": "{app} には専用のプロファイルがあるので切り替わりました。プロファイルのないアプリに移ると、ホームのプロファイルに戻ります。",
+"topbar.pin": "固定",
+"topbar.pinned": "固定中",
+"topbar.pinHelp": "このプロファイルを固定します。もう一度クリックするまで、アプリを切り替えてもデッキはこのままです。",
+"topbar.pinnedHelp": "固定中: アプリを切り替えてもデッキは {profile} のままです。クリックすると再びアプリに合わせて切り替わります。",
+"topbar.settings": "設定",
+"settings.title": "設定",
+"settings.advanced": "詳細",
+"settings.calibrateHelp": "キーの画像がずれて見える場合は、キーの窓に合わせて調整します。",
+"stage.editLayout": "配置を編集",
+"stage.doneLayout": "完了",
+"stage.editLayoutHelp": "図が机の上と違う場合は、モジュールを動かしたり回したりします。",
+"library.hintSelected": "アクションをコントロールにドラッグするか、クリックして {control} に割り当てます。",
+"library.notHere": "ここでは不可",
+"inspector.nothingSelected": "何も選択されていません",
+"inspector.look": "見た目",
+"topbar.calibrate": "キーを調整",
+"topbar.arrange": "モジュールを配置",
+"topbar.doneArranging": "配置を完了",
+"topbar.modules": "{count} 個のモジュール",
+"topbar.turned": "{turn}° 回転",
+"topbar.language": "言語",
+"language.filesHelp": "ほかの言語: その言語のファイルを languages フォルダーに入れて、ここで選びます。「言語ファイルを作成」で翻訳の元になる英語のテキストをすべて書き出します。ファイルにないテキストは英語で表示されます。",
+"language.makeFile": "言語ファイルを作成",
+"language.openFolder": "languages フォルダーを開く",
+"language.templateMade": "英語のテキストはすべて {path} にあります。言語コード（ja.json など）に名前を変えて翻訳し、ここで選んでください。",
+"profile.title": "プロファイル",
+"profile.close": "閉じる",
+"topbar.plugins": "プラグイン",
+"topbar.games": "ゲーム",
+"inspector.missingOption": "未インストール: {id}",
+"look.appIcon": "アプリのアイコンを使う",
+"inspector.missing": "このアクションは「{plugin}」のもので、インストールされていません。設定は保存されています。もう一度使うにはプラグインをインストールするか、別のアクションを選んでください。",
+"folder.title": "プロファイルのフォルダー",
+"folder.choose": "フォルダーを選ぶ…",
+"folder.default": "アプリのフォルダーに戻す",
+"folder.changed": "完了しました。そのフォルダーにあるプロファイルを使い、足りないものはあなたのプロファイルをコピーしました。",
+"folder.help": "OneDrive や Dropbox などの同期フォルダーを選ぶと、プロファイルを複数のパソコンで共有できます。ほかのパソコンでの変更は数秒で反映されます。両方で同じプロファイルを同時に変えた場合は、最後に保存したほうが残ります。",
+"screens.title": "画面（すべてのプロファイル）",
+"screens.brightness": "キーとダイヤルの明るさ: {value}%",
+"screens.locked": "パソコンのロック中は画面とライトを消す",
+"screens.after": "画面を消すまでの時間",
+"screens.never": "消さない",
+"screens.minutes": "{count} 分",
+"screens.help": "暗くなったデッキに最初に触れると、起動するだけでキーのアクションは実行されません。",
+"backups.title": "バックアップ（すべてのプロファイル）",
+"backups.help": "MasterDeck は 1 日 1 回と、インポート・削除・復元の前に、すべてのプロファイルと設定をコピーします。最新の 30 件を残します。",
+"backups.daily": "毎日",
+"backups.beforeImport": "インポート前",
+"backups.beforeDelete": "削除前",
+"backups.beforeRestore": "復元前",
+"backups.byHand": "手動",
+"backups.profiles": "{count} 個のプロファイル",
+"backups.restore": "復元",
+"backups.confirm": "すべてのプロファイルと設定を {when} の状態に戻しますか？今の状態は先にバックアップされます。",
+"backups.restored": "復元しました。復元前の状態は一覧に「復元前」として残っています。",
+"backups.now": "今すぐバックアップ",
+"backups.made": "バックアップを作成しました。",
+"backups.all": "{count} 件すべて表示",
+"backups.fewer": "表示を減らす",
+"games.title": "ゲーム",
+"games.help": "デッキが小さなゲーム機になります。キーひとつひとつがゲームです。ダイヤルを 1 秒押し続けると戻ります（ゲーム → ゲーム一覧 → プロファイル）。",
+"games.play": "デッキで遊ぶ",
+"games.stop": "遊ぶのをやめる",
+"games.best": "ベスト {score}",
+"games.noBest": "まだ遊んでいません",
+"games.key": "ヒント: ゲームのアクションをキーに置くか、トレイのメニューを使うと、デッキからそのまま遊べます。",
+"games.wheel": "ルーレットの項目",
+"games.wheelHelp": "1 行に 1 つ、14 文字以内の項目を 2〜12 個。空にすると標準のランチルーレットになります。",
+"games.banner": "デッキは今ゲーム機です。プロファイルのアクションは待機中です。ダイヤルを長押しすると戻ります。",
+"plugins.title": "プラグイン",
+"plugins.help": "プラグインは manifest.json の入ったフォルダーです。plugins フォルダーに入れて MasterDeck を再起動すると、そのアクションが「何をする？」に表示されます。",
+"plugins.howTo": "作り方",
+"plugins.openFolder": "plugins フォルダーを開く",
+"plugins.none": "インストールされたプラグインはありません。",
+"plugins.actions": "{count} 個のアクション",
+"plugins.connected": "接続中",
+"plugins.permissions": "使用を宣言しているもの: {list}",
+"plugins.restarts": "{count} 回再起動",
+"profile.name": "名前",
+"profile.apps": "次のアプリが前面にあるとき、このプロファイルに切り替える",
+"profile.appsHelp": "カンマで区切ります。コロンの後にウィンドウのタイトルを付けると、一部のウィンドウだけに合わせられます: \"chrome.exe: YouTube\"、どのアプリでもそのタイトルなら \"*: Zoom Meeting\"。タイトルの条件はアプリだけの条件より優先されます。",
+"profile.addApp": "{app} をリンク",
+"profile.linkApp": "アプリをリンク",
+"profile.unlinkApp": "{app} のリンクを解除",
+"profile.appsOpen": "起動中",
+"profile.appsRecent": "最近使用",
+"profile.noApps": "ほかのアプリはまだ見つかっていません。アプリを開いて一度前面に出してから戻ってください。",
+"profile.appsAdvanced": "詳細: アプリとウィンドウタイトルを入力",
+"profile.autoSwitch": "前面のアプリに合わせてプロファイルを自動で切り替える",
+"profile.fallback": "MasterDeck 起動時のホームプロファイル",
+"profile.homeHelp": "手で選んだプロファイルがホームプロファイルです。専用のプロファイルを持つアプリは前面にある間だけ切り替わり、その後ホームに戻ります。プロファイルのないアプリでは何も切り替わりません。",
+"profile.panel": "キーパネル",
+"profile.panelKeys": "キーごとに個別の表示",
+"profile.panelPicture": "全キーで 1 枚の画像",
+"profile.panelClock": "全キーで時計",
+"profile.panelGraph": "全キーでライブグラフ",
+"connections.title": "接続（すべてのプロファイル）",
+"connections.obsUrl": "OBS WebSocket のアドレス",
+"connections.obsPassword": "OBS WebSocket のパスワード",
+"connections.passwordKept": "保存済み（入力すると変更）",
+"connections.passwordNone": "パスワードなし",
+"connections.save": "保存",
+"connections.saved": "保存しました。OBS の操作を含むプロファイルが有効な間、MasterDeck が接続します。",
+"connections.removePassword": "パスワードを削除",
+"connections.passwordRemoved": "パスワードを削除しました。",
+"connections.obsHelp": "OBS で: ツール > WebSocket サーバー設定。パスワードはシステムの資格情報ストアに保存されます。",
+"steps.when": "条件",
+"steps.when.always": "常に",
+"steps.when.micMuted": "マイクがミュートのとき",
+"steps.when.micOn": "マイクがオンのとき",
+"steps.when.soundMuted": "音声がミュートのとき",
+"steps.when.soundOn": "音声がオンのとき",
+"steps.when.obsRecording": "OBS が録画中のとき",
+"steps.when.obsNotRecording": "OBS が録画中でないとき",
+"steps.when.obsStreaming": "OBS が配信中のとき",
+"steps.when.obsNotStreaming": "OBS が配信中でないとき",
+"audio.next": "押すたびに次のデバイス",
+"audio.outputs": "スピーカー / ヘッドホン",
+"audio.inputs": "マイク",
+"midi.choose": "MIDI 出力を選ぶ…",
+"midi.noPorts": "MIDI 出力がありません（Windows では loopMIDI をインストール）",
+"midi.refresh": "更新",
+"connections.spotifyConnect": "Spotify に接続",
+"connections.spotifyWhy": "Spotify では、MasterDeck のようなアプリがお気に入りやプレイリストを使うには、開発者サイトで自分用の無料アプリを作る必要があり、Spotify Premium が必要です。再生・一時停止・次の曲はそれなしで使えます。",
+"connections.spotifyStep1": "Spotify アカウントで Spotify の開発者ダッシュボードにサインインします。",
+"connections.spotifyOpenDashboard": "ダッシュボードを開く",
+"connections.spotifyStep2": "Create app をクリックし、名前と説明を自由に入力します（例: MasterDeck）。",
+"connections.spotifyStep3": "同じフォームの Redirect URIs にこのアドレスを貼り付けて Add をクリックします。Web API にチェックを入れ、規約に同意して Save をクリックします。",
+"connections.spotifyCopy": "コピー",
+"connections.spotifyStep4": "アプリのページから Client ID をコピーしてここに貼り付け、接続します。ブラウザで一度だけ許可を求められます。",
+"connections.spotifyIdPlaceholder": "Client ID: 英数字 32 文字",
+"connections.spotifyAs": "{name} として接続しました。お気に入り、削除、プレイリストに追加のキーが使えます。",
+"connections.spotifyNoPremium": "このアカウントには Premium がないと Spotify が伝えています。Premium がないと、Spotify はこの種のアプリを停止します。",
+"connections.spotifyHowAgain": "設定方法",
+"connections.spotifyReconnect": "もう一度接続",
+"connections.spotifyDisconnect": "接続を解除",
+"connections.spotifyWaiting": "ブラウザーでサインインを完了してください…",
+"connections.spotifyConnected": "接続しました。お気に入り登録、削除、プレイリストへの追加のキーが使えます。",
+"connections.streamlabsUrl": "Streamlabs Desktop のアドレス",
+"connections.streamlabsToken": "Streamlabs API トークン",
+"connections.streamlabsHelp": "Streamlabs Desktop で: 設定 > リモートコントロール > 詳細を表示。API トークンをコピーします。トークンはシステムの資格情報ストアに保存されます。",
+"connections.twitch": "Twitch",
+"connections.twitchConnect": "Twitch に接続",
+"connections.twitchWaiting": "ブラウザーの Twitch のページで MasterDeck を承認してください…",
+"connections.twitchConnected": "接続しました。Twitch のキーが使えます。",
+"connections.twitchHelp": "ブラウザーで Twitch を開いて MasterDeck を承認します。パスワードは保存されず、サインイン情報だけがシステムの資格情報ストアに残ります。",
+"connections.twitchNotSetUp": "このビルドでは Twitch のサインインが設定されていません。",
+"connections.haUrl": "Home Assistant のアドレス",
+"connections.haToken": "Home Assistant のアクセストークン",
+"connections.tokenNone": "トークンなし",
+"connections.removeToken": "トークンを削除",
+"connections.haHelp": "Home Assistant で: プロフィール > セキュリティ > 長期アクセストークン。トークンはシステムの資格情報ストアに保存されます。",
+"metric.cpu": "CPU 負荷",
+"metric.ram": "メモリ使用量",
+"metric.gpu": "GPU 負荷",
+"metric.gpuTemp": "GPU 温度",
+"metric.vram": "GPU メモリ使用量",
+"profile.panelHelp": "キーのアクションはそのまま動きます。変わるのは表示だけです。アニメーション GIF は動きます。",
+"profile.edge": "ベースの縁を 1 色で光らせる",
+"profile.duplicate": "複製",
+"profile.copyName": "{name} のコピー",
+"profile.export": "エクスポート",
+"profile.import": "インポート",
+"profile.adapt": "手持ちのモジュールに合わせる",
+"profile.adaptHelp": "持っていないモジュールの割り当てを、持っているモジュールにコピーします（元の設定は残るので、後でモジュールを付ければすぐに使えます）",
+"profile.adaptNothing": "移すものはありません。このプロファイルは手持ちのモジュールで足ります。",
+"profile.moved": "モジュールに合わせてコピーしました（元の設定は残ります）: {list}",
+"profile.fileType": "MasterDeck プロファイル",
+"profile.savedTo": "{path} に保存しました",
+"profile.delete": "削除",
+"profile.confirmDelete": "プロファイル「{name}」を削除しますか？",
+"banner.unresponsiveWin": "{name} が応答しません。再起動するか、ベースから外してもう一度付けてください。",
+"banner.unresponsive": "{name} が応答しません。MasterDeck が再起動しています。暗いままなら、ベースから外してもう一度付けてください。",
+"banner.restarted": "再起動しました。再接続中…",
+"banner.restarting": "再起動中…",
+"banner.restart": "モジュールを再起動",
+"banner.paused": "デッキは一時停止中です。キーとダイヤルは専用のアニメーションを表示し、何も反応しません。",
+"banner.resume": "再開",
+"turn.group": "ベースの向き",
+"turn.label": "ベースの回転",
+"turn.auto": "自動",
+"turn.standing": "0°、立てて設置",
+"turn.lying": "270°、寝かせて設置",
+"turn.noSensor": "センサーの値なし",
+"turn.follow": "センサーに従う（{sensed}）",
+"turn.always": "常に時計回りに {turn}",
+"pages.title": "ページ",
+"pages.keys": "ページ",
+"pages.main": "メイン",
+"pages.name": "ページ名",
+"pages.new": "新しいページ",
+"pages.newHelp": "新しいキーのページ（「ページへ移動」のキーで開きます）",
+"pages.unreachable": "このページを開くものがデッキにありません",
+"pages.addWay": "「次のページ」を追加",
+"pages.addWayHelp": "前のページの空いているキーに「次のページ」キーを置きます",
+"pages.rename": "名前を変更",
+"pages.delete": "ページを削除",
+"pages.confirmDelete": "ページ「{name}」とそのキーを削除しますか？",
+"welcome.title": "MasterDeck へようこそ",
+"welcome.none": "デッキがまだ見つかりません。ベースを USB-C ケーブルで接続してください。モジュールは取り付けるとすぐに表示されます。",
+"welcome.found": "{count} 個のモジュールが見つかりました: {list}。",
+"welcome.skip": "スキップ",
+"inspector.empty": "コントロールをクリックするか、デッキ上で押す・回す・スライドして、動作を設定します。",
+"inspector.gesture": "ジェスチャー",
+"inspector.gestureSet": "設定済み",
+"gesture.tap": "押す",
+"gesture.hold": "長押し",
+"gesture.double": "ダブル押し",
+"gesture.holdHelp": "コントロールを 0.5 秒押し続けると実行されます。",
+"gesture.doubleHelp": "素早く 2 回押すと実行されます。そのため 1 回押しは、ダブル押しでないことを確かめるために 0.3 秒待ちます。",
+"inspector.action": "アクション",
+"inspector.nothing": "なし",
+"inspector.accel": "速く回すと加速",
+"inspector.serial": "シリアル",
+"inspector.firmware": "ファームウェア",
+"hotkey.recording": "キーを押してください…",
+"hotkey.placeholder": "例: Ctrl+Shift+F13",
+"hotkey.record": "記録",
+"hotkey.special": "特殊キー",
+"hotkey.specialPick": "特殊キー…",
+"param.targetPlaceholder": "C:\\Tools\\app.exe または https://…",
+"param.targetPlaceholderMac": "/Applications/App.app または https://…",
+"param.browse": "参照",
+"param.chooseProfile": "プロファイルを選ぶ…",
+"param.mainPage": "メインページ",
+"param.pictureNone": "画像を選ぶ",
+"param.pictureChange": "変更",
+"param.pictureRemove": "削除",
+"petFit.happy": "ごきげん",
+"petFit.petted": "なでられ中",
+"petFit.hungry": "おなかすいた",
+"petFit.asleep": "おやすみ",
+"petFit.size": "大きさ",
+"petFit.reset": "リセット",
+"petFit.drag": "ドラッグして画像を動かす",
+"param.lastApp": "直前に前面にあったアプリを使う",
+"param.useApp": "{app} を使う（少し前に前面にありました）",
+"param.chooseApp": "アプリを選ぶ",
+"param.playingNow": "いま音を出しているアプリ",
+"param.notConnected": "一覧から選ぶには {service} に接続してください（設定 > 接続）。",
+"param.typeName": "名前を入力する",
+"param.pickName": "一覧から選ぶ",
+"param.searchHint": "数文字入力すると、一致する名前が表示されます。",
+"param.obsPick": "選ぶ…",
+"param.changeApp": "変更",
+"param.typeApp": "名前を入力する",
+"param.listApps": "一覧から選ぶ",
+"param.installedApps": "インストール済み",
+"param.appNotFound": "その名前のアプリはありません。名前を入力しますか？",
+"steps.action": "ステップ {n} のアクション",
+"steps.up": "上へ",
+"steps.down": "下へ",
+"steps.remove": "ステップを削除",
+"steps.wait": "実行前の待ち時間",
+"steps.add": "ステップを追加",
+"modes.name": "モード {n} の名前",
+"modes.namePlaceholder": "ダイヤルに表示される名前",
+"modes.remove": "モードを削除",
+"modes.action": "モード {n} のアクション",
+"modes.add": "モードを追加",
+"look.name": "ラベル",
+"look.onOwn": "オンのときの見た目",
+"look.onHelp": "ミュート中・録画中・配信中・オンのときに表示されます。設定しないとキーは赤（ライブのシーンは緑）になります。",
+"look.ownColor": "独自の色",
+"look.color": "色",
+"look.ledLevel": "明るさで値を表示（フェーダーの位置、音量）",
+"look.ledHelp": "ここで設定した色やエフェクトは、このコントロールではデッキのライトスタイル（設定 > ライト）より優先されます。",
+"look.advancedLights": "ライトの詳細設定",
+"lights.title": "ライト",
+"profile.color": "プロファイルの色",
+"installed.pickApp": "アプリを選ぶ",
+"installed.pickGame": "ゲームを選ぶ",
+"installed.searchApps": "アプリを検索",
+"installed.searchGames": "ゲームを検索",
+"installed.refresh": "アプリとゲームを探し直す",
+"installed.scanning": "インストール済みのものを調べています…",
+"installed.noApps": "一致するアプリはありません。",
+"installed.noGames": "ゲームが見つかりません（Steam、Epic、GOG Galaxy を読み取ります）。",
+"installed.gamePlaceholder": "steam://rungameid/730",
+"profile.checkTitle": "これらのコントロールを確認してください",
+"profile.checkHelp": "このパソコンにないものを指しています（ほかの PC からプロファイルをインポートした後によく起こります）。インスペクターでアプリ、ファイル、デバイスを選び直してください。",
+"profile.colorHelp": "ライトスタイルが「プロファイルごとの色」のときに使われます（設定 > ライト）。",
+"lights.style": "ライトスタイル",
+"lights.rainbow": "レインボー",
+"lights.oneColor": "単色",
+"lights.profileColor": "プロファイルごとの色",
+"lights.off": "オフ",
+"lights.brightness": "LED の明るさ（ノブ、フェーダー、縁）",
+"lights.reactTo": "ライトが反応するもの",
+"lights.reactMic": "マイクのミュート（そのノブ、なければ縁）",
+"lights.reactLive": "OBS や Streamlabs の録画・配信中（縁がゆっくり点滅）",
+"lights.reactAgents": "Claude Code のセッションが応答を待っている（縁が脈打つ）",
+"lights.reactTimer": "タイマーが終了（縁が点滅）",
+"lights.reactLevels": "音量のノブとフェーダーがレベルを表示",
+"lights.help": "デッキのすべてのライトに 1 つのスタイル。ノブやフェーダー個別に設定した色やエフェクト（ライトの詳細設定）が優先されます。",
+"look.icon": "アイコン",
+"look.noIcon": "アイコンなし",
+"look.preview": "キーのプレビュー",
+"look.label": "ラベル",
+"look.background": "背景",
+"look.text": "文字",
+"look.iconColor": "アイコン",
+"look.fit": "画像",
+"screens.appIcons": "キーのアプリアイコン",
+"screens.appIconsIcon": "アイコンとして表示、下に名前",
+"screens.appIconsFill": "キー全体",
+"screens.appIconsFillLabel": "キー全体に名前付き",
+"screens.appIconsHelp": "画像が「自動」のキーに使われます。キーごとに個別に選ぶこともできます。",
+"screens.font": "デッキのフォント",
+"screens.fontOwn": "MasterDeck 標準（IBM Plex Sans）",
+"screens.fontHelp": "キーとダイヤルの文字に使います。フォントにない文字（日本語、中国語、韓国語など）は、その文字を持つこのパソコンの別のフォントで表示されます。",
+"look.fitAuto": "自動",
+"look.fitIcon": "アイコンとして",
+"look.fitFill": "キー全体",
+"look.fitHelp": "自動: アプリのアイコンやロゴは「設定 > 画面」のとおり（標準はアイコンとして）、写真やカバーはキー全体に表示されます。ラベルが空なら文字は表示されません。",
+"look.picture": "画像",
+"look.pictures": "画像",
+"look.changePicture": "画像を変更",
+"look.choosePicture": "画像を選ぶ",
+"look.removePicture": "画像を削除",
+"look.pictureHelp": "PNG、JPG、GIF（アニメーションも可）、WebP、SVG。キー全体に表示されアイコンの代わりになります。ラベルは上に重なります。",
+"look.pictureHelpDial": "PNG、JPG、GIF（アニメーションも可）、WebP、SVG。ダイヤルの画面全体に表示されアイコンの代わりになります。ラベルは上に重なります。",
+"deck.connectingTitle": "デッキに接続しています...",
+"deck.connecting": "MasterDeck がベースとモジュールを認識しています。数秒かかります。",
+"deck.noneTitle": "MasterHUB が見つかりません。",
+"deck.none": "ベースを USB-C ケーブルで接続してください。モジュールは取り付けるとすぐにここに表示されます。",
+"deck.top": "上",
+"deck.dial": "ダイヤル",
+"deck.slotUnknown": "スロット不明",
+"deck.rotate": "{kind} を回転",
+"deck.guessed": "位置は推定です。「モジュールを配置」で置いてください。",
+"deck.edge": "縁",
+"deck.rainbow": "レインボー",
+"deck.off": "オフ",
+"forApp.menu": "アプリやゲーム用に…",
+"forApp.menuHelp": "選ぶと、MasterDeck がプロファイルを作り、そのアプリと一緒に切り替えます。",
+"forApp.title": "アプリ用のプロファイル",
+"forApp.help": "アプリを選んでください。MasterDeck がプロファイルを作ります。そのアプリ専用のテンプレートがあればそれを、なければ種類（ブラウザー、エディター、チャット、プレーヤー）に合ったキーと、ノブとダイヤルにメディアと音量を、手持ちのモジュールに合わせて配置します。そのアプリが前面に来るたびに切り替わります。",
+"forApp.open": "起動中",
+"forApp.installed": "インストール済み",
+"forApp.making": "{app} のプロファイルを作成中…",
+"fresh.title": "{name} の準備ができました",
+"fresh.subtitle": "最初にいくつかのキーを設定しました。自分好みにしましょう:",
+"fresh.dragTitle": "アクションを追加",
+"fresh.drag": "キー、ノブ、ダイヤルをクリックするか、デッキで押して、動作を選びます。",
+"fresh.lookTitle": "アイコンと色を選ぶ",
+"fresh.look": "キーを選び、「見た目」でアイコン（ゲームアイコンやアイコンパックも）、スタイル、色、または自分の画像を選びます。",
+"fresh.lightsTitle": "ライトを設定",
+"fresh.lights": "プロファイルパネルでプロファイルに色を付けます。デッキでの使い方は「設定 > ライト」で決まります。",
+"fresh.switchTitle": "自動で切り替わります",
+"fresh.switch": "{app} を前面に出すとこのプロファイルになり、離れるとホームプロファイルに戻ります。",
+"fresh.switchNone": "プロファイルパネルでアプリをリンクすると、そのアプリが前面のときに切り替わります。",
+"fresh.done": "わかりました",
+"profiles.title": "プロファイル",
+"profiles.count": "{count} 個のプロファイル",
+"profiles.all": "すべてのプロファイル（{count}）",
+"profiles.search": "プロファイルとアプリを検索",
+"profiles.rename": "名前を変更",
+"auto.banner": "アプリとゲーム用の既製プロファイル: {names}。それぞれのアプリが前面に来ると自動で切り替わります。",
+"auto.bannerOne": "{names} 用の既製プロファイル。アプリが前面に来ると自動で切り替わります。",
+"auto.show": "表示",
+"try.interrupted": "下書き「{name}」をデッキで試している間に MasterDeck が再起動したため、元のデッキに戻りました。あなたの設定は何も変わっていません。",
+"try.putBack": "もう一度デッキに表示",
+"try.useThis": "これを使う",
+"try.dismiss": "今はしない",
+"ai.toggle": "AI で作る",
+"ai.help": "Claude Code が MasterDeck のツールでプロファイル全体を設計します。アプリの実際のショートカット、アイコン、ライト、手持ちのすべてのモジュール。使えるのは MasterDeck だけで、あなたのファイルには触れません。1〜3 分かかります。",
+"ai.helpCopy": "Claude Code が見つかりません。アプリを選ぶと依頼文がコピーされます。MasterDeck に接続した Claude Desktop に貼り付けてください（設定 > 接続）。",
+"ai.making": "Claude が {app} のプロファイルを作っています。1〜3 分かかります。作業を続けて構いません。",
+"ai.copied": "依頼文をコピーしました。Claude Desktop（設定 > 接続で接続済み）に貼り付けると、プロファイルがここに表示されます。",
+"ai.nothing": "Claude は終了しましたが、新しいプロファイルはできませんでした。",
+"library.popular": "よく使う",
+"inspector.moreOptions": "その他のオプション",
+"hotkey.common": "よく使うショートカット...",
+"shortcut.copy": "コピー",
+"shortcut.paste": "貼り付け",
+"shortcut.cut": "切り取り",
+"shortcut.undo": "元に戻す",
+"shortcut.redo": "やり直し",
+"shortcut.save": "保存",
+"shortcut.find": "検索",
+"shortcut.selectAll": "すべて選択",
+"shortcut.newTab": "新しいタブ",
+"shortcut.closeTab": "タブを閉じる",
+"shortcut.reopenTab": "タブを開き直す",
+"shortcut.screenshot": "スクリーンショット",
+"shortcut.taskView": "タスクビュー",
+"shortcut.desktop": "デスクトップ",
+"shortcut.lock": "ロック",
+"shortcut.clipboard": "クリップボード",
+"shortcut.emoji": "絵文字",
+"shortcut.explorer": "ファイル",
+"shortcut.gameBar": "Game Bar",
+"shortcut.clip": "30 秒クリップ",
+"dialLooks.title": "ダイヤルの見た目",
+"demo.page-anim": "7 タブ中 5: キーのアニメーション画像（GIF）。それぞれ自分のペースで動きます。「見た目 > 画像を選ぶ」で自分のものを置くか、AI アシスタントに作ってもらえます。",
+"demo.page-picture": "7 タブ中 6: 1 枚の画像を 15 個のキーに分割。各キーはそれぞれの役目をこなします。",
+"demo.split-picture": "1 枚の画像の一部です。画像全体でパネルを覆うこともでき（プロファイル設定 > パネル）、AI アシスタントに 15 個のキーへ切り分けてもらうこともできます。",
+"demo.page-basics": "7 タブ中 1: キーの日常的な役目。右下のキーで次のタブへ。このキーでいつでもここに戻れます。",
+"demo.open-app": "プログラム、ファイル、フォルダーを開きます。「アプリを開く」アクションで設定します。この PC のアプリ（アイコン付き）から選ぶか、任意のファイルを参照します。",
+"demo.open-web": "ブラウザーでウェブサイトを開きます。アプリと同じアクションで、プログラムの代わりにアドレスを入れます。",
+"demo.shortcut": "キーの組み合わせを押します。「ホットキー」で記録するか、よく使うものを名前で選べます（コピー、スクリーンショットなど）。ゲームでは「送信方法: ゲーム用」を選びます。",
+"demo.type-text": "前面のアプリに文字を入力します。署名、返信、コマンドなど。先にテキスト欄をクリックしてください。",
+"demo.media": "再生中の音楽や動画を操作します（Spotify、YouTube、どのプレーヤーでも）。",
+"demo.mute": "パソコンの音をミュート / ミュート解除します。",
+"demo.mic": "すべてのアプリでマイクを一度にミュートします。ミュート中はキーが赤くなります。プッシュトゥトークとしても使えます。",
+"demo.next": "次のタブへ移動します。タブはキーのページです。プロファイルは複数のページを持て、「ページへ移動」キーで行き来します。",
+"demo.page-live": "7 タブ中 2: 情報をライブで表示し、自動で更新されるキー。",
+"demo.clock": "キーやダイヤルに時計や日付（「時計」アクション）。",
+"demo.timer": "カウントダウン。押すと開始・一時停止し、終わると鳴って点滅します（「タイマー」アクション）。",
+"demo.monitor": "パソコンの負荷や温度を毎秒表示します（「システムモニター」アクション）。押すとタスクマネージャー（Mac ではアクティビティモニタ）が開きます。",
+"demo.now-playing": "再生中の曲をカバー付きで表示。押すと再生 / 一時停止します。",
+"demo.weather": "現在地の天気（「ライブ値」アクション、取得元: 天気）。キーの設定で都市を選んでください。それまでは「設定」と表示されます。",
+"demo.calendar": "次の予定と開始までの時間（ライブ値、取得元: 次のカレンダー予定）。設定にカレンダーの非公開 ICS アドレスを貼り付けます。",
+"demo.live-url": "ウェブサイト、Home Assistant、コマンドから得た任意の数値を自動で更新。しきい値で色を付けられます（ライブ値）。",
+"demo.page-looks": "7 タブ中 3: 同じ種類のキーをいろいろな描き方で。ここにあるものはすべてキーの「見た目」で設定できます。",
+"demo.style": "キーのスタイル: フラット、グラデーション、ガラス、アウトライン。背景は自由に。",
+"demo.animation": "キーやダイヤルのアニメーション GIF。それぞれのペースで再生されます。",
+"demo.picture": "キー全体に自分の画像、ラベルは帯の上に。",
+"demo.app-icon": "アプリのアイコンを中央に、下に名前。アプリアイコンの表示方法は「設定 > 画面」で決まり、キーごとにも選べます。",
+"demo.two-looks": "オンのときに別の見た目になるキー。押して確かめてください（「切り替え」アクション、見た目 > オンのときの見た目）。",
+"demo.long-label": "長いラベルは小さくなり、さらに 2 行になって、必ず収まります。",
+"demo.text-only": "文字だけ。アイコンなしで、短ければ大きく表示。",
+"demo.game-icon": "通常のアイコンに加えて 300 以上のゲームアイコン。アイコン選択で検索できます。",
+"demo.colors": "背景、文字、アイコンを自分の色に。",
+"demo.house": "MasterDeck 独自の見た目: グラファイトのキーに、グループの色のアイコン。既製プロファイルやおすすめで使われます。",
+"demo.page-control": "7 タブ中 4: 1 つのキーで複数の役目、ライト、切り替え。",
+"demo.gestures": "押すと再生 / 一時停止、長押しで次の曲、ダブル押しで前の曲。上の「押す」「長押し」「ダブル押し」タブで設定します。",
+"demo.macro": "1 回押すだけで複数のステップを、それぞれの待ち時間の後に実行。ここではメモ帳を開いて 1 行入力します（「シーケンス」アクション）。",
+"demo.push-to-talk": "キーを押している間だけマイクがオンになります。",
+"demo.lighting": "プロファイルが変わるまで、ノブ、フェーダー、ベースの縁にライトエフェクト。「ライトを戻す」で元に戻ります（「ライトエフェクト」アクション）。",
+"demo.deck-brightness": "デッキの画面を暗く、または明るくします。",
+"demo.profile": "別のプロファイルに切り替えます。ノブやダイヤルを回して順に切り替えることもできます。",
+"demo.page": "タブ（キーのページ）へ移動します。ここでは最初のタブへ戻ります。",
+"demo.page-apps": "7 タブ中 7: ほかのアプリ。アプリの起動やサインインが必要です。設定は「設定 > 接続」で。",
+"demo.obs": "OBS で録画や配信を始めます。その間キーは赤くなります。WebSocket サーバーを有効にした OBS が必要です。",
+"demo.spotify": "再生中の曲をお気に入りに追加します。「設定 > 接続」に Spotify のアプリ ID が必要です。",
+"demo.home-assistant": "スマートホームのライトやスイッチをオン / オフします。「設定 > 接続」の Home Assistant と、キーのエンティティが必要です。",
+"demo.claude": "Claude Code のセッション: どれが作業中で、どれがあなたを待っているか。「設定 > 接続」で接続します。",
+"demo.open-game": "ゲームやランチャーを開きます。「ゲームを開く」アクションで、この PC のゲームがカバー付きで一覧表示されます。",
+"demo.dial-gallery": "ダイヤルを回すと表示できるものが見られます。それぞれの見た目の名前が上に出ます。使うにはダイヤルを選び、「ダイヤルの見た目」で選びます。",
+"demo.volume": "回すと音量を設定: システム全体、前面のアプリ、特定のアプリ、またはマイク。LED がレベルを表示します。",
+"demo.scroll": "回すと前面のアプリをスクロールします。",
+"demo.zoom": "回すとズームイン / アウト（方向ごとにキーの組み合わせ）。",
+"inspector.note": "これは何か",
+"dialLooks.more": "ダイヤルの見た目",
+"dialLooks.help": "ダイヤルに表示できるものをサンプル値で。1 クリックで設定され、ダイヤルにライブで表示されます。",
+"connections.mcpDeck": "プロジェクト用のデッキツール",
+"connections.mcpDeckHelp": "Claude Code のコマンドをコピーします。プロジェクトのフォルダーで実行すると、そこのアシスタントがデッキに通知や状態を表示し、キー 1 つで答えられる質問をしてきます。",
+"arrange.share": "この配置を共有",
+"arrange.shareHelp": "モジュールの位置（スロット、配置、回転のみ）を記入した GitHub のフォームを開きます。これで MasterDeck が誰のデッキでも正しく配置できるようになります。送信前に内容を確認できます。",
+"lights.hubRainbow": "MasterDeck が描くレインボー（ウィンドウと一致）。オフ: モジュール自身の、より滑らかなもの",
+"lights.hubRainbowHelp": "オン: MasterDeck がすべての LED の色を一緒に変え、図にも同じ瞬間に同じ色が表示されます。オフ: 各モジュールが自分の滑らかなレインボーを動かし、図には似たものだけが表示されます。",
+"audio.keep": "そのまま",
+"audio.noSecond": "2台目なし",
+"lights.reactCall": "通話中: 縁が緑、ミュート中は赤",
+"call.setting": "通話中は通話アプリのプロファイルを表示し、そのままにする",
+"call.settingHelp": "Zoom、Teams、Discord、Slack、ブラウザー（Meet）などがマイクを使っていると通話中とみなします。通話が終わるまで、前面に何があってもデッキはそのアプリにリンクしたプロファイルを表示します。",
+"connections.claudeApprove": "読み取り系ツールの許可の確認にデッキで答える（試用）",
+"connections.claudeApproveHelp": "Claude Code がファイルの読み取り、検索、ウェブページを開く許可を求めると、ダイヤルに内容が表示され、2 つのキーに「許可 / 拒否」が出ます。コマンドと編集はデッキでは答えません。30 秒押されなければ、Claude Code はいつもどおりターミナルで尋ねます。--dangerously-skip-permissions では使われません（その場合は何も尋ねられません）。",
+"suggest.title": "おすすめ",
+"suggest.help": "このプロファイルのアプリとこのコントロール向けに選びました。1 クリックで設定され、後から何でも変えられます。",
+"suggest.more": "このコントロール向けのほかのアイデア",
+"suggest.fill": "空いているキーを埋める",
+"suggest.fillHelp": "このページのまだ何もしていないキーに、おすすめのアクションを置きます",
+"auto.ok": "OK",
+"auto.new": "新規",
+"auto.setting": "MasterDeck が知っているアプリとゲームのプロファイルを自動で作る",
+"profiles.hide": "バーから隠す",
+"profiles.show": "バーに表示",
+"profiles.inBar": "上部バーに表示",
+"profiles.groupHome": "ホーム",
+"profiles.groupHomeHelp": "MasterDeck はこのプロファイルで起動します。別のものをホームにするには、その行の家のボタンを押します。",
+"profiles.groupOwn": "あなたのプロファイル",
+"profiles.groupApps": "アプリとゲーム用",
+"profiles.groupAppsHelp": "アプリが前面になると自動で切り替わります（自動切り替えがオンのとき）。",
+"profiles.home": "ホーム",
+"profiles.setHome": "ホームに設定：MasterDeck はこのプロファイルで起動します",
+"profiles.active": "有効",
+"profiles.none": "一致するプロファイルはありません。",
+"profiles.help": "バーには、ホームプロファイル、表示に選んだプロファイル、いま有効なプロファイルが並びます。アプリにリンクしたプロファイルは表示に選ばない限りバーに出ず、そのアプリが前面にある間だけ現れます。タブを右クリックするとその他の操作があります。",
+"topbar.lastApp": "（直前のアプリ）",
+"topbar.lastAppHelp": "MasterDeck のウィンドウが前面にある間は、直前のアプリのプロファイルのままなので編集できます。",
+"icons.addPack": "アイコンパックを追加",
+"icons.addFolder": "フォルダーからパックを追加",
+"icons.packFile": "アイコンパック（zip または Stream Deck）",
+"icons.removePack": "このパックを削除",
+"icons.removePackConfirm": "このアイコンパックを削除しますか？その画像を使っているキーはそのまま残ります。",
+"icons.packHelp": "アイコンパック（+）: manifest.json の入った zip やフォルダー、または Stream Deck の .streamDeckIconPack。MasterDeck にはパックは含まれていません。使用が許可されたパックを使ってください。",
+"connections.claudeConnect": "Claude Code を接続",
+"secret.save": "保存",
+"place.search": "検索",
+"place.placeholder": "都市、例: Tokyo",
+"place.current": "現在: {place}",
+"place.none": "その名前の場所は見つかりません。",
+"secret.remove": "削除",
+"secret.saved": "システムの資格情報ストアに保存しました。",
+"secret.removed": "削除しました。",
+"secret.kept": "保存済み（入力すると置き換え）",
+"secret.none": "なし",
+"connections.mcpName": "AI アシスタント（MCP）",
+"connections.mcpDesktopOn": "Claude Desktop",
+"connections.mcpDesktop": "Claude Desktop を接続",
+"connections.mcpDesktopDone": "Claude Desktop に追加しました。Claude Desktop を再起動して、プロファイルの作成を頼んでください。以前の設定の保存先: {backup}",
+"connections.mcpCode": "Claude Code を接続",
+"connections.mcpCodeCopy": "Claude Code のコマンドをコピー",
+"connections.mcpCodeDone": "すべてのプロジェクト向けに Claude Code に追加しました。新しい Claude Code のセッションを始めて、プロファイルの作成を頼んでください。",
+"connections.mcpSnippet": "ほかのアプリ用の JSON をコピー",
+"connections.mcpCopied": "コピーしました。",
+"connections.mcpHelp": "自分の AI アシスタントにプロファイルを設計・作成させます。モジュール、アプリ、ゲームを読み取り、キー、画像、アニメーション、ライトを作ってプレビューできます。通信相手は MasterDeck の起動中のこのパソコンの MasterDeck だけで、MasterDeck に AI のキーは不要です。ほかのアプリ: その MCP 設定に JSON を貼り付けます。",
+"connections.claudeDisconnect": "接続を解除",
+"connections.claudeHelp": "MasterDeck は Claude Code の設定に小さなフックを追加し、どのセッションが作業中か、許可を求めているか、あなたを待っているかをデッキに表示します。送られるのは状態とプロジェクトのフォルダー名だけで、プロンプトは送られません。接続を解除するとフックは削除され、以前の設定は settings.json.hubdeck-backup として残ります。",
+"icons.interface": "インターフェース",
+"icons.games": "ゲーム",
+"icons.emoji": "絵文字",
+"icons.search": "アイコンを検索",
+"icons.loading": "アイコンを読み込み中…",
+"icons.none": "一致するアイコンはありません。",
+"icons.gamesCredit": "ゲームアイコン: game-icons.net の作者の皆さん（Lorc、Delapouite ほか）、CC BY 3.0。",
+"about.gameIcons": "ゲームアイコン: game-icons.net の作者の皆さん（Lorc、Delapouite ほか）、CC BY 3.0。",
+"look.style": "スタイル",
+"look.labelPos": "ラベルの位置",
+"look.pos.top": "上",
+"look.pos.middle": "中央",
+"look.pos.bottom": "下",
+"look.auto": "自動",
+"look.labelSize": "ラベルのサイズ",
+"look.iconSize": "アイコンのサイズ",
+"look.iconFlip": "アイコンを左右反転",
+"look.size.small": "小",
+"look.size.large": "大",
+"look.style.flat": "フラット",
+"look.style.gradient": "グラデーション",
+"look.style.glass": "ガラス",
+"look.style.outline": "アウトライン",
+"look.presets": "カラープリセット",
+"presets.test": "テスト用プロファイル",
+"look.effect": "エフェクト",
+"look.speed": "速さ",
+"look.speedHelp": "速さはモジュールごとに 1 つ。最後に設定したコントロールが優先されます。",
+"effect.static": "点灯",
+"effect.breathing": "呼吸",
+"effect.strobe": "ストロボ",
+"effect.blink": "高速点滅",
+"effect.cycling": "色の循環",
+"effect.random": "ランダムな色",
+"effect.wave": "ウェーブ",
+"effect.water": "きらめき",
+"effect.rainbow": "レインボー",
+"effect.music": "音楽に合わせて",
+"lights.musicDim": "ビートの合間の暗さ",
+"lights.musicTitle": "強さ",
+"lights.musicPreset.soft": "やさしく：音楽と一緒に光る",
+"lights.musicPreset.beat": "ビート（おすすめ）",
+"lights.musicPreset.punchy": "強め：暗めで強く光る",
+"lights.musicPreset.beats": "ビートだけ",
+"lights.musicPreset.own": "自分の設定",
+"lights.musicFrom": "光り始める音量",
+"lights.musicWhich": "光るもの",
+"lights.musicEdge": "ベースの縁",
+"lights.musicKnobs": "ノブも",
+"lights.musicFaders": "フェーダーも",
+"lights.musicLead": "フラッシュを早める時間",
+"lights.musicTest": "テスト：メトロノーム 8 秒",
+"lights.musicTestHelp": "音楽を止めてテストを押し、縁を見てください。クリックより後に光るならスライダーを上げ、先に光るなら下げます。環境（スピーカー、Bluetooth ヘッドホン）ごとに違います。",
+"lights.musicWhite": "スネアや手拍子は白っぽく光る",
+"lights.musicMode": "ビートの追い方",
+"lights.musicMode.predict": "ビートを予測（スネアも、おすすめ）",
+"lights.musicMode.react": "低音に反応するだけ（最初の方法）",
+"lights.musicWhere": "光り方は Settings > Lights > 音楽に合わせたライト で設定します。",
+"lights.music": "音楽に合わせて（プロファイルごとの色）",
+"lights.musicHelp": "再生中の音楽（Spotify やほかのプレーヤー）のビートに合わせて光り、音が大きいほど明るくなります。MasterDeck がこのパソコンの音を聞くのは、ライトがこの効果を使っているときだけで、録音はしません。",
+"lights.musicHelpMac": "再生中の音楽（Spotify やほかのプレーヤー）のビートに合わせて光り、音が大きいほど明るくなります。MasterDeck がこの Mac の音を聞くのは、ライトがこの効果を使っているときだけです（macOS 14.2 以降）。初回は macOS がシステムオーディオ録音の許可を求めます。録音はしません。",
+"steps.record": "キーを記録",
+"steps.stopRecord": "記録を停止",
+"steps.recording": "記録中: どこでもキーを押して、「記録を停止」をクリックしてください。",
+"steps.recordHelp": "入力したものを、間の待ち時間も含めてホットキーのステップとして記録します。",
+"gallery.title": "共有プロファイル",
+"gallery.crumb": "ギャラリー",
+"gallery.browse": "共有プロファイルを見る",
+"gallery.browseHelp": "ほかのユーザーが作った既製プロファイル。",
+"gallery.loading": "ギャラリーを読み込み中…",
+"gallery.offlineTitle": "ギャラリーはまだ公開されていません",
+"gallery.offline": "共有プロファイルはここに表示されます。それまでは、送ってもらった .hubdeck ファイルをインポートできます（プロファイル > インポート）。",
+"gallery.emptyTitle": "共有プロファイルはまだありません",
+"gallery.retry": "再試行",
+"gallery.add": "追加",
+"gallery.adding": "追加中…",
+"gallery.added": "追加済み",
+"gallery.by": "作者: {author}",
+"gallery.needs": "使用するもの",
+"gallery.missing": "このモジュールを持っていません",
+"gallery.missingHelp": "それでも追加できます。{list} のコントロールは、そのモジュールを手に入れるまで使われません。",
+"gallery.share": "自分のものを共有: .hubdeck ファイルとしてエクスポートして送ってください。",
+"gallery.howTo": "共有の方法",
+"profile.fileTypePackage": "画像付きの MasterDeck プロファイル",
+"profile.fileTypeJson": "設定のみ（JSON）",
+"help.saveDiagnostics": "診断情報を保存",
+"help.diagnosticsSaved": "保存しました。ファイルのあるフォルダーを開きました。",
+"settings.appearance": "外観",
+"tour.editLater": "あとで何でも変えられます。デッキで押すとそのエディターが開きます。",
+"tour.dial.try2": "見た目の下の「試す」を押して、ダイヤルを見てください。",
+"tour.dial.face.scroll": "回してスクロール、押してズーム",
+"tour.dial.face.brightness": "モニター。回して暗く",
+"tour.dial.face.cpu": "パソコンの忙しさ",
+"tour.dial.face.timer": "リング付きのカウントダウン",
+"tour.dial.face.clock": "時刻、日付、ストップウォッチ",
+"tour.dial.face.nowPlaying": "カバーと曲の再生位置",
+"tour.dial.more": "ほかにも: 温度、マイクのレベル、プロファイル、アニメーション。エディターでは自分のアプリの状態、OBS のシーン、Claude Code のセッション、Home Assistant も。",
+"tour.dial.onDial": "ダイヤルに表示中",
+"tour.dial.tryOn": "ダイヤルで試す: {face}",
+"tour.dial.allDone": "4 つすべて完了: 次の見た目を試してください",
+"tour.dial.gesture.turn": "回す",
+"tour.dial.gesture.press": "押す",
+"tour.dial.gesture.double": "ダブル押し",
+"tour.dial.gesture.hold": "長押し",
+"tour.dial.face.volume": "パソコンの音量",
+"tour.dial.face.pomodoro": "集中と休憩をラウンドで",
+"tour.dial.face.weather": "外の空模様を 1 時間ごとに",
+"tour.dial.face.pet": "ダイヤルに住む小さな友だち",
+"tour.dial.try": "試す",
+"tour.dial.body": "丸い画面は、ほかのデッキにはない部分です。ほかに何になれるかを紹介します。「試す」でダイヤルに表示され、最後に残したものがデッキに残ります。",
+"tour.dial.title": "ダイヤルのいろいろな顔",
+"tour.gestures.try": "キーを長押しし、ノブをダブル押ししてください。",
+"tour.gestures.editLater": "ツアーの後は、同じように押すとウィンドウの右側で編集できます。",
+"tour.gestures.free": "空き: ツアーの後に何か追加できます",
+"tour.gestures.turnPress": "回して押す",
+"tour.gestures.pressed": "押したもの: {control}",
+"tour.gestures.pressAnyHelp": "すべてのキー、ノブ、ダイヤルについて、押す・ダブル押し・長押しで何をするかがここに表示されます。",
+"tour.gestures.pressAny": "次に: デッキのどこかを押してください",
+"tour.gestures.dialHoldHelpNext": "回す・押す: ダイヤルの動作。長押し: 次の曲。",
+"tour.gestures.dialHoldHelp": "回す: 曲の中を移動。押す: 再生 / 一時停止。長押し: {app} を開く。",
+"tour.gestures.dialHold": "ダイヤルを長押し",
+"tour.gestures.keyDoubleHelp": "押す: そのキーの役目。ダブル押し: スピーカー ↔ ヘッドホン。",
+"tour.gestures.keyDouble": "マイクの隣のキーをダブル押し",
+"tour.gestures.knobDoubleHelp": "回す: 音量。押す: ミュート。ダブル押し: スピーカー ↔ ヘッドホン。",
+"tour.gestures.knobDouble": "システムのノブをダブル押し",
+"tour.gestures.keyHoldHelp": "押す: マイクのオン / オフ。長押し: すべての音をオフ。",
+"tour.gestures.keyHold": "マイクのキーを長押し",
+"tour.gestures.body": "キー、ノブ、ダイヤルはどれも複数のことができます。押す、ダブル押し、長押し、ノブとダイヤルは回す。それぞれ 1 つずつ試してください。試すコントロールはデッキで点滅します。",
+"tour.gestures.title": "1 つのコントロールで多くの役目",
+"tour.makingDeck": "デッキをハードウェアに合わせています",
+"tour.makingApps": "使っているアプリとゲームを探しています",
+"tour.makingModules": "モジュールを確認しています",
+"tour.lookHelp.music.1": "ダイヤルを回すと曲の中を前後に移動し、押すと再生 / 一時停止します。",
+"tour.lookHelp.music.0": "ダイヤルを回すと音楽の音量を設定し、押すと再生 / 一時停止します。",
+"tour.lookHelp.volume.1": "ノブやフェーダーのライトを見てください。それぞれアプリの色（Spotify は緑、Discord は紫、システムは白）になり、音量も表示します。",
+"tour.lookHelp.volume.0": "ノブやフェーダーのライトを見てください。デッキのライトの色のまま、アプリの音が大きくなるほど明るくなります。",
+"welcome.deskFix": "直す",
+"tour.deskYes": "はい、デッキを作ってください",
+"profiles.ready": "あなたのアプリ用（{count}）",
+"profiles.readyHelp": "MasterDeck がお持ちのアプリ用に作りました。スイッチは「アプリと一緒に切り替え」です。オンにすると、そのアプリが前面のときにプロファイルが表示されます。",
+"profiles.switchInFor": "{app} と一緒に切り替え",
+"profiles.switchInHelp": "オン: {app} が前面のときにこのプロファイルが表示されます",
+"assistant.cardLine": "やりたいことを伝えると、デッキで試せる構成を作ります。",
+"assistant.cardNoCli": "これは Claude Code で動きますが、このパソコンにはまだありません。下の「詳細」に入手方法があります。ツアーはなしでも動きます。",
+"assistant.cardSignIn": "Claude Code はありますが、サインインしていません。方法は下の「詳細」にあります。",
+"assistant.example1": "ダイヤルで Spotify をもっと便利に",
+"assistant.example2": "空いている 2 つのノブを使って",
+"assistant.example3": "会議用のプロファイル",
+"assistant.sendThis": "これを Claude に送りますか？",
+"assistant.whatGoes": "Claude に送られるのは、あなたのメッセージ、よく使うアプリ（名前と時間）、MasterDeck がショートカットを持つインストール済みアプリ、デッキのモジュール、プロファイル名、そして保存している好みのメモです。このパソコンのほかの情報は送られません。",
+"assistant.whatExactly": "具体的には",
+"assistant.dontAsk": "今後は確認しない",
+"assistant.sendNoApps": "アプリの一覧なしで送る",
+"assistant.cardPlaceholder": "やりたいことを入力",
+"guide.step": "{n} / {total}",
+"guide.skip": "スキップ",
+"guide.next": "次へ",
+"guide.done": "完了",
+"guide.inspector.title": "エディター",
+"guide.inspector.text": "デッキのコントロールを押すと、ここで動作と見た目を選べます。",
+"guide.newDeck.title": "新しいプロファイル",
+"guide.newDeck.text": "ツアーをもう一度、アプリやゲーム用のプロファイル、既製プロファイル、アシスタント、空のプロファイル。",
+"guide.profiles.title": "プロファイル",
+"guide.profiles.text": "すべてのプロファイル。アプリが前面に来ると、そのアプリのプロファイルになります。",
+"guide.edge.title": "ライトと画面",
+"guide.edge.text": "ライトと画面のスタイル、明るさ、反応。",
+"welcome.desk": "MasterDeck は各モジュールの位置からデッキを描きました。場所や向きが違うものがあれば、一度だけ直してください。",
+"welcome.deskTitle": "机の上と同じに見えますか？",
+"deck.edgeOpen": "ライト: スタイル、明るさ、反応",
+"settings.lightsScreens": "ライトと画面",
+"settings.text": "デッキの文字",
+"screens.fontSample": "このフォントでのラベルの例",
+"gesture.addDouble": "+ ダブル押しを追加",
+"gesture.addHold": "+ 長押しのアクションを追加",
+"switching.example": "例: Discord が前面に来るとそのプロファイルになり、離れるとホームプロファイルに戻ります。",
+"switching.more": "詳細: 自動で作られるプロファイル、通話",
+"switching.main": "前面のアプリに合わせてプロファイルを切り替える",
+"startup.title": "起動",
+"startup.windows": "Windows と一緒に起動",
+"startup.mac": "ログイン時に開く",
+"startup.help": "MasterDeck はウィンドウを開かずにトレイで起動します。トレイアイコンにも同じスイッチがあります。",
+"library.morePlugins": "プラグインでアクションを追加…",
+"library.showUnfit": "さらに {count} 個表示（{control} 用ではありません）",
+"chooser.title": "何をする？",
+"plugins.stop": "停止",
+"plugins.start": "開始",
+"plugins.uninstall": "アンインストール",
+"plugins.uninstallTitle": "{name} をアンインストールしますか？",
+"plugins.uninstallBody": "次の {count} 個のキーは、再インストールするまで動作しません:",
+"plugins.uninstallUnused": "このプラグインのアクションを使っているキーはありません。",
+"confirm.cancel": "キャンセル",
+"confirm.gotIt": "OK",
+"error.deleteProfile": "プロファイルは削除されませんでした",
+"error.addWay": "キーは追加されませんでした",
+"confirm.delete": "削除",
+"confirm.remove": "削除",
+"confirm.putBack": "元に戻す",
+"confirm.goBack": "戻す",
+"plugins.busy": "CPU を多く使っています",
+"chooser.fromOthers": "ほかのデッキ所有者のアイデア",
+"chooser.onHold": "長押し",
+"updates.backTitle": "以前のバージョンに戻す",
+"updates.backHelp": "このバージョンで問題が起きたら、{version} に戻せます。プロファイルは先にバックアップされます。",
+"updates.goBack": "{version} に戻す",
+"updates.going": "戻しています…",
+"updates.backConfirm": "MasterDeck {version} に戻しますか？プロファイルを先にバックアップしてから、MasterDeck を再起動します。",
+"chooser.browseTitle": "アクション",
+"chooser.browseHint": "アクションをキー、ノブ、ダイヤルにドラッグします。コントロールをクリックするか、デッキで押すと、その動作を確認・変更できます。",
+"edge.title": "このプロファイルのライト",
+"edge.followHelp": "オフ: 縁はすべてのプロファイル共通のライトスタイルに従います。",
+"edge.mode.follow": "すべてのプロファイルと同じ",
+"edge.mode.color": "単色",
+"edge.mode.effect": "独自のエフェクト",
+"edge.followStyle": "縁はすべてのプロファイル共通のライトスタイル、現在は {style} を表示します（設定 > ライトと画面）。",
+"edge.all": "すべてのプロファイルのライト",
+"edge.allHelp": "ライトのスタイル、明るさ、反応、そして画面: 設定 › ライトと画面。",
+"help.startTitle": "もう一度はじめから",
+"help.startHelp": "ツアーはモジュールとアプリに合わせたプロファイルを作って案内します。「自分で作る」はコントロールを 1 つずつ設定します。",
+"chooser.search": "{count} 個のアクションを検索",
+"chooser.noMatch": "「{query}」に一致するアクションはありません。",
+"chooser.for.keys": "キー用",
+"chooser.for.dial": "ダイヤル用",
+"chooser.for.knobs": "ノブ用",
+"chooser.for.faders": "フェーダー用",
+"chooser.for.rollers": "ローラー用",
+"chooser.for.base": "ベース用",
+"chooser.for.press": "押す操作用",
+"chooser.onDeck": "このプロファイルで使用中",
+"chooser.copy": "ここでも同じことをする",
+"chooser.all": "すべてのアクション",
+"chooser.change": "変更",
+"chooser.cancel": "キャンセル",
+"chooser.clear": "何もしない",
+"topbar.autoOffHelp": "オフ: 前面のアプリに関係なく、デッキは {profile} のままです。オンにすると再びアプリに合わせます。",
+"topbar.autoOnHelp": "オン: デッキは前面のアプリに合わせます。オフにするとこのプロファイルのままになります。",
+"topbar.autoSwitch": "自動切り替え",
+"newDeck.empty": "空のプロファイル",
+"newDeck.readyHelp": "配信、デザイン、動画、ゲームなどのプロファイル",
+"newDeck.ready": "既製プロファイル",
+"newDeck.tourHelp": "モジュールとアプリに合わせたプロファイルをすぐに作り、案内します。約 5 分、AI なし。",
+"newDeck.tour": "デッキで見せて",
+"topbar.newDeck": "新しいプロファイル",
+"import.runsTitle": "このプロファイルはパソコンで何かを実行します",
+"import.runsAsk": "「{name}」には、パソコンで次のものを実行するキーがあります:\n\n{list}\n\n入手先を信頼できる場合だけ残してください。",
+"import.runsMore": "ほか {count} 件",
+"import.keep": "残す",
+"import.remove": "削除する",
+"theme.system": "システム",
+"theme.dark": "ダーク",
+"theme.light": "ライト",
+"theme.help": "「システム」は Windows や macOS のライト / ダークモードに従います。デッキは実際の色のままです。",
+"updates.title": "アップデート",
+"updates.atStart": "起動時にアップデートを確認",
+"updates.notify": "新しいバージョンが出たら通知する (バージョンごとに1回)",
+"updates.checkNow": "今すぐ確認",
+"updates.checking": "確認中…",
+"updates.latest": "最新バージョンです",
+"updates.notSetUp": "このビルドではアップデートがまだ設定されていません。",
+"updates.available": "MasterDeck {version} があります",
+"updates.whatsNew": "新機能",
+"updates.install": "インストールして再起動",
+"updates.installing": "インストール中…",
+"updates.later": "あとで",
+"crash.back": "MasterDeck は {at} に予期せず終了し、自動で再起動しました。その間デッキは解放されていました。",
+"crash.stopped": "MasterDeck は {at} に予期せず終了しました。デッキは解放されました。",
+"crash.copy": "詳細をコピー",
+"crash.report": "このクラッシュを報告",
+"crash.copied": "コピーしました。バグ報告に貼り付けてください",
+"ringing.timer": "タイマー",
+"ringing.text": "{name} が終了しました{where}。",
+"ringing.onProfile": "（プロファイル {profile}）",
+"ringing.onPage": "（ページ {page}）",
+"ringing.stop": "停止",
+"crash.ok": "OK",
+"updates.help": "MasterDeck は新しいバージョンを探すだけで、「インストール」をクリックするまで何もインストールしません。",
+"help.title": "ヘルプとフィードバック",
+"help.report": "問題を報告",
+"diag.title": "診断",
+"diag.help": "モジュールを確認します：ライトや画面をテストし、操作への反応を見て、モジュールが返す情報を読み取ります。モジュールには何も保存されません。",
+"diag.none": "モジュールが接続されていません。デッキを接続すると、ここにモジュールが表示されます。",
+"diag.modules": "モジュール",
+"diag.ok": "OK",
+"diag.hadProblems": "直近1時間に問題あり",
+"diag.notAnswering": "応答なし",
+"diag.notAnsweringHelp": "このモジュールが応答しません。ここで再起動するか、ベースから外して付け直してください。",
+"diag.restart": "モジュールを再起動",
+"diag.slot": "スロット {slot}",
+"diag.firmware": "ファームウェア {v}",
+"diag.lightsTest": "ライトのテスト",
+"diag.screenTest": "画面のテスト",
+"diag.lightsHelp": "すべてのライトが赤、緑、青、白に光ってから消え、その後ひとつずつ白に光ります。ウィンドウではなくモジュールを見てください。",
+"diag.screenHelp": "画面全体が赤、緑、青、白、黒の順に表示されます。ウィンドウではなくモジュールを見てください。",
+"diag.run": "テストを実行",
+"diag.testing": "テスト中…",
+"diag.again": "もう一度",
+"diag.now": "現在：{what}",
+"diag.red": "赤",
+"diag.green": "緑",
+"diag.blue": "青",
+"diag.white": "白",
+"diag.off": "消灯",
+"diag.alone": "ライト {n} のみ",
+"diag.askLights": "すべてのライトが各色に光り、消え、順番にひとつずつ光りましたか？",
+"diag.askScreen": "画面全体が各色を均一に表示しましたか？",
+"diag.yesAll": "はい、すべて",
+"diag.markLights": "そうでなければ、違う動きをしたライトを選んでください。一部だけでも選んでください（1 はウィンドウの図で最初のもの）：",
+"diag.markKeys": "そうでなければ、違う動きをしたキーを選んでください（1 は左上）：",
+"diag.notePlaceholder": "何が見えましたか？（例：ライト1が赤のまま）",
+"diag.notAll": "いいえ、おかしな所があった",
+"diag.verdictOk": "モジュールはすべてのコマンドを受け付けました。後でおかしく見えたら、もう一度テストしてください。",
+"diag.verdictBad": "モジュールはコマンドを受け付けましたが、すべての場所に表示されませんでした。モジュールのハードウェアの問題と考えられます。レポートをコピーして私たちに、保証期間内ならメーカーに送ってください。",
+"diag.input": "操作",
+"diag.inputHelp.faders": "各フェーダーを下から上まで動かしてください：番号が光り、バーが追従します。",
+"diag.inputHelp.knobs": "各ノブを回して押してください：回転は ↻、押下は ●。",
+"diag.inputHelp.rollers": "各ローラーを回してください：番号が光ります。",
+"diag.inputHelp.keys": "各キーを押してください：番号が光ります。",
+"diag.inputHelp.dial": "ダイヤルを両方向に回して押してください。",
+"diag.inputHelp.base": "デッキを縦に立ててから寝かせてください：センサーが追従するはずです。",
+"diag.dialLeft": "左に回した",
+"diag.dialRight": "右に回した",
+"diag.dialPress": "押した",
+"diag.orientation": "向き：{o}",
+"diag.orientation.horizontal": "横置き",
+"diag.orientation.vertical": "縦置き",
+"diag.sensorWorks": "センサーは追従しています",
+"diag.reads": "モジュールが返す情報",
+"diag.readAgain": "再読み取り",
+"diag.reading": "読み取り中…",
+"diag.happened": "直近1時間",
+"diag.nothingHappened": "何も起きていません：切断も、画像やライトの失敗もありません。",
+"diag.copy": "レポートをコピー",
+"diag.copied": "コピーしました",
+"diag.github": "GitHub で報告",
+"diag.read.firmware": "ファームウェア",
+"diag.read.firmware-parts": "ファームウェア部品",
+"diag.read.firmware-parts-2": "ファームウェア部品 2",
+"diag.read.device-info": "デバイス情報",
+"diag.read.brightness": "保存された明るさ",
+"diag.read.fader-values": "フェーダー位置",
+"diag.read.led-mode": "保存された LED モード",
+"diag.read.orientation": "向きセンサー",
+"diag.read.stored-config": "保存された設定",
+"diag.read.screen-info": "画面",
+"diag.read.backlight": "バックライト",
+"diag.discordText": "モジュールのレポートをクリップボードにコピーしました（シリアル番号なし）。Discord で #help を開き、貼り付けて、見えたことを書いてください。",
+"help.discordReport": "Discord で報告",
+"help.discordReportHelp": "GitHub アカウント不要: バージョン、システム、モジュール、最近のエラーをコピーします。#help に貼り付けてください",
+"help.discordReportCopied": "Discord 用にコピーしました",
+"help.discordReportCopiedText": "バージョン、システム、モジュール、最近のエラーをクリップボードにコピーしました (パスとシリアル番号は除外)。Discord で #help を開き、貼り付けて何が起きたかを書いてください。",
+"help.suggest": "機能を提案",
+"help.button": "フィードバック",
+"help.menuText": "どれも GitHub のページを開きます（書き込みには無料のアカウントが必要です）。",
+"help.ask": "質問する",
+"whatsNew.eyebrow": "MasterDeck {version} の新機能",
+"whatsNew.close": "閉じる",
+"whatsNew.try": "デッキで試す",
+"whatsNew.onDeck": "30 秒間デッキに表示中",
+"whatsNew.openLook": "デッキの見た目を開く",
+"whatsNew.notes": "すべての変更",
+"whatsNew.ok": "OK",
+"whatsNew.menu": "新機能",
+"whatsNew.0.2.heroTitle": "生きたデッキ",
+"whatsNew.0.2.heroText": "15 個のキーがアイコンの後ろで動く 1 枚の絵になり、押すと絵の中で何かが起こります。ハロウィンの丘から雨の東京まで 12 のプリセット。決める前にデッキで試せます。",
+"whatsNew.0.2.saverTitle": "選ぶ前に見られるスクリーンセーバー",
+"whatsNew.0.2.saverText": "それぞれに動くプレビュー付き。どのプリセットもスクリーンセーバーにできます。",
+"whatsNew.0.2.musicTitle": "音楽に合わせるライトをデッキの下に",
+"whatsNew.0.2.musicText": "オン・オフとビートへの合わせ方を、スクリーンセーバーの隣で。",
+"whatsNew.0.2.editorTitle": "キーの見た目エディター",
+"whatsNew.0.2.editorText": "テンプレート、模様、バッジ、スタイル：キーのパネルの「見た目を編集」から。",
+"whatsNew.0.2.discordTitle": "Discord の MasterDeck",
+"whatsNew.0.2.discordText": "プリセットの評価、アイデアへの投票、質問：GitHub アカウントは不要です。",
+"help.discord": "Discord に参加",
+"help.discordHelp": "プリセットの評価、アイデアへの投票、質問ができます。GitHub アカウントは不要です。",
+"help.reportHelp": "バージョン、システム、モジュール、最近のエラーを記入済みのフォームを開きます。送信前にすべて確認できます",
+"help.text": "どちらも GitHub の短いフォームを開きます（無料のアカウントが必要です）。",
+"help.diagnostics": "問題がある場合は診断ファイルを添付してください（下の「診断情報を保存」、またはトレイアイコンのメニュー）。バージョン、モジュール、ログが入っており、ウェブアドレス、キー、パス、シリアル番号は除かれています。",
+"about.madeBy": "作者",
+"about.contact": "連絡先",
+"about.source": "ソースコード",
+"about.licence": "ライセンス",
+"about.notAffiliated": "MasterDeck は独立したプロジェクトで、Cooler Master とは提携しておらず、承認も受けていません。",
+"about.credits": "アイコン: Lucide（ISC ライセンス）。フォント: IBM Plex Sans と IBM Plex Mono（SIL Open Font License）。",
+"topbar.more": "その他",
+"profile.switching": "切り替え",
+"profile.switchingWhere": "前面のアプリによる切り替え、自動で作られるプロファイル、通話は「設定 > プロファイル」ですべてのプロファイルに設定します。",
+"settings.profiles": "プロファイル",
+"profile.edgeTitle": "縁のライト",
+"profile.manage": "管理",
+"settings.subtitle": "すべてのプロファイル共通",
+"settings.screens": "画面",
+"settings.brightness": "画面の明るさ（キーとダイヤル）",
+"settings.backups": "バックアップ",
+"settings.connections": "接続",
+"settings.general": "一般",
+"settings.back": "デッキに戻る",
+"settings.help": "ヘルプと情報",
+"connections.stateSet": "設定済み",
+"connections.stateNotSet": "未設定",
+"connections.stateConnected": "接続済み",
+"connections.stateOff": "未設定",
+"connections.stateUnavailable": "このビルドにはありません",
+"plugins.crumb": "追加のアクション",
+"plugins.installed": "インストール済み",
+"plugins.noneHelp": "プラグインのフォルダーを plugins フォルダーに入れて MasterDeck を再起動してください。",
+"plugins.running": "実行中",
+"plugins.stopped": "停止中",
+"plugins.uses": "使用するもの",
+"shelf.title": "取り付けていないモジュール",
+"shelf.notAttached": "未接続 · 設定は保持",
+"shelf.remove": "{kind} を手持ちのモジュールから外す",
+"shelf.pick": "どのモジュールを持っていますか？",
+"shelf.add": "持っているモジュールを追加",
+"welcome.ownedTitle": "ほかにもモジュールを持っていますか？",
+"welcome.owned": "持っているけれど取り付けていないものにチェックを入れてください。そのコントロールを今のうちに設定できます。",
+"welcome.attached": "接続済み",
+"calib.title": "キーを調整",
+"calib.help": "各キーには、アプリが想定する縁のすぐ内側に{green}の線、すぐ外側に{red}の線が表示されます。すべてのキーの四辺で赤い線が消え、緑の線がまだ見える状態になるまで調整してください。",
+"calib.green": "緑",
+"calib.red": "赤",
+"calib.deck": "デッキで: ダイヤル（またはノブ 1）を回して強調表示の値を変え、押して次の値へ進みます。",
+"calib.x0": "左端",
+"calib.x0Help": "すべてのキーを左右に動かします",
+"calib.y0": "上端",
+"calib.y0Help": "すべてのキーを上下に動かします",
+"calib.dx": "列の間隔",
+"calib.dxHelp": "列と列の距離",
+"calib.dy": "行の間隔",
+"calib.dyHelp": "行と行の距離",
+"calib.w": "キーの幅",
+"calib.wHelp": "キーの窓の幅",
+"calib.h": "キーの高さ",
+"calib.hHelp": "キーの窓の高さ",
+"calib.minus": "{name} を 1 減らす",
+"calib.plus": "{name} を 1 増やす",
+"calib.save": "保存",
+"calib.cancel": "キャンセル",
+"calib.reset": "リセット",
+"compare.title": "描画を比較",
+"compare.help": "現在のプロファイルを表示したまま、キーの描画方法を切り替えます。比較中は調整用の枠は表示されません。",
+"compare.a": "A · 旧方式",
+"compare.aHelp": "72×72 の画像 15 枚、JPEG 85（最初のバージョン）",
+"compare.b": "B · 新方式",
+"compare.bHelp": "調整済みの窓に合わせて拡大縮小したパネル画像 1 枚、JPEG 98（現在）",
+"compare.c": "C · 可逆",
+"compare.cHelp": "B と同じで JPEG 100。圧縮と画面そのものの差を見分けるため",
+"compare.off": "オフ",
+"suggest.helpNoApp": "このコントロール向けに選びました。1 クリックで設定され、後から何でも変えられます。",
+"suggest.replaced": "以前の動作を置き換えました。Ctrl+Z で戻せます。",
+"gesture.turnPress": "回して押す",
+"topbar.baseLies": "ベースは{orientation}です",
+"settings.pluginsHelp": "プラグインは「何をする？」にアクションを追加します。MasterDeck にはまだ付属していません。開発者向けのガイドは docs/PLUGINS.md です。",
+"presets.group.start": "まずはここから",
+"presets.group.streaming": "配信と通話",
+"presets.group.photo": "写真とデザイン",
+"presets.group.video": "動画編集",
+"presets.group.games": "ゲーム",
+"presets.group.tools": "仕事とツール",
+"presets.group.showcase": "ショーケース",
+"presets.group.test": "テスト用プロファイル",
+"look.changeIcon": "アイコンを変更",
+"look.more": "その他の見た目: ラベルの位置とサイズ、アイコンのサイズ、スタイル、色",
+"look.moreDial": "その他の見た目: 背景、文字の色、プリセット",
+"look.edit": "見た目を編集: テンプレート、背景、アイコン、ラベル、追加",
+"designer.title": "見た目エディター",
+"designer.tab.templates": "テンプレート",
+"designer.tab.background": "背景",
+"designer.tab.icon": "アイコン",
+"designer.tab.label": "ラベル",
+"designer.tab.extras": "追加",
+"designer.tab.when": "条件",
+"rules.help": "条件に合うあいだキーの見た目を変えます: CPU 80 % 以上、音楽の再生中、前面のアプリ、夜の時間。後のルールが優先されます。",
+"rules.rule": "ルール {n}",
+"rules.when": "条件",
+"rules.remove": "ルール {n} を削除",
+"rules.add": "ルールを追加",
+"rules.then": "そのときのキー",
+"rules.kind.metric": "値が次を超えたとき",
+"rules.kind.playing": "音楽の再生中",
+"rules.kind.micMuted": "マイクがミュートのとき",
+"rules.kind.appFront": "アプリが前面のとき",
+"rules.kind.time": "時刻が次の間のとき",
+"rules.metric": "値",
+"rules.metric.cpu": "CPU %",
+"rules.metric.ram": "RAM %",
+"rules.metric.gpu": "GPU %",
+"rules.metric.cpuTemp": "CPU °C",
+"rules.metric.gpuTemp": "GPU °C",
+"rules.above": "超",
+"rules.app": "アプリ",
+"rules.pickApp": "アプリを選択",
+"rules.from": "開始",
+"rules.to": "終了",
+"rules.noMotion": "動きなし",
+"rules.bgColor": "背景色",
+"rules.values": "値を表示",
+"rules.value.cpu": "CPU 使用率",
+"rules.value.ram": "メモリ使用量",
+"rules.value.gpu": "GPU 使用率",
+"rules.value.cpuTemp": "CPU 温度",
+"rules.value.gpuTemp": "GPU 温度",
+"rules.value.time": "時刻",
+"rules.value.date": "日付",
+"rules.value.song": "再生中の曲",
+"rules.value.artist": "アーティスト",
+"rules.value.app": "前面のアプリ",
+"designer.templatesHelp": "クリックでこのキーに見た目を適用します。ラベル、アイコン、画像はそのままです。",
+"designer.saveTemplate": "マイテンプレートとして保存",
+"designer.templateName": "テンプレート名",
+"designer.deleteTemplate": "テンプレート {name} を削除",
+"designer.save": "保存",
+"designer.cancel": "キャンセル",
+"designer.kind": "背景",
+"designer.kind.flat": "単色",
+"designer.kind.gradient": "グラデーション",
+"designer.kind.outline": "枠線",
+"designer.from": "開始色",
+"designer.to": "終了色",
+"designer.frameColor": "枠",
+"designer.angle": "方向",
+"designer.finish": "仕上げ",
+"designer.finish.none": "なし",
+"designer.finish.glass": "ガラス",
+"designer.finish.matte": "マット",
+"designer.iconHelp": "アイコンの変更と画像は上のラベルの横にあります。",
+"designer.effect": "文字の効果",
+"designer.effect.shadow": "影",
+"designer.effect.outline": "縁取り",
+"designer.badge": "バッジ",
+"designer.badgeHint": "3, !, NEW",
+"designer.badgeColor": "バッジの色",
+"designer.ring": "キーの周りに枠",
+"designer.ringColor": "枠の色",
+"designer.pattern": "パターン",
+"designer.pattern.stripes": "ストライプ",
+"designer.pattern.dots": "ドット",
+"designer.pattern.grid": "グリッド",
+"designer.pattern.noise": "ノイズ",
+"designer.patternStrength": "強さ",
+"icons.recent": "最近",
+"icons.inPacks": "インストールしたアイコンパック",
+"icons.more": "その他のアイコン (Elgato Marketplace)",
+"icons.moreHelp": "Elgato のアイコンパックをブラウザーで開きます。ダウンロードしたパック (.streamDeckIconPack) は MasterDeck で開けます: ダブルクリックするか、このウィンドウにドロップします。",
+"icons.packAdded": "アイコンパックを追加しました: {name}。アイコンの変更にあります。",
+"look.openStudio": "大きなエディター",
+"look.openStudioHelp": "キーの見た目をウィンドウ全体で編集: アイコン、大きなプレビュー、アイコンやラベルのドラッグ、複数のキー",
+"designer.font": "フォント",
+"designer.fontDeck": "デッキのフォント (設定 > 画面)",
+"studio.title": "キーエディター",
+"studio.undo": "元に戻す",
+"studio.redo": "やり直す",
+"studio.undoHelp": "最後の変更を元に戻す (Ctrl+Z)",
+"studio.redoHelp": "やり直す (Ctrl+Y または Ctrl+Shift+Z)",
+"studio.png": "PNG で保存",
+"studio.pngHelp": "このキーを画像として保存 (288 x 288)",
+"studio.pngSaved": "保存しました: {path}",
+"studio.pack": "ページをアイコンパックとして書き出す",
+"studio.packHelp": "ページのキーを Stream Deck のアイコンパックとして保存 (.streamDeckIconPack, 144 x 144)",
+"studio.packSaved": "{count} 個のキーをアイコンパックとして保存しました: {path}",
+"studio.style": "{name} の新しいキーをこの見た目で始める",
+"studio.styleHelp": "プロファイル独自のスタイル: アクションを割り当てたキーがこの色、背景、仕上げ、効果になります",
+"studio.styleSet": "{name} の新しいキーはこの見た目で始まります",
+"studio.styleOff": "{name} の新しいキーは MasterDeck の見た目に戻りました",
+"studio.key": "キー {n}",
+"studio.back": "戻る",
+"studio.done": "完了",
+"studio.gone": "このキーにはもう何も割り当てられていません。",
+"studio.drag": "ドラッグ",
+"studio.dragHelp": "キーの上でドラッグするか矢印キーで、アイコンやラベルを1ピクセルずつ動かします。動きはデッキと同じようにここで再生されます。",
+"studio.resetPlace": "元の位置へ",
+"studio.together": "一緒に変えるキー",
+"studio.togetherHelp": "ほかのキーを {count} 個チェック: 同じ見た目になります。ラベル、アイコン、画像はそのままです。",
+"designer.motion": "動き",
+"designer.motion.pulse": "パルス",
+"designer.motion.shine": "光沢",
+"designer.motion.slide": "パターン移動",
+"designer.pattern.waves": "波",
+"designer.pattern.hex": "六角形",
+"designer.motion.glow": "グロー",
+"designer.motion.sweep": "縁の光",
+"designer.motion.sparkle": "きらめき",
+"designer.motion.flow": "流れ",
+"skin.film": "フィルム",
+"skin.glitch": "グリッチ",
+"skin.neon": "ネオン管",
+"skin.glass": "ガラス",
+"skin.pumpkin": "かぼちゃ",
+"designer.skins": "スタイル",
+"designer.skinsHelp": "スタイルはキー全体を一つの作りで描きます。背景、質感、光、アイコン、ラベルをキー自身の色で。もう一度クリックすると外れます。",
+"designer.motion.film": "映写機",
+"designer.motion.glitch": "グリッチ",
+"designer.motion.flicker": "ちらつき",
+"designer.motion.sparks": "火花",
+"designer.motionFlashes": "この動きは時々ちらつきます。点滅する光が苦手な場合は、別の動きを選んでください。",
+"effects.title": "生きているデッキ",
+"look.title": "デッキの見た目",
+"look.back": "デッキに戻る",
+"look.live": "デッキに編集中の見た目がそのまま表示されます",
+"look.apply": "適用",
+"look.discard": "変更を破棄",
+"look.save": "マイルックとして保存",
+"look.undo": "元に戻す",
+"look.reset": "プリセットに戻す",
+"dl.presets": "プリセット",
+"look.elements": "要素 ({n})",
+"look.mine": "マイルック",
+"look.none": "見た目なし",
+"look.icons.on": "アイコン表示中",
+"look.icons.off": "アイコン非表示",
+"look.compare": "押し続ける: 元のプリセット",
+"look.hint": "プレビューのキーをクリック: 押下 · I を押し続ける: アイコンなし · Space を押し続ける: 元の見た目",
+"look.smooth": "滑らかさ",
+"look.meter": "毎秒 {fps}/24 枚 · {ms} / 41.7 ms · 余裕 {free} %",
+"look.measured": "あなたのデッキで計測",
+"look.active": "デッキ上",
+"look.activeLine": "{n} 個オン: {names}",
+"look.switchOff": "オフにする",
+"look.switchOn": "オンにする",
+"look.solo": "押し続ける: この要素だけ表示",
+"look.onPress": "押したとき",
+"look.estimate": "推定",
+"look.cost": "コストの詳細",
+"look.costShare": "1 枚あたり {ms} ms、描画時間の {pct} %、{where}",
+"look.gpu": "グラフィックカード",
+"look.cpu": "プロセッサ",
+"look.close": "設定を閉じる",
+"look.guard": "{name} で {ms} ms 増えます: 1 枚あたり合計 {total} / 41.7 ms。デッキが毎秒 24 枚を下回るかもしれません。",
+"look.guardYes": "それでもオンにする",
+"look.guardNo": "やめる",
+"look.swapped": "入れ替え: {old} → {new}（ここでは一度に一つ）",
+"look.muted3": "{name} をオフにしました: 3 つ目の背景は他の 2 つを隠してしまいます",
+"look.leaveTitle": "変更を適用しますか？",
+"look.discord": "プリセットの評価や、次にほしいプリセットのリクエストは",
+"look.discordLink": "Discord で",
+"look.presetLights": "ライトをプリセットの色に",
+"look.presetEdge": "ベースのエッジ",
+"look.presetControls": "ノブとフェーダー",
+"look.ownLed": "独自の色",
+"look.backToPreset": "プリセットに戻す",
+"look.allBackToPreset": "すべてプリセットに戻す",
+"look.fromPresetLed": "色はプリセット（{name}）から来ています。独自の色が優先されます。",
+"deck.fromPreset": "プリセットの色",
+"look.presetSaver": "プリセットをこのプロファイルのスクリーンセーバーに",
+"look.presetAlsoHelp": "色と絵だけです。ライトの光り方はエッジと設定 > ライトで、スクリーンセーバーの開始はスクリーンセーバーで設定します。独自の色を持つノブやフェーダーはその色を保ち、エッジで独自の色を選ぶとエッジはプリセットの色から外れます。",
+"look.unsaved": "デッキには今の変更が表示されています。破棄すると元の見た目に戻ります。",
+"look.stay": "とどまる",
+"look.saveTitle": "マイルックとして保存",
+"dl.name": "名前",
+"dl.icon": "アイコン",
+"look.replace": "置き換える",
+"look.saveNew": "新しく保存",
+"look.cancel": "キャンセル",
+"look.exists": "同じ名前のルックがあります: 「置き換える」で上書き、「新しく保存」で番号を付けて追加します。",
+"look.saved": "「{name}」を保存しました",
+"look.applied": "適用しました: プロファイルに保存済み",
+"look.discarded": "変更を破棄しました: デッキは元に戻りました",
+"look.basedOn": "ベース: {name}",
+"look.own": "オリジナルミックス",
+"look.empty": "何もオンになっていません。プリセットを選ぶか、要素をオンにしてください。",
+"look.myName": "マイ: {name}",
+"look.rule.two": "同時に最大 2 つ",
+"look.rule.one": "一度に一つ",
+"look.cat.skin": "キーのスタイル",
+"look.cat.scene": "キー越しに見える背景: 風景、空、水。プリセットはふつう空と風景を組み合わせます。",
+"look.cat.canvas": "デッキ全体にかかる天気や粒子: 霧、雨、雪、落ち葉。",
+"look.cat.blocks": "キーそれぞれを一つの物体に: ガラス、フレーム、霜、カボチャ、クモの巣。",
+"look.cat.light": "アイコンそのものを変えます: ランプ、金、クロム、クリスタル、光のにじみ。",
+"look.cat.inhabitant": "ときどきデッキを横切る訪問者: コウモリ、幽霊、目、クモ。",
+"look.cat.reaction": "キーを押したときに起こること: 波紋、火花、花火、ドミノ。",
+"look.cat.page": "キーのページを切り替えるときの動き。",
+"look.cat.finish": "画面全体の粒子感と質感。",
+"look.cat.skinHelp": "ページのすべてのキーにかかるフィルター: ラベル、アイコン、色はそのままです。",
+"look.count": "{count} 個の要素",
+"look.solo.on": "単独表示: {name}",
+"look.comparing": "元のプリセット: {name}",
+"look.hover": "{name} を試しに追加",
+"look.skinNone": "スタイルなし",
+"look.keys": "キー",
+"look.keys.help": "ページの各キーの作り：スタイルとアイコンへの光。プリセットを変えてもそのまま残ります。",
+"look.keys.style": "スタイル",
+"look.keys.light": "アイコンへの光",
+"look.lightNone": "光なし",
+"look.group.halloween": "ハロウィン",
+"effects.layers": "レイヤー",
+"effects.noGpu": "この PC には MasterDeck が使えるグラフィックカードがないため、GPU と書かれたエフェクトはデッキで省かれます (ほかは動きます)。",
+"effects.reaction.water": "水",
+"effects.scene": "アイコンの背後",
+"effects.scene.scene": "夜空",
+"effects.light": "アイコンへの光",
+"effects.light.light": "ランプ",
+"effects.finish": "仕上げ",
+"effects.finish.finish": "タイルと色",
+"effects.grain": "フィルムグレイン",
+"effects.stars": "星",
+"effects.angle": "ランプの角度",
+"effects.grainCost": "グレインは毎フレーム変わるため、送信量が大きく増え、1秒あたりの表示枚数が減ります。",
+"effects.gpuHelp": "グラフィックカードで描画します。ない場合、このレイヤーは省略されます。",
+"effects.add": "レイヤーを追加",
+"effects.addOne": "{name} を追加",
+"effects.empty": "まだレイヤーがありません。下から追加してください。レイヤーごとに設定があり、重ねられます。",
+"effects.show": "{name} を表示",
+"effects.up": "{name} を上へ",
+"effects.down": "{name} を下へ",
+"effects.remove": "{name} を削除",
+"effects.speed": "速さ",
+"effects.density": "量",
+"effects.often": "頻度",
+"effects.wind": "風",
+"effects.calm": "無風",
+"effects.reset": "元の設定に戻す",
+"effects.stacked": "キー全体のレイヤーが2つあると送信の負荷が増え、デッキの1秒あたりの表示枚数が減ることがあります。",
+"effects.orderHelp": "レイヤーはリストの上から順に描かれ、後のものが前のものの上に重なります(波紋はリストで上にあるものを曲げます)。",
+"deck.livingOpen": "生きているデッキ: キー全体の効果とキーのスタイル",
+"effects.onDeck": "効果",
+"effects.canvas": "キー全体に",
+"effects.reaction": "押したとき",
+"effects.inhabitant": "時々",
+"effects.canvas.fog": "霧",
+"effects.canvas.rain": "雨",
+"effects.canvas.snow": "雪",
+"effects.canvas.fireflies": "ホタル",
+"effects.canvas.embers": "残り火",
+"effects.reaction.ripple": "波紋",
+"effects.reaction.embers": "火の粉",
+"effects.inhabitant.bats": "コウモリ",
+"effects.page": "ページ切り替え時",
+"effects.blocks": "ブロックとしてのキー",
+"effects.kind.fire": "炎",
+"effects.kind.aurora": "オーロラ",
+"effects.kind.aquarium": "水槽",
+"effects.kind.cover": "ジャケットの水槽",
+"effects.kind.lava": "ラバランプ",
+"effects.kind.glass": "ガラスブロック",
+"effects.kind.frames": "フレームと光",
+"effects.kind.liquid": "液体",
+"effects.kind.frost": "霜",
+"effects.kind.springs": "弾むキー",
+"effects.kind.heart": "いいねのハート",
+"effects.kind.flip": "めくれるカード",
+"effects.kind.hop": "跳ねる光",
+"effects.kind.holo": "ホロ箔",
+"effects.kind.relief": "レリーフ",
+"effects.kind.gold": "金",
+"effects.kind.chrome": "クローム",
+"effects.kind.crystal": "クリスタル",
+"effects.kind.mist": "霧",
+"effects.kind.neonrain": "ネオンの雨",
+"effects.kind.caustics": "プールの光",
+"effects.kind.pumpkins": "ジャック・オー・ランタン",
+"effects.kind.eyes": "暗闇の目",
+"effects.kind.ghost": "おばけ",
+"effects.kind.spider": "クモ",
+"effects.kind.webs": "クモの巣",
+"effects.kind.batburst": "キーからコウモリ",
+"effects.kind.ghostrise": "キーからおばけ",
+"effects.kind.domino": "ドミノ",
+"effects.kind.chain": "連鎖する稲妻",
+"effects.kind.firework": "花火",
+"effects.kind.shockwave": "衝撃波",
+"effects.kind.magnet": "マグネット",
+"effects.kind.bloom": "色の波",
+"effects.kind.haunt": "幽霊屋敷の景色",
+"effects.kind.candle": "ろうそくの光",
+"effects.kind.carved": "彫られた縁",
+"effects.kind.stone": "石の額縁",
+"effects.kind.slime": "スライム",
+"effects.kind.spectral": "幽霊の光",
+"effects.upright": "{name}（縦置き）",
+"effects.theme.halloween-night": "ハロウィン: 幽霊の夜",
+"effects.theme.halloween-lanterns": "ハロウィン: ランタン",
+"effects.theme.halloween-spooky": "ハロウィン: 不気味なキー",
+"effects.theme.halloween-night.help": "紫の夜と月の下、キー越しに見える幽霊屋敷、枯れ木、墓。コウモリ、低い霧、おばけ、下にはジャック・オー・ランタン。キーのスタイルはそのまま。",
+"effects.theme.halloween-lanterns.help": "どのキーもランタンに: 下からのろうそくの光、彫ったカボチャのように光る縁、大きなジャック・オー・ランタン、クモの巣とクモ。キーのスタイルはそのまま。",
+"effects.theme.halloween-spooky.help": "どのキーも不気味に: 古い石の額縁、上から垂れるスライム、幽霊のような緑のアイコン、暗闇の目、押したキーから現れるおばけ。キーのスタイルはそのまま。",
+"effects.react": "押すと反応",
+"effects.moving": "動く",
+"effects.side": "側",
+"effects.side.left": "左",
+"effects.side.right": "右",
+"effects.rate": "今のデッキ: 毎秒 {fps} 枚 · MasterDeck の CPU {cpu} %",
+"effects.rateFps": "今のデッキ: 毎秒 {fps} 枚",
+"effects.rateHelp": "1 秒ごとの実測: キー画面が受け取った画像の数と、MasterDeck が使った CPU 1 コア分の割合。",
+"effects.cost": "フレームのコスト (ライブ)",
+"effects.cost.help": "デッキで 1 秒ごとに実測: 各エフェクトと画像の各部分にかかる時間。デッキは毎秒最大 24 枚なので、1 枚あたり約 41.7 ms です。",
+"effects.cost.total": "1 枚 {budget} ms のうち {ms} ms",
+"effects.cost.waiting": "計測中… (まずデッキが画像を描く必要があります)",
+"effects.cost.layers": "エフェクト",
+"effects.cost.frame": "1 枚の画像",
+"effects.cost.layersTotal": "エフェクト合計",
+"effects.cost.keys": "アイコンとラベル",
+"effects.cost.encode": "デッキ用の JPEG",
+"effects.cost.send": "USB 送信",
+"effects.cost.ownThread": "別スレッド",
+"effects.cost.heaviest": "最も重い",
+"effects.cost.halo": "アイコンの光",
+"effects.cost.ms": "{ms} ms",
+"effects.theme.halloween": "ハロウィン",
+"effects.theme.halloween.help": "月の出た紫の夜、低い霧、キーの上のジャック・オー・ランタン、クモの巣、コウモリ、暗闇の目、おばけとクモ。キーのスタイルはそのまま。下の各要素はオフにしたり変えたりできます。",
+"effects.strength": "強さ",
+"effects.tint": "自分の色",
+"effects.flashes": "雨では時々稲妻が光り、画面全体が2回光ります。連鎖する稲妻も当たったキーを光らせます。点滅する光が苦手な場合は、別の効果を選んでください。",
+"effects.help": "キー画面全体に、キーの背景とアイコンの間に描かれます。キーの操作はそのままです。",
+"effects.notWithPanel": "効果はキーの上に表示され、キー全体の一枚の画像の上には出ません。見るには「キーパネル」を「キーごとに個別の表示」にしてください。",
+"designer.motionHelp": "デッキ上で動きます。上のプレビューは静止しています。オンのときだけ動かすには「オンのときの見た目」で設定します。",
+"designer.applyOthers": "この見た目をほかのキーにも",
+"designer.applyHelp": "色、背景、仕上げ、文字の効果、枠がチェックしたキーに適用されます。ラベル、アイコン、画像はそのままです。",
+"designer.apply": "選択したキーに適用 ({n})",
+"designer.all": "すべて",
+"designer.applied": "{count} 個のキーに適用しました",
+"template.neon": "ネオン",
+"template.forest": "森",
+"template.ember": "残り火",
+"template.night": "夜",
+"template.frame": "枠",
+"template.matte": "マット",
+"inspector.moduleInfo": "モジュール情報",
+"assistant.title": "デッキアシスタント",
+"assistant.tab": "はじめる",
+"assistant.menu": "アシスタントに聞く…",
+"assistant.menuHelp": "あなたの使い方を聞いて、デッキで試せるプロファイルを作ります。",
+"assistant.new": "新しい会話",
+"assistant.intro": "アシスタントはあなたの使い方を知り、あなたに合うデッキ全体の案を作ります。デッキで試して比べ、1 つ選ぶと一緒に仕上げます。",
+"assistant.step1": "持っているアプリと使っているアプリを確認します。何かを送る前に内容を見られます。",
+"assistant.step2": "よく使うアプリの案がすぐに表示され、その後アシスタント自身のアイデアが 1 つずつ出てきます。",
+"assistant.step3": "デッキで試し、ダイヤルで比べ、1 つ選んで、変えたいところを伝えます。",
+"assistant.privacy": "このパソコンの Claude Code をあなたのアカウントで使います。送られるのはアプリ名、使用時間、モジュール、プロファイル名だけで、送信前に確認できます。",
+"assistant.scan": "アプリを確認",
+"assistant.scanning": "確認中…",
+"assistant.firstDefault": "私の使い方に合わせてデッキを設定するのを手伝って。",
+"assistant.send": "送信して開始",
+"assistant.cancel": "キャンセル",
+"assistant.thinking": "考え中…",
+"assistant.drafts": "試せる案 {count} 件",
+"assistant.try": "試す",
+"assistant.tryHelp": "今すぐデッキに表示します。「戻る」で元に戻ります",
+"assistant.back": "戻る",
+"assistant.use": "これを使う",
+"assistant.useHelp": "デッキとして使います。既存のデッキの新しい版なら、そのデッキを置き換えます（先にバックアップします）",
+"assistant.discard": "破棄",
+"assistant.placeholder": "回答するか、変更を頼む…",
+"assistant.stop": "停止",
+"assistant.sendShort": "送信",
+"assistant.noCli": "アシスタントにはこのパソコンの Claude Code が必要です。claude.com/claude-code からインストールし、ターミナルで claude を実行して一度サインインしてください。",
+"assistant.tool.guide": "デザインガイドを読んでいます",
+"assistant.tool.modules": "モジュールを確認しています",
+"assistant.tool.actions": "アクションを調べています",
+"assistant.tool.icons": "アイコンを選んでいます",
+"assistant.tool.apps": "アプリを確認しています",
+"assistant.tool.profiles": "プロファイルを読んでいます",
+"assistant.tool.draft": "案を作っています",
+"assistant.tool.change": "案を変更しています",
+"assistant.tool.lights": "ライトを設定しています",
+"assistant.tool.picture": "画像を追加しています",
+"assistant.tool.preview": "キーを確認しています",
+"assistant.tool.other": "作業中",
+"assistant.countPresses": "押したキーを数える（このパソコンに保存）。アシスタントが実際によく使うものに合わせてキーを並べられます",
+"screens.saver": "スクリーンセーバー",
+"screens.saverOff": "なし",
+"screens.saverAfter": "開始までの時間",
+"screens.saverHelp": "しばらくデッキに触れていないと、15 個のキー全体にデッキのライトの色で表示されます。最初に触れると終了するだけです。",
+"apps.title": "あなたのアプリ",
+"builder.open": "デッキを一歩ずつ作る",
+"builder.title": "アシスタントとデッキを作る",
+"builder.steps": "ステップ",
+"builder.stepDial": "ダイヤル",
+"builder.stepKnob": "ノブ {n}",
+"builder.stepReview": "確認",
+"builder.stepOf": "ステップ {n} / {count}",
+"builder.talk": "会話",
+"builder.talkDial": "まずは画面付きのダイヤルから。触っていないときに何を表示し、回すと何をしますか？デッキでどれでも試してください。回したり押したりして。",
+"builder.talkKnob": "ノブ {n}。ノブには画面がありません。変えた内容は少しの間ダイヤルに表示されます。デッキで試して 1 つ選んでください。",
+"builder.talkReview": "あなたのデッキです。プロファイルとして保存するか、以前のものを残してください。",
+"builder.chipMusic": "音楽用",
+"builder.chipWork": "仕事用",
+"builder.chipVolume": "音量",
+"builder.chipAll": "すべて表示",
+"builder.narrow": "アイデアを絞り込む: 曲、音量、Spotify…",
+"builder.needsSetup": "個別の設定が必要",
+"builder.try": "デッキで試す",
+"builder.onDeck": "デッキに表示中",
+"builder.pick": "選ぶ",
+"builder.nothing": "一致するものがありません。上の言葉を消してください。",
+"builder.tryHelp": "「デッキで試す」は、選ぶか次へ進むまで実際のデッキに表示します。デッキのほかの部分はそのままです。",
+"builder.skip": "このままで次へ",
+"builder.reviewTitle": "あなたのデッキ",
+"builder.unchanged": "以前のまま",
+"builder.name": "プロファイル名",
+"builder.defaultName": "マイデッキ",
+"builder.save": "プロファイルとして保存",
+"builder.throwAway": "破棄する",
+"builder.soFar": "ここまでのデッキ",
+"inspector.pluginSettings": "プラグインの設定",
+"access.banner": "デッキからショートカットを送ったり文字を入力したりするには、macOS の許可が必要です: システム設定 > プライバシーとセキュリティ > アクセシビリティ > MasterDeck。",
+"access.allow": "許可…",
+"inspector.swapTurns": "回す操作と押しながら回す操作を入れ替える",
+"inspector.swapTurnsHelp": "Stream Deck 用に作られたプラグイン向け: ダイヤルを押しながら回したときの動作を普通に回したときに、その逆も同様にします。プラグイン自体は変更されません。",
+"plugins.installSd": "Stream Deck プラグインをインストール…",
+"plugins.sdFile": "Stream Deck プラグイン",
+"plugins.catalog": "プラグインカタログ",
+"plugins.catalogSearch": "プラグインを検索",
+"plugins.catalogLoading": "カタログを読み込み中…",
+"plugins.catalogOffline": "カタログに接続できません。接続を確認してもう一度お試しください。",
+"plugins.catalogNone": "一致するプラグインはありません。",
+"plugins.install": "インストール",
+"plugins.isInstalled": "インストール済み",
+"plugins.byAuthor": "作者: {author}",
+"plugins.aiAssisted": "AI の助けを借りて作成",
+"plugins.tried": "MasterDeck で動作確認済み（{systems}）",
+"plugins.source": "ソース",
+"plugins.elgatoPage": "Elgato Marketplace",
+"pluginsTab.filters": "フィルター",
+"pluginsTab.source": "入手元",
+"pluginsTab.src.elgato": "Elgato Marketplace",
+"pluginsTab.src.openaction": "OpenAction",
+"pluginsTab.src.github": "GitHub",
+"pluginsTab.worksWith": "対応",
+"pluginsTab.thisSystem": "このパソコン（{os}）",
+"pluginsTab.dial": "ダイヤルとノブを使う",
+"pluginsTab.triedOnly": "MasterDeck で動作確認済み",
+"pluginsTab.category": "カテゴリ",
+"pluginsTab.all": "すべて",
+"pluginsTab.cat.Audio": "オーディオ",
+"pluginsTab.cat.Music": "音楽",
+"pluginsTab.cat.Streaming": "配信",
+"pluginsTab.cat.Communication": "通話とチャット",
+"pluginsTab.cat.Lighting": "照明",
+"pluginsTab.cat.Smart home": "スマートホーム",
+"pluginsTab.cat.Monitoring": "モニタリング",
+"pluginsTab.cat.Productivity": "生産性",
+"pluginsTab.cat.Developer": "開発",
+"pluginsTab.cat.Gaming": "ゲーム",
+"pluginsTab.cat.Other": "その他",
+"pluginsTab.sort": "並べ替え",
+"pluginsTab.sortPopular": "人気順",
+"pluginsTab.sortUpdated": "最近の更新順",
+"pluginsTab.sortTried": "動作確認済みを先に",
+"pluginsTab.sortName": "名前",
+"pluginsTab.help": "ここで 1 クリックでインストールできる無料の Stream Deck プラグイン。プラグインはこのパソコンで動くプログラムです。インストール前に何をするものか確認してください。",
+"pluginsTab.popElgato": "Elgato で {n} 位",
+"pluginsTab.stars": "★ {n}",
+"pluginsTab.tried": "MasterDeck で動作確認済み",
+"pluginsTab.triedOn": "{os} の MasterDeck で動作確認済み",
+"pluginsTab.notTried": "未確認",
+"pluginsTab.dialTag": "ダイヤル",
+"pluginsTab.updated": "{date} 更新",
+"pluginsTab.use": "使う",
+"pluginsTab.setup.hwinfoShm": "センサーを表示する前に：HWiNFO の設定で Shared Memory Support にチェックを入れ、HWiNFO を終了してもう一度起動してください（無料版の HWiNFO は 12 時間後にオフにします）。",
+"pluginsTab.setup.hwinfoGadget": "センサーを表示する前に：HWiNFO のセンサー設定の HWiNFO Gadget タブで Enable reporting to Gadget と、使いたい各センサーの Report value in Gadget にチェックを入れてください。",
+"chooser.new": "新規",
+"chooser.focusHint": "アクションをコントロールにドラッグし、デッキの下で設定を編集します。",
+"pluginsTab.more": "さらに表示（残り {count}）",
+"plugins.browse": "プラグインを見る",
+"plugins.browseHelp": "「プラグイン」タブには、Elgato Marketplace、OpenAction、GitHub の、ここで 1 クリックでインストールできる無料の Stream Deck プラグインが並んでいます。",
+"plugins.locked": "Stream Deck アプリのものがほかに {count} 個あります。Elgato が自社アプリ用に暗号化しているため、そこでしか動きません。",
+"plugins.popular": "Elgato Marketplace で {rank} 位",
+"plugins.fromSd": "Stream Deck アプリのプラグイン",
+"plugins.fromSdHelp": "このパソコンには Elgato の Stream Deck アプリがあります。MasterDeck はそのプラグインのコピーを使えます。Stream Deck アプリ側のものはそのまま残ります。Elgato が自社アプリ用に暗号化したプラグインは、そこでしか動きません。",
+"plugins.use": "MasterDeck で使う",
+"plugins.version": "バージョン {version}",
+"plugins.fileTitle": "この Stream Deck プラグインをインストールしますか？",
+"plugins.fileFrom": "{file} から",
+"plugins.fileTrust": "プラグインはこのパソコンで動くプログラムです。入手元を信頼できる場合だけインストールしてください。",
+"plugins.fileReading": "プラグインを読み込み中…",
+"plugins.cannotRun": "MasterDeck では実行できません",
+"plugins.dropHere": "ドロップしてプラグインをインストール",
+"tour.exit": "終了（デッキは元に戻ります）",
+"tour.title": "あなたのデッキ",
+"tour.walkTitle": "あなたのデッキ: ひととおりの案内",
+"tour.madeFor": "用途: {focus}",
+"tour.focusQuestion": "パソコンでいちばんよくすることは？",
+"tour.focusHelp": "MasterDeck が見えたものから 1 つ選びました（{why}）。違っていたら変えてください。迷ったら「少しずつ全部」が誰にでも合います。",
+"tour.focusHelpPlain": "迷ったら「少しずつ全部」が誰にでも合います。",
+"tour.focus.games": "ゲーム",
+"tour.focus.streaming": "配信",
+"tour.focus.calls": "通話と仕事",
+"tour.focus.music": "音楽",
+"tour.focus.mixed": "少しずつ全部",
+"tour.focusDoes.games": "カバー、クリップ、ゲームの音量",
+"tour.focusDoes.streaming": "録画、配信開始、リプレイ",
+"tour.focusDoes.calls": "ミュート、会議、仕事のアプリ",
+"tour.focusDoes.music": "再生中の曲、スキップ、音量",
+"tour.focusDoes.mixed": "落ち着いた日常用のデッキ",
+"tour.suggested": "おすすめ",
+"tour.whyGames": "ゲームが {count} 本あります",
+"tour.whyStreaming": "OBS または Streamlabs があります",
+"tour.whyCalls": "{app} を使っています",
+"tour.whyMusic": "{app} で音楽を聴いています",
+"tour.whyMixed": "特に目立つものはありません",
+"tour.noModules": "まずベースにモジュールを取り付けてください。ツアーはデッキのすべてを案内します。",
+"tour.promise": "約 5 分 · デッキで 5 つのパート · あなたのものは何も変わりません",
+"tour.make": "デッキを作る",
+"tour.making": "デッキを作っています…",
+"tour.deckNow": "新しいデッキが今モジュールに表示されています",
+"tour.parts": "あなたのデッキ · 残す",
+"tour.partsHelp": "パートをオフにするとデッキから外れ、デッキはすぐに反映されます。",
+"tour.keepPart": "{part} を残す",
+"tour.stopOf": "{n} / {count}",
+"tour.nowLabel": "今:",
+"tour.nextLabel": "次:",
+"tour.now.done": "完了。準備ができたら進んでください。",
+"tour.now.pickLook": "4 つすべて完了。ほかの見た目を試すか、先へ進んでください。",
+"tour.now.dial.turn": "ダイヤルを回してください。",
+"tour.now.dial.press": "ダイヤルを押してください。",
+"tour.now.dial.double": "ダイヤルを素早く 2 回押してください。",
+"tour.now.dial.hold": "ダイヤルを 1 秒押し続けてください。",
+"tour.cheer.done": "完了！",
+"tour.cheer.count": "完了！ {n} / {count}",
+"tour.firstHint": "デッキはもう作られて、ハードウェアに表示されています。各パートを試して、気に入ったものを残してください。",
+"tour.tryIt": "試してみる",
+"tour.done": "できました",
+"tour.waiting": "デッキでの操作を待っています…",
+"tour.playAgain": "音をもう一度鳴らす",
+"tour.dryRun": "ツアー中、これらのキーは何をするかを伝えるだけです。配信や録画は始まりません。",
+"tour.macAutomation": "macOS が、Spotify や「ミュージック」で再生中のものを MasterDeck が読み取ってよいか一度だけ尋ねることがあります。",
+"tour.look": "見た目",
+"tour.keep": "デッキに残す",
+"tour.next": "次へ",
+"tour.back": "戻る",
+"tour.volume.title": "アプリごとの音量",
+"tour.volume.body": "ゲームや前面のアプリ、ボイスチャット、音楽、その他にそれぞれ専用のコントロールがあり、ライトがそれぞれの音の大きさを示します。",
+"tour.volume.bodyMac": "ゲームや前面のアプリ、ボイスチャット、音楽、その他にそれぞれ専用のコントロールがあります。初回は、MasterDeck がアプリの音を設定してよいか macOS が一度だけ尋ねます（システムオーディオ録音）。",
+"tour.volume.tryFaders": "強調表示のフェーダー（システム）を動かしてください。MasterDeck が鳴らす音が小さくなります。",
+"tour.volume.tryKnobs": "強調表示のノブ（システム）を回してください。MasterDeck が鳴らす音が小さくなります。",
+"tour.volume.tryDial": "ダイヤルを回してください。MasterDeck が鳴らす音が小さくなります。",
+"tour.volume.tryKeys": "「小さく」または「大きく」を押してください。MasterDeck が鳴らす音が変わります。",
+"tour.look.volume.0": "ライトがレベルを表示",
+"tour.look.volume.1": "アプリごとの色",
+"tour.mute.title": "ミュートと会話",
+"tour.mute.body": "1 つのキーですべてのアプリのマイクをミュートし、キーが赤くなります。通話中はデッキが自動で通話アプリのキーを表示します。",
+"tour.mute.try": "マイクを押すと赤くなります。もう一度押すとミュート解除（ツアーはどのみちマイクを元の状態に戻します）。",
+"tour.mute.tryCall": "マイクを押すと赤くなります。その隣: {app} 専用のミュートキー。",
+"tour.music.title": "再生中の曲",
+"tour.music.body": "再生中のもののカバー、押して一時停止、次の曲はキー 1 つで。",
+"tour.music.tryDial": "音楽を再生して、ダイヤルを押して一時停止し、回してみてください。",
+"tour.music.tryKey": "音楽を再生して、カバーのキーを押して一時停止してください。",
+"tour.look.music.0": "回すと音量",
+"tour.look.music.1": "回すと曲の中を移動",
+"tour.apps.title": "あなたのアプリ",
+"tour.apps.body": "よく使うアプリを、実際のアイコン付きでキー 1 つで。Discord、Chrome、ゲームなどは、初めて開いたときに専用のプロファイルができます。",
+"tour.apps.try": "最初のキーを押すと、アプリが開きます。",
+"tour.games.title": "ゲーム",
+"tour.games.body": "ゲームをカバー付きで。直前の場面のクリップもキー 1 つで。",
+"tour.games.try": "「クリップ」を押してください。Xbox Game Bar が直前の 30 秒を保存します（macOS: 録画ツール）。",
+"tour.streaming.title": "配信",
+"tour.streaming.body": "OBS の録画、配信開始、リプレイ、スクリーンショット。配信中や録画中はキーが赤く表示されます。",
+"tour.streaming.try": "「配信開始」を押してください。ツアー中は何をするかを伝えるだけです。",
+"tour.work.title": "仕事のアプリ",
+"tour.work.body": "よく使うアプリをさらに、2 段目にキー 1 つで。",
+"tour.work.try": "下段のキーのどれかを押すと、アプリが開きます。",
+"tour.player.title": "プレーヤー",
+"tour.player.body": "再生中のものの前へ・再生・次へ、消音、そして時刻。",
+"tour.player.try": "再生を押してください。",
+"tour.extras.title": "便利なキー",
+"tour.extras.body": "時刻、集中タイマー、スクリーンショット、パソコンの負荷、画面のロック。",
+"tour.extras.try": "「集中 25」を押すと、キーで 25 分のタイマーが始まります。",
+"tour.finale": "フィナーレ",
+"tour.superTitle": "スーパーモード",
+"tour.superBody": "MasterDeck の見どころ。欲しいものを残してください。",
+"tour.superAnimations.title": "アニメーションのページ",
+"tour.superAnimations.body": "デッキの「お楽しみ」を押すと、アニメーション、ダイヤルの Mochi、スクリーンセーバーを見られます。「戻る」で戻ります。",
+"tour.superSaver.title": "コードの雨のスクリーンセーバー",
+"tour.superSaver.body": "席を離れるとキーに流れ落ちるコードが表示され、触れると戻ります。",
+"tour.superRainbow.title": "レインボーの縁",
+"tour.superRainbow.body": "ベースの縁がゆっくりとしたレインボーに。オフ: 落ち着いた 1 色。",
+"tour.showSaver": "今すぐデッキに表示",
+"tour.seeDeck": "デッキを見る",
+"tour.endTitle": "これがあなたのデッキです",
+"tour.endKept": "{count} 個のパートを残しました",
+"tour.useHome": "ホームプロファイルにする",
+"tour.changeSteps": "一歩ずつ変更する",
+"tour.throwAway": "破棄する",
+"tour.appDecks": "Discord、ゲーム、ほかのアプリは、初めて開いたときに専用のプロファイルができます。",
+"tour.oldStays": "ほかのプロファイルはそのままです。いつでも切り替えて戻れます。",
+"tour.askTitle": "もっと欲しいですか？",
+"tour.askHelp": "毎日クリックが多すぎる作業をアシスタントに伝えてください。このプロファイルをもとに作ります。",
+"tour.askPlaceholder": "例: スピーカーとヘッドセットの切り替え",
+"tour.askSend": "アシスタントに聞く",
+"assistant.letsSet": "デッキを設定しましょう",
+"assistant.letsSetHelp": "MasterDeck がすぐにモジュールに合わせたデッキを作り、案内します。AI は不要です。",
+"assistant.showMe": "デッキで見せて",
+"assistant.showMeHelp": "モジュールとアプリに合わせたプロファイルを作って案内 · 約 5 分 · AI なし",
+"assistant.recommended": "おすすめ",
+"assistant.yourDeck": "あなたのデッキ",
+"assistant.showMeAgain": "もう一度デッキで見せて",
+"assistant.buildYourself": "自分で一歩ずつ作る",
+"assistant.aiTitle": "AI アシスタント",
+"assistant.cardNext": "次へ",
+"assistant.needsCli": "このパソコンに、あなたのアカウントの Claude Code が必要です。ツアーと「一歩ずつ」はなしでも動きます。",
+"assistant.needsSignIn": "Claude Code はありますが、まだサインインしていません。",
+"assistant.usesAndSends": "使うものと送るもの",
+"assistant.howToGet": "入手方法",
+"assistant.exMusicDial": "ダイヤルで {app}",
+"assistant.exCall": "デッキで {app} の通話",
+"assistant.exFaders": "フェーダーでアプリの音量",
+"assistant.exKnobs": "ノブの使い方のアイデア",
+"assistant.exApps": "よく使うアプリをキーに",
+"assistant.draftsWaiting": "{count} 件の案が待っています",
+"assistant.throwAll": "すべて破棄",
+"assistant.details": "詳細",
+"assistant.runsLine": "あなたの Claude Code（{plan}）で動作",
+"assistant.needsLine": "アシスタントとの会話には Claude Code が必要です",
+"plugins.installing": "インストール中…",
+"plugins.installed1": "{id} をインストールしました。アクションは「何をする？」にあります。",
+"plugins.sdHelp": "MasterDeck は Stream Deck 用のプラグインを実行します。プラグインのページや GitHub のリリースにある .streamDeckPlugin ファイルを MasterDeck で開くか、このウィンドウにドロップしてください。キーは 5×3 のキーパッド、ダイヤルとノブはダイヤルとして扱われます。Elgato が自社アプリ用に暗号化したプラグインは、そこでしか動きません。",
+"apps.help": "自分のアプリやツールの状態（待機中のエージェント、実行中のビルドなど）をデッキに表示し、キー用のアクションを提供できます。アプリの MasterDeck マニフェストまたは状態のアドレスを追加すると、MasterDeck がそれを受け取ります。その後「アプリの状態」アクションを使うか、アシスタントに頼んでください。",
+"apps.count": "{count} 件接続中",
+"apps.items": "{count} 項目、{waiting} 件があなたを待っています",
+"apps.noItems": "まだ応答がありません",
+"apps.address": "マニフェストまたは状態のアドレス",
+"apps.add": "追加",
+"apps.added": "{name} を接続しました。状態は {id}.* です",
+"apps.joined": "{names} が自分で接続しました。その状態をキーやダイヤルに表示できます（「アプリの状態」アクション）。",
+"apps.remove": "接続を解除",
+"apps.copyPrompt": "これをアプリに追加するプロンプトをコピー（Claude Code 用）",
+"apps.promptCopied": "コピーしました。アプリのフォルダーで Claude Code に貼り付けてください",
+"assistant.power": "もっと広く調べさせる。",
+"assistant.powerHelp": "自分のアプリの操作方法（API、リンク、スイッチ）を調べ、作る前にキーが動くか確かめるために、ファイルの読み取り、ウェブ検索、コマンドの実行もできます。コマンドとウェブの取得は、すべてここであなたの許可を待ちます。",
+"assistant.ask.Bash": "次のコマンドを実行しようとしています:",
+"assistant.ask.WebFetch": "次のアドレスを開こうとしています:",
+"assistant.ask.WebSearch": "次のことをウェブで検索しようとしています:",
+"assistant.ask.Read": "次のものを読もうとしています:",
+"assistant.ask.other": "{tool} を使おうとしています:",
+"assistant.ask.once": "許可",
+"assistant.ask.talk": "この会話中は許可",
+"assistant.ask.deny": "いいえ",
+"assistant.ask.allowed": "許可しました",
+"assistant.ask.denied": "許可しませんでした",
+"assistant.all": "すべて",
+"assistant.none": "なし",
+"assistant.sendPicked": "送信（{count}）",
+"assistant.pos": "{n} / {total}",
+"assistant.prev": "前の案",
+"assistant.next": "次の案",
+"assistant.tryOnDeck": "デッキで試す",
+"assistant.onDeckNow": "デッキに表示中: この案。ダイヤルを回すと次の案。",
+"assistant.backToMine": "自分のものに戻す",
+"nudge.app": "最近 {name} に {hours} 時間使っていますが、まだデッキがありません。MasterDeck が試せる案を用意しています。",
+"nudge.module": "{kind} が初めて取り付けられました。アイデアが欲しいですか？",
+"nudge.sketch": "案を見せて",
+"nudge.ask": "アシスタントに聞く",
+"nudge.askApp": "デッキで {name} を本当に便利にして。",
+"nudge.askModule": "{kind} を取り付けたところです。何をさせればいい？",
+"nudge.unused": "「{deck}」の {control}（{label}）は {since} から使われていません。使うものに変えますか？",
+"nudge.unusedHow": "デッキで押してここで選び、動作を変えるか、アシスタントにアイデアを聞いてください。",
+"nudge.askUnused": "デッキ「{deck}」の {control}（{label}）を一度も使っていません。私がよく使うものから、代わりにできることをいくつか提案して。",
+"tour.countUse": "明日、一度も使っていないコントロールを教えて。入れ替えられるように（押した回数を数え、このパソコンに保存）",
+"nudge.later": "今はしない",
+"nudge.ideas": "アイデア",
+"nudge.chipApp": "{name} のプロファイル",
+"nudge.chipModule": "{kind} のアイデア",
+"nudge.chipUnused": "{control} にもっと良いものを",
+"nudge.never": "今後は提案しない",
+"nudge.toggle": "よく使うアプリのプロファイルを提案する（1 日に最大 1 回、ゲーム中や通話中は提案しない）",
+"assistant.tool.idea": "アイデアを描いています",
+"assistant.tool.tour": "ツアーを作っています",
+"assistant.tool.shortcuts": "ショートカットを確認しています",
+"assistant.tool.deck": "デッキに表示しています",
+"assistant.remembered": "覚えました: {text}",
+"assistant.forgetThis": "これを忘れる",
+"assistant.tasteTitle": "あなたについて覚えていること（{count}）",
+"assistant.tasteHelp": "このパソコンに保存され、会話の最初のメッセージと一緒に送られます。不要なものは削除し、知っておいてほしいことを追加してください。",
+"assistant.tasteNone": "まだありません。会話の中で好みを言うと記録します。",
+"assistant.tasteAdd": "メモを追加。例: アニメーションなし",
+"assistant.tasteForgetAll": "すべて忘れる",
+"assistant.unchecked": "未確認のショートカット {count} 件",
+"assistant.uncheckedHelp": "このアプリについて MasterDeck が確認したリストにありません。頼る前に試してください。",
+"assistant.quick": "すぐに作成、AI なし",
+"assistant.runsTitle": "Claude Code で動作",
+"assistant.runs": "MasterDeck には組み込まれていません。このパソコンの Claude Code で動き、{account}（{plan}）でサインインしています。",
+"assistant.cost": "回答はすべて、Claude とのほかのチャットと同じく、Claude プランの利用上限に数えられます。最初の回答は 1 分以内です。アシスタントが使えるのは MasterDeck 自身のツールだけで、ファイルやコマンドは使えません。",
+"assistant.checking": "Claude Code を探しています…",
+"assistant.needsTitle": "アシスタントには Claude Code が必要です",
+"assistant.needs": "MasterDeck には組み込まれていません。このパソコンの Claude Code で動き、Claude プラン（Pro または Max）か Anthropic の API キーでサインインしている必要があります。ここには Claude Code がインストールされていません。",
+"assistant.without": "なくてもプロファイルは作れます。+ > 「アプリやゲーム用に…」でどのアプリのプロファイルも作れ、既製プロファイルも同じメニューにあります。",
+"assistant.checkAgain": "もう一度確認",
+"assistant.signInTitle": "Claude Code にサインインしていません",
+"assistant.signIn": "ターミナルを開いて claude を一度実行し、Claude のアカウント（Pro または Max）か API キーでサインインしてください。その後もう一度確認してください。",
+"assistant.costApi": "API キーでサインインしています。回答はすべて使用量に応じて Anthropic のアカウントに請求されます。アシスタントが使えるのは MasterDeck 自身のツールだけで、ファイルやコマンドは使えません。",
+"assistant.apiKey": "API キー、従量課金",
+"assistant.claudePlan": "あなたの Claude プラン",
+"assistant.hood": "内部で動いているもの",
+"assistant.model": "モデル",
+"assistant.modelLater": "最初の回答の後に表示",
+"assistant.session": "セッション",
+"assistant.sessionLater": "最初のメッセージで開始",
+"assistant.folder": "フォルダー",
+"assistant.resume": "この会話をターミナルで読む・続けるには: cd \"{folder}\" の後 claude --resume {session}",
+"assistant.command": "MasterDeck が毎回どのように起動するか",
+"assistant.toolsOnly": "--tools \"\" で Claude Code 自身のツール（ファイル、コマンド、ウェブ）をオフにし、--strict-mcp-config と --allowedTools で MasterDeck のツールだけを残します。--system-prompt で MasterDeck の指示だけを渡し（Claude Code のコーディング用プロンプトは渡しません）、--setting-sources local と --disable-slash-commands で自分の Claude Code の設定（フック、CLAUDE.md ファイル、スキル、権限）を除きます。サインイン、モデル、effort はそのままです。",
+"assistant.rules": "渡している指示",
+"assistant.effort": "Effort",
+"assistant.sameAsCode": "Claude Code と同じ",
+"assistant.sameAsCodeIs": "Claude Code と同じ（{value}）",
+"assistant.pickHelp": "標準では、アシスタントはあなたの Claude Code と同じものを使います。ここで選んだ名前（Opus、Sonnet など）は常にその種類の最新モデルを意味するので、Claude Code の更新で新しいモデルになります。軽いモデルや低い effort はプランの使用量が少なく、案作りには高いほうが有利です。次の回答から反映されます。",
+"assistant.buildThese": "これを作って: {list}",
+"assistant.build": "{count} 件のアイデアを作る",
+"assistant.pickIdeas": "作るアイデアを選んでください",
+"assistant.draftGone": "この案は破棄されました。",
+"assistant.kept": "残して、デッキに表示しました",
+"assistant.replaced": "{name} を更新してデッキに表示しました（バックアップを作成済み）",
+"assistant.firstPlaceholder": "…または自分の言葉で: していること、よく手を伸ばすもの、イライラすること",
+"assistant.tryingBar": "{name} をデッキで試しています",
+"assistant.contextHelp": "この会話のコンテキスト: {window} トークン中 {used}（{pct}%）。いっぱいになると Claude Code が古い部分を圧縮します。「新しい会話」は空の状態から始まります。",
+"assistant.knobs": "ノブ",
+"assistant.rollers": "ローラー",
+"assistant.faders": "フェーダー",
+"caption.volume.system": "システム",
+"caption.volume.mic": "マイク",
+"caption.volume.others": "ほかのアプリ",
+"caption.volume.front": "前面のアプリ",
+"caption.scroll": "スクロール",
+"caption.seek": "シーク",
+"caption.media": "曲送り",
+"caption.brightness": "明るさ",
+"caption.profiles": "プロファイル",
+"caption.pages": "ページ",
+"caption.keys": "ショートカット",
+"assistant.compare": "{count} 件すべてをデッキで比べる（ダイヤルを回す）",
+"assistant.compareStop": "比較をやめる",
+"assistant.pick": "これにする",
+"assistant.pickSketch": "「{title}」（案 {id}）にします。仕上げてください。",
+"assistant.comparingBar": "デッキで比較中 {n}/{count}: ダイヤルを回してください",
+"assistant.pickSketchHelp": "アシスタントがこれを仕上げます: 実際のアイコン、ライト、ダイヤル、追加の機能",
+"stage.saverOn": "デッキはスクリーンセーバー中",
+"stage.saverEnd": "終了",
+"music.chip": "音楽",
+"music.open": "音楽に合わせるライト：どのライトが再生中の音に合わせるか、その合わせ方",
+"music.title": "音楽に合わせるライト",
+"music.allProfiles": "すべてのプロファイル",
+"music.on": "ライトを音楽に合わせる",
+"music.onHelp": "すべてのプロファイルに適用されます。エッジに独自の効果があるプロファイルはそれを保ちます。再生中の音はコンピューターから読み取り、録音はしません。",
+"music.edge": "エッジ",
+"music.knobs": "ノブ",
+"music.faders": "フェーダー",
+"music.thisEdge": "このプロファイルのエッジ",
+"music.moved": "音楽に合わせるライトは、デッキの下、スクリーンセーバーの隣に移りました。",
+"saver.title": "スクリーンセーバー",
+"deck.saverOpen": "スクリーンセーバー：離席中にデッキに表示するもの",
+"saver.forProfile": "このプロファイル",
+"saver.shared": "すべてのプロファイルと同じ",
+"saver.own": "専用",
+"saver.sharedHelp": "ここでの変更は、専用のスクリーンセーバーがないすべてのプロファイルに適用されます。",
+"saver.ownHelp": "このプロファイルのみ。ほかのプロファイルは共通のものを使います。",
+"saver.scenes": "デッキ全体のシーン",
+"saver.simple": "シンプル",
+"saver.scene.aurora": "オーロラ",
+"saver.scene.aquarium": "アクアリウム",
+"saver.scene.lava": "ラバランプ",
+"saver.scene.fire": "暖炉",
+"saver.scene.snowfall": "雪の夜",
+"saver.scene.fireflies": "夏の夜",
+"saver.scene.neon": "ネオンの雨",
+"saver.scene.haunted": "幽霊の夜",
+"saver.dial": "その間のダイヤル",
+"saver.dial.clock": "その色の時計",
+"saver.dial.same": "そのまま",
+"saver.dial.off": "消灯",
+"saver.lights": "その間のライト",
+"saver.lights.scene": "その色で呼吸",
+"saver.lights.same": "そのまま",
+"saver.lights.off": "消灯",
+"saver.allProfiles": "すべてのプロファイル共通",
+"saver.try": "デッキでプレビュー",
+"saver.tryHelp": "デッキに20秒間表示します。デッキに触れると終了します。",
+"saver.help": "しばらくデッキに触れていないと15個のキー全体に表示されます。最初のタッチは終了するだけで、キーは押されません。",
+"saver.presets": "プリセット",
+"saver.fromLook": "このプロファイルの見た目",
+"saver.gpuHelp": "シーンはグラフィックカードで描画するリビングデッキのレイヤーです。点の色はダイヤルとライトに使われます。",
+"settings.saverMoved": "スクリーンセーバーはデッキの下の「スクリーンセーバー」で設定します：シーン、開始までの時間、プロファイル専用の設定。",
+"settings.saverOpen": "開く",
+"effects.kind.leaves": "紅葉",
+"effects.kind.storks": "コウノトリ",
+"effects.kind.goldlight": "金色の光",
+"effects.kind.sakura": "桜の花びら",
+"effects.kind.lanterns": "提灯",
+"effects.kind.ukiyo": "浮世絵の月",
+"effects.kind.koi": "鯉の池",
+"effects.theme.poland-autumn": "ポーランド: 黄金の秋",
+"effects.theme.japan-sakura": "日本: 富士と桜",
+"effects.theme.poland-hunt": "ポーランド: きのこ狩り",
+"effects.kind.woodland": "古い森",
+"effects.kind.fuji": "富士山",
+"effects.kind.matrix": "コードの雨",
+"effects.kind.code": "コードエディタ",
+"effects.kind.synthwave": "シンセウェイブ",
+"effects.kind.ink": "光るインク",
+"effects.kind.nebula": "深宇宙",
+"effects.kind.spectrum": "スペクトラム",
+"effects.kind.circuit": "回路基板",
+"effects.kind.orbit": "軌道上",
+"effects.kind.vinyl": "ターンテーブル",
+"effects.kind.impasto": "油彩インパスト",
+"effects.kind.hollowhill": "ホロウ・ヒル",
+"effects.kind.lanternhollow": "ランタン・ホロウ",
+"effects.kind.tokyorain": "東京の雨",
+"effects.theme.japan-tokyo-rain": "日本: 東京の雨",
+"effects.theme.japan-tokyo-rain.help": "濡れたガラス越しに見る夜の東京の通り: 通りの上のネオン看板、濡れた路面に映るその光、各キーを流れる雨粒。押すとそのキーの上のネオンが灯ります。キーのスタイルはそのまま。",
+"effects.theme.halloween-hill": "ハロウィン: ホロウ・ヒル",
+"effects.theme.halloween-hollow": "ハロウィン: ランタン・ホロウ",
+"effects.theme.halloween-hill.help": "キー越しに見える紫のハロウィンの夜: 丘の上の窓に灯りのともる傾いた屋敷、枯れ木の向こうの満月、鉄柵のある墓地、地を這う霧の中で光るジャック・オー・ランタン、コウモリとクモ。押すとろうそくの光の波が霧を走り、キーからコウモリの群れが飛び出します。キーのスタイルはそのまま。",
+"effects.theme.halloween-hollow.help": "低い琥珀色の月の下、霧に包まれた墓地の谷: それぞれ顔の違うジャック・オー・ランタン、枯れ木のフクロウ、黒猫、コウモリ、鬼火、舞い落ちる葉、ときどき月を横切る魔女。押すと突風: ろうそくが消えかけ、煙と火の粉とともに燃え戻ります。キーのスタイルはそのまま。",
+"effects.theme.neon-circuit": "ネオン: サイバーリグ",
+"effects.theme.neon-circuit.help": "アイコンの後ろのカーボンの基板に光る回路。シアンとマゼンタの光のパルスが走り、各キーの角に HUD の括弧。押すと電流のサージが回路を駆け抜け、キーの括弧が光ります。キーのスタイルはそのまま。",
+"effects.theme.space-orbit": "宇宙: 軌道上",
+"effects.theme.space-orbit.help": "ステーションから見た地球の曲がった縁がデッキの下に: 大気の細い青い線、縁から昇る太陽、夜の側の街の灯り、右に揺れるオーロラ。押すとキーからスキャナーの波が広がります。キーのスタイルはそのまま。",
+"effects.theme.music-vinyl": "音楽スタジオ: ターンテーブル",
+"effects.theme.music-vinyl.help": "アイコンの後ろで回るレコード。溝に光が乗り、中央で赤いラベルが回ります。溝は再生中の音で光り、低音はラベルの近く、高音は外周に。押すとレコードがスクラッチし、光の輪が溝を走ります。これがオンのときだけ MasterDeck はスピーカーへの音を聞き、何も録音しません。キーのスタイルはそのまま。",
+"effects.theme.studio-impasto": "画家のアトリエ: キャンバスに油彩",
+"effects.theme.studio-impasto.help": "アイコンの後ろに厚い油彩で描いた夜: 青と青緑のゆっくりした渦に沿う絵の具たっぷりの筆致、黄色のリボン、左上から照らされた絵の具の盛り上がり、透けて見える麻布。押すとパレットナイフがキーをなでます。キーのスタイルはそのまま。",
+"effects.theme.matrix-rain": "マトリックス: コードの雨",
+"effects.theme.matrix-rain.help": "アイコンの後ろに降る緑のコードの雨。文字の列がそれぞれの速さで落ち、先頭が明るく光ります。押すとキーのアイコンが光る文字に砕けて散り、また戻り、下のキーへコードの滝が流れ落ちます。キーのスタイルはそのまま。",
+"effects.theme.dev-editor": "開発者: コードエディタ",
+"effects.theme.dev-editor.help": "アイコンの後ろの暗いコードエディタ: 構文の色のついた行が上へ流れ、下ではエージェントが点滅するカーソルとともに新しい行を書きます。押すとキーの下の行が選択され、波が通ったコードを書き直します。キーのスタイルはそのまま。",
+"effects.theme.neon-synthwave": "ネオン: シンセウェイブ",
+"effects.theme.neon-synthwave.help": "キー越しのシンセウェイブの夜: 縞模様の太陽がワイヤーフレームの山の向こうに沈み、ネオンのグリッドがこちらへ迫り、走査線が走ります。押すとキーにヒットマーカーが光り、グリッドに衝撃が走り、周りのキーにグリッチの波が広がります。キーのスタイルはそのまま。",
+"effects.theme.studio-ink": "画家のアトリエ: 光るインク",
+"effects.theme.studio-ink.help": "アイコンの後ろ、黒い紙に光る水彩インク: ウルトラマリン、ローズ、ビリジアン、オーカーのにじみがゆっくり広がり、乾いた縁が濃くなり、紙の目に顔料がたまります。押すとキーに絵の具が落ち、隣のキーへ広がって乾きます。キーのスタイルはそのまま。",
+"effects.theme.space-nebula": "宇宙: 星雲",
+"effects.theme.space-nebula.help": "キー越しの深宇宙: 暗い塵の帯がかかる光る星雲、それぞれの速さで流れる三層の星、右のキーの後ろに環のある惑星。押すとハイパースペースへ跳び、星がキーから伸びていきます。キーのスタイルはそのまま。",
+"effects.theme.music-spectrum": "音楽スタジオ: スペクトラム",
+"effects.theme.music-spectrum.help": "再生中の音のスペクトラムをアイコンの後ろに: 低音から高音までの16本のバーが光るセグメントで立ち上がり、床に映り、ビートごとに壁が光ります。音楽がないときは低く呼吸します。押すと音の波がキーの上を走ります。これがオンのときだけ MasterDeck はスピーカーへの音を聞き、何も録音しません。キーのスタイルはそのまま。",
+"effects.theme.japan-koi": "日本: 鯉の池",
+"effects.theme.poland-autumn.help": "低い日差しを背にした紅葉の森。カエデ・オーク・シラカバの葉が舞い落ちてアイコンに積もり、キーの底にはきのこ。押すとキーから葉が舞い上がり、きのこが跳ねます。キーのスタイルはそのまま。",
+"effects.theme.japan-sakura.help": "キー越しに見える晴れた日: 雪をかぶった富士山、その後ろの赤い太陽、上の角から伸びる満開の桜の枝、湖に立つ鳥居、そのすべてが水面に映ります。花びらが舞い落ちてアイコンに積もり、押すと風で吹き飛びます。キーのスタイルはそのまま。",
+"effects.theme.poland-hunt.help": "朝の古い森の中: 3段すべてを貫くマツとブナの幹、樹冠から差す日の光、低く流れる霧、シダと苔の林床にはヤマドリタケ、ニセイロガワリ、ベニテングタケ、アンズタケ。押すときのこが跳ねます。キーのスタイルはそのまま。",
+"effects.theme.japan-koi.help": "アイコンの下の鯉の池: 6種類の鯉が睡蓮の葉の間を泳ぎます。押すとえさになり、そのキーに集まって水面に波紋が広がります。花びらが舞います。キーのスタイルはそのまま。",
+"effects.kind.mushrooms": "きのこ"
+},
+"actions": {
+"claude.session": {
+"name": "セッション",
+"description": "Claude Code のセッションをキーごとに 1 つ、開始順に。作業中は青、許可が必要なときはオレンジの点滅、あなたの番になると緑。押すと、どのセッションで何を待っているかをダイヤルに表示します。先に設定で Claude Code を接続してください。",
+"params": {
+"slot": {
+"label": "セッション番号"
+}
+}
+},
+"claude.sessions": {
+"name": "すべてのセッション",
+"description": "ダイヤル（またはノブ）で Claude Code のセッションを切り替えます。回して選ぶと、画面に何をしていて何を待っているかが表示されます。"
+},
+"core.audioDevice": {
+"name": "オーディオデバイス",
+"description": "スピーカー、ヘッドセット、マイクをすべてのアプリの既定にします。回すと順に切り替わります。そのデバイスが既定の間、キーが光ります。",
+"params": {
+"device": {
+"label": "デバイス",
+"help": "空にすると、押すたびに次のデバイスへ切り替わります。"
+},
+"with": {
+"label": "切り替え先",
+"help": "2 台目のデバイス: 押すたびに 2 台を切り替えます。"
+},
+"kind": {
+"label": "種類",
+"options": {
+"input": "マイク",
+"output": "スピーカー / ヘッドホン"
+}
+}
+}
+},
+"core.brightness": {
+"name": "モニターの明るさ",
+"description": "DDC/CI でモニター自体の明るさを変えます。ノブとダイヤルは回して、フェーダーは位置で設定します。多くのデスクトップ用モニターが対応していますが、ノートパソコンの画面は対応していません。",
+"params": {
+"monitor": {
+"label": "モニター",
+"options": {
+"1": "モニター 1",
+"2": "モニター 2",
+"3": "モニター 3",
+"all": "すべてのモニター"
+}
+},
+"step": {
+"label": "1 クリックあたりの変化（%）"
+}
+}
+},
+"core.clock": {
+"name": "時計",
+"description": "キーやダイヤルに時刻、日付、またはその両方を表示します。回すと時刻と日付、秒、日付、週を切り替え、押すとストップウォッチを動かせます。",
+"params": {
+"hours": {
+"label": "時間表示",
+"options": {
+"12": "12 時間制",
+"24": "24 時間制"
+}
+},
+"press": {
+"label": "押すと",
+"options": {
+"hours": "12 / 24 時間制を切り替え",
+"none": "何もしない",
+"stopwatch": "ストップウォッチの開始 / 停止",
+"stopwatchReset": "ストップウォッチをリセット"
+}
+},
+"show": {
+"label": "表示",
+"options": {
+"date": "日付",
+"seconds": "秒付きの時刻",
+"time": "時刻",
+"timeDate": "時刻と日付",
+"week": "年間の週番号"
+}
+}
+}
+},
+"core.dayMode": {
+"name": "1 日のモード",
+"description": "キー 1 つでまとめて設定: 仕事、ゲーム、会議、録音など。プロファイルを切り替え、スピーカーやヘッドセットとマイクを既定にし、ベースの縁をモードの色で光らせます。そのプロファイルの表示中はキーが光ります。",
+"params": {
+"color": {
+"label": "縁の色",
+"help": "#rrggbb。空なら縁はプロファイルのライトのまま。"
+},
+"input": {
+"label": "マイク",
+"help": "空ならマイクはそのまま。"
+},
+"output": {
+"label": "スピーカー / ヘッドホン",
+"help": "空ならスピーカーはそのまま。"
+},
+"profile": {
+"label": "プロファイル",
+"help": "空ならプロファイルはそのまま。"
+}
+}
+},
+"core.deckBrightness": {
+"name": "デッキの明るさ",
+"description": "キーパネルとダイヤルの画面の明るさ。フェーダーで設定、ノブとダイヤルで回して調整、キーで明るく / 暗くします。",
+"params": {
+"press": {
+"label": "押すと",
+"options": {
+"brighter": "明るく",
+"darker": "暗く"
+}
+},
+"step": {
+"label": "変化量（%）"
+}
+}
+},
+"core.dialGallery": {
+"name": "ダイヤルギャラリー",
+"description": "ダイヤルの見た目の一覧。回すと見た目（音量、時計、再生中の曲、パソコンの負荷、タイマーなど）が切り替わり、できるものはライブで、それぞれ上に名前が表示されます。"
+},
+"core.game": {
+"name": "ゲームを開く",
+"description": "この PC にインストールされたゲームをランチャー（Steam、Epic、GOG）から起動します。選ぶとキーにカバーが表示されます。",
+"params": {
+"game": {
+"label": "ゲーム",
+"help": "この PC で見つかったゲームから選ぶか、steam://rungameid/730 のようなランチャーのリンクを貼り付けます。"
+}
+}
+},
+"core.hotkey": {
+"name": "ホットキー",
+"description": "キーの組み合わせを送ります。ノブ、ローラー、ダイヤルでは方向ごとに 1 つ。",
+"params": {
+"clockwise": {
+"label": "時計回り / 上に回す"
+},
+"counterClockwise": {
+"label": "反時計回り / 下に回す"
+},
+"hold": {
+"label": "押し続ける時間（ミリ秒）"
+},
+"keys": {
+"label": "キー",
+"help": "押す: キーで、またノブやダイヤルを押し込んだとき。"
+},
+"mode": {
+"label": "送信方法",
+"help": "ゲーム用: ハードウェアのスキャンコードを少しの間押したまま送るので、キーボードを直接読むゲームにも届きます。管理者として動くゲームには、MasterDeck も管理者として実行する必要があります。",
+"options": {
+"game": "ゲーム用",
+"normal": "通常のキー"
+}
+}
+}
+},
+"core.http": {
+"name": "HTTP リクエスト",
+"description": "ウェブアドレスやアプリのローカル API を呼び出します（GET、または本文付きの POST）。成功したかどうかをキーが表示します。",
+"params": {
+"body": {
+"label": "本文",
+"help": "JSON またはテキスト。{ か [ で始まる場合は JSON として送信"
+},
+"headers": {
+"label": "ヘッダー",
+"help": "1 行に 1 つ。例: Authorization: Bearer abc"
+},
+"method": {
+"label": "メソッド"
+},
+"url": {
+"label": "アドレス",
+"help": "例: http://127.0.0.1:7777/agents/1/focus"
+}
+}
+},
+"core.launch": {
+"name": "開く",
+"description": "プログラム、ドキュメント、フォルダー、URL を開きます。",
+"params": {
+"target": {
+"label": "開くもの",
+"help": "C:\\Tools\\app.exe のようなパス、フォルダー、または https://example.com のような URL"
+}
+}
+},
+"core.lighting": {
+"name": "ライトエフェクト",
+"description": "プロファイルが変わるまで、ノブ、フェーダー、ベースの縁、またはすべてに LED エフェクトを設定します。「プロファイルのもの」で元に戻ります。マルチアクションや切り替えでも使えます。例: OBS の録画中にベースを赤く呼吸させる。",
+"params": {
+"color": {
+"label": "色"
+},
+"effect": {
+"label": "エフェクト",
+"options": {
+"blink": "高速点滅",
+"breathing": "呼吸",
+"cycling": "色の循環",
+"off": "オフ",
+"profile": "プロファイルのもの",
+"rainbow": "レインボー",
+"random": "ランダムな色",
+"static": "点灯",
+"strobe": "ストロボ",
+"water": "きらめき",
+"wave": "ウェーブ"
+}
+},
+"speed": {
+"label": "速さ（%）"
+},
+"target": {
+"label": "対象",
+"options": {
+"all": "すべて",
+"base": "ベースの縁",
+"faders": "フェーダー",
+"knobs": "ノブ"
+}
+}
+}
+},
+"core.live": {
+"name": "ライブ値",
+"description": "キーやダイヤルに自動で更新される値を表示します。取得元はウェブアドレス（JSON またはテキスト）、Home Assistant のセンサー、コマンド、天気、次のカレンダー予定。しきい値で色が付き、最大値があればダイヤルにリングを描きます。押すとページを開くか、更新します。",
+"params": {
+"alert": {
+"label": "警告（赤）",
+"help": "この値からキーが赤になります。空なら赤くなりません。"
+},
+"below": {
+"label": "悪いのは",
+"options": {
+"false": "高いとき（負荷、温度）",
+"true": "低いとき（バッテリー、空き容量）"
+}
+},
+"command": {
+"label": "コマンド",
+"help": "出力の 1 行目が表示されます。キーを押して許可した後にだけ実行されます（共有されたプロファイルが勝手にコマンドを実行することはありません）。"
+},
+"decimals": {
+"label": "小数点以下",
+"help": "-1 = そのまま。"
+},
+"dial": {
+"label": "ダイヤルでは",
+"help": "シーン: 天気と昼夜に合わせて空が動き、回すと次の数時間を見られます。",
+"options": {
+"scene": "天気のシーン",
+"value": "値"
+}
+},
+"entity": {
+"label": "エンティティ",
+"help": "状態を表示するエンティティ。例: sensor.living_room_temperature。"
+},
+"every": {
+"label": "更新間隔（秒）"
+},
+"max": {
+"label": "最大値",
+"help": "最大値があるとダイヤルに値をリングで描きます。0 = リングなし。"
+},
+"open": {
+"label": "押すと開く",
+"help": "押したときに開くウェブページやファイル。空なら押すと更新します。"
+},
+"path": {
+"label": "値の場所",
+"help": "JSON 内の値の場所。例: data.items.0.price。プレーンテキストの応答なら空に。"
+},
+"place": {
+"label": "場所",
+"help": "都市を検索します。天気は Open-Meteo から取得します（無料、アカウント不要）。"
+},
+"prefix": {
+"label": "値の前"
+},
+"press": {
+"label": "押すと",
+"options": {
+"forecast": "予報を開く",
+"refresh": "更新（または下のページを開く）",
+"view": "今日、明日、3 日間"
+}
+},
+"secret": {
+"label": "トークン",
+"help": "Authorization: Bearer として送られます。システムの資格情報ストアに保存され、プロファイルには入りません。"
+},
+"source": {
+"label": "取得元",
+"options": {
+"calendar": "次のカレンダー予定",
+"command": "コマンド",
+"ha": "Home Assistant",
+"url": "ウェブアドレス",
+"weather": "天気"
+}
+},
+"suffix": {
+"label": "値の後"
+},
+"units": {
+"label": "温度の単位",
+"options": {
+"imperial": "°F",
+"metric": "°C"
+}
+},
+"url": {
+"label": "アドレス",
+"help": "JSON かテキストを返すウェブアドレス。例: https://api.example.com/status。カレンダーなら非公開の ICS アドレス（Google: 設定 > カレンダー > iCal 形式の非公開 URL、Outlook: カレンダーを公開 > ICS）。"
+},
+"warn": {
+"label": "注意（オレンジ）",
+"help": "この値からキーがオレンジになります。空ならなりません。"
+}
+}
+},
+"core.media": {
+"name": "マルチメディア",
+"description": "再生中のものの再生 / 一時停止、次の曲、前の曲。",
+"params": {
+"command": {
+"label": "コマンド",
+"options": {
+"next": "次の曲",
+"playPause": "再生 / 一時停止",
+"previous": "前の曲",
+"stop": "停止"
+}
+}
+}
+},
+"core.mic": {
+"name": "マイクのミュート",
+"description": "すべてのアプリで既定のマイクをミュート / ミュート解除します。キーがミュート中かどうかを表示します。",
+"params": {
+"mode": {
+"label": "押すと",
+"help": "プッシュトゥトーク: ミュートされていて、キーを押している間だけオン。プッシュトゥミュート: オンで、押している間だけミュート。押している間、キーの長押しとダブル押しは無視されます。",
+"options": {
+"pushToMute": "プッシュトゥミュート（押している間ミュート）",
+"pushToTalk": "プッシュトゥトーク（押している間話せる）",
+"toggle": "ミュートを切り替え"
+}
+}
+}
+},
+"core.modes": {
+"name": "モード",
+"description": "1 つのダイヤルやノブに複数の役目。回すと現在のモードの操作、押すと次のモードに切り替わり名前を表示します。",
+"params": {
+"modes": {
+"label": "モード",
+"help": "各モードは何かを回します: 音量、スクロール、方向ごとのホットキー、メディア。"
+}
+}
+},
+"core.monitor": {
+"name": "システムモニター",
+"description": "CPU の負荷や温度、メモリ、GPU の負荷・温度・メモリをキーやダイヤルに毎秒表示します。押すとタスクマネージャー（Mac ではアクティビティモニタ）を開くか、次の値を表示し、回すと値を切り替えます。",
+"params": {
+"metric": {
+"label": "表示",
+"help": "CPU の温度と AMD・Intel の GPU は LibreHardwareMonitor から取得します。Options > Remote Web Server > Run をオンにして起動しておけば（Run on Windows startup も）表示され、なければキーにダッシュが出ます。NVIDIA の GPU はなしでも動きます。",
+"options": {
+"cpu": "CPU 負荷",
+"cpuTemp": "CPU 温度",
+"gpu": "GPU 負荷",
+"gpuTemp": "GPU 温度",
+"ram": "メモリ使用量",
+"vram": "GPU メモリ使用量"
+}
+},
+"press": {
+"label": "押すと",
+"options": {
+"next": "次の値を表示",
+"open": "タスクマネージャー / アクティビティモニタを開く"
+}
+}
+}
+},
+"core.multi": {
+"name": "マルチアクション",
+"description": "複数のアクションを順に実行します。必要ならそれぞれの前に待ち時間を入れられます。",
+"params": {
+"steps": {
+"label": "ステップ",
+"help": "各ステップは待ち時間の後に実行されます。ステップに別のマルチアクションは入れられません。"
+}
+}
+},
+"core.nextPage": {
+"name": "次のページ",
+"description": "キーの次のページを表示します。最後のページの次はメインページに戻ります。"
+},
+"core.nowPlaying": {
+"name": "再生中",
+"description": "再生中のもののカバー、タイトル、アーティストを表示します（Windows: どのプレーヤーでも、macOS: Spotify と Apple Music）。押すと再生 / 一時停止（スキップは長押しかダブル押しに設定）、回すと音量、曲送り、曲の中の移動。",
+"params": {
+"player": {
+"label": "音楽アプリ",
+"help": "Windows: 対象の音楽アプリ、例: Spotify。最後に動画が再生されていてもその曲を表示し、閉じているときは押すと開いて再生します。空: 再生中のもの（音楽アプリを優先）。"
+},
+"press": {
+"label": "押すと",
+"options": {
+"next": "次の曲",
+"playPause": "再生 / 一時停止",
+"previous": "前の曲"
+}
+},
+"turn": {
+"label": "回すと",
+"options": {
+"seek": "曲の中を移動",
+"tracks": "曲送り",
+"volume": "音量を変える"
+}
+}
+}
+},
+"core.page": {
+"name": "ページへ移動",
+"description": "フォルダーのように、キーの別のページを表示します。そのページにはメインページへ戻るキーを置いてください。",
+"params": {
+"page": {
+"label": "ページ"
+}
+}
+},
+"core.pet": {
+"name": "ダイヤルのペット",
+"description": "Mochi はダイヤルに住んでいます。回すと遊び、押すとなで、ダブル押しでごはん、長押しで寝かせる / 起こす。何時間もひとりだとお腹がすいて悲しくなり、夜遅くには眠くなり、パソコンのロック中は眠ります。気分はダイヤルの色に表れます。死ぬことはありません。",
+"params": {
+"name": {
+"label": "名前"
+},
+"press": {
+"label": "押すと",
+"help": "キーでは:「ダイヤルに出す」で Mochi をこのプロファイルのダイヤルに連れてきて、もう一度押すとダイヤルを元に戻します。",
+"options": {
+"dial": "ダイヤルに出す / しまう",
+"feed": "ごはんをあげる",
+"pet": "なでる",
+"sleep": "寝る / 起きる"
+}
+},
+"bodyFit": {
+"label": "合わせ方",
+"help": "プレビューで画像をドラッグすると動かせます。プレビューはごきげん・なでられ中・おなかすいた・おやすみの Mochi です。"
+},
+"body": {
+"label": "からだ",
+"help": "Mochi のからだに使う自分の画像。目・口・気分はその上に描かれ、反応もすべてそのままです。画像は自分の形のままです。切り抜きにするには背景が透明な PNG を使ってください。空欄:Mochi のからだ。"
+}
+}
+},
+"core.pomodoro": {
+"name": "ポモドーロ",
+"description": "集中、短い休憩、また集中。数ラウンドごとに長い休憩。ダイヤルにリングで時間（集中は赤、休憩は緑）とラウンドを点で表示します。押すと開始 / 一時停止、止まっている間は回して集中の長さを設定、フェーズが終わると鳴って押されるのを待ちます。",
+"params": {
+"focus": {
+"label": "集中（分）"
+},
+"long": {
+"label": "長い休憩（分）"
+},
+"press": {
+"label": "押すと",
+"options": {
+"reset": "最初から",
+"skip": "次のフェーズへ",
+"startPause": "開始 / 一時停止"
+}
+},
+"rounds": {
+"label": "長い休憩までのラウンド数"
+},
+"short": {
+"label": "休憩（分）"
+},
+"sound": {
+"label": "終了時の音",
+"options": {
+"off": "オフ",
+"on": "オン"
+}
+}
+}
+},
+"core.previousPage": {
+"name": "前のページ",
+"description": "このページの前のキーのページを表示します。メインページの前は最後のページです。"
+},
+"core.profile": {
+"name": "プロファイルの切り替え",
+"description": "有効なプロファイルを変えます。選んだもの、または次 / 前（名前順）。ノブやダイヤルを回すと順に切り替わります。",
+"params": {
+"profile": {
+"label": "プロファイル"
+},
+"which": {
+"label": "移動先",
+"options": {
+"named": "選んだプロファイル",
+"next": "次のプロファイル",
+"previous": "前のプロファイル"
+}
+}
+}
+},
+"core.run": {
+"name": "コマンドを実行",
+"description": "プログラム、PowerShell やバッチのスクリプト、シェルコマンドを引数付きで実行します。コンソールウィンドウなしにもできます。",
+"params": {
+"args": {
+"label": "引数",
+"help": "スペースで区切ります。スペースを含むものは \"引用符\" で囲みます。"
+},
+"command": {
+"label": "プログラムまたはスクリプト",
+"help": "プログラム、または .ps1 / .bat / .cmd / .sh スクリプト。"
+},
+"folder": {
+"label": "作業フォルダー"
+},
+"window": {
+"label": "ウィンドウ",
+"options": {
+"hidden": "非表示",
+"normal": "表示"
+}
+}
+}
+},
+"core.saver": {
+"name": "スクリーンセーバー",
+"description": "キーに数秒間スクリーンセーバーを表示します。触れると終了します。「次」にすると押すたびに次のものを表示します。自動で始まるものはデッキの下の「スクリーンセーバー」で設定します。",
+"params": {
+"effect": {
+"label": "種類",
+"options": {
+"": "次",
+"aurora": "オーロラ",
+"aquarium": "アクアリウム",
+"lava": "ラバランプ",
+"fire": "暖炉",
+"snowfall": "雪の夜",
+"fireflies": "夏の夜",
+"neon": "ネオンの雨",
+"haunted": "幽霊の夜",
+"clock": "大きな時計",
+"rain": "コードの雨",
+"stars": "夜空",
+"waves": "波"
+}
+}
+}
+},
+"core.scroll": {
+"name": "スクロール",
+"description": "マウスポインターの下のウィンドウをスクロールします。",
+"params": {
+"amount": {
+"label": "1 クリックあたりの行数"
+},
+"axis": {
+"label": "方向",
+"options": {
+"horizontal": "左 / 右",
+"vertical": "上 / 下"
+}
+}
+}
+},
+"core.seek": {
+"name": "プレーヤーでシーク",
+"description": "選んだプレーヤーのショートカットで、動画や曲を前後にジャンプします。ノブ、ローラー、ダイヤルは回してシーク。",
+"params": {
+"player": {
+"label": "プレーヤー",
+"options": {
+"arrows": "矢印キー（多くのプレーヤー）",
+"gom": "GOM Player",
+"kmplayer": "KMPlayer",
+"mediaPlayer": "Windows Media Player（新）",
+"mpc": "MPC-HC / MPC-BE",
+"netflix": "ブラウザーの Netflix",
+"potplayer": "PotPlayer",
+"spotify": "Spotify",
+"vlc": "VLC（10 秒）",
+"vlcShort": "VLC（3 秒）",
+"wmpLegacy": "Windows Media Player レガシ",
+"youtube": "ブラウザーの YouTube（10 秒）"
+}
+},
+"press": {
+"label": "押すと移動",
+"options": {
+"back": "戻る",
+"forward": "進む"
+}
+}
+}
+},
+"core.sound": {
+"name": "音声を再生",
+"description": "音声ファイル（WAV、MP3、FLAC、OGG）を再生する小さなサウンドボード。再生中に押すと停止、最初から、またはもう 1 つ重ねて再生。すべての音を止めるキーにもできます。",
+"params": {
+"device": {
+"label": "再生先",
+"help": "空なら既定のスピーカー。デバイスを選ぶとそこで再生します。例: 通話や配信に送る仮想ケーブル。"
+},
+"file": {
+"label": "音声ファイル"
+},
+"mode": {
+"label": "押すと",
+"options": {
+"overlap": "もう 1 つ再生",
+"playStop": "再生 / 停止",
+"restart": "最初から",
+"stopAll": "すべての音を停止"
+}
+},
+"volume": {
+"label": "音量（%）"
+}
+}
+},
+"core.state": {
+"name": "アプリの状態",
+"description": "接続した自分のアプリの状態（待機中のエージェント、実行中のビルドなど）を表示し、それに合わせて色とアイコンが変わります。ダイヤルでは app.* があなたを待っているものを数えます。",
+"params": {
+"link": {
+"label": "開くリンク",
+"help": "またはアプリが登録したリンクを、押したときに開きます"
+},
+"method": {
+"label": "メソッド"
+},
+"name": {
+"label": "状態",
+"help": "app.item、例: launcher.1。launcher.* で項目を数えます（設定 > 接続 > あなたのアプリ）"
+},
+"url": {
+"label": "呼び出すアドレス",
+"help": "押したときに呼び出されます（{id} = 項目）。例: http://127.0.0.1:4317/agents/{id}/focus"
+}
+}
+},
+"core.text": {
+"name": "テキスト",
+"description": "メールアドレスや署名などのテキストを入力します。",
+"params": {
+"text": {
+"label": "テキスト",
+"help": "{date} と {time} は、キーを押したときの今日の日付と時刻になります。"
+}
+}
+},
+"core.timer": {
+"name": "タイマー",
+"description": "キーやダイヤルでカウントダウン。押すと開始、一時停止、再開。終了後に押すと戻ります。ノブやダイヤルでは、止まっている間に回して分を設定します。",
+"params": {
+"minutes": {
+"label": "分"
+},
+"press": {
+"label": "押すと",
+"help": "両方使うには、同じキーの長押しかダブル押しにリセットするタイマーを置いてください。",
+"options": {
+"addMinute": "1 分追加",
+"reset": "リセット",
+"startPause": "開始 / 一時停止"
+}
+},
+"seconds": {
+"label": "秒"
+},
+"sound": {
+"label": "終了時の音",
+"options": {
+"off": "オフ",
+"on": "オン"
+}
+}
+}
+},
+"core.toggle": {
+"name": "マルチアクションスイッチ",
+"description": "1 回目に押すと最初のステップ、次に押すと 2 番目のステップを実行します。例: 開始と停止。次にどちらが来るかをキーが表示します。",
+"params": {
+"first": {
+"label": "1 回目"
+},
+"second": {
+"label": "2 回目"
+}
+}
+},
+"core.volume": {
+"name": "音量",
+"description": "システム全体またはアプリ 1 つの音量。フェーダーで設定、ノブとダイヤルで回して調整、押すとミュート。",
+"params": {
+"app": {
+"label": "アプリ",
+"help": "音量を設定するアプリ。音が出ている必要があります。macOS: 14.2 以降、システムオーディオ録音の許可を一度だけ求めます。"
+},
+"popup": {
+"label": "Windows の音量表示",
+"help": "キーボードの音量キーで Windows が表示する音量ウィンドウ。",
+"options": {
+"hide": "表示しない",
+"show": "表示する"
+}
+},
+"step": {
+"label": "1 クリックあたりの変化（%）"
+},
+"target": {
+"label": "音量の対象",
+"options": {
+"app": "アプリ 1 つ",
+"front": "前面のアプリ",
+"mic": "マイク（入力レベル）",
+"others": "ほかのすべてのアプリ（別のコントロールにないもの）",
+"system": "システム全体"
+}
+}
+}
+},
+"ha.activate": {
+"name": "シーンまたはスクリプト",
+"description": "シーンやスクリプトを実行します。",
+"params": {
+"entity": {
+"label": "シーンまたはスクリプト",
+"help": "例: scene.movie_night または script.good_night。"
+}
+}
+},
+"ha.brightness": {
+"name": "ライトの明るさ",
+"description": "ライトの明るさ。フェーダーで設定、ノブとダイヤルで回して調整、ノブを押すとライトのオン / オフ。",
+"params": {
+"entity": {
+"label": "ライト",
+"help": "例: light.desk。"
+},
+"step": {
+"label": "1 クリックあたりの変化（%）"
+}
+}
+},
+"ha.service": {
+"name": "サービスを呼び出す",
+"description": "Home Assistant の任意のサービスをデータ付きで呼び出します。例: climate.set_temperature。",
+"params": {
+"data": {
+"label": "データ",
+"help": "JSON。例: {\"entity_id\": \"climate.living_room\", \"temperature\": 21}"
+},
+"service": {
+"label": "サービス"
+}
+}
+},
+"ha.toggle": {
+"name": "デバイスの切り替え",
+"description": "ライト、スイッチ、ファン、カバー、メディアプレーヤーをオン / オフします。オンの間キーが光ります。",
+"params": {
+"entity": {
+"label": "エンティティ",
+"help": "エンティティ ID。例: light.desk または switch.kettle。"
+}
+}
+},
+"midi.cc": {
+"name": "MIDI コントロールチェンジ",
+"description": "フェーダーは位置を、ノブとダイヤルは回して値を、キーは押すと下の値を送ります。どの DAW やシンセでも。",
+"params": {
+"cc": {
+"label": "コントローラー（CC）"
+},
+"channel": {
+"label": "チャンネル"
+},
+"port": {
+"label": "MIDI 出力"
+},
+"step": {
+"label": "1 クリックあたりの変化"
+},
+"value": {
+"label": "押したときの値",
+"help": "キーのみ: 押したときに送る値。"
+}
+}
+},
+"midi.note": {
+"name": "MIDI ノート",
+"description": "キーを押している間ノートを鳴らします。",
+"params": {
+"channel": {
+"label": "チャンネル"
+},
+"note": {
+"label": "ノート",
+"help": "60 = 中央のド。"
+},
+"port": {
+"label": "MIDI 出力"
+},
+"velocity": {
+"label": "ベロシティ"
+}
+}
+},
+"obs.filter": {
+"name": "フィルターのオン / オフ",
+"description": "ソースやシーンのフィルターをオン / オフします。フィルターがオンの間キーが光ります。",
+"params": {
+"filter": {
+"label": "フィルター"
+},
+"source": {
+"label": "ソース",
+"help": "フィルターを持つソースまたはシーン。"
+}
+}
+},
+"obs.mute": {
+"name": "ソースをミュート",
+"description": "マイクなどの音声ソースをミュート / ミュート解除します。ミュート中はキーに表示されます。",
+"params": {
+"input": {
+"label": "音声ソース",
+"help": "OBS のミキサーでの名前。例: Mic/Aux。"
+},
+"mode": {
+"label": "押すと",
+"help": "プッシュトゥトーク: ミュートされていて、キーを押している間だけオン。プッシュトゥミュート: オンで、押している間だけミュート。押している間、キーの長押しとダブル押しは無視されます。",
+"options": {
+"pushToMute": "プッシュトゥミュート（押している間ミュート）",
+"pushToTalk": "プッシュトゥトーク（押している間話せる）",
+"toggle": "ミュートを切り替え"
+}
+}
+}
+},
+"obs.profile": {
+"name": "OBS のプロファイル",
+"description": "OBS を別のプロファイル（出力と配信の設定）に切り替えます。それが現在のものの間キーが光ります。",
+"params": {
+"profile": {
+"label": "OBS のプロファイル",
+"help": "OBS（プロファイルメニュー）での名前どおりに。"
+}
+}
+},
+"obs.record": {
+"name": "録画",
+"description": "録画を開始 / 停止します。録画中はキーが赤くなります。"
+},
+"obs.recordPause": {
+"name": "録画の一時停止",
+"description": "録画中の録画を一時停止 / 再開します。一時停止中はキーが赤くなります。"
+},
+"obs.replay": {
+"name": "リプレイを保存",
+"description": "リプレイバッファーを保存します（先に OBS でリプレイバッファーを開始してください）。"
+},
+"obs.replayBuffer": {
+"name": "リプレイバッファーのオン / オフ",
+"description": "リプレイバッファーを開始 / 停止します（「リプレイを保存」の前に必要）。動作中はキーが赤くなります。"
+},
+"obs.scene": {
+"name": "シーン",
+"description": "OBS をシーンに切り替えます。そのシーンがライブの間キーが光ります。",
+"params": {
+"scene": {
+"label": "シーン",
+"help": "OBS での名前どおりに。"
+}
+}
+},
+"obs.sceneCollection": {
+"name": "シーンコレクション",
+"description": "OBS を別のシーンコレクションに切り替えます。それが現在のものの間キーが光ります。",
+"params": {
+"collection": {
+"label": "シーンコレクション",
+"help": "OBS（シーンコレクションメニュー）での名前どおりに。"
+}
+}
+},
+"obs.screenshot": {
+"name": "スクリーンショット",
+"description": "ソースまたはライブのシーンを PNG で保存します。",
+"params": {
+"folder": {
+"label": "フォルダー",
+"help": "空なら OBS の録画フォルダー。"
+},
+"source": {
+"label": "ソース",
+"help": "空ならライブのシーン。"
+}
+}
+},
+"obs.source": {
+"name": "ソースの表示 / 非表示",
+"description": "カメラやオーバーレイなど、シーン内のソースを表示 / 非表示にします。",
+"params": {
+"scene": {
+"label": "シーン",
+"help": "空ならライブのシーン。"
+},
+"source": {
+"label": "ソース"
+}
+}
+},
+"obs.stream": {
+"name": "配信",
+"description": "配信を開始 / 停止します。ライブ中はキーが赤くなります。"
+},
+"obs.studioMode": {
+"name": "スタジオモード",
+"description": "スタジオモード（プレビューとプログラムを並べて表示）をオン / オフします。オンの間キーが光ります。"
+},
+"obs.transition": {
+"name": "トランジション",
+"description": "スタジオモードで、プレビューのシーンをプログラムに送ります。",
+"params": {
+"transition": {
+"label": "トランジション",
+"help": "空なら OBS で選んだトランジション。名前を指定することもできます。例: フェード。"
+}
+}
+},
+"obs.virtualCam": {
+"name": "仮想カメラ",
+"description": "OBS の仮想カメラを開始 / 停止します。動作中はキーが赤くなります。"
+},
+"obs.volume": {
+"name": "ソースの音量",
+"description": "OBS ミキサーのソースの音量。フェーダーで設定、ノブとダイヤルで回して調整。",
+"params": {
+"input": {
+"label": "音声ソース",
+"help": "OBS のミキサーでの名前。"
+},
+"step": {
+"label": "1 クリックあたりの変化（dB）"
+}
+}
+},
+"spotify.add": {
+"name": "プレイリストに追加",
+"description": "再生中の曲を自分のプレイリストに追加します。",
+"params": {
+"playlist": {
+"label": "プレイリスト",
+"help": "プレイリストのリンク（共有 > リンクをコピー）または ID。"
+}
+}
+},
+"spotify.like": {
+"name": "お気に入り登録 / 解除",
+"description": "再生中の曲をお気に入りの曲に追加、または外します。お気に入りの曲の間キーが緑になります。"
+},
+"spotify.remove": {
+"name": "このプレイリストから削除",
+"description": "再生中の曲を再生元のプレイリスト（自分のプレイリスト）から外し、次の曲へ進みます（Premium）。"
+},
+"streamlabs.mute": {
+"name": "ソースをミュート",
+"description": "Streamlabs ミキサーの音声ソースをミュート / ミュート解除します。ミュート中はキーに表示されます。",
+"params": {
+"input": {
+"label": "音声ソース",
+"help": "Streamlabs のミキサーでの名前。例: Mic/Aux。"
+}
+}
+},
+"streamlabs.record": {
+"name": "録画",
+"description": "録画を開始 / 停止します。録画中はキーが赤くなります。"
+},
+"streamlabs.replay": {
+"name": "リプレイを保存",
+"description": "リプレイバッファーを保存します（動作している必要があります）。"
+},
+"streamlabs.replayBuffer": {
+"name": "リプレイバッファーのオン / オフ",
+"description": "リプレイバッファーを開始 / 停止します。動作中はキーが赤くなります。"
+},
+"streamlabs.scene": {
+"name": "シーン",
+"description": "Streamlabs Desktop をシーンに切り替えます。そのシーンがライブの間キーが光ります。",
+"params": {
+"scene": {
+"label": "シーン",
+"help": "Streamlabs での名前どおりに。"
+}
+}
+},
+"streamlabs.source": {
+"name": "ソースの表示 / 非表示",
+"description": "カメラやオーバーレイなど、シーン内のソースを表示 / 非表示にします。",
+"params": {
+"scene": {
+"label": "シーン",
+"help": "空ならライブのシーン。"
+},
+"source": {
+"label": "ソース"
+}
+}
+},
+"streamlabs.stream": {
+"name": "配信",
+"description": "配信を開始 / 終了します。ライブ中はキーが赤くなります。"
+},
+"streamlabs.studioMode": {
+"name": "スタジオモード",
+"description": "スタジオモードをオン / オフします。オンの間キーが光ります。"
+},
+"streamlabs.transition": {
+"name": "トランジション",
+"description": "スタジオモードで、プレビューのシーンを配信に送ります。"
+},
+"streamlabs.volume": {
+"name": "ソースの音量",
+"description": "Streamlabs ミキサーのソースの音量。フェーダーで設定、ノブとダイヤルで回して調整。",
+"params": {
+"input": {
+"label": "音声ソース",
+"help": "Streamlabs のミキサーでの名前。"
+},
+"step": {
+"label": "1 クリックあたりの変化（%）"
+}
+}
+},
+"twitch.ad": {
+"name": "広告を流す",
+"description": "CM を開始します（Twitch のパートナーとアフィリエイト、ライブ中）。",
+"params": {
+"length": {
+"label": "長さ",
+"options": {
+"120": "2 分",
+"150": "2 分 30 秒",
+"180": "3 分",
+"30": "30 秒",
+"60": "1 分",
+"90": "1 分 30 秒"
+}
+}
+}
+},
+"twitch.chat": {
+"name": "チャットメッセージ",
+"description": "Twitch のチャットにメッセージを送ります。",
+"params": {
+"message": {
+"label": "メッセージ",
+"help": "/ で始まるコマンドはここでは使えません。"
+}
+}
+},
+"twitch.chatMode": {
+"name": "チャットモード",
+"description": "チャットモードをオン / オフします: フォロワー限定、サブスクライバー限定、エモート限定、低速モード。オンの間キーが光ります（最初に押した後にわかります）。",
+"params": {
+"duration": {
+"label": "時間",
+"help": "フォロワー限定: フォローしてからの必要な時間（分、0 = フォロワーなら誰でも）。低速モード: メッセージの間隔（秒、3〜120）。"
+},
+"mode": {
+"label": "モード",
+"options": {
+"emote": "エモート限定",
+"followers": "フォロワー限定",
+"slow": "低速モード",
+"subscribers": "サブスクライバー限定"
+}
+}
+}
+},
+"twitch.clearChat": {
+"name": "チャットを消去",
+"description": "チャットのすべてのメッセージを消去します。"
+},
+"twitch.clip": {
+"name": "クリップを作成",
+"description": "ライブ配信の直前の場面をクリップにします。"
+},
+"twitch.marker": {
+"name": "配信マーカー",
+"description": "ライブ配信のこの瞬間に印を付け、後で動画の中で見つけられるようにします。",
+"params": {
+"description": {
+"label": "説明"
+}
+}
+},
+"twitch.openClip": {
+"name": "最後のクリップを開く",
+"description": "MasterDeck で最後に作ったクリップ、またはチャンネルのクリップページを開きます。"
+},
+"twitch.shield": {
+"name": "シールドモード",
+"description": "シールドモードをオン / オフします。オンの間キーが光ります（最初に押した後にわかります）。"
+},
+"twitch.title": {
+"name": "配信タイトルとゲーム",
+"description": "配信のタイトル、ゲーム（カテゴリ）、またはその両方を設定します。",
+"params": {
+"game": {
+"label": "ゲーム",
+"help": "Twitch での名前どおりに。例: Just Chatting。空ならそのまま。"
+},
+"title": {
+"label": "タイトル",
+"help": "空なら現在のタイトルのまま。"
+}
+}
+},
+"vjoy.axis": {
+"name": "ジョイスティックの軸",
+"description": "仮想ジョイスティック（vJoy）の軸を動かします。フェーダーで設定（スロットル、ミクスチャー、フラップ）、ノブ、ローラー、ダイヤルで少しずつ（トリム）、押すと中央に。シムで割り当ててください。Windows のみ、vJoy が必要です。",
+"params": {
+"axis": {
+"label": "軸",
+"options": {
+"dial": "ダイヤル",
+"slider": "スライダー"
+}
+},
+"device": {
+"label": "vJoy デバイス",
+"help": "Configure vJoy で設定した vJoy デバイス 1〜16。先に vJoy をインストールしてください: https://github.com/BrunnerInnovation/vJoy/releases"
+},
+"press": {
+"label": "押すと",
+"options": {
+"center": "中央にする",
+"max": "最大にする",
+"nothing": "何もしない",
+"zero": "最小にする"
+}
+},
+"step": {
+"label": "1 クリックあたりの変化（%）",
+"help": "ノブ、ローラー、ダイヤル: 1 段階で動く量。"
+}
+}
+},
+"vjoy.button": {
+"name": "ジョイスティックのボタン",
+"description": "キーを押している間、仮想ジョイスティック（vJoy）のボタンを押します。シムやゲーム向けで、ゲームの操作設定で割り当ててください。ノブ、ローラー、ダイヤルでは 1 段階ごとにボタンを 1 回押します。Windows のみ、vJoy が必要です。",
+"params": {
+"button": {
+"label": "ボタン",
+"help": "キー、またはノブやダイヤルを押し込んでいる間押し続けます。"
+},
+"clockwise": {
+"label": "時計回り / 上に回したときに押すボタン",
+"help": "ノブ、ローラー、ダイヤル: 1 段階ごとに 1 回。0 = なし。"
+},
+"counterClockwise": {
+"label": "反時計回り / 下に回したときに押すボタン"
+},
+"device": {
+"label": "vJoy デバイス",
+"help": "Configure vJoy で設定した vJoy デバイス 1〜16。先に vJoy をインストールしてください: https://github.com/BrunnerInnovation/vJoy/releases"
+}
+}
+},
+"vjoy.hat": {
+"name": "ジョイスティックのハット",
+"description": "キーを押している間、仮想ジョイスティック（vJoy）のハットスイッチ（POV）を倒します。例: 周りを見回す。Windows のみ、vJoy が必要です。",
+"params": {
+"device": {
+"label": "vJoy デバイス",
+"help": "Configure vJoy で設定した vJoy デバイス 1〜16。先に vJoy をインストールしてください: https://github.com/BrunnerInnovation/vJoy/releases"
+},
+"direction": {
+"label": "方向",
+"help": "斜めには連続型のハットが必要です（Configure vJoy > POV hat switch: Continuous）。",
+"options": {
+"down": "下",
+"downLeft": "左下",
+"downRight": "右下",
+"left": "左",
+"right": "右",
+"up": "上",
+"upLeft": "左上",
+"upRight": "右上"
+}
+},
+"hat": {
+"label": "ハット"
+}
+}
+}
+},
+"groups": {
+"Audio": "オーディオ",
+"Claude Code": "Claude Code",
+"Home Assistant": "Home Assistant",
+"MasterDeck": "MasterDeck",
+"Joystick": "ジョイスティック",
+"MIDI": "MIDI",
+"Media": "メディア",
+"OBS": "OBS",
+"Spotify": "Spotify",
+"Streamlabs": "Streamlabs",
+"System": "システム",
+"Twitch": "Twitch"
+},
+"presets": {
+"bg3": {
+"description": "ターン終了、ターン制モード、突き飛ばし、投擲、ジャンプ、隠密、各パネル、クイックセーブとクイックロード。"
+},
+"capcut": {
+"description": "Windows 版 CapCut: ダイヤルで動画内を移動（速く回すほど速く）、押すと再生。ローラーでフレーム送りとタイムラインのズーム。キーで分割とマーカー。"
+},
+"claude": {
+"description": "Claude Code のセッションごとにキーを 1 つ。作業中か、質問中か、あなたを待っているかを表示。ダイヤルにはすべてのセッション。"
+},
+"cs2": {
+"description": "武器スロット、リロード、インスペクト、ドロップ、使用、購入メニュー、スコア、無線、チャット。"
+},
+"demo": {
+"name": "MasterDeck を知る",
+"description": "デッキでのツアー: MasterDeck にできることを 7 つのタブで（右下のキーで次へ）、ダイヤルは見た目のギャラリー。キーを押すと、それが何でどう設定するかをウィンドウが説明します。"
+},
+"diablo4": {
+"description": "スキル 1〜4、ポーション、回避、乗騎、ポータル、マップ、インベントリ、各パネル。ゲーム、Discord、音楽の音量。"
+},
+"everyday": {
+"name": "毎日のデスク",
+"description": "メディア、コピーと貼り付け、フェーダーでアプリの音量、ローラーでスクロール。"
+},
+"fortnite": {
+"description": "建築パーツ（F1〜F5）、編集、アイテムスロット 1〜5、マップ、インベントリ、エモート、修理。"
+},
+"game": {
+"name": "ゲームのアクションバー",
+"description": "数字キーとアビリティキー、ズームとアイテム切り替え、ゲームチャットと音楽の音量。"
+},
+"games": {
+"name": "マイゲーム",
+"description": "この PC にインストールされたゲームをカバー付きで。キーを押すと起動します。"
+},
+"illustrator": {
+"description": "キーでツール、グループ化、前面 / 背面へペースト。ダイヤルでズーム、ノブでヒストリーと重ね順。"
+},
+"lightroom": {
+"description": "キーでフラグ、除外、星。ノブで現像のスライダー、ローラーで写真の切り替え。"
+},
+"lol": {
+"description": "Q W E R、サモナースペル、アイテムとトリンケット、リコール、ショップ、スコア、カメラのロックとセンター。"
+},
+"meetings": {
+"name": "Discord と会議",
+"description": "Discord、Teams、Zoom、Google Meet のミュート、カメラ、退出、挙手。"
+},
+"minecraft": {
+"description": "ホットバーのスロット、インベントリ、ドロップ、持ち替え、チャット、プレイヤー、進捗、カメラ、スクリーンショット、デバッグ。"
+},
+"obs": {
+"name": "OBS 配信",
+"description": "実際の状態に合わせて光るシーン、録画、配信、リプレイ、マイクのミュート。フェーダーで OBS のミキサー。"
+},
+"photoshop": {
+"description": "キーでツール、ダイヤルでブラシサイズ、ノブでズームとヒストリー。"
+},
+"premiere": {
+"description": "ジョグとシャトル: ダイヤルでシャトル（J/L、速く回すほど速く）、押すと再生。ローラーでフレーム送りとタイムラインのズーム。キーでカット、マーク、再生。"
+},
+"resolve": {
+"description": "エディットページ用のジョグとシャトル: ダイヤルでシャトル（J/L）、押すと再生。ローラーでフレーム送りとタイムラインのズーム。キーでブレード、リップル削除、マーカー。"
+},
+"shotcut": {
+"description": "ジョグとシャトル: ダイヤルでシャトル（J/L）、押すと再生。ローラーでフレーム送りとタイムラインのズーム。キーで分割、リップル削除、リフト、マーカー。"
+},
+"showcase-focus": {
+"name": "夜の集中",
+"description": "キー全体に夜空、ダイヤルに 25 分の集中タイマー、ローファイ音楽、静かに呼吸する縁。"
+},
+"showcase-spotify": {
+"name": "Spotify スタジオ",
+"description": "ダイヤルに曲とカバー、お気に入りと保存、動くイコライザー、全体に Spotify の緑。"
+},
+"showcase-stream": {
+"name": "ライブ配信",
+"description": "シーンのカード、赤く光る配信開始と録画、マーカーとクリップ、フェーダーで配信ミキサー。"
+},
+"sim": {
+"name": "シム用パネル",
+"description": "デッキをフライトシムやレースシム用のジョイスティックに（Windows、vJoy が必要）: ボタン 15 個、フェーダーでスロットル、ミクスチャー、プロペラ、フラップ、トリム、ノブで軸。シムの操作設定で割り当ててください。"
+},
+"status": {
+"name": "ステータスボード",
+"description": "時刻、天気、次の予定、パソコンの負荷、ウェブサイト、ビルド、家のセンサー、価格をキーに表示。自動で更新され、しきい値を超えるとオレンジや赤になります。求められたキーで場所、カレンダー、アドレスを設定してください。"
+},
+"test-aurora": {
+"name": "テスト: オーロラ",
+"description": "15 個のキー全体に動くオーロラ、ダイヤルに炎、LED エフェクト。"
+},
+"test-integrations": {
+"name": "テスト: 連携",
+"description": "再生中の曲、システムモニター、OBS、Streamlabs、Spotify、オーディオデバイス、Home Assistant、Twitch。"
+},
+"test-keys": {
+"name": "テスト: キーとジェスチャー",
+"description": "押す、長押し、ダブル押し、マルチアクション、切り替え、ページ、ミュートとプッシュトゥトーク、タイマー、時計、文字入力。"
+},
+"test-looks": {
+"name": "テスト: 見た目",
+"description": "キーとダイヤルに自分の画像とアニメーション GIF、色、縁と LED の色。"
+},
+"test-panel": {
+"name": "テスト: パネル全体",
+"description": "15 個のキー全体に 1 枚の画像。キーはそのまま動作します。"
+},
+"test-real-apps": {
+"name": "テスト: 実際のアプリ",
+"description": "この PC で見つかったアプリを実際のアイコン付きのキーに。ダイヤルとキーに動くアート。"
+},
+"test-turning": {
+"name": "テスト: ノブ、ダイヤル、ローラー",
+"description": "ダイヤルのモード、速い回転、アプリの音量、デッキとモニターの明るさ、回してプロファイル切り替え。"
+},
+"valorant": {
+"description": "アビリティとアルティメット、武器スロット、スパイク、リロード、使用、ピン、マップ、スコア。"
+},
+"vegas": {
+"description": "ジョグとシャトル: ダイヤルでシャトル（J/L）、押すと再生 / 一時停止。ローラーでフレーム送りとタイムラインのズーム。キーで分割、自動リップル、マーカー。"
+}
+},
+"games": {
+"arena": {
+"name": "アリーナ",
+"about": "丸い画面でコアを守ります。ダイヤルを回して、飛んでくるものに盾を向けます。"
+},
+"balance": {
+"name": "バランス",
+"about": "5 本のフェーダーすべてを動く目標に合わせ続けます。光るキーとフェーダーのライトが場所を示します。"
+},
+"duel": {
+"name": "デュエル",
+"about": "2 人用: 左のキー対右のキー。自分の光ったキーを先に押した人の勝ち。光る前に押すと 1 点減点。"
+},
+"memory": {
+"name": "神経衰弱",
+"about": "キーの下に 7 組の絵が隠れています。できるだけ少ない手数で見つけてください。"
+},
+"mole": {
+"name": "モグラたたき",
+"about": "モグラが隠れる前にたたきます。3 回外すと終わり。"
+},
+"pong": {
+"name": "ポン",
+"about": "キーパネル全体がコートです。左のパドルをダイヤルで動かします。ノブやローラーを回すと 2 人目が右側を操作します。7 点先取。"
+},
+"reflex": {
+"name": "反射神経",
+"about": "ランダムな瞬間にキーが光ります。できるだけ速く押してください。5 ラウンド、平均をミリ秒で表示します。"
+},
+"rhythm": {
+"name": "リズム",
+"about": "キーの列を音符が降りてきます。最下段に来たときにリズムに合わせて押します。"
+},
+"safe": {
+"name": "金庫",
+"about": "ダイヤルで暗証番号を解きます。光で各数字を見つけ、押して確定します。"
+},
+"simon": {
+"name": "サイモン",
+"about": "キーが光る順番を見て、同じ順番で押します。ラウンドごとに長くなります。"
+},
+"snake": {
+"name": "スネーク",
+"about": "キーパネル全体がフィールドで、キーの窓から見えます。ダイヤルで操作し、食べて伸びて、壁にぶつからないように。"
+},
+"wheel": {
+"name": "ルーレット",
+"about": "ダイヤルを回して丸い画面に決めてもらいます: ランチ、誰が払うか、何をして遊ぶか。"
+}
+},
+"keys": {
+"CapsLock": "Caps Lock",
+"Down": "↓ 下",
+"Escape": "Esc",
+"Left": "← 左",
+"NextTrack": "次の曲",
+"NumAdd": "Num +",
+"NumDecimal": "Num .",
+"NumDivide": "Num ÷",
+"NumLock": "Num Lock",
+"NumMultiply": "Num ×",
+"NumSubtract": "Num −",
+"PageDown": "Page Down",
+"PageUp": "Page Up",
+"PlayPause": "再生/一時停止",
+"PrevTrack": "前の曲",
+"PrintScreen": "Print Screen",
+"Right": "→ 右",
+"ScrollLock": "Scroll Lock",
+"Up": "↑ 上",
+"VolumeDown": "音量を下げる",
+"VolumeMute": "ミュート",
+"VolumeUp": "音量を上げる"
+}
+}

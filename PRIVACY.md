@@ -1,0 +1,28 @@
+# Privacy
+
+HubDeck has no account, no cloud and no telemetry. Everything it keeps stays on your computer, in
+its data folder (`%APPDATA%\dev.hubdeck.app` on Windows, `~/Library/Application Support/dev.hubdeck.app`
+on macOS).
+
+What leaves your computer, and only when you use the feature:
+
+| Feature | What is sent, and where |
+|---|---|
+| Checking for updates (on by default, Settings > Updates) | a request for the newest release to GitHub |
+| Now playing with cover art | the cover picture, from the address the music player gives (Spotify's or Apple's servers) |
+| The "Discover HubDeck" sample profile | its Live page shows the Bitcoin price from api.coingecko.com while that page is on the deck; delete the profile or that key to stop it |
+| Shared profiles gallery | a download of the gallery list from GitHub |
+| Plugin catalog (Settings > Plugins) | the catalog list from openactionapi.github.io and its icons; on Install, the plugin file from its author's GitHub |
+| Weather, calendar, live values | requests to the addresses you set (Open-Meteo for weather) |
+| OBS, Home Assistant, Streamlabs, Spotify, Twitch | requests to those apps or services, with the access you gave them |
+| Stream Deck plugins | whatever each plugin does; they are separate programs |
+| The deck assistant | your messages, and with your OK a list of the apps you used most, go to Anthropic through your own Claude Code; nothing is sent until you start a talk |
+| Report a problem | a GitHub issue form opens in your browser; you choose what to send |
+
+Counting which keys you press (for the assistant, and for the next day's "you never used this
+knob" card after the tour) is off until you switch it on, stays on your computer, and switching it
+off forgets it. The tour looks at your modules and the apps you use on this computer only; its
+sound for the volume part is a file inside HubDeck. On macOS, setting one app's own volume routes
+that app's sound through HubDeck to play it at the level you set (the system calls it System Audio
+Recording): nothing is recorded or saved, and the app plays straight again when HubDeck quits. Spectrum and lights to the music read the sound your computer plays (Windows: loopback capture of the speakers; macOS 14.2 or newer: a Core Audio tap, which macOS asks you to allow once as System Audio Recording; no microphone), only while one of them is on; nothing is recorded, saved or sent. Claude Code sessions on keys send only their state, the
+project folder's name and the tool's name to HubDeck, never your prompts.

@@ -1,0 +1,85 @@
+name: Desktop installers
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows x64
+            os: windows-latest
+            rust-targets: x86_64-pc-windows-msvc
+            build-target: x86_64-pc-windows-msvc
+            bundle: nsis
+            artifact: MasterDeck-Windows-x64
+          - name: macOS Universal
+            os: macos-latest
+            rust-targets: aarch64-apple-darwin,x86_64-apple-darwin
+            build-target: universal-apple-darwin
+            bundle: dmg
+            artifact: MasterDeck-macOS-Universal
+    env:
+      CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_RUSTFLAGS: -C target-feature=+crt-static
+      TAURI_BUNDLER_DMG_IGNORE_CI: "true"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.rust-targets }}
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: app/pnpm-lock.yaml
+      - name: Install locked frontend dependencies
+        working-directory: app
+        run: pnpm install --frozen-lockfile
+      - name: Test frontend
+        working-directory: app
+        run: pnpm test
+      - name: Build installer
+        working-directory: app
+        run: pnpm exec tauri build --target ${{ matrix.build-target }} --bundles ${{ matrix.bundle }} --config src-tauri/tauri.installers.conf.json -- --locked
+      - name: Prepare Windows installer and checksum
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $source = @(Get-ChildItem 'target/x86_64-pc-windows-msvc/release/bundle/nsis/*-setup.exe')
+          if ($source.Count -ne 1) { throw 'Expected one Windows setup executable.' }
+          New-Item -ItemType Directory installers | Out-Null
+          $name = 'MasterDeck-Windows-x64-Setup.exe'
+          Copy-Item -LiteralPath $source[0].FullName -Destination "installers/$name"
+          $digest = (Get-FileHash -Algorithm SHA256 -LiteralPath "installers/$name").Hash.ToLowerInvariant()
+          "$digest  $name" | Set-Content -Encoding ascii installers/SHA256.txt
+      - name: Verify and prepare universal macOS installer
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          bundle="target/universal-apple-darwin/release/bundle"
+          app="$bundle/macos/MasterDeck.app"
+          executable="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$app/Contents/Info.plist")"
+          lipo -verify_arch arm64 x86_64 "$app/Contents/MacOS/$executable"
+          codesign --verify --deep --strict "$app"
+          set -- "$bundle"/dmg/*.dmg
+          test "$#" -eq 1 && test -f "$1"
+          hdiutil verify "$1"
+          mkdir installers
+          cp "$1" installers/MasterDeck-macOS-Universal.dmg
+          (cd installers && shasum -a 256 MasterDeck-macOS-Universal.dmg > SHA256.txt)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: installers/
+          if-no-files-found: error
+          compression-level: 0

@@ -1,0 +1,274 @@
+# MasterHUB: protocol and verification status
+
+Base sources: the public research projects cooltek-sdk-probe (projectzero7, MIT) and cooltek-sdk (MIT/Apache). The "Verified here" column says what we confirmed on our own hardware.
+
+## Devices
+
+Each module is a separate USB HID device (the base contains a Prolific USB hub `067B:2586`). Vendor `0x2516`, usage page `0x0C`.
+
+| Module | Model | PID | Serial (our unit) | Firmware here | Latest |
+|---|---|---|---|---|---|
+| Base 4×6 | M0064 / MHBS01AA46 | `0x01F6` | MHBS01AA461251602207 | 02.00.04.00 | 2.0.4.0 |
+| 15 keys IPS 4×3 | M4315 / MHKD15AA43 | `0x01FE` | MHKD15AA431251603100 | 02.00.01.00 | 2.0.1.0 |
+| 5 faders 4×2 | M005S / MHFD05AA42 | `0x0200` | MHFD05AA421251701184 | 01.00.05.00 | 1.0.5.0 |
+| 2 rollers 4×1 | M032LE / MHRR02AA41 | `0x0204` | MHRR02AA411251602398 | 01.00.03.01 | 1.0.3.1 |
+| 3 knobs 2×2 | M003K / MHKB03AA22 | `0x0202` | MHKB03AA221252301845 | 01.00.05.00 | 1.0.5.0 |
+| Dial IPS 2×2 | M131E / MHDD01AA22 | `0x0206` | MHDD01AA221252300567 | 01.00.04.00 | unknown |
+
+
+## Reports (HID descriptor read 2026-10-09)
+
+- Input `0x01`: 63 bytes. Layout: `[1]` channel tag, `[2:4]` length (LE), `[4:]` payload = event id, length, values.
+- Output `0x02`: 63 bytes (M0), **319 bytes** (keys).
+- Feature `0x03` (set) and `0x2D..0x36` (M0) / `0x37..0x3E` (keys): 31 bytes each.
+
+## Commands
+
+| Module | What | Report | Verified here |
+|---|---|---|---|
+| M0 | firmware | get feature `0x2E` | yes |
+| M0 | serial | get feature `0x30` | yes |
+| M0 | brightness / LED mode | get feature `0x32` / `0x34` | yes (100, mode 9 = rainbow) |
+| Faders | values 0–100 | get feature `0x33` | yes |
+| Base | orientation (sensor) | input tag `0x2B`, payload `01` / `00`; sent on change and repeated while the base moves; read on demand: feature `0x35` → `35 00 vv` | yes (2026-10-09, rotating the base: `01` ↔ `00`) |
+| M0 | LED color | output `02 2D target idx R G B save` | yes (base, faders; save=0), demo 2026-10-09 |
+| M0 | LED mode | output `02 2C target idx mode save` | yes, mode 1 = static; reading `0x34` still shows the saved mode (9) with save=0 |
+| M0 | LED brightness | output `02 2E target idx 0..100` | no |
+| M0 | LED effects | `02 2C target FF mode 0` after a color `02 2D`, speed `02 30 50` | yes on knobs (2026-10-11, watched on the deck, violet, speed 50): 2 breathing = smooth fade in and out; 3 strobe = hard on/off; 4 "spring" = fast blinking; 5 cycling = colors jump in order; 6 random = colors jump; 7 wave = smooth color change; 8 "water" = shimmer, every other LED of the ring lit in turn (so a knob ring has several LEDs, addressed only as one); 9 rainbow = smooth color change. The base edge did not change in that test because it was sent index `FF` (see the next row). Base edge, index 0, step by step with the owner (2026-10-11): static red, breathing, wave (whole strip changes color smoothly) all work; 8 "water" runs a pattern along the strip (every second or third LED, with a visible direction) and changes colors meanwhile, so the edge has many LEDs, addressed only as one; index `FF` is ignored by the base |
+| M0 | LED addressing limits | the official M0 SDK (`Adjust_LED_Color_CM_M0`) accepts target 0 = base with index 0 only (`FF` rejected), 1 = faders 0-4 or `FF`, 2 = knobs 0-2 or `FF`; the SDK has no other LED command (color, mode, brightness, speed only), so single LEDs inside a knob ring are not addressable through any known command | read from the SDK, 2026-10-11 |
+| Faders | event | input tag `0x2A`, `02 05 v1..v5` | yes (441 events in the demo); on macOS too (344 events, 2026-10-15, firmware 01.00.05.00; a fader reports its place once when attached, and the 5 report up to ~120 times a second together while moved) |
+| Rollers | event | input tag `0x2A`, `01 02 r1 r2` (0 up, 1 down, ff none) | yes on Windows (39 events in the demo) and on macOS after SET_IDLE (2026-10-15). **The rollers (firmware 01.00.03.01) send no input report at all until the host sends the HID class request SET_IDLE** (`21 0A 0000 0000 0000`, duration 0, interface 0). Windows' HID driver sends it to every HID device; macOS does not, so on the Mac the rollers were silent (reseating did not help; GET_IDLE reads 0 before and after). Sent from `prototype/tools/hid_idle.py --set`, both rollers turned at once (owner's deck, 2026-10-15 16:56); HubDeck now sends it to every M0 module on macOS at connect. Knobs (01.00.05.00) report without it. Their HID descriptor equals the knobs' (Consumer page 0x0C, input report 1 of 63 B, output 2, features 3, 2D-31, 36). The squeal of session 9 was not heard on 2026-10-15 |
+| Knobs | rotation / press | input tag `0x2A`, `00 03 ...` / `03 03 ...` | yes (335 rotations, 26 presses in the layout A test) |
+| Keys | software mode | feature `03 3A 01` | yes, 2026-10-09 19:0x (before that the module was in a bad state, see below) |
+| Keys | info | get feature `0x3B` → `14 03 05 0f e0 01 10 01 01 48 48` = 3 rows, 5 columns, 15 keys, 480×272, key 72×72 | yes (our decoding) |
+| Keys | firmware / serial / brightness | get feature `0x38` / `0x3A` / `0x3C` (software mode only) | yes: 02.00.01.00, serial OK, 100 |
+| Keys | backlight | feature `03 34 0..100` | yes: set 20 and 100, read back from `0x3C` (2026-10-10) |
+| Keys | per-key image | output `02 36 chunk(LE16) len(LE16) idx last` + JPEG 72×72, in chunks of 312 B | yes: 15 keys in 0.1 s, digits on colored backgrounds, live change on press |
+| Keys | screen / key color | feature `03 36 R G B` / `03 37 idx R G B` | sent |
+| Keys | presses | input tag `0x34`, `02 0F k1..k15` | yes: 91 events in 60 s, indices 0–14, several keys at once work |
+
+### Keys: full-panel image
+
+`02 35` + JPEG 480×272 in chunks (same header as the per-key image, index 0). Verified: one image across all 15 keys, ~11 KB per frame.
+
+Key positions in the panel image (measured 2026-10-09 with a grid of labeled coordinates and a photo): key `i` shows a 72×72 square starting at (`(i % 5) * 102`, `(i / 5) * 100`), i.e. x = 0, 102, 204, 306, 408 and y = 0, 100, 200. The keys reach the panel edge; the gaps of 30 px horizontally and 28 px vertically are hidden by the frames. More precisely (calibration mode with double frames, the owner, 2026-10-09): key window **79×75 px**, column spacing 100, row spacing 99, start (0, 0); these are the app defaults. The windows are not perfectly even, so pixel-exact alignment on all 15 keys is hard. Speed (Windows, this unit): 15 separate key images (18 KB) 18 ms, one panel image (13.6 KB) 11 ms. USB is not the bottleneck; the app draws the keys as one panel image so they change at the same time.
+
+### Dial (M131E), from disassembly of `CoolTEK_SDK_CM_M131E_V03.02.00.dll` and a hardware test
+
+| What | Report | Verified here |
+|---|---|---|
+| software mode | feature `03 49 01` (`00` = hardware) | yes |
+| brightness | feature `03 44 0..100`; read `0x4C` | yes: set 20 and 100, read back the same (2026-10-10, `examples/backlight.rs`). **0 is unsafe on macOS**: the set timed out (I/O Timeout) and the dial answered nothing after it, not even after a re-enumeration; only a reseat helps (2026-10-14). The keys module did the same at a later lock (its first 0 went through). HubDeck sends no brightness 0 to any module: screens off are black images |
+| screen color | feature `03 46 R G B` | no |
+| image | output `02 45` + JPEG 240×240 in chunks (header as for the keys) | yes |
+| firmware / serial / info | get feature `0x48` / `0x4A` / `0x4B` (`14 00 00 00 f0 00 f0 00 01 f0 f0` = 240×240) | yes |
+| rotation | input tag `0x44`, `03 01 00` right, `03 01 01` left | yes |
+| press | input tag `0x44`, `04 01 01` pressed, `04 01 00` released | yes |
+
+We read the output report length from the HID descriptor (`_output_report_len`): keys 320 B, M0 modules 64 B. Data chunk = length − 8.
+
+### Keys: where a per-key image lands (measured 2026-10-26, camera)
+
+A panel picture with a 10 px grid, then each key sent as its own 72x72 image cut from that
+picture; the camera's two photos compared key by key (phase correlation, 1.44 camera px a panel
+px): the per-key image of key `i` covers the panel square starting at about
+**x = 4 + 99.5 x column, y = 1 + 99.1 x row** (72x72; the same for both guesses tried, 102/100 and
+100/99, within half a pixel), not the 102/100 grid above.
+
+**To the pixel** (camera, 2026-10-26, `crates/mh-device/examples/align.rs`: one still picture of
+3 px noise sent in turns as the whole panel and as the 15 squares cut from it, each key's camera
+picture compared between the two, the cut moved by one pixel in each direction): the squares
+start at **x = 5, 104, 203, 303, 402** and **y = 1, 101, 199**. The rounded fit above put the left
+column (x 4) and the middle row (y 100) a pixel off: the owner saw whole keys jump with slow
+effects, where the app switches between the whole panel and the keys' squares. With the table
+every key's difference is at the camera's noise (1.9-2.3 against 12-30 a pixel off). Sizes and times (Python, q98): a key image 3.2 KB in
+~3 ms; the whole panel 34 KB in ~105 ms.
+
+The decoder takes the **standard Huffman tables only**: a panel JPEG with tables optimised for
+the picture (`jpeg-encoder` `set_optimized_huffman_tables`) showed its first rows, then black
+(2026-10-26).
+
+## Picture frame rate (measured 2026-10-10)
+
+`cargo run --release -p mh-device --example framerate -- 4 <quality>` on the reference unit:
+full key panel images (480x272) and dial images (240x240) both go in at about **32 frames per
+second**, with JPEG quality 80 (~7 KB panel, ~4 KB dial) and 60 (~5 KB, ~3 KB) alike, and both
+modules together each still at ~32 fps. The limit is on the device side, not the size of the
+picture. Whether the screens show every frame was not checked by eye yet.
+
+JPEG made by the `jpeg-encoder` crate (baseline, its default chroma sampling, quality 80-98) is
+taken by the keys (480x272 panel) and the dial (240x240) like the `image` crate's: checked
+2026-10-15 on the PC with the release gate's busiest deck and the film deck (the dial mirror in the
+window shows the same bytes the dial got).
+
+## Base orientation and module placement (2026-10-09)
+
+- **Orientation**: the base has a sensor. When the base is rotated, report `0x35` and event `0x2B` switch between `01` and `00`. The official app treats `1` as "horizontal" and everything else as "vertical". It tells only two states apart. Confirmed on the reference unit: base lying flat horizontally = `01` (horizontal), standing upright = `00` (vertical). 4-position test (2026-10-09 20:25–20:28, rotating 90° to the right each time): start `01`, 90° right `00`, 180° `01`, 270° `01`. It is a one-direction tilt switch, not an accelerometer: it only tells the "90° right" position (upright on a stand) apart from the rest. App: automatic horizontal/vertical from the sensor plus a manual rotation in 4 positions, remembered per base. The earlier "heartbeat every 0.5 s" is the same orientation reports. Drawing turn for the upright (`00`) position: 180 (the owner's deck, 2026-10-14: at 0 everything stood upside down; lying flat stays 270). The switch can stick: on 2026-10-13, after the deck was carried to the Mac, the flat base read vertical until the owner lifted it slightly (mechanical, not software); the manual rotation covers it.
+- **Module placement and rotation**: the base contains a tree of USB hubs (Prolific `067B:2586`). A module's port path relative to the base's top hub (e.g. `1-4-3`) identifies the slot, and through it the module's place and rotation. The official app maps it in CSS (`pos` + path, 99 rules for both orientations). Windows: `DEVPKEY_Device_LocationPaths`, e.g. `…#USB(6)#USB(1)#USB(4)#USB(3)`; macOS: `locationID`. On the reference unit, 2026-10-09: dial `1-3-4`, knobs `1-4-3`, keys `2-3`, rollers `3-3`, base MCU `1-4-4`.
+
+### Slot table (2026-10-09)
+
+`prototype/tools/gen_slots.py` converts the official app's board layout (88 module + slot combinations) into a cell and rotation in our 4×6 grid. Their board is rotated 180° relative to ours. The knob and roller drawings are off by another 180°. Verified with identify mode (numbers on the keys, an arrow on the dial, LED colors, roller preview) on the reference unit: keys@2-3, dial@1-3-4, knobs@1-4-3, rollers@3-3, faders@1-1-3 (faders placed by the table with no corrections). In the knobs module the order is: knob 2 on the left, 1 on the right, 3 below them. App: the user's manual layout > table > guessing.
+
+**Any module in any connector (2026-10-19).** Any module works in any of the 26 connectors (the owner); the official table leaves out the 42 combinations where a module hangs over the base's edge, e.g. keys in `1-1-1` (a user's deck in #4: keys, faders `2-3`, knobs `1-3-4`, dial `1-4-1` = 28 cells on a 24-cell base) or keys in `4-4` (the owner, 2026-10-19 12:21). A model fits the table: each connector is a point on the base with a direction, each module kind has its own connector point under it (in its unrotated footprint: dial (1, 0), keys (3, 1), faders (3, 0), knobs (1, 2) turned 180, rollers (2, 0) turned 270); it matches 58 of 62 known pairs (the misses: rollers in `1-2-1` and `1-2-4`, faders in `3-1` and `3-2`, maybe a second connector under those modules). Keys and faders share their rotation in all 7 connectors where both are known. `gen_slots.py` adds the derived positions marked `derived` (they may lie outside the 4×6 grid); the table keeps the official ones. Derived keys `1-1-1`: col 2, row 0, 90° (one cell over the edge); keys `4-4`: col 0, row -2, 90°. Checked on hardware by the owner (2026-10-19 12:59-13:00, the window matched his desk, nothing corrected in Edit layout): keys `1-1-1` and `1-2-4` (derived), rollers `1-1-4` (official, unchecked before); all marked `verified` in the table.
+
+**Output reports and a second handle (2026-10-19, Windows).** A 64-byte LED color to the base
+takes 2.7 ms through its own HID handle while the app's reader holds another; through the shared
+handle it waited for the reader's 20 ms slice (34.8 ms). `send_output_report` (the control pipe,
+SET_REPORT) is refused by the base and hangs 5 s. Since the 20:38 build knobs and faders
+get one color for all their LEDs with index `FF` (`02 2D <group> FF r g b 0`); not yet seen on the
+deck (the knobs flashed at 20:17-20:27 with one report per LED; index `FF` took effects on 2026-10-11).
+The faders module fell off USB twice while being worked with, once while its LEDs changed ~50
+times a second; whether a high LED rate can do it is not known. The second drop (20:09, its music
+switch off) also came while HubDeck sent it a new rainbow color every 20 ms (the music's step), so
+both drops had a high LED rate. At 10 colors a second (2026-10-19, 21:06 to 22:58, music playing
+part of it) it stayed connected. Index `FF` with one color for the whole module is what goes out
+for HubDeck's rainbow on knobs and faders now (`GET /api/leds`: 10 colors a second); the owner,
+looking at the deck that evening: "Te podsiweltnei dobrze dziala" (not a per-module check). Likely,
+not proven: the faders' firmware takes about 25 LED reports a second, not 50; HubDeck stays under 30.
+
+### Two modules of the same kind (2026-11-01)
+
+- The base takes the 15-key module in more than one slot (the owner tried it: his keys came back in
+  6-2-4, then 6-2-3). A user with two keys modules and two bases saw HubDeck give both the same pictures
+  and actions (issue #7, 2026-10-20): each module is its own HID device with its own serial, and every
+  module of a kind got the same reports.
+- HubDeck 0.2.1 gives a second knobs, faders or rollers module its own control numbers, remembered by
+  serial (`deck.rs` `assign_groups`); keys and the dial still mirror. Not tried on hardware with two
+  modules of one kind (one of each here); whether the base's USB carries two keys panels at full rate
+  is unknown (the PC sends ~2.1 MB/s to one).
+
+### Every M0 read on the owner's deck (2026-11-02, Settings > Diagnostics, `GET /api/modules/<id>/check`)
+
+Read while HubDeck ran, through its own handle; each answered in 45-48 ms (keys 31 ms), nothing wedged
+(keys, faders, rollers, base kept working). Payloads after `[id, len]`:
+
+| Read | Base (02.00.04.00) | Faders (01.00.05.00) | Rollers (01.00.03.01) | Reading |
+|---|---|---|---|---|
+| `0x2E` firmware | `12 54 4c 2f` + "02.00.04.00" | `54 e2 61 51` + "01.00.05.00" | `28 35 3e 25` + "01.00.03.01" | 4 bytes that differ per module (a checksum?), then the version |
+| `0x2D` firmware part | `90 ff ea ec` + "02.00.00.00" | `b1 b6 1e e3` + "01.00.00.00" | `b1 b6 1e e3` + "01.00.00.00" | likely the boot loader: the same bytes on faders and rollers |
+| `0x2F` firmware part 2 | the same as `0x2E` | the same as `0x2E` | the same as `0x2E` | |
+| `0x31` device info | 20 zero bytes | 20 zero bytes | 20 zero bytes | nothing in it on this firmware |
+| `0x32` brightness | `64` | `64 64 64 64 64` | (not read) | one per light: 100 each |
+| `0x33` fader values | | `27 3a 35 34 2e` (39 58 53 52 46) | | where the faders stood |
+| `0x34` LED mode | `09` | `09 09 09 09 09` | | one per light; **the saved mode, not the shown one**: the deck showed static orange (mode 1) at that moment |
+| `0x35` orientation | `35 00 01` (payload length 0, value after it) = horizontal | | | |
+| `0x36` stored config | `2b 67 7c 91 b0 00 00 00` twice | `a4 97 c1 a9 e4 00 00 00` twice | `15 32 c5 08 94 00 00 00` twice | 5 bytes and 3 zeros, repeated; differs per module; meaning unknown (not colours) |
+
+A module whose light ignores every colour (a faders user, 2026-11-02) can be compared against these.
+
+That user's faders (0.2.2's report, 2026-11-02; part of fader 1's light red from power-on, on a charger
+too, ignoring every colour while the rest of that light follows): `0x2E`/`0x2D`/`0x2F` byte for byte the
+same as the owner's (the 4 leading bytes too), so the firmware is the same; `0x32` `00 00 00 00 00`
+(the owner's 100 each); `0x34` `09` x5 like the owner's; `0x36` `a0 9b 85 be e4 00 00 00 b4 e4 e1 f3 e4
+00 00 00`: the two halves differ, where every module of the owner's has two equal halves. HubDeck never
+sends the brightness command (`02 2E`) and every colour and mode it sends has save = 0, so the saved
+brightness 0 and the changed config came from elsewhere (the official app or the firmware itself).
+
+## Blocked in the driver (`_FORBIDDEN` in `prototype/masterhub/driver.py`)
+
+Firmware update, serial number change, factory data write, recovery tests and factory reset. Firmware is updated only with the official app.
+
+## Hot unplugging (2026-10-09)
+
+Removing a module from the base causes an HID read error (`read error`). `prototype/masterhub/hub.py` closes the handle, scans for devices every second and, when the module comes back, runs `initialize()` and `on_connect` (redraw). Measured: the keys came back 5 s after unplugging.
+
+A module with a loose contact on the base leaves USB for about 0.5 s on a press (Windows plays
+its unplug sound) even with no host software running: seen on the keys module 2026-10-15 (5 drops
+in a minute of presses, both sides of the module, HubDeck quit); taking it off the base and
+putting it back cured it. `prototype/tools/usbwatch.py` lists the modules every 0.1 s by
+enumeration (opens nothing) and prints each GONE/BACK.
+
+## Keys and dial firmware lockup (cause confirmed 2026-10-09)
+
+**Reading any feature report from the keys or the dial in hardware mode locks up the module until a power reset.** From then on every feature read returns empty, and the USB strings (product, serial number) are garbage: they contain bytes from the last feature response, e.g. `02.00.01.00` read as UTF-16. Write commands are accepted without error but do nothing. Switching software mode does not fix it; only removing the module from the base and putting it back helps (or restarting the computer).
+
+Test 2026-10-09 ~19:40: after a power reset the keys module responded correctly (`state_check.py`). One `get_feature_report(0x38)` in hardware mode, and the module was locked up. The dial, which we did not touch, kept working. The same had happened earlier with the dial (reading `0x4A` in hardware mode) and with the first run of the probe that day.
+
+Unlocking without removing the module (test 2026-10-09 ~19:55, `prototype/tools/recover_test.py`, Windows 10):
+
+| Method | Result |
+|---|---|
+| closing and reopening the HID handle + switching software mode | does not help |
+| `IOCTL_USB_HUB_CYCLE_PORT` on the hub in the base (without administrator) | rejected, error 31 |
+| `pnputil /restart-device "USB\VID_2516&PID_01FE\<serial>"` (administrator) | **unlocks** |
+| removing the module from the base and putting it back | unlocks |
+
+macOS (2026-10-13): 200 ms between software mode on and the first read was not always enough when
+the module had just been handed back by another app; the read then wedged it. 600 ms and a second
+software-mode command before the read: no wedge in twelve restarts.
+
+macOS: re-enumeration through IOUSBHost (no admin rights) brought stuck keys and dial back in
+2026-10-14 (both within 4 s), but not every time: a dial stuck after brightness 0 needed a reseat,
+and on 2026-10-23 a dial that had stopped answering feature reports during a long run (its
+hand-back at quit timed out after 5 s, pictures were still taken until then) left USB altogether
+after the re-enumeration until it was reseated (twice). Reseating always unlocks.
+
+Consequences:
+- `mh-device` refuses to read from the keys and the dial outside software mode (`Error::HardwareMode`).
+- We identify modules by device path, not by USB string. We take the serial number from the report (`0x3A`/`0x4A`) after switching to software mode.
+- When a module does not respond after switching to software mode, the hub sends `Event::Unresponsive`. The app offers "Restart module" (Windows: `pnputil /restart-device` via UAC) and, as a fallback, re-seating the module.
+- M0 modules (base, faders, knobs, rollers) can always be read.
+
+## Official app (MasterHUB 1.0.0.113)
+
+- Slots in the official app: `portNumber` = USB port path (node library `usb`, `portNumbers`) with the base prefix cut off, joined without separators (`143`); CSS classes `.<widget>.pos<path>` in `Baseboard.vue`. Widgets: `control-keypad` (keys), `roller`, `knob3` (knobs), `knobx1` (dial), `control-sliders5` (faders). Our `prototype/tools/gen_slots.py` converts this into `app/src/slots.generated.json`.
+- It drew the keys one by one (72×72, JPEG quality 60) and did not use the full panel for the keys. It exported profiles to `.mhz`. Bundled profiles: only Default (plus Photoshop in the resources). It took the base orientation from the base input report (`data[0] == 1` → horizontal) and offered a manual switch.
+
+- On exit, on computer sleep and on settings changes the app calls `Set_Sw_Mode_CM_M4315(false)` and `Set_Sw_Mode_CM_M131E(false)`. Our driver should do the same.
+- After `Set_Sw_Mode(true)` the app waits (`200 * i` ms) before reading the firmware.
+- `MHDaemon` (a separate process) reads CPU/GPU sensors every second through the CPUID SDK (kernel driver). Likely cause of the computer freeze on 2026-10-09, in conflict with MSI Mystic Light/Afterburner (a hypothesis with no proof, because the logs were lost in the hard reset).
+- Modules supported in the SDK: M0 (base, faders, knobs, rollers), M131E (dial), M4315 (keys), M3700, M3704, M4300, M4600, M5000.
+
+## What the hardware offers, and what is not used yet (checked 2026-10-26)
+
+- **No sound, microphone or vibration**: the deck enumerates as HID devices and Prolific hubs only
+  (no USB audio class; Windows `Get-PnpDevice`, VID `2516`/`067B`, 2026-10-26), and none of the
+  SDKs has such a function.
+- **Every function of the three SDKs** (names read from the DLLs as data, 2026-10-26):
+  M0: `Adjust_LED_Brightness`, `Adjust_LED_Color`, `Adjust_LED_Mode`, `Adjust_LED_Speed`,
+  `Calibrate_Direction` (forbidden), `Get_Device_Direction`, `Get_LED_Brightness`, `Get_LED_Mode`,
+  `Get_Slider_Value`, config/info/serial/firmware reads, and the forbidden writes
+  (`Save_Factory_Data`, `Set_Serial_Number`, `Test_FW_Recovery_Process`,
+  `Test_Factory_Reset_Process`, `Update_FW`). Keys M4315: `Adjust_Backlight`, `Get_Backlight`,
+  `Display_Color_On_Button`, `Display_Color_On_Screen`, `Display_Picture_On_Button`,
+  `Display_Picture_On_Screen`, `Set_Sw_Mode`, reads, the forbidden writes and
+  `Test_Animation_Recovery_Process` (a stored animation in the firmware; restoring it is a
+  recovery test, forbidden). Dial M131E: the same without the per-button pair.
+- **Checked with the camera (2026-10-26 12:41, `examples/lights.rs`, film at 30 fps)**: a key's
+  solid colour (`03 37 idx R G B`) fills that one key at once over the panel picture (14 ms, no
+  JPEG); the screen's colour (`03 36 R G B`) fills all keys (18 ms); a panel picture after either
+  shows normally. The backlight (`03 34`, 20 <-> 100) changes in 4-24 ms and the flashes show on
+  film (33 changes in 2 s went through). Not tried: the dial's `03 46`, LED brightness `02 2E`.
+- **How many pictures the key screen shows** (2026-10-26, `examples/counter.rs`: a frame number as
+  squares, filmed at 30 fps and read back): about **24 different pictures a second** at most, both
+  when 30.4 a second were sent (one report at a time) and 37.9 (two at a time), q98 pictures of
+  ~39 KB. Pictures written two reports at a time arrive whole (no tears or garbage on film).
+- **Sending**: hidapi writes a 320-byte report and waits for it; overlapped writes in flight on a
+  handle of their own take a q98 panel faster and with less CPU (`examples/pipeline.rs`, 40 KB:
+  one by one 33.6 ms at 12:34; later, with the PC busy, 48.9-109.6 ms and 4.2-6.2 ms of CPU a
+  picture against eight in flight 23.6-28.2 ms and 2.2-2.5 ms). HubDeck writes pictures with eight
+  in flight on Windows (`mh-device` `overlapped.rs`; `HUBDECK_PIPELINE=0` turns it off). At q98 the bytes decide: a
+  snowy panel (~80 KB) took 76 ms one report at a time (10.9 a second).
+- **Sending on macOS** (2026-10-30, `examples/pipeline_mac.rs`, MacBook M2 Pro, the deck through
+  the base): hidapi's write is IOHIDDeviceSetReport, one report at a time; Tokyo Rain's q98
+  panels took 121-133 ms (7.5-8.3 pictures a second). IOHIDDeviceSetReportWithCallback with
+  writes in flight on a device object of its own: a ~49 KB panel 76.5 -> 26.4 ms (13.1 -> 37.9 a
+  second) and 6.9 -> 2.9 ms of CPU a picture with 2, 4, 8 or 16 in flight alike (1 in flight 63.9
+  ms); a ~180 KB panel 85 ms (~2.1 MB/s, the device's pace). The second object opens only when
+  hidapi opened the module shared: an exclusive (seize) open refuses it and cuts off one opened
+  before it (`0xe00002c5`, kIOReturnExclusiveAccess). Every module's report descriptor is usage
+  page 0x0C with opaque byte arrays (usage 0xFF00, report ids 01/02/03 and feature ids), no
+  standard consumer usages, so the system's driver has nothing to act on in a shared open.
+- **The same pace on Windows** (2026-10-31, his PC, eight reports in flight, the installed app's log):
+  Lantern Hollow at 99 KB a picture took 46.5 ms to send (21.5 a second), at its lighter moments 27.6 ms
+  (24.6 a second, the engine's limit): ~2.1 MB/s, as on the Mac. Past it the picture's size sets the rate.
+  HubDeck opens keys and dial shared with eight in flight (`mh-device` `pictures.rs`;
+  `HUBDECK_PIPELINE=0` turns it off).
+- **No known way**: single LEDs inside a knob ring or along the base edge (the hardware has many,
+  its "water" mode lights them in turn, but no SDK function addresses one). Probing unknown
+  commands is not done (firmware risk; the owner's rule against workarounds).
+
+## Side note
+
+The keys module returns corrupted USB string descriptors (shifted by one UTF-16 byte), but `hid.enumerate` shows the correct names. Harmless for now.

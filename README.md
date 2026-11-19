@@ -1,0 +1,457 @@
+<p align="center">
+  <img src="site/images/icon.png" width="104" height="104" alt="MasterDeck">
+</p>
+
+<h1 align="center">MasterDeck</h1>
+
+<p align="center">
+  <b>Desktop control software for the Cooler Master MasterHUB.</b><br>
+  Set up keys, dials, knobs, faders, and rollers from one workspace.<br>
+  Free and open source for Windows and macOS.
+</p>
+
+<p align="center">
+  <a href="https://github.com/kyawzin19997/coolermaster/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/kyawzin19997/coolermaster?label=release&color=6e56ff"></a>
+  <a href="https://github.com/kyawzin19997/coolermaster/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/kyawzin19997/coolermaster/ci.yml?branch=main&label=CI"></a>
+  <a href="https://przemotar.github.io/hubdeck/discord"><img alt="Discord" src="https://img.shields.io/badge/Discord-join-5865F2?logo=discord&logoColor=white"></a>
+  <a href="#license"><img alt="License: MIT or Apache-2.0" src="https://img.shields.io/badge/license-MIT%20%2F%20Apache--2.0-blue"></a>
+  <img alt="Windows and macOS" src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS-555">
+</p>
+
+<p align="center">
+  <a href="https://github.com/kyawzin19997/coolermaster/releases/latest/download/MasterDeck-windows-x64-setup.exe"><img alt="Download for Windows" src="https://img.shields.io/badge/Download%20for%20Windows-x64-2563eb?style=for-the-badge"></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/Przemotar/hubdeck/releases">macOS downloads (upstream)</a> ·
+  <a href="https://przemotar.github.io/hubdeck/">Website</a> ·
+  <a href="#documentation">Docs</a> ·
+  <a href="#faq">FAQ</a>
+</p>
+
+![MasterDeck: the deck drawn live with its LED colors, a key selected and what it does on the right](docs/images/hubdeck-main.png)
+
+![MasterDeck in 23 seconds: a key pressed on the deck gets an action picked in the window, the dial changes its face, ready decks switch with a click](docs/images/hubdeck-film.gif)
+
+> MasterDeck is an independent project. It is not made, endorsed or supported by Cooler Master.
+> "Cooler Master" and "MasterHUB" are trademarks of their owner and are used here only to say
+> which hardware this software works with.
+
+## Quick start
+
+1. [Download for Windows](https://github.com/kyawzin19997/coolermaster/releases/latest/download/MasterDeck-windows-x64-setup.exe) or choose a macOS installer from the [upstream releases](https://github.com/Przemotar/hubdeck/releases) ([installation guide](#install)).
+2. Quit the official MasterHUB app: two apps cannot drive the deck at once.
+3. Open MasterDeck from the tray and click **Show me on my deck**: one question, and in about five
+   minutes your deck is set up for your modules and apps. No account and no AI needed.
+
+## Supported modules
+
+| Module | Windows 10/11 | macOS 12+ |
+|---|---|---|
+| Base with the edge light | ✓ | ✓ |
+| 15 LCD keys | ✓ | ✓ |
+| Dial with its round screen | ✓ | ✓ |
+| 3 knobs | ✓ | ✓ |
+| 5 faders | ✓ | ✓ |
+| 2 rollers | ✓ | ✓ |
+
+Checked module by module on real hardware. Attach and take off modules while MasterDeck runs; it finds
+where each one sits and how it is turned. One base at a time for now.
+
+## Highlights
+
+- **Every module, live.** 15 LCD keys, the round dial, knobs, faders, rollers and the edge light,
+  found and drawn as they sit on your base, while it runs.
+- **A living deck.** The 15 keys show one moving scene behind your icons, as if they were windows
+  onto it, and it answers your presses: a forest in autumn, Fuji, a koi pond, code rain, a nebula,
+  two for Halloween and more ([below](#the-living-deck)).
+- **A deck made for you in minutes.** Say what you do most; MasterDeck builds a deck for your modules
+  and apps and walks you through it on the hardware. No AI needed.
+- **Profiles that follow the app in front**, with per-app volume, mute, media with cover art, OBS,
+  Home Assistant, monitor brightness and system stats.
+- **Stream Deck plugins** run in MasterDeck: the Plugins tab lists about 300 that install with one
+  click (the open ones on Elgato Marketplace, the OpenAction catalog and GitHub), with filters and
+  search; also the plugins your Stream Deck app already has, and any `.streamDeckPlugin` you open
+  with MasterDeck or drop on its window. Of 53 popular ones checked, 44 start and draw on Windows
+  (marked "tried in MasterDeck"; [the list](docs/STREAMDECK-PLUGINS.md#tried)); tell us when one does
+  not work.
+- **Your language and your fonts.** English, Polish and Japanese built in, or a language file of
+  your own; any font on your computer for the text on the deck.
+- **Safe by design.** Firmware is never written; dangerous commands are refused in code. Nothing
+  leaves your computer unless you turn it on ([PRIVACY.md](PRIVACY.md)).
+- **Light.** About 3 % of one CPU core and 40 MB of memory in the tray with a clock and meters on the keys; 9 % and 62 MB with 22 animations on the deck (Windows, measured before the release).
+
+## The living deck
+
+![Deck look: the presets, and the deck live on the right with Hollow Hill behind the icons](docs/images/hubdeck-living-deck.png)
+[![The twelve presets one after another as the deck shows them, with a press on key 8 in each](docs/images/hubdeck-presets.gif)](https://przemotar.github.io/hubdeck/media/hubdeck-presets.mp4)
+
+The keys module can be one picture instead of fifteen squares. A scene is drawn live behind your
+icons and seen through the key windows, moving all the time, and a press does something in it:
+leaves thrown out of the key, a gust through the cherry blossom, koi swimming to the key for food,
+a jump to hyperspace. Your icons and labels stay on top, with a soft dark halo behind them so they
+stay readable.
+
+Click **Living deck** under the deck in the window. **Deck look** opens with the presets (each
+thumbnail moves when you point at it) and your deck as it really is, live: the deck shows a preset
+while you try it, a click on a key in the preview presses it, and nothing is kept until you click
+**Apply** (it is saved in the profile). The presets:
+
+- Halloween: **Hollow Hill** (a crooked manor on a knoll, a harvest moon, a graveyard in the fog)
+  and **Lantern Hollow** (jack-o'-lanterns, an owl, a black cat, now and then a witch across the
+  moon)
+- **Golden autumn** and **Mushroom hunt**: a forest against the low sun, and the inside of an old
+  forest with ceps and fly agarics on the floor
+- **Fuji and sakura**, **Koi pond** and **Tokyo Rain**: a bright day at Mount Fuji, a pond seen from
+  above, a street at night through wet glass
+- **Code rain**, **Synthwave**, **Cyber rig**, **Nebula** and **Spectrum**: the last one shows what
+  plays on your speakers (on a Mac from macOS 14.2; MasterDeck listens only while it is on and records
+  nothing)
+
+Mushroom hunt, Fuji and sakura and Koi pond are drawn as one picture for a deck lying flat or
+standing upright. **Keys**, in the same view, gives every key a style and a light on the icons,
+and they stay when you change the preset; **Save as mine** keeps a look of your own.
+
+The scenes are drawn by the graphics card, up to 24 pictures a second (as many as the key screens
+show). On a computer without a graphics card MasterDeck can use, the window says so and the deck runs
+without them.
+
+**Screensaver**, beside Living deck under the deck: after the minutes you set without a touch, a
+scene across all 15 keys (aurora, aquarium, lava lamp, fireplace, summer night, neon rain or
+haunted night), any of the presets, or a simple one; meanwhile the dial can show a clock and the
+lights breathe in the scene's color. The first touch only ends it, it does not press a key. One for
+every profile, or a profile's own; **Preview on the deck** shows it for 20 seconds.
+
+## Built from what deck owners complain about
+
+Before and while building MasterDeck we read what owners of the MasterHUB and of other decks (Stream
+Deck, Loupedeck, Logitech MX Creative Console, Razer Stream Controller) say goes wrong: reviews,
+vendor forums, GitHub issues and about 1,200 Reddit posts of 2025-2026. The ones that shaped MasterDeck
+most, with their sources:
+
+| What owners say | What MasterDeck does |
+|---|---|
+| "Nearly every update ... breaks almost everything"; people roll back by hand ([r/elgato](https://redd.it/1tg0k8o), [r/elgato](https://redd.it/1vhfyp9)) | Nothing installs until you click Install, with the changes shown first; **Go back to the version before** in Settings, signed like any update, your profiles backed up first |
+| A press does nothing, or arrives seconds later, and you cannot tell which ([r/elgato](https://redd.it/1tin7ed)) | Every press **frames the key at once**; an action that failed leaves a **red corner** and the window says why |
+| Official integrations broken for weeks: OBS, weather, Spotify ([r/elgato](https://redd.it/1tu968o), [r/elgato](https://redd.it/1u7j0sq)) | OBS, Streamlabs, now playing, weather and Home Assistant are **built in**; Stream Deck plugins run beside them, restarted when they crash, stoppable by hand |
+| Forced accounts, a store, an ad in paid software ([r/elgato](https://redd.it/1vei16t), [r/elgato](https://redd.it/1ueyj99)) | **No account, no store, no ads, no telemetry.** Open source |
+| The vendor walks away and the hardware becomes a brick ([r/Loupedeck](https://redd.it/1ux25ju), the MasterHUB itself) | MIT or Apache-2.0, the protocol documented in [PROTOCOL.md](PROTOCOL.md): anyone can keep it going |
+| "What do I use it for if I don't stream?" (the most discussed non-hardware thread, [r/elgato](https://redd.it/1wh69jh)) | A tour builds a deck for your modules and apps in minutes; **ideas from other deck owners**, taken from that thread, are one click away |
+| Companion apps that take 2-4 GB of memory ([Logitech reviews](https://www.target.com/p/logitech-mx-creative-console-9-customizable-buttons-with-lcd-screens-graphite/-/A-1006718799)) | Measured before every release: 9.4 % of one CPU core and 62 MB with 22 animations on the deck, memory flat over 5 minutes (Windows) |
+| "Commands did not save properly", a setup lost ([APH Networks](https://aphnetworks.com/reviews/cooler-master-masterhub/2)) | Every change saved at once and written safely; daily backups with Restore |
+
+## Install
+
+### Windows 10 and 11 (x64)
+
+1. [Download for Windows](https://github.com/kyawzin19997/coolermaster/releases/latest/download/MasterDeck-windows-x64-setup.exe). For older versions and the SHA-256 checksums, see [All releases](https://github.com/kyawzin19997/coolermaster/releases).
+2. Open `MasterDeck-windows-x64-setup.exe`. Follow the installer and leave **Create desktop shortcut** selected if you want one. Setup includes the offline WebView2 installer.
+3. Launch **MasterDeck** from Start or the desktop. To remove it, open **Settings → Apps → Installed apps**, find **MasterDeck**, and choose **Uninstall**.
+
+Windows releases currently use Tauri updater signatures. The installer does not have a Windows Authenticode publisher signature, so SmartScreen may show an unknown-publisher prompt. Compare the file's SHA-256 with `SHA256-windows.txt` from the same GitHub release before proceeding.
+
+In **MasterDeck → Settings → Updates**, check for new releases and choose **Download and install** when you are ready. The app can also check in the background and notify you.
+
+### macOS 12 or later (Apple silicon and Intel)
+
+Choose a `.dmg` on the [upstream releases page](https://github.com/Przemotar/hubdeck/releases), then open it and drag MasterDeck to Applications.
+The app is not notarised by Apple yet, so the first time macOS says it "could not verify" MasterDeck.
+Once only:
+
+1. Click *Done* (not *Move to Trash*).
+2. Open System Settings > Privacy & Security, scroll to Security and click *Open Anyway* next to
+   the line about MasterDeck; confirm with your password or Touch ID.
+3. Click *Open* in the next message.
+
+On macOS 14 and older, right-click MasterDeck in Applications and choose *Open* also works. To send
+shortcuts and type text from the deck, allow MasterDeck in Privacy & Security > Accessibility; the
+app asks for it with a button. Setting one app's own volume (macOS 14.2 or later) asks once for
+System Audio Recording: MasterDeck plays that app's sound at the level you set and records nothing.
+**Linux** (x86-64, experimental): there is no installer yet. Build it from the source (below) and
+let your user open the deck's USB ids:
+
+```sh
+sudo install -m 644 packaging/linux/99-masterhub.rules /etc/udev/rules.d/
+sudo udevadm control --reload && sudo udevadm trigger
+```
+
+The whole deck works: keys, dial, knobs, faders, rollers and the base's light. So do system and
+per-app volume, microphone mute, media keys and now-playing with cover art (MPRIS), the installed
+apps and their icons, idle and lock detection, and typing, hotkeys and scrolling through a virtual
+keyboard. Monitor brightness is the one integration still missing. `hubdeck cli doctor` checks
+these pieces on the machine and prints what works.
+
+Close the official MasterHUB app first: two apps cannot drive the deck at once.
+
+### Platforms
+
+| System | Every release | On a real deck |
+|---|---|---|
+| Windows 10 and 11 (x64) | GitHub release workflow with installation and uninstall checks | MasterHUB supported |
+| macOS 12 or later | Universal DMG available from the manual Desktop installers workflow | MasterHUB supported |
+| Linux (experimental) | Source builds and tests in CI | Use `hubdeck cli doctor` to check system integrations |
+
+Maintainers can follow the [Windows release guide](docs/windows-release.md) to configure updates and publish a new version.
+If you are new to GitHub, start with [MasterDeck on GitHub](docs/github-for-beginners.md).
+
+Something wrong on a Mac? Please [open an issue](https://github.com/Przemotar/hubdeck/issues): Mac
+reports are checked on a deck first.
+
+### Known issues
+
+- The window shows the dial's animations at about 8 frames a second; the dial itself plays them
+  at 15 or more.
+- macOS: after MasterDeck restarts, the keys or the dial sometimes stop taking pictures; MasterDeck tries
+  to restart that module by itself, and taking it off the base and putting it back always helps.
+- macOS 12 to 14.1: one app's own volume cannot be set (the system and the player can).
+- Elgato Marketplace plugins with copy protection do not run, also when the Stream Deck app has
+  them (Elgato keeps their files encrypted on disk); the catalog says which ones come only through
+  Elgato's app. Plugins from their authors' own pages run.
+- Twitch sign-in is off until the app registration is done. Linux: monitor brightness is not wired
+  up yet; the udev rule above must be installed for the deck and for typing, hotkeys and scrolling.
+- A module that drops off USB when you press it (Windows plays its unplug sound, the keys go blank
+  for a moment) has a loose contact with the base: take it off and put it back firmly.
+
+## What it does
+
+<details>
+<summary><b>Everything in detail</b> (modules, profiles, actions, plugins, the tour and the assistant, integrations, lights, looks, ready-made profiles, safety)</summary>
+
+Coming next: Twitch actions (built, waiting for the app's Twitch
+registration), a shared profiles gallery, more than one base.
+
+**Deck and modules**
+- Every module: 15 keys, dial with its 240x240 screen, knobs, faders, rollers and the base. Attach and
+  remove modules while it runs; MasterDeck finds where each one sits and how it is turned.
+- The window draws your deck as it is on the desk, live: the very pictures the keys and the dial
+  get (clocks, values, covers), LED colors and the edge light. Press, turn or slide anything to
+  select it.
+- Modules you own but have not attached stay on a shelf beside the deck, still editable.
+
+**Profiles that follow you**
+- Your home profile is the one you pick. An app with its own profile takes over while it is in
+  front (even one window: `chrome.exe: YouTube` on Windows, `Google Chrome: YouTube` on macOS) and
+  gives back when you leave it; the *Auto-switch* switch in the top bar stops
+  switching. Switching is drawn in tens of milliseconds.
+- Key pages, press / hold / double press on every key, knob and the dial, multi-actions with delays
+  and conditions, a keyboard macro recorder, toggles, several modes on one dial.
+- Profiles in a OneDrive or Dropbox folder to share them between PCs; daily backups with
+  one-click restore; import of profiles exported by the official app (`.mhz`, beta).
+
+**Actions**
+- Open apps, files and websites (with the app's own icon), run commands, hotkeys (F13-F24, media
+  keys, and a mode that games can read), type text, scroll.
+- System, per-app, "app in front" and microphone volume (per app on macOS 14.2 or later); microphone mute for every app; switch the
+  speakers or microphone; play sounds (a small soundboard).
+- Multimedia (play, pause, tracks), now playing with cover art, seek in 12 players; monitor brightness (DDC/CI);
+  system monitor (CPU, memory, GPU, temperatures, on macOS too); clock and timer; deck brightness.
+- On the dial for fun and focus: Mochi, a pet that gets hungry, sleepy and happy (with a picture of
+  your own as its body if you like), Pomodoro and the weather; screensavers for the whole deck.
+
+**Plugins made for Stream Deck**
+- Install a `.streamDeckPlugin` (open it with MasterDeck, drop it on the window, or pick it), use
+  the plugins Elgato's Stream Deck app already installed, or pick one in the Plugins tab: about
+  300 from Elgato Marketplace's open ones, the OpenAction catalog and GitHub (Discord, Spotify,
+  OBS, Home Assistant, Philips Hue, VS Code and more), with filters for the source, this computer,
+  dial and knobs and what was tried in MasterDeck. *Use it* after Install opens the deck with the
+  plugin's actions first, and they join "What should it do?". 44 of 53 popular ones checked run on Windows
+  ([the list](docs/STREAMDECK-PLUGINS.md#tried)). Keys are a 5x3
+  keypad, the dial and knobs are dials, the plugin's own settings page shows in the panel on the right.
+  Many plugins are written in JavaScript and need [Node.js](https://nodejs.org) 20 or later
+  installed; MasterDeck says so when one does. How it works and what to expect:
+  [docs/STREAMDECK-PLUGINS.md](docs/STREAMDECK-PLUGINS.md).
+
+**A tour, then a deck assistant**
+- *Show me on my deck* (no AI needed): one question about what you do most, then MasterDeck makes a
+  deck for your modules and your apps at once and walks you through it on the hardware, part by
+  part; the control to try blinks on the deck. Keep the parts you like; nothing of yours changes
+  until you keep the deck. With your OK it counts presses, and the next day names a control you
+  never used, to swap it.
+- The assistant uses your own Claude Code (it needs a Claude Pro or Max plan, or an Anthropic API
+  key; the tour and everything else work without it): it looks at the apps you use (with your OK), asks a few questions and
+  sketches whole decks you try on the hardware before you keep one; or go step by step, control
+  by control, through a gallery of options. It changes only drafts; more in
+  [docs/ASSISTANT.md](docs/ASSISTANT.md).
+- Your own apps and scripts can show their state on the deck (an agent waiting, a build running)
+  and offer actions: [docs/APP-CONTRACT.md](docs/APP-CONTRACT.md).
+
+**Integrations**
+- OBS Studio and Streamlabs Desktop: scenes, record, stream, replay, sources, mixer, with the live
+  state on the keys.
+- Spotify (like, playlists; with Spotify Premium, through a free developer app of your own), Home Assistant (devices, scenes, lights, services), MIDI to any DAW.
+- Claude Code: a key per coding session that shows whether it works, needs your permission or
+  waits for you. Only the state and the project folder name are sent; never your prompts.
+- Plugins in any language over a local WebSocket, and a local API for scripts; see
+  [docs/PLUGINS.md](docs/PLUGINS.md).
+
+**Lights**
+- One lighting style for the whole deck, or a color and effect per knob and fader and for the edge.
+- Lights that mean something: a muted microphone, being on air, a session that needs you, a timer
+  that ran out, levels as brightness.
+
+**Key looks**
+- Labels, colors, styles (flat, gradient, glass, outline), your own pictures and animated GIFs, one
+  picture, a clock or a live graph across all 15 keys.
+- A look editor in the key's Look panel (templates, background, icon, label, extras such as
+  patterns, a badge and motion), and **Full editor** for the key on the whole window, several keys
+  at once; save a key as a PNG or a page as a Stream Deck icon pack. A key can change its look while
+  something holds (CPU over 80 %, music playing, the microphone muted, an app in front, a time of
+  day) and show a value in its label.
+- The living deck: scenes behind the icons across all 15 keys, answering presses
+  ([more](#the-living-deck)).
+- Lucide icons and 300 game icons (game-icons.net) with search; install icon packs, including
+  Stream Deck icon packs.
+
+**Ready-made profiles**
+- Everyday desk, OBS streaming, Discord and meetings, Photoshop, Illustrator, Lightroom, video
+  editing, Claude Code, a game action bar, and games on their default keys: Diablo IV, Baldur's
+  Gate 3, Counter-Strike 2, Valorant, Fortnite, Minecraft, League of Legends
+  ([how to set up a game](docs/GAMES-SETUP.md)). Each one adapts to the modules you have.
+
+**Sharing**
+- A profile and all its pictures as one `.hubdeck` file; secrets in web requests are left out.
+
+**Safe and light**
+- The module firmware is never updated or changed. Commands that could rewrite serial numbers,
+  reset a module or flash firmware are not part of MasterDeck's protocol code, and hand-built reports
+  carrying them are refused.
+- No account, no cloud, no telemetry. MasterDeck goes online only for the update check (on by default,
+  Settings > Updates), album covers of what plays, and what you turn on; the full list is in
+  [PRIVACY.md](PRIVACY.md).
+- About 3 % of one CPU core and 40 MB of memory while it waits in the tray (measured on the
+  release build with the deck attached, a clock and meters on the keys); the window exists only
+  while it is open.
+- If MasterDeck ever stops unexpectedly, a small guard hands the deck back to its firmware and starts
+  MasterDeck again; the window then says when it happened, and *Report this crash* opens a bug
+  report with the details filled in (nothing is sent until you send it).
+- Tray app that starts with the system; dark and light look; English, Polish and Japanese.
+
+</details>
+
+## Screenshots
+
+**The tour**: a deck made for your modules at once, walked through part by part; the control to try
+lights up on the deck.
+
+![The tour: a deck made at once and walked through part by part](docs/images/hubdeck-tour.png)
+
+**Plugins**: about 300 Stream Deck plugins one click away in the Plugins tab, and the ones your
+Stream Deck app has; each shows its CPU and memory, and you can stop and start it by hand.
+
+![The Plugins tab: about 300 plugins, a search and the "Tried in MasterDeck" filter](docs/images/hubdeck-plugins.gif)
+
+## FAQ
+
+**Can MasterDeck damage or brick my modules?**
+No. MasterDeck never writes firmware. Commands that could rewrite serial numbers, reset a module or
+flash firmware are not part of its protocol code, and reports carrying them are refused
+(`crates/mh-protocol/src/safety.rs`).
+
+**Do I need to uninstall the official app? Can I go back?**
+No uninstall is needed; just quit the official app first, since two apps cannot drive the deck at
+once. To go back, quit MasterDeck (tray > Quit) and start the official app; your modules are unchanged.
+
+**Does it work with a Stream Deck or other decks?**
+No, it drives the MasterHUB only. It runs plugins *made for* Stream Deck on the MasterHUB.
+
+**Is the AI required? Does it cost anything?**
+No. The tour, the editor and everything else work without it. The optional assistant runs on your
+own Claude Code, which needs a Claude Pro or Max plan or an Anthropic API key.
+
+**Why is the app unsigned? Is it safe?**
+Code-signing certificates cost money every year; the installers are built from this repository by
+GitHub Actions, and each release lists the files' SHA-256. The source is all here, and
+[PRIVACY.md](PRIVACY.md) lists everything that can go online.
+
+**Linux?**
+Experimental, and checked on a real deck (Fedora 44 / KDE Wayland). Build it from the source below
+and install `packaging/linux/99-masterhub.rules`; the deck and its system integrations (volume,
+media, apps, idle/lock, typing) work, except monitor brightness. `hubdeck cli doctor` reports what
+the machine supports.
+
+## Documentation
+
+- [Stream Deck plugins](docs/STREAMDECK-PLUGINS.md): what runs and how
+- [The deck assistant](docs/ASSISTANT.md) and [your own apps on the deck](docs/APP-CONTRACT.md)
+- [Games](docs/GAMES-SETUP.md), [sharing profiles](docs/SHARING.md), [the command line](docs/CLI.md)
+- [Plugins for developers](docs/PLUGINS.md), [MCP tools](docs/MCP.md)
+- [The USB protocol](PROTOCOL.md), [architecture](ARCHITECTURE.md), [how it was built](docs/CASE-STUDY.md)
+- [Comparison with the official app](docs/OFFICIAL-APP.md)
+
+## Background
+
+The MasterHUB is good hardware: a base with an edge light, and modules you arrange as you like (15
+LCD keys, a dial with a round screen, knobs, faders, rollers). Its official software has not kept up:
+pieces promised to backers (an SDK, macOS support, more integrations) have not arrived, updates are
+rare, and owners ask about bugs and whether it will stay supported
+([what we found](docs/OFFICIAL-APP.md)). MasterDeck is a new, open app for the same hardware, so the
+deck keeps working and keeps getting better. The protocol was worked out from public research and checked
+module by module on real hardware; see [PROTOCOL.md](PROTOCOL.md).
+
+## Build from source
+
+You need Rust (1.90 or later), Node 22 or later with pnpm, and on Windows the Visual Studio C++
+build tools (the "Desktop development with C++" workload); on macOS the Xcode command line tools
+(`xcode-select --install`); on Linux the WebKitGTK 4.1, GTK 3, libsoup 3, libusb 1.0 and ALSA
+development packages (Fedora: `webkit2gtk4.1-devel gtk3-devel libsoup3-devel libusb1-devel
+alsa-lib-devel libappindicator-gtk3-devel`).
+
+```
+cd app
+pnpm install
+pnpm tauri dev      # run with hot reload
+pnpm tauri build    # installers in target/release/bundle/
+```
+
+Tests: `cargo test -p mh-protocol -p mh-device -p hubdeck` and `pnpm test` in `app/`. Without the
+hardware, `pnpm dev` and http://localhost:1420/?demo show the window with a sample deck.
+
+How it is built:
+
+- `crates/mh-protocol`: the HID protocol of the modules (encode and decode, no I/O), as verified on
+  hardware in [PROTOCOL.md](PROTOCOL.md).
+- `crates/mh-device`: USB HID transport and the hot-plug hub.
+- `app/`: the Tauri 2 app, the engine in Rust (`app/src-tauri/src/engine/`) and the window in React.
+
+More in [ARCHITECTURE.md](ARCHITECTURE.md).
+
+## Community
+
+MasterDeck has a [Discord server](https://przemotar.github.io/hubdeck/discord): rate the living deck's
+presets, post ideas and vote on them (each week the three with the most votes become GitHub issues),
+ask how to set something up, show your deck. Bugs still go to GitHub issues, where they are tracked
+until they are fixed. The server's bot reads messages so the maker gets summaries, made with the
+help of AI; it does not chat or answer by itself.
+
+## Feedback and contributing
+
+- Something does not work: **Feedback > Report a problem** in MasterDeck's top bar opens
+  [the form](https://github.com/Przemotar/hubdeck/issues/new?template=bug.yml) with your version,
+  system, modules and the last errors filled in (addresses, keys and paths left out); you see it
+  all before sending. After a crash, the window offers **Report this crash** the same way. No
+  GitHub account: **Feedback > Report on Discord** copies the same and opens the Discord's #help.
+- A module acting up (a light stuck on one colour, a key or fader that does nothing):
+  **Settings > Diagnostics** tests its lights or screen and controls, shows what it reports and
+  whether it dropped off, and copies a report without serial numbers.
+- An idea: [suggest a feature](https://github.com/Przemotar/hubdeck/issues/new?template=feature.yml).
+- Questions, setups, profiles: [Discussions](https://github.com/Przemotar/hubdeck/discussions) or
+  the [Discord](https://przemotar.github.io/hubdeck/discord).
+- Anything you prefer not to post in public: przemotar+hubdeck@gmail.com
+- Code: see [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## License
+
+MasterDeck is licensed under either of [Apache License, Version 2.0](LICENSE-APACHE) or
+[MIT license](LICENSE-MIT) at your option. Unless you explicitly state otherwise, any contribution
+you submit for inclusion in this project, as defined in the Apache-2.0 license, shall be dual
+licensed as above, without any additional terms or conditions.
+
+Third-party icons and fonts keep their own licences (Lucide ISC, game-icons.net CC BY 3.0, IBM Plex
+OFL): see [NOTICE.md](NOTICE.md).
+
+## About
+
+Made by **Przemysław Tarkowski** (przemotar+hubdeck@gmail.com), from scratch: the USB protocol of
+every module was worked out and checked on real hardware, then the app was written around it.
+It was built with [Claude Code](https://claude.com/claude-code) as the main tool; the story, the
+numbers and the decisions are in [docs/CASE-STUDY.md](docs/CASE-STUDY.md).

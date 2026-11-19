@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HubDeck: an open app for the MasterHUB deck</title>
+<meta name="description" content="Free, open-source alternative to the official MasterHUB software for Cooler Master's modular deck, on Windows and macOS: every module, profiles that follow your apps, Stream Deck plugins and a tour that makes your deck in minutes.">
+<meta property="og:title" content="HubDeck: the app your MasterHUB deserved">
+<meta property="og:description" content="Free and open source, for Windows and macOS. Every key, screen, knob, fader and light, Stream Deck plugins and a deck made for you in minutes.">
+<meta property="og:image" content="https://przemotar.github.io/hubdeck/images/og.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="640">
+<meta property="og:url" content="https://przemotar.github.io/hubdeck/">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="google-site-verification" content="pvTlOtUub7kAQDAovjcLiuN480_cHZWFa88JTojXNoo">
+<link rel="canonical" href="https://przemotar.github.io/hubdeck/">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "HubDeck", "description": "Free, open-source alternative to the official Cooler Master MasterHUB software, for Windows and macOS.", "applicationCategory": "UtilitiesApplication", "operatingSystem": "Windows 10, Windows 11, macOS 12 or later", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}, "downloadUrl": "https://github.com/Przemotar/hubdeck/releases/latest", "url": "https://przemotar.github.io/hubdeck/", "license": "https://opensource.org/licenses/MIT", "codeRepository": "https://github.com/Przemotar/hubdeck", "image": "https://przemotar.github.io/hubdeck/images/og.png"}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Is HubDeck free?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. It is free and open source (MIT or Apache-2.0), with no account, no cloud and no telemetry. It is made by a MasterHUB owner and is not affiliated with Cooler Master."}}, {"@type": "Question", "name": "Is it an alternative to the official MasterHUB software?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. HubDeck drives the whole Cooler Master MasterHUB deck by itself: keys, dial, knobs, faders, rollers and the edge light, with profiles that follow the app in front, Stream Deck plugins and a tour that sets up your deck in minutes."}}, {"@type": "Question", "name": "Which MasterHUB modules does it support?", "acceptedAnswer": {"@type": "Answer", "text": "All of them, on Windows 10 and 11 and on macOS 12 or later: the base with its edge light, the 15 LCD keys, the dial with its round screen, the 3 knobs, the 5 faders and the 2 rollers. Attach and take off modules while it runs; it finds where each one sits. One base at a time for now."}}, {"@type": "Question", "name": "Do I need to uninstall the official app? Can I go back?", "acceptedAnswer": {"@type": "Answer", "text": "No uninstall is needed: quit the official app first, since two apps cannot drive the deck at once. To go back, quit HubDeck from the tray and start the official app; your modules are unchanged. Profiles exported from the official app (.mhz) can be imported (beta)."}}, {"@type": "Question", "name": "Can it damage or brick my modules?", "acceptedAnswer": {"@type": "Answer", "text": "No. HubDeck never writes firmware. Commands that could rewrite serial numbers, reset a module or flash firmware are not part of its code, and reports carrying them are refused."}}, {"@type": "Question", "name": "Can I use Stream Deck plugins on the MasterHUB?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. The Plugins tab installs about 300 plugins made for Stream Deck with one click, and HubDeck can use the plugins your Stream Deck app already has. HubDeck drives the MasterHUB only, not Stream Deck hardware."}}, {"@type": "Question", "name": "Does it work on a Mac?", "acceptedAnswer": {"@type": "Answer", "text": "Yes, on macOS 12 or later, Apple silicon and Intel. Download the .dmg and drag HubDeck to Applications."}}, {"@type": "Question", "name": "Is AI required?", "acceptedAnswer": {"@type": "Answer", "text": "No. The tour, the editor and everything else work without it. The optional deck assistant runs on your own Claude Code."}}]}</script>
+<link rel="icon" href="images/icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #0b0b0f; --card: #14131b; --line: #25232f; --text: #e8e6f0; --muted: #b8b4c8; --dim: #8f8aa3; --accent: #8b7cf6; --accent-text: #120f1f; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+  a { color: #c4b5fd; } a:hover { color: #ddd6fe; }
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+  header { display: flex; flex-wrap: wrap; align-items: center; gap: 24px; padding: 22px 0; }
+  .brand { display: flex; align-items: center; gap: 10px; color: var(--text); text-decoration: none; font-weight: 700; font-size: 18px; }
+  .brand img { width: 30px; height: 30px; border-radius: 8px; }
+  nav { display: flex; flex-wrap: wrap; gap: 20px; margin-left: auto; font-size: 15px; }
+  nav a { color: var(--muted); text-decoration: none; }
+  nav a:hover { color: var(--text); }
+  .hero { padding: 56px 0 32px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 22px; }
+  .eyebrow { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: #a99cf9; font-weight: 600; }
+  h1 { margin: 0; font-size: clamp(36px, 6vw, 64px); line-height: 1.05; font-weight: 700; letter-spacing: -0.02em; max-width: 900px; }
+  .lead { margin: 0; font-size: 19px; line-height: 1.55; color: var(--muted); max-width: 720px; }
+  .buttons { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+  .btn { display: inline-flex; align-items: center; min-height: 52px; padding: 0 24px; border-radius: 12px; font-weight: 600; text-decoration: none; font-size: 16px; }
+  .btn.primary { background: var(--accent); color: var(--accent-text); }
+  .btn.secondary { background: #1d1b28; border: 1px solid #3a3550; color: var(--text); }
+  .small { font-size: 13px; color: var(--dim); }
+  .shot { width: 100%; border-radius: 18px; border: 1px solid #2a2836; box-shadow: 0 40px 120px rgba(139, 124, 246, .18); display: block; }
+  section { padding-bottom: 72px; }
+  h2 { margin: 0 0 24px; font-size: 32px; font-weight: 700; letter-spacing: -0.01em; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+  .card { border-radius: 16px; padding: 22px; background: var(--card); border: 1px solid var(--line); }
+  .card h3 { margin: 0 0 8px; font-size: 17px; font-weight: 600; }
+  .card p { margin: 0; font-size: 15px; line-height: 1.55; color: var(--muted); }
+  .split { display: flex; flex-wrap: wrap; gap: 32px; align-items: center; }
+  .split > div { flex: 1 1 420px; min-width: 0; }
+  .split > img { flex: 1 1 520px; min-width: 0; width: 100%; border-radius: 16px; border: 1px solid #2a2836; }
+  .split p { font-size: 17px; line-height: 1.6; color: var(--muted); margin: 0; }
+  .story { border-radius: 20px; padding: 36px; background: var(--card); border: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: 28px; align-items: center; }
+  .story > div { flex: 1 1 520px; min-width: 0; }
+  .story h2 { font-size: 28px; margin-bottom: 12px; }
+  .story p { margin: 0; font-size: 16px; line-height: 1.6; color: var(--muted); }
+  .faq { display: grid; gap: 10px; max-width: 860px; }
+  .faq details { border-radius: 14px; background: var(--card); border: 1px solid var(--line); }
+  .faq summary { cursor: pointer; padding: 16px 20px; font-size: 17px; font-weight: 600; list-style-position: inside; }
+  .faq summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 14px; }
+  .faq details p { margin: 0; padding: 0 20px 18px; font-size: 15px; line-height: 1.6; color: var(--muted); max-width: 70ch; }
+  footer { border-top: 1px solid #1f1d29; padding: 28px 0 48px; display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; font-size: 14px; color: var(--dim); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="brand" href="./"><img src="images/icon.png" alt="">HubDeck</a>
+    <nav aria-label="Sections">
+      <a href="#features">Features</a>
+      <a href="#assistant">Assistant</a>
+      <a href="#story">How it was built</a>
+      <a href="#faq">Questions</a>
+      <a href="https://github.com/Przemotar/hubdeck">GitHub</a>
+      <a href="discord/">Discord</a>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <span class="eyebrow">Free and open source · Windows and macOS</span>
+    <h1>The app your MasterHUB deserved</h1>
+    <p class="lead">Every key, screen, knob, fader and light of Cooler Master's modular deck, profiles that follow the app you are in, Stream Deck plugins, and a tour that makes your deck in minutes.</p>
+    <div class="buttons">
+      <a class="btn primary" href="https://github.com/Przemotar/hubdeck/releases/latest/download/HubDeck-windows-x64-setup.exe">Download for Windows</a>
+      <a class="btn secondary" href="https://github.com/Przemotar/hubdeck/releases/latest/download/HubDeck-macos.dmg">Download for macOS</a>
+    </div>
+    <span class="small">Version 0.1 preview · no account, no cloud, no telemetry</span>
+  </section>
+
+  <section>
+    <video class="shot" src="media/hubdeck-film.mp4" poster="images/hubdeck-film-poster.jpg" autoplay muted loop playsinline controls aria-label="HubDeck in 23 seconds: a key pressed on the deck gets an action picked in the window, the dial changes its face, ready decks switch with a click"></video>
+  </section>
+
+  <section id="features">
+    <h2>Everything the deck can do</h2>
+    <div class="grid">
+      <article class="card"><h3>Every module, live</h3><p>Keys, the round dial screen, knobs, faders, rollers and the edge light, found and placed as they sit on your base, while it runs.</p></article>
+      <article class="card"><h3>Profiles that follow you</h3><p>Your home profile, and an app's own profile takes over while it is in front. Pages, holds, double presses, modes.</p></article>
+      <article class="card"><h3>Stream Deck plugins</h3><p>A Plugins tab with about 300 plugins made for Stream Deck that install with one click (the open ones on Elgato Marketplace, the OpenAction catalog and GitHub), the plugins your Stream Deck app already has, and any plugin file you open with HubDeck. Of 53 popular ones checked, 44 start and draw on Windows; tell us when one does not work.</p></article>
+      <article class="card"><h3>Your apps on the deck</h3><p>Your own tools can show their state (an agent waiting, a build running) and offer actions through a small HTTP contract.</p></article>
+      <article class="card"><h3>Lights that mean something</h3><p>One style for the whole deck, with reactions: a call, a muted mic, an agent that needs you.</p></article>
+      <article class="card"><h3>Light and private</h3><p>About one percent of a core in the tray. No account, no cloud, no telemetry.</p></article>
+    </div>
+  </section>
+
+  <section id="assistant" class="split">
+    <div>
+      <h2>A deck made for you, in minutes</h2>
+      <p>Say what you do most at the computer, and HubDeck makes a deck for your modules and your apps at once, then walks you through it on the real hardware: the control to try lights up, and you keep the parts you like. No AI needed. Want more? The assistant, running on your own Claude Code, builds on it, or go control by control through a gallery of ideas.</p>
+    </div>
+    <img src="images/hubdeck-tour.png" alt="The tour: a deck made at once and walked through part by part, the control to try lit on the deck">
+  </section>
+
+  <section id="story">
+    <div class="story">
+      <div>
+        <h2>Written from scratch, in the open</h2>
+        <p>The USB protocol of every module was worked out and checked on real hardware, then the app was built around it with Claude Code. The code, the protocol and the story are public: take it, change it, extend it, with or without AI.</p>
+      </div>
+      <a class="btn secondary" href="https://github.com/Przemotar/hubdeck/blob/main/docs/CASE-STUDY.md">Read the case study</a>
+    </div>
+  </section>
+
+  <section id="faq">
+    <h2>Questions</h2>
+    <div class="faq">
+      <details><summary>Is HubDeck free?</summary><p>Yes. It is free and open source (MIT or Apache-2.0), with no account, no cloud and no telemetry. It is made by a MasterHUB owner and is not affiliated with Cooler Master.</p></details>
+      <details><summary>Is it an alternative to the official MasterHUB software?</summary><p>Yes. HubDeck drives the whole Cooler Master MasterHUB deck by itself: keys, dial, knobs, faders, rollers and the edge light, with profiles that follow the app in front, Stream Deck plugins and a tour that sets up your deck in minutes.</p></details>
+      <details><summary>Which MasterHUB modules does it support?</summary><p>All of them, on Windows 10 and 11 and on macOS 12 or later: the base with its edge light, the 15 LCD keys, the dial with its round screen, the 3 knobs, the 5 faders and the 2 rollers. Attach and take off modules while it runs; it finds where each one sits. One base at a time for now.</p></details>
+      <details><summary>Do I need to uninstall the official app? Can I go back?</summary><p>No uninstall is needed: quit the official app first, since two apps cannot drive the deck at once. To go back, quit HubDeck from the tray and start the official app; your modules are unchanged. Profiles exported from the official app (.mhz) can be imported (beta).</p></details>
+      <details><summary>Can it damage or brick my modules?</summary><p>No. HubDeck never writes firmware. Commands that could rewrite serial numbers, reset a module or flash firmware are not part of its code, and reports carrying them are refused.</p></details>
+      <details><summary>Can I use Stream Deck plugins on the MasterHUB?</summary><p>Yes. The Plugins tab installs about 300 plugins made for Stream Deck with one click, and HubDeck can use the plugins your Stream Deck app already has. HubDeck drives the MasterHUB only, not Stream Deck hardware.</p></details>
+      <details><summary>Does it work on a Mac?</summary><p>Yes, on macOS 12 or later, Apple silicon and Intel. Download the .dmg and drag HubDeck to Applications.</p></details>
+      <details><summary>Is AI required?</summary><p>No. The tour, the editor and everything else work without it. The optional deck assistant runs on your own Claude Code.</p></details>
+    </div>
+  </section>
+
+  <footer>
+    <span>Made by Przemysław Tarkowski · <a href="mailto:przemotar+hubdeck@gmail.com">przemotar+hubdeck@gmail.com</a></span>
+    <span>Not affiliated with Cooler Master. MIT or Apache-2.0.</span>
+  </footer>
+</div>
+</body>
+</html>

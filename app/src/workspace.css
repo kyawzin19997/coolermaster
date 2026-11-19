@@ -1,0 +1,620 @@
+/* Shared desktop chrome */
+.topbar {
+  height: 52px;
+  padding-inline: 18px;
+  gap: 8px;
+  border-color: var(--ln2);
+}
+
+.brand {
+  height: 30px;
+  gap: 10px;
+  padding-right: 18px;
+  font-size: 17px;
+  letter-spacing: -0.02em;
+}
+
+.brand .logo {
+  width: 27px;
+  height: 27px;
+}
+
+.topbar .status {
+  border: 1px solid var(--ln2);
+  border-radius: var(--r);
+  background: var(--inbg);
+  padding: 5px 9px;
+}
+
+.topbar .profiles .tab.is-active,
+.settings-nav-item.is-active {
+  color: var(--acc2);
+  background: var(--accbg);
+  box-shadow: inset 0 0 0 1px var(--accln);
+}
+
+.settings-head,
+.studio-bar {
+  min-height: 57px;
+  background: var(--bg1);
+  border-color: var(--ln2);
+}
+
+.settings-nav {
+  background: var(--bg1);
+  border-color: var(--ln2);
+}
+
+.settings-nav-item {
+  border-radius: var(--r);
+}
+
+.settings-content {
+  background: var(--bg0);
+}
+
+.settings-content > .sec {
+  padding-inline: 22px;
+}
+
+.sheet,
+.confirm {
+  border: 1px solid var(--ln2);
+  border-radius: 10px;
+}
+
+.workspace-loading {
+  display: grid;
+  place-items: center;
+  color: var(--tx2);
+}
+
+/* The editor and builder share a deck canvas and a compact tools column. */
+.deck-workspace,
+.builder-page {
+  --action-pane: clamp(276px, 25vw, 368px);
+  overflow: hidden;
+}
+
+.profile-library-sheet {
+  width: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-library-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--ln2);
+}
+
+.profile-library-header h2 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.profile-library-sheet > .library {
+  width: 100%;
+  flex: 1;
+  border: 0;
+}
+
+.profile-library-sheet .lib-tabs {
+  margin: 15px 12px 0;
+}
+
+.profile-library-sheet .lib-tabs .tab {
+  min-height: 34px;
+}
+
+.profile-library-sheet .lib-head {
+  padding-inline: 12px;
+}
+
+.profile-library-sheet .lib-profiles {
+  padding-inline: 12px;
+}
+
+.profile-library-sheet .plist-group + .plist-group {
+  margin-top: 16px;
+}
+
+.profile-library-sheet .prow {
+  min-height: 47px;
+}
+
+.profile-library-sheet .prow-main {
+  gap: 7px;
+  padding-inline: 4px;
+}
+
+.profile-library-sheet .prow-more {
+  width: 23px;
+  height: 27px;
+  flex: none;
+  color: var(--tx3);
+}
+
+.profile-library-sheet .prow-more:hover,
+.profile-library-sheet .prow-more[aria-expanded="true"] {
+  color: var(--tx);
+}
+
+.profile-library-sheet .prow.is-active {
+  background: var(--accbg);
+  box-shadow: inset 2px 0 0 var(--acc2), inset 0 0 0 1px var(--accln);
+}
+
+.profile-library-sheet .prow-tools {
+  background: var(--popbg);
+  box-shadow: 0 0 0 1px var(--ln2);
+}
+
+.profile-library-sheet .lib-new {
+  margin-top: 14px;
+}
+
+.deck-workspace > .center {
+  background: var(--bg0);
+}
+
+.builder-canvas {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.builder-canvas .builder-deck {
+  min-height: 0;
+  padding: 16px 20px;
+}
+
+.builder-page .builder-step {
+  border-radius: var(--r);
+}
+
+.workbench-title {
+  display: flex;
+  align-items: center;
+  flex: none;
+  min-height: 46px;
+  gap: 14px;
+  padding: 6px 14px;
+  border-bottom: 1px solid var(--ln);
+  background: var(--bg1);
+}
+
+.workbench-title h1 {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.1;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.workbench-title .page-bar {
+  flex: 1;
+  min-width: 0;
+  justify-content: flex-start;
+}
+
+.workbench-title .page-bar + .spacer {
+  display: none;
+}
+
+.deck-tools {
+  flex: none;
+}
+
+.deck-tools .popover {
+  left: auto;
+  right: 0;
+  min-width: 208px;
+  padding: 4px;
+}
+
+.layout-tool {
+  white-space: nowrap;
+}
+
+.icon-picker-sheet {
+  width: 100%;
+  min-width: 0;
+  overflow-y: auto;
+}
+
+.icon-picker-sheet .insp-head h2 {
+  margin: 0;
+  font-size: 17px;
+}
+
+.deck-workspace .stage-bar {
+  flex: none;
+  min-height: 41px;
+  padding: 5px 16px;
+  border-bottom: 1px solid var(--ln);
+  background: var(--bg1);
+}
+
+.deck-workspace .deck-area {
+  justify-content: safe center;
+  gap: 8px;
+  padding: 16px 20px;
+  background: var(--stagebg);
+  --deck-max-w: 1080px;
+}
+
+.deck-workspace .deck-area > .dk {
+  min-height: 194px;
+  gap: 6px;
+}
+
+.deck-workspace .dk-strip {
+  gap: 5px;
+  padding-bottom: 2px;
+  grid-column: 1 / -1;
+}
+
+.deck-workspace .dk-chip {
+  border-radius: var(--r);
+}
+
+@container deck-area (aspect-ratio >= 8/5) {
+  .deck-workspace .dk.has-shelf {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .deck-workspace .dk.has-shelf .dk-shelf {
+    grid-area: 1 / 2 / 2 / 3;
+    max-width: 155px;
+    max-height: 100%;
+    align-self: center;
+    flex-wrap: nowrap;
+    overflow-y: auto;
+  }
+
+  .deck-workspace .dk.has-shelf .dk-shelf-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    padding-right: 24px;
+    border-radius: var(--r);
+  }
+}
+
+/* Keep the search and plugin entry point visible while the results scroll. */
+.editor-sidebar {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 var(--action-pane);
+  min-width: 0;
+  min-height: 0;
+  border-left: 1px solid var(--ln2);
+  background: var(--bg1);
+}
+
+.editor-sidebar[hidden] {
+  display: none;
+}
+
+.action-sidebar {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.action-sidebar[inert] {
+  display: none;
+}
+
+.action-sidebar .chooser {
+  width: 100%;
+  gap: 0;
+}
+
+.chooser-controls,
+.chooser-results {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.action-sidebar .chooser-controls {
+  flex: none;
+  gap: 10px;
+  padding: 14px 14px 12px;
+  border-bottom: 1px solid var(--ln);
+}
+
+.action-sidebar .chooser-head h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+
+.action-sidebar .search .input {
+  min-height: 32px;
+  padding-right: 58px;
+}
+
+.action-sidebar .search .search-key,
+.action-sidebar .search .search-clear {
+  position: absolute;
+  right: 7px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.action-sidebar .search .search-clear {
+  width: 25px;
+  height: 25px;
+}
+
+.action-sidebar .search .search-clear .i {
+  position: static;
+  transform: none;
+}
+
+.action-sidebar .library-filter {
+  min-width: 0;
+  white-space: normal;
+  font-size: 12px;
+}
+
+.action-sidebar .chooser-browse {
+  margin: 0;
+  font-size: 12px;
+}
+
+.action-sidebar .chooser-results {
+  flex: 1;
+  min-height: 0;
+  padding: 9px 12px 12px;
+  gap: 7px;
+  overflow-y: auto;
+}
+
+.action-sidebar .chooser-groups {
+  flex: none;
+  overflow: visible;
+  border: 1px solid var(--ln);
+  box-shadow: none;
+  border-radius: var(--r);
+}
+
+.action-sidebar .chooser-group-head {
+  padding-inline: 8px;
+  min-height: 34px;
+}
+
+.action-sidebar .chooser-group-head[aria-expanded="true"] {
+  background: var(--bg2);
+}
+
+.action-sidebar .chooser-group-head .nm {
+  font-weight: 500;
+}
+
+.action-sidebar .chooser-item {
+  cursor: grab;
+  padding-inline: 6px;
+}
+
+.action-sidebar .chooser-item:active {
+  cursor: grabbing;
+}
+
+.action-sidebar .action-grip {
+  width: 13px;
+  height: 13px;
+  margin-left: auto;
+  color: var(--tx3);
+  opacity: 0.65;
+}
+
+.action-sidebar .chooser-foot {
+  margin: 0;
+  padding: 6px 12px;
+  border-top: 1px solid var(--ln2);
+  background: var(--bg1);
+}
+
+/* The properties dock shares the left column with the deck. */
+.control-dock {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  height: clamp(178px, var(--dock-height), min(440px, calc(100% - 240px)));
+  min-height: 0;
+  border-top: 1px solid var(--ln2);
+  background: var(--bg1);
+}
+
+.control-dock-handle {
+  display: grid;
+  flex: none;
+  place-items: center;
+  height: 10px;
+  cursor: ns-resize;
+  touch-action: none;
+  background: var(--bg1);
+}
+
+.control-dock-handle::after {
+  content: "";
+  width: 34px;
+  height: 3px;
+  border-radius: 3px;
+  background: var(--ln2);
+}
+
+.control-dock-handle:hover::after,
+.control-dock-handle:focus-visible::after {
+  background: var(--acc2);
+}
+
+.control-dock-handle:focus-visible {
+  outline: 2px solid var(--acc);
+  outline-offset: -2px;
+}
+
+#control-dock-content {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+#control-dock-content > .inspector {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+}
+
+#control-dock-content > .control-inspector:not(.side-panel) {
+  overflow: hidden;
+}
+
+.control-inspector .insp-head {
+  gap: 7px;
+  padding: 5px 14px;
+  min-height: 39px;
+  background: var(--bg1);
+}
+
+.control-inspector .insp-head > .i {
+  color: var(--acc2);
+}
+
+.control-inspector .insp-head .grow {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+}
+
+.control-inspector .insp-head h2 {
+  font-size: 14px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.control-mode .tab {
+  height: 25px;
+  padding-inline: 7px;
+  font-size: 11px;
+}
+
+.control-editor-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  flex: 1;
+  min-height: 0;
+}
+
+.control-action-pane[hidden] {
+  display: none;
+}
+
+.control-action-pane,
+.control-look-pane {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.control-inspector .sec {
+  gap: 9px;
+  padding: 11px 14px;
+}
+
+.control-inspector .action-card {
+  gap: 7px;
+  padding: 7px 8px;
+  border: 1px solid var(--ln);
+  border-radius: var(--r);
+  background: var(--bg2);
+}
+
+@media (min-width: 1180px) {
+  .control-inspector .action-card {
+    max-width: 760px;
+  }
+}
+
+.control-inspector .action-card .tool {
+  height: 28px;
+  padding-inline: 7px;
+  font-size: 12px;
+}
+
+.control-inspector .action-description {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+.control-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex: 1;
+  padding: 16px;
+}
+
+.control-empty-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex: none;
+  border: 1px solid var(--ln2);
+  border-radius: var(--r);
+  background: var(--bg2);
+  color: var(--tx2);
+}
+
+.control-empty p {
+  margin: 2px 0 0;
+  color: var(--tx2);
+  font-size: 12px;
+}
+
+@media (max-width: 1050px) {
+  .topbar {
+    padding-inline: 10px;
+    gap: 5px;
+  }
+
+  .topbar .brand {
+    padding-right: 10px;
+  }
+
+  .deck-workspace .deck-area {
+    padding-inline: 9px;
+  }
+}
+
+@media (max-height: 700px) {
+  .topbar {
+    height: 46px;
+  }
+
+  .workbench-title {
+    padding-block: 9px;
+  }
+}
