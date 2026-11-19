@@ -2,44 +2,48 @@ name: Desktop installers
 
 on:
   workflow_dispatch:
+    inputs:
+      platform:
+        description: Installer to build
+        type: choice
+        default: all
+        options: [all, windows, macos]
+      source_ref:
+        description: Git branch or tag to package (defaults to this workflow's branch)
+        type: string
+        required: false
 
 permissions:
   contents: read
 
 jobs:
   build:
-    name: ${{ matrix.name }}
+    name: ${{ matrix.os == 'windows-latest' && 'Windows x64' || 'macOS Universal' }}
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - name: Windows x64
-            os: windows-latest
-            rust-targets: x86_64-pc-windows-msvc
-            build-target: x86_64-pc-windows-msvc
-            bundle: nsis
-            artifact: MasterDeck-Windows-x64
-          - name: macOS Universal
-            os: macos-latest
-            rust-targets: aarch64-apple-darwin,x86_64-apple-darwin
-            build-target: universal-apple-darwin
-            bundle: dmg
-            artifact: MasterDeck-macOS-Universal
+        os: ${{ fromJSON(inputs.platform == 'windows' && '["windows-latest"]' || inputs.platform == 'macos' && '["macos-latest"]' || '["windows-latest","macos-latest"]') }}
     env:
       CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_RUSTFLAGS: -C target-feature=+crt-static
       TAURI_BUNDLER_DMG_IGNORE_CI: "true"
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
         with:
-          targets: ${{ matrix.rust-targets }}
+          ref: ${{ inputs.source_ref || github.ref }}
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.100.0
+          targets: ${{ matrix.os == 'windows-latest' && 'x86_64-pc-windows-msvc' || 'aarch64-apple-darwin,x86_64-apple-darwin' }}
+      - uses: Swatinem/rust-cache@v2
       - uses: pnpm/action-setup@v4
         with:
-          version: 10
+          version: 10.32.1
       - uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: 24.19.0
           cache: pnpm
           cache-dependency-path: app/pnpm-lock.yaml
       - name: Install locked frontend dependencies
@@ -50,7 +54,7 @@ jobs:
         run: pnpm test
       - name: Build installer
         working-directory: app
-        run: pnpm exec tauri build --target ${{ matrix.build-target }} --bundles ${{ matrix.bundle }} --config src-tauri/tauri.installers.conf.json -- --locked
+        run: pnpm exec tauri build --target ${{ matrix.os == 'windows-latest' && 'x86_64-pc-windows-msvc' || 'universal-apple-darwin' }} --bundles ${{ matrix.os == 'windows-latest' && 'nsis' || 'dmg' }} --config src-tauri/tauri.installers.conf.json -- --locked
       - name: Prepare Windows installer and checksum
         if: runner.os == 'Windows'
         shell: pwsh
@@ -66,20 +70,27 @@ jobs:
         if: runner.os == 'macOS'
         shell: bash
         run: |
-          bundle="target/universal-apple-darwin/release/bundle"
-          app="$bundle/macos/MasterDeck.app"
-          executable="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$app/Contents/Info.plist")"
-          lipo -verify_arch arm64 x86_64 "$app/Contents/MacOS/$executable"
-          codesign --verify --deep --strict "$app"
-          set -- "$bundle"/dmg/*.dmg
-          test "$#" -eq 1 && test -f "$1"
+          set -- target/universal-apple-darwin/release/bundle/dmg/*.dmg
+          if [ "$#" -ne 1 ] || [ ! -f "$1" ]; then
+            echo "::error::Expected exactly one universal macOS disk image."
+            exit 1
+          fi
           hdiutil verify "$1"
+          mount=$(mktemp -d)
+          hdiutil attach -readonly -nobrowse -mountpoint "$mount" "$1"
+          trap 'hdiutil detach "$mount"' EXIT
+          app="$mount/MasterDeck.app"
+          executable="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$app/Contents/Info.plist")"
+          binary="$app/Contents/MacOS/$executable"
+          lipo -verify_arch arm64 x86_64 "$binary"
+          codesign --verify --deep --strict "$app"
+          "$binary" cli --help
           mkdir installers
           cp "$1" installers/MasterDeck-macOS-Universal.dmg
           (cd installers && shasum -a 256 MasterDeck-macOS-Universal.dmg > SHA256.txt)
       - uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.artifact }}
+          name: ${{ matrix.os == 'windows-latest' && 'MasterDeck-Windows-x64' || 'MasterDeck-macOS-Universal' }}
           path: installers/
           if-no-files-found: error
           compression-level: 0
