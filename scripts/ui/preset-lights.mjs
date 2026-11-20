@@ -26,7 +26,7 @@ const settings = JSON.parse(fs.readFileSync(path.join(dir, "settings.json"), "ut
 settings.autoSwitch = false;
 fs.writeFileSync(path.join(dir, "settings.json"), JSON.stringify(settings, null, 2));
 
-const app = spawn(exe, [], { env: { ...process.env, HUBDECK_AUTOMATION: dir, HUBDECK_CDP_PORT: "9490" }, stdio: "ignore" });
+const app = spawn(exe, [], { env: { ...process.env, MASTERDECK_AUTOMATION: dir, MASTERDECK_CDP_PORT: "9490" }, stdio: "ignore" });
 for (let i = 0; i < 60 && !fs.existsSync(path.join(dir, "api-http-port")); i++) await sleep(500);
 await sleep(1500);
 const results = [];

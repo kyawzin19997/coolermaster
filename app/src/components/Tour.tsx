@@ -1,8 +1,8 @@
 // The tour (owner, 2026-10-13: show, then ask, then build; docs/ASSISTANT-TOUR.md): one question
-// about what the person does at the computer (HubDeck suggests the answer), then the deck is made
+// about what the person does at the computer (MasterDeck suggests the answer), then the deck is made
 // at once and shown on the hardware, and the tour walks through it part by part (layout 2A: the
 // parts on the left, the part in the middle, the deck on the right). Each part is kept or left out
-// and has up to two looks; the finale shows HubDeck's showpieces; the end keeps the deck or throws
+// and has up to two looks; the finale shows MasterDeck's showpieces; the end keeps the deck or throws
 // it away. Nothing of the user's changes; Exit puts everything back.
 import { listen } from "@tauri-apps/api/event";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -94,7 +94,7 @@ export function Tour({
   const finale = useMemo(() => tour?.stops.filter((s) => s.id.startsWith("super")) ?? [], [tour]);
   const stop = phase === "stops" ? main[Math.min(at, main.length - 1)] : null;
 
-  // the volume part plays HubDeck's own sound, so turning is heard even when nothing plays
+  // the volume part plays MasterDeck's own sound, so turning is heard even when nothing plays
   useEffect(() => {
     if (stop?.id !== "volume") return;
     api.tourSound(true).catch(() => {});
@@ -183,7 +183,7 @@ export function Tour({
       (e) => (setError(String(e)), setPhase("focus")),
     );
   };
-  // the button shows the choice at once; the deck follows when HubDeck has made it
+  // the button shows the choice at once; the deck follows when MasterDeck has made it
   const set = (id: string, keep: boolean | null, look: number | null) => {
     setTour((v) => v && { ...v, stops: v.stops.map((s) => (s.id === id ? { ...s, keep: keep ?? s.keep, look: look ?? s.look } : s)) });
     return api.tourSet(id, keep, look).then(setTour, (e) => setError(String(e)));
@@ -296,7 +296,7 @@ export function Tour({
               {phase === "making" ? t("tour.making") : t("tour.make")}
             </button>
           </div>
-          {/* what HubDeck is doing while it makes the deck (owner: show it works, not that it hangs) */}
+          {/* what MasterDeck is doing while it makes the deck (owner: show it works, not that it hangs) */}
           {phase === "making" && <MakingSteps />}
           {error && <p className="help catalog-err">{error}</p>}
         </div>
@@ -643,7 +643,7 @@ function FaceGestures({ face, ticked }: { face: DialFace; ticked: Record<string,
   );
 }
 
-/** "Your dial, many faces": HubDeck's own dial looks; Try puts one on the dial (the tour's deck keeps it). */
+/** "Your dial, many faces": MasterDeck's own dial looks; Try puts one on the dial (the tour's deck keeps it). */
 function DialFaces({ stop, onPick, gallery, ticked }: { stop: TourStop; onPick: (i: number) => void; gallery: DialFace[]; ticked: Record<string, boolean> }) {
   const ids = stop.faces ?? [];
   // the look on the dial: its four gestures, ticked off as they happen on the deck (a new look starts over)
@@ -674,7 +674,7 @@ function DialFaces({ stop, onPick, gallery, ticked }: { stop: TourStop; onPick: 
   );
 }
 
-/** Why HubDeck suggests what it suggests, in a few words. */
+/** Why MasterDeck suggests what it suggests, in a few words. */
 function why(s: TourSuggestion): string {
   if (s.focus === "games" && s.games > 0) return t("tour.whyGames", { count: s.games });
   if (s.focus === "streaming") return t("tour.whyStreaming");

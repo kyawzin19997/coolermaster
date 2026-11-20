@@ -186,7 +186,7 @@ mod tests {
     use super::*;
 
     /// Reads (never sets) the brightness of the attached monitors:
-    /// `cargo test -p hubdeck read_brightness -- --ignored --nocapture`
+    /// `cargo test -p masterdeck read_brightness -- --ignored --nocapture`
     #[test]
     #[ignore]
     fn read_brightness() {

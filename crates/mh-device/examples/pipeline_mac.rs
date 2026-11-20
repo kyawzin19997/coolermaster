@@ -2,12 +2,12 @@
 //! several at a time? (2026-10-30: on the Mac a q98 panel of Tokyo Rain took 121-133 ms, ~8
 //! pictures a second; hidapi waits for each 320-byte report.) Sends the same busy pictures (as
 //! `pipeline.rs` on Windows: a snowy panel, q98, and a denser one) for a few seconds each way:
-//! hidapi one by one as HubDeck does, then `mh_device::pictures` with 1, 2, 4 and 8 in flight on a
+//! hidapi one by one as MasterDeck does, then `mh_device::pictures` with 1, 2, 4 and 8 in flight on a
 //! device object of its own; prints the time a picture takes, pictures a second and CPU.
 //!
 //!     cargo run --release -p mh-device --example pipeline_mac -- [seconds per test]
 //!
-//! Quit HubDeck first (it holds the modules exclusively); the keys go back to their own animation
+//! Quit MasterDeck first (it holds the modules exclusively); the keys go back to their own animation
 //! at the end. macOS only.
 
 #[cfg(target_os = "macos")]
@@ -131,7 +131,7 @@ mod mac {
             let reports: Vec<Vec<Report>> = frames.iter().map(|f| report::panel_image(f, keys.output_len)).collect();
             println!("pictures: q98, ~{} KB, {} reports of {} B each", avg / 1024, reports[0].len(), keys.output_len);
 
-            // hidapi, one report at a time (HubDeck today)
+            // hidapi, one report at a time (MasterDeck today)
             let cpu0 = cpu_ms();
             let start = Instant::now();
             let mut n = 0usize;

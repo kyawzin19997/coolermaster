@@ -1,4 +1,4 @@
-"""HubDeck's CPU per thread, by the threads' names (Windows): where the app's CPU goes, without
+"""MasterDeck's CPU per thread, by the threads' names (Windows): where the app's CPU goes, without
 performance counters (they do not work on the owner's PC). Rust names its threads with
 SetThreadDescription, so each thread's name is read back with GetThreadDescription and its CPU time
 with GetThreadTimes, at the start and the end of the window.

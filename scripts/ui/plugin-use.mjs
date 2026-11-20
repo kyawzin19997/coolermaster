@@ -13,7 +13,7 @@ import path from "node:path";
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1")), "..", "..");
 const dir = path.join(os.tmpdir(), "hubdeck-plugin-use");
 const PORT = 9474;
-if (process.argv[2]) process.env.HUBDECK_PLUGIN_CATALOG = path.resolve(process.argv[2]);
+if (process.argv[2]) process.env.MASTERDECK_PLUGIN_CATALOG = path.resolve(process.argv[2]);
 const ps = (...a) => execFileSync("powershell", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", path.join(root, "scripts", "automation.ps1"), "-Dir", dir, "-CdpPort", String(PORT), ...a], { encoding: "utf8" });
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const results = [];

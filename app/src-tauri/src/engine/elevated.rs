@@ -1,12 +1,12 @@
 //! Windows keeps key presses of a normal program from a program that runs as administrator (UIPI):
 //! the keys of the deck then do nothing in that app and nobody knows why (pain point SD7). Before
-//! sending keys HubDeck checks the app in front; the keys still go, and the window says why they
+//! sending keys MasterDeck checks the app in front; the keys still go, and the window says why they
 //! may not arrive.
 
 /// Why keys cannot reach the app in front, or None when they can.
 pub fn blocked_reason() -> Option<String> {
     platform::blocked()
-        .map(|exe| format!("{exe} runs as administrator, so Windows keeps HubDeck's key presses from it. Start HubDeck as administrator (right-click > Run as administrator) to control it."))
+        .map(|exe| format!("{exe} runs as administrator, so Windows keeps MasterDeck's key presses from it. Start MasterDeck as administrator (right-click > Run as administrator) to control it."))
 }
 
 #[cfg(windows)]
@@ -33,7 +33,7 @@ mod platform {
         }
     }
 
-    /// The app in front when it runs elevated and HubDeck does not.
+    /// The app in front when it runs elevated and MasterDeck does not.
     pub fn blocked() -> Option<String> {
         // SAFETY: plain Win32 queries; the process handle is closed before returning.
         unsafe {

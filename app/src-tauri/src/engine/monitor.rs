@@ -90,7 +90,7 @@ impl Sample {
 
 /// Whole-machine CPU load from the change in the system's busy and idle times since last call.
 /// Windows: `GetSystemTimes` (microseconds of work). sysinfo's `refresh_cpu_usage` took 1.1 s of
-/// CPU per call on the owner's PC (2026-10-10) and made HubDeck use a quarter of a core when idle.
+/// CPU per call on the owner's PC (2026-10-10) and made MasterDeck use a quarter of a core when idle.
 #[cfg(windows)]
 struct CpuLoad {
     last: Option<(u64, u64)>,
@@ -271,7 +271,7 @@ pub fn watch(tx: Sender<Msg>) {
 mod tests {
     use super::*;
 
-    /// What each reading costs: `cargo test --release -p hubdeck sample_cost -- --ignored --nocapture`
+    /// What each reading costs: `cargo test --release -p masterdeck sample_cost -- --ignored --nocapture`
     #[test]
     #[ignore]
     fn sample_cost() {

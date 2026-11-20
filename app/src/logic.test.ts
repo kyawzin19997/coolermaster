@@ -167,10 +167,10 @@ describe("texts", () => {
   });
 
   it("makes a language file with every English text", () => {
-    const file = languageTemplate([{ id: "core.nextPage", name: "Next page", group: "HubDeck", description: "d", inputs: [], params: [{ key: "k", label: "L", type: "select", options: [["a", "A"]] } as never], icon: "" }], [], [{ id: "mole", name: "Mole", about: "a" }]);
+    const file = languageTemplate([{ id: "core.nextPage", name: "Next page", group: "MasterDeck", description: "d", inputs: [], params: [{ key: "k", label: "L", type: "select", options: [["a", "A"]] } as never], icon: "" }], [], [{ id: "mole", name: "Mole", about: "a" }]);
     expect(file.strings["topbar.settings"]).toBe("Settings");
     expect(file.actions?.["core.nextPage"]).toEqual({ name: "Next page", description: "d", params: { k: { label: "L", options: { a: "A" } } } });
-    expect(file.groups).toEqual({ HubDeck: "HubDeck" });
+    expect(file.groups).toEqual({ MasterDeck: "MasterDeck" });
     expect(file.games?.mole?.name).toBe("Mole");
   });
 
@@ -212,7 +212,7 @@ describe("engine messages in Polish", () => {
 });
 
 
-describe("HubDeck's rainbow", () => {
+describe("MasterDeck's rainbow", () => {
   it("goes round with the clock like the engine's (leds::rainbow_rgb)", () => {
     expect(hubRainbow(0)).toBe("rgb(255, 0, 0)");
     expect(hubRainbow(RAINBOW_MS / 3)).toBe("rgb(0, 255, 0)");
@@ -247,7 +247,7 @@ describe("a page nothing on the deck opens (owner's pick 1a, 2026-10-16)", () =>
 });
 
 describe("questions before something that cannot be undone", () => {
-  // window.confirm in HubDeck's window returns a promise an `if` takes as yes (a profile was
+  // window.confirm in MasterDeck's window returns a promise an `if` takes as yes (a profile was
   // deleted without a question, 2026-10-18): confirmed() from confirm.ts waits for the answer
   it("never uses window.confirm", () => {
     const sources = import.meta.glob(["./**/*.{ts,tsx}", "!./demo/**", "!./**/*.test.ts"], { query: "?raw", import: "default", eager: true }) as Record<string, string>;

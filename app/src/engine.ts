@@ -721,7 +721,7 @@ export interface LightSettings {
   color: string;
   brightness: number;
   react: { mic: Reaction; live: Reaction; agents: Reaction; timer: Reaction; call: Reaction; levels: boolean };
-  /** The rainbow is drawn by HubDeck (the window shows exactly what the deck does), not by each module. */
+  /** The rainbow is drawn by MasterDeck (the window shows exactly what the deck does), not by each module. */
   hubRainbow?: boolean;
   /** Lights to the music: how dark between beats and from how loud a part they light up, 0..100. */
   musicDim?: number;
@@ -791,7 +791,7 @@ export interface AssistantScan {
   used: [string, number, number][];
   /** Since when the time in front is counted (local, `2026-10-12 16:30`). */
   since: string;
-  /** Installed apps HubDeck has a shortcut pack or a preset for. */
+  /** Installed apps MasterDeck has a shortcut pack or a preset for. */
   known: string[];
   modules: string[];
   /** Owned but not attached now (the assistant builds for `modules`). */
@@ -819,7 +819,7 @@ export interface AssistantInfo {
   folder: string;
   command: string;
   rules: string;
-  /** Picked in HubDeck; null = Claude Code's default. */
+  /** Picked in MasterDeck; null = Claude Code's default. */
   chosenModel: string | null;
   chosenEffort: string | null;
   /** Claude Code's own defaults from its settings. */
@@ -838,7 +838,7 @@ export interface Idea {
   extras: string[];
   /** A few sample keys to draw on the card. */
   keys: { label: string; icon: string }[];
-  /** The whole deck sketched; HubDeck makes a draft of it. */
+  /** The whole deck sketched; MasterDeck makes a draft of it. */
   deck?: unknown;
 }
 
@@ -848,7 +848,7 @@ export type AssistantEvent =
   | { kind: "text"; text: string; choices: string[]; ideas: Idea[] }
   /** A piece of the message being written; the `text` event replaces it. */
   | { kind: "delta"; text: string }
-  /** An idea (propose_idea, or a quick sketch HubDeck made itself) with its draft. */
+  /** An idea (propose_idea, or a quick sketch MasterDeck made itself) with its draft. */
   | { kind: "idea"; idea: Idea; draft: string | null; dropped: string[] }
   /** Answers as buttons; with `multiple` the user ticks several (or all) and sends them together. */
   | { kind: "choices"; choices: string[]; multiple: boolean }
@@ -859,7 +859,7 @@ export type AssistantEvent =
   | { kind: "done" }
   | { kind: "error"; message: string };
 
-/** A suggestion HubDeck made on its own (an app without a deck, a new kind of module). */
+/** A suggestion MasterDeck made on its own (an app without a deck, a new kind of module). */
 export interface Nudge {
   subject: string;
   kind: "app" | "module" | "unused";
@@ -872,7 +872,7 @@ export interface Nudge {
   since?: string;
 }
 
-/** An app of the user's that HubDeck listens to. */
+/** An app of the user's that MasterDeck listens to. */
 export interface AppSource {
   id: string;
   name: string;
@@ -935,7 +935,7 @@ export interface EngineState {
   autoProfiles?: boolean;
   /** The draft shown on the deck for a try. */
   trying?: string | null;
-  /** A draft that was on the deck for a try when HubDeck stopped: the window offers it back. */
+  /** A draft that was on the deck for a try when MasterDeck stopped: the window offers it back. */
   interruptedTry?: string | null;
   /** Comparing drafts on the deck: [which one, of how many]. */
   comparing?: [number, number] | null;
@@ -969,7 +969,7 @@ export interface Screens {
   blankWhenLocked: boolean;
   /** How app icons show on keys: like an icon with the name, the whole key, the whole key with the name. */
   appIcons?: "icon" | "fill" | "fillLabel";
-  /** The font for text on the deck, a family on this computer ("" = HubDeck's own). */
+  /** The font for text on the deck, a family on this computer ("" = MasterDeck's own). */
   deckFont?: string;
   /** The screensaver all profiles share ("" = none) and after how many idle minutes it starts. */
   saver?: string;
@@ -1113,7 +1113,7 @@ export interface CatalogPlugin {
   repository: string;
   icon: string;
   aiAssisted: boolean;
-  /** Checked in HubDeck on these systems ("Windows", "Windows, macOS"); null = not tried yet. */
+  /** Checked in MasterDeck on these systems ("Windows", "Windows, macOS"); null = not tried yet. */
   tried?: string | null;
   /** Its page on Elgato Marketplace, when it is there. */
   elgato?: string | null;
@@ -1132,7 +1132,7 @@ export interface CatalogPlugin {
   dial: boolean;
 }
 
-/** A Stream Deck plugin on this computer: in the Stream Deck app's folder, or a file opened with HubDeck. */
+/** A Stream Deck plugin on this computer: in the Stream Deck app's folder, or a file opened with MasterDeck. */
 export interface LocalPlugin {
   id: string;
   name: string;
@@ -1140,7 +1140,7 @@ export interface LocalPlugin {
   version: string;
   /** Its icon as a data URI. */
   icon?: string | null;
-  /** Why HubDeck cannot run it; null: it can. */
+  /** Why MasterDeck cannot run it; null: it can. */
   problem?: string | null;
   actions?: number;
   digest?: string | null;
@@ -1363,7 +1363,7 @@ export interface LedView {
 /** What the knob, fader and base LEDs show now, by module id; null = the module's own rainbow. */
 export type LedsShown = Record<string, LedView[] | null>;
 
-/** The last time HubDeck ended without quitting (written by its guard process). */
+/** The last time MasterDeck ended without quitting (written by its guard process). */
 export interface CrashReport {
   at: string;
   restarted: boolean;
@@ -1372,7 +1372,7 @@ export interface CrashReport {
 }
 
 export const api = {
-  /** The key screen's pictures a second and HubDeck's CPU since the last call. */
+  /** The key screen's pictures a second and MasterDeck's CPU since the last call. */
   deckRate: () => invoke<{ fps: number; cpu: number | null }>("deck_rate"),
   frameCost: () => invoke<FrameCost>("frame_cost"),
   livingGpu: () => invoke<boolean>("living_gpu"),
@@ -1408,7 +1408,7 @@ export const api = {
   languagesOpenFolder: () => invoke("languages_open_folder"),
   dialGallery: () => invoke<DialFace[]>("dial_gallery"),
   aiPrompt: (name: string, exe: string, target: string, picture: string | null, language: string) => invoke<string>("ai_prompt", { name, exe, target, picture, language }),
-  /** Runs Claude Code with HubDeck's tools only; rejects with "no-cli" when it is not installed. */
+  /** Runs Claude Code with MasterDeck's tools only; rejects with "no-cli" when it is not installed. */
   aiBuild: (prompt: string) => invoke<string>("ai_build", { prompt }),
   suggestions: (profile: string, control: string) => invoke<Binding[]>("suggestions", { profile, control }),
   profileFill: (profile: string, page: string | null) => invoke<number>("profile_fill", { profile, page }),
@@ -1464,7 +1464,7 @@ export const api = {
   pluginUninstall: (id: string) => invoke("plugin_uninstall", { id }),
   /** Where a plugin's actions stand in the profiles. */
   pluginUses: (id: string) => invoke<{ profile: string; pages: Profile["pages"]; control: string; label: string | null }[]>("plugin_uses", { id }),
-  /** macOS: may HubDeck send keys and type (Accessibility)? */
+  /** macOS: may MasterDeck send keys and type (Accessibility)? */
   accessibilityOk: () => invoke<boolean>("accessibility_ok"),
   /** macOS: ask for Accessibility with the system's dialog. */
   accessibilityAsk: () => invoke<boolean>("accessibility_ask"),
@@ -1478,13 +1478,13 @@ export const api = {
   sdDropFile: (name: string, bytes: Uint8Array) => invoke<string>("sd_drop_file", bytes, { headers: { "x-name": encodeURIComponent(name) } }),
   /** The plugins Elgato's Stream Deck app installed on this computer. */
   sdStreamDeck: () => invoke<LocalPlugin[]>("sd_stream_deck"),
-  /** Copy one of the Stream Deck app's plugins into HubDeck and start it; returns its id. */
+  /** Copy one of the Stream Deck app's plugins into MasterDeck and start it; returns its id. */
   sdImport: (id: string) => invoke<string>("sd_import", { id }),
   /** What a plugin file holds, without installing it. */
   sdPeek: (path: string) => invoke<LocalPlugin>("sd_peek", { path }),
-  /** Plugin files opened with HubDeck (a double click) since the window last asked. */
+  /** Plugin files opened with MasterDeck (a double click) since the window last asked. */
   sdOpened: () => invoke<string[]>("sd_opened"),
-  /** The tour: what HubDeck suggests the deck is mostly for, from what it sees. */
+  /** The tour: what MasterDeck suggests the deck is mostly for, from what it sees. */
   tourSuggest: (language: string) => invoke<TourSuggestion>("tour_suggest", { language }),
   tourDone: () => invoke<boolean>("tour_done"),
   /** Make the deck for this focus and show it on the deck (a draft). */
@@ -1510,7 +1510,7 @@ export const api = {
   /** The personal tour as a draft, made at once; its id. */
   assistantTour: (language: string) => invoke<string>("assistant_tour", { language }),
   tasteGet: () => invoke<Taste>("taste_get"),
-  /** The user's own apps HubDeck listens to, and what they report now (docs/APP-CONTRACT.md). */
+  /** The user's own apps MasterDeck listens to, and what they report now (docs/APP-CONTRACT.md). */
   appsState: () => invoke<AppsState>("apps_state"),
   appConnect: (url: string) => invoke<AppSource>("app_connect", { url }),
   appRemove: (id: string) => invoke("app_remove", { id }),
@@ -1563,7 +1563,7 @@ export const api = {
   twitchConnect: () => invoke("twitch_connect"),
   twitchDisconnect: () => invoke("twitch_disconnect"),
   setIntegrations: (obsUrl: string, obsPassword: string | null) => invoke("integrations_set", { obsUrl, obsPassword }),
-  createPage: (profile: string, name: string) => invoke<Page>("page_create", { profile, name }),
+  createPage: (profile: string, name: string, autoLabel?: string) => invoke<Page>("page_create", { profile, name, autoLabel }),
   renamePage: (profile: string, page: string, name: string) => invoke("page_rename", { profile, page, name }),
   deletePage: (profile: string, page: string) => invoke("page_delete", { profile, page }),
   addWayToPage: (profile: string, page: string) => invoke("page_add_way", { profile, page }),
@@ -1635,10 +1635,10 @@ export function useEngine(): EngineView {
   return useMemo(() => ({ state, profile: shown, catalog, icons, error, reloadProfile }), [state, shown, catalog, icons, error, reloadProfile]);
 }
 
-/** How long HubDeck's rainbow takes to go round (the same as `leds::RAINBOW_MS`). */
+/** How long MasterDeck's rainbow takes to go round (the same as `leds::RAINBOW_MS`). */
 export const RAINBOW_MS = 10_000;
 
-/** HubDeck's rainbow color at a moment (ms since 1970), worked out as the engine does. */
+/** MasterDeck's rainbow color at a moment (ms since 1970), worked out as the engine does. */
 export function hubRainbow(ms: number): string {
   const h = ((ms % RAINBOW_MS) / RAINBOW_MS) * 6;
   const x = Math.round((1 - Math.abs((h % 2) - 1)) * 255);
@@ -1649,7 +1649,7 @@ export function hubRainbow(ms: number): string {
 /** The LEDs as the engine last set them on the deck (null outside the app, e.g. the demo). */
 export function useLeds(): LedsShown | null {
   const [leds, setLeds] = useState<LedsShown | null>(null);
-  // HubDeck's rainbow: the same clock as the engine, so the drawing and the deck show one color
+  // MasterDeck's rainbow: the same clock as the engine, so the drawing and the deck show one color
   const hub = !!leds && Object.values(leds).some((l) => l?.some((x) => x.effect === "hubRainbow"));
   useEffect(() => {
     if (!hub) return;

@@ -12,7 +12,7 @@ use super::mcp::Api;
 
 pub const SERVER_NAME: &str = "hubdeck-deck";
 
-pub const INSTRUCTIONS: &str = "The user's desk controller (HubDeck): a round dial screen, 15 keys with screens and a light strip on the base. Use notify for things the user should see when they look up (a long task finished, a test failed), show_status for what you are doing during a long task (clear it at the end), ask_physical to let the user answer a short question with one key press instead of typing, and read_controls to read faders and knobs the user set. Keep texts short: they show on small screens.";
+pub const INSTRUCTIONS: &str = "The user's desk controller (MasterDeck): a round dial screen, 15 keys with screens and a light strip on the base. Use notify for things the user should see when they look up (a long task finished, a test failed), show_status for what you are doing during a long task (clear it at the end), ask_physical to let the user answer a short question with one key press instead of typing, and read_controls to read faders and knobs the user set. Keep texts short: they show on small screens.";
 
 pub fn tools() -> Vec<Value> {
     vec![
@@ -78,7 +78,7 @@ pub fn call_tool(api: &dyn Api, name: &str, args: &Value) -> Result<Vec<Value>, 
         "ask_physical" => {
             let seconds = args.get("timeout_seconds").and_then(Value::as_u64).unwrap_or(120).clamp(5, 600);
             let asked = api.call("POST", "/api/ask", Some(&json!({"question": args.get("question"), "options": args.get("options"), "seconds": seconds})))?;
-            let id = asked["id"].as_u64().ok_or("HubDeck did not take the question")?;
+            let id = asked["id"].as_u64().ok_or("MasterDeck did not take the question")?;
             wait_for_answer(api, id, Duration::from_secs(seconds + 2), Duration::from_millis(400))
         }
         "read_controls" => Ok(vec![json!({"type": "text", "text": serde_json::to_string_pretty(&api.call("GET", "/api/controls", None)?).unwrap_or_default()})]),

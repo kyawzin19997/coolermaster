@@ -1,9 +1,9 @@
-//! Suggestions outside the talk (both design reviews; the owner picked them, 2026-10-12): HubDeck
+//! Suggestions outside the talk (both design reviews; the owner picked them, 2026-10-12): MasterDeck
 //! notices on its own, with no AI, that an app the user works in a lot has no deck yet, or that a
 //! kind of module was attached for the first time, and offers a sketch made on this computer. The
 //! model only comes in if the user asks for it.
 //!
-//! The day after the tour's deck was kept, if the user let HubDeck count presses, the card can
+//! The day after the tour's deck was kept, if the user let MasterDeck count presses, the card can
 //! also be about that deck: a control never touched since ("knob 3 never turned, swap it?").
 //!
 //! Brakes: a calm card in the Assistant tab (no pop-ups, nothing taken over on the deck), at most

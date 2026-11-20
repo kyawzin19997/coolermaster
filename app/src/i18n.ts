@@ -28,6 +28,33 @@ export interface LanguagePack {
 }
 
 const en = {
+  "pages.autoName": "Page {n}",
+  "phone.title": "Upload from Phone",
+  "phone.starting": "Starting the upload session…",
+  "phone.connection": "Connection mode",
+  "phone.local": "Local Wi-Fi",
+  "phone.internet": "Internet",
+  "phone.code": "Upload QR code",
+  "phone.scan": "Scan with your phone’s camera.",
+  "phone.localHelp": "Use the same trusted Wi-Fi network. If the page does not open, allow MasterDeck on private networks in Windows Firewall.",
+  "phone.remoteHelp": "Use this HTTPS link when your phone is on another network.",
+  "phone.copy": "Copy link",
+  "phone.copied": "Link copied",
+  "phone.copyFailed": "Couldn’t copy the link. Scan the QR code instead.",
+  "phone.expired": "The pairing code expired. Start a new session.",
+  "phone.noLocal": "No private IPv4 network is available. Connect both devices to the same Wi-Fi, then start a new session.",
+  "phone.match": "Match this code on your phone",
+  "phone.approve": "Approve",
+  "phone.decline": "Decline",
+  "phone.declined": "Pairing declined.",
+  "phone.connected": "Phone connected · {mode}",
+  "phone.reconnect": "Waiting for the phone to reconnect · {mode}",
+  "phone.ended": "Session ended. Completed files remain in the desktop inbox.",
+  "phone.verified": "Received and verified",
+  "phone.save": "Save a copy",
+  "phone.end": "End session",
+  "phone.new": "New session",
+  "phone.confirmImport": "Import {name}?",
   // module and control names
   "module.base": "Base",
   "module.keys": "15-key module",
@@ -4709,7 +4736,7 @@ const actionTexts = (): Record<string, ActionText> | undefined => (lang === "pl"
 const groupTexts = (): Record<string, string> | undefined => (lang === "pl" ? GROUPS_PL : pack?.groups);
 
 export const actionName = (a: Pick<ActionDef, "id" | "name">) => actionTexts()?.[a.id]?.name || a.name;
-export const groupName = (g: string) => g === "HubDeck" ? "MasterDeck" : groupTexts()?.[g] || g;
+export const groupName = (g: string) => g === "MasterDeck" ? "MasterDeck" : groupTexts()?.[g] || g;
 
 function localizeParam(actionId: string, p: ParamDef): ParamDef {
   const tr = actionTexts()?.[actionId]?.params?.[p.key];

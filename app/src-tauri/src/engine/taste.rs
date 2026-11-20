@@ -94,7 +94,7 @@ pub fn outcome(title: &str, app: &str, kept: bool) {
 /// What goes with the first message of a talk (and is shown in the scan card first).
 pub fn text() -> String {
     let t = get();
-    let mut out = String::from("What HubDeck remembers about this user's taste (they can see and edit it in the window):");
+    let mut out = String::from("What MasterDeck remembers about this user's taste (they can see and edit it in the window):");
     if t.notes.is_empty() {
         out.push_str(" nothing yet.");
     }

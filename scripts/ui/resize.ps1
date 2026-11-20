@@ -17,7 +17,7 @@ public class WR {
 '@
 $ids = Get-Content "$Dir\automation.pid"
 $p = Get-Process -Id $ids -ErrorAction SilentlyContinue | Where-Object { $_.ProcessName -eq 'hubdeck' }
-foreach ($hwnd in [WR]::Find([uint32]$p.Id, "HubDeck")) {
+foreach ($hwnd in [WR]::Find([uint32]$p.Id, "MasterDeck")) {
   # SWP_NOMOVE 0x2 | SWP_NOZORDER 0x4 | SWP_NOACTIVATE 0x10
   [void][WR]::SetWindowPos($hwnd, [IntPtr]::Zero, 0, 0, $W, $H, 0x16)
   "resized window $hwnd of $($p.Id) to $W x $H"

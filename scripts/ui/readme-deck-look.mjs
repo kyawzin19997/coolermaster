@@ -23,7 +23,7 @@ fs.rmSync(dir, { recursive: true, force: true });
 fs.mkdirSync(dir, { recursive: true });
 fs.writeFileSync(path.join(dir, "settings.json"), JSON.stringify({ autoSwitch: false }));
 
-const app = spawn(exe, [], { env: { ...process.env, HUBDECK_AUTOMATION: dir, HUBDECK_CDP_PORT: String(PORT) }, stdio: "ignore" });
+const app = spawn(exe, [], { env: { ...process.env, MASTERDECK_AUTOMATION: dir, MASTERDECK_CDP_PORT: String(PORT) }, stdio: "ignore" });
 let browser;
 let ok = false;
 try {

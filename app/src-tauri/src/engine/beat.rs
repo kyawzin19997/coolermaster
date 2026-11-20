@@ -1,5 +1,5 @@
 //! The music's beat for the lights (owner, 2026-10-19: "żeby deck podświetlał się w rytm muzyki,
-//! która leci na spotify"). Spotify gives no beat to apps like HubDeck's (its audio analysis is
+//! która leci na spotify"). Spotify gives no beat to apps like MasterDeck's (its audio analysis is
 //! closed to them since 2024-11), so the sound itself is listened to: what goes to the speakers,
 //! through Windows' loopback capture (WASAPI, the documented way audio visualizers in lighting
 //! apps do it). Listening only while a light uses the effect or the living deck's music layer is
@@ -705,9 +705,9 @@ mod mac {
         match code {
             0 => {}
             2 => return Err("macOS 14.2 or newer hears what plays".into()),
-            3 => return Err("macOS refused to let HubDeck hear what plays: allow it in System Settings > Privacy & Security > Screen & System Audio Recording".into()),
+            3 => return Err("macOS refused to let MasterDeck hear what plays: allow it in System Settings > Privacy & Security > Screen & System Audio Recording".into()),
             4 => return Err("no sound output".into()),
-            7 => return Err("the sound is not in a format HubDeck reads".into()),
+            7 => return Err("the sound is not in a format MasterDeck reads".into()),
             c => return Err(format!("the listening device would not start ({c})")),
         }
         log::info!("music beat: listening ({rate:.0} Hz, {channels} channels, Core Audio tap)");
@@ -799,7 +799,7 @@ mod tests {
             .collect()
     }
 
-    /// With music playing: `cargo test -p hubdeck beat_live -- --ignored --nocapture`
+    /// With music playing: `cargo test -p masterdeck beat_live -- --ignored --nocapture`
     #[cfg(windows)]
     #[test]
     #[ignore]
@@ -826,7 +826,7 @@ mod tests {
     }
 
     /// With music playing, 12 s: the gaps between kicks and the tempo found, to tune `tempo_of`.
-    /// `cargo test -p hubdeck beat_live_tempo -- --ignored --nocapture`
+    /// `cargo test -p masterdeck beat_live_tempo -- --ignored --nocapture`
     #[cfg(windows)]
     #[test]
     #[ignore]
@@ -850,7 +850,7 @@ mod tests {
     }
 
     /// With music playing, 15 s: the best period and how sure, every half second, from the live
-    /// sound (`cargo test -p hubdeck beat_live_raw -- --ignored --nocapture`).
+    /// sound (`cargo test -p masterdeck beat_live_raw -- --ignored --nocapture`).
     #[cfg(windows)]
     #[test]
     #[ignore]

@@ -1,9 +1,9 @@
-//! Import of profiles exported by the official MasterHUB app (`.mhz`), so switching to HubDeck
+//! Import of profiles exported by the official MasterHUB app (`.mhz`), so switching to MasterDeck
 //! costs nothing. The format is described in `docs/OFFICIAL-APP.md` > "The .mhz file": a zip with
 //! one JSON file per profile plus the pictures it uses. The official profile is keyed by module
-//! serial numbers; HubDeck binds control kinds, so the first module of each kind is taken.
+//! serial numbers; MasterDeck binds control kinds, so the first module of each kind is taken.
 //!
-//! Actions are translated where HubDeck has an equivalent (hotkeys, open, text, media, volume,
+//! Actions are translated where MasterDeck has an equivalent (hotkeys, open, text, media, volume,
 //! scroll, multi-task, pages and folders, OBS). Anything else becomes an empty binding whose label
 //! says what it was ("Not supported: Clear chat"), so nothing disappears silently.
 
@@ -91,7 +91,7 @@ fn convert(v: &Value, name: &str, pictures: &mut dyn FnMut(&str) -> Option<Strin
     }
     if let Some(knobs) = first_module(v, "knobsList") {
         // the official app reads knob events as data[2] = rotateB, [3] = rotateR, [4] = rotateG
-        // (App.vue, replyM003IoStatus); HubDeck's knobs.N is data[2 + N]
+        // (App.vue, replyM003IoStatus); MasterDeck's knobs.N is data[2 + N]
         for (i, key) in ["rotateB", "rotateR", "rotateG"].iter().enumerate() {
             if let Some(b) = knobs.get(key).and_then(|k| turn_control(k, "right", "left")) {
                 profile.controls.insert(format!("knobs.{i}"), b);
@@ -112,7 +112,7 @@ fn convert(v: &Value, name: &str, pictures: &mut dyn FnMut(&str) -> Option<Strin
         }
     }
     if let Some(rollers) = first_module(v, "rollerBlock") {
-        // official: data[2] = "right" roller, data[3] = "left"; HubDeck's rollers.N is data[2 + N]
+        // official: data[2] = "right" roller, data[3] = "left"; MasterDeck's rollers.N is data[2 + N]
         for (i, side) in ["right", "left"].iter().enumerate() {
             if let Some(b) = rollers.get(side).and_then(|r| {
                 // the left roller's action is sometimes stored next to the two sides
@@ -168,7 +168,7 @@ fn binding(action: &str, params: Value, label: Option<String>) -> Binding {
     Binding { action: action.into(), params, look: Look { label, ..Look::default() }, accel: false, look_on: None, swap_turns: false }
 }
 
-/// One key name of the official app (recorded or built in) -> HubDeck's name; None = unknown.
+/// One key name of the official app (recorded or built in) -> MasterDeck's name; None = unknown.
 fn key_name(name: &str) -> Option<String> {
     let raw = name.trim();
     let n = raw.to_lowercase().replace("vk_", "").replace(['_', ' '], "");
@@ -329,10 +329,10 @@ fn press_action(btn: &Value) -> Result<(String, Value), String> {
             ok("core.lighting", json!({"target": "all", "effect": effect, "color": "#ffffff", "speed": 50}))
         }
         "timer" => ok(super::actions::TIMER, timer_params(btn)),
-        // "Play Audio": a sound file, play/pause or play/stop; HubDeck stops on the second press
+        // "Play Audio": a sound file, play/pause or play/stop; MasterDeck stops on the second press
         "play-pause" if !str_of(btn, "appFilePath").is_empty() => ok("core.sound", json!({"mode": "playStop", "file": str_of(btn, "appFilePath"), "volume": 80, "device": ""})),
         "clock" => ok(super::actions::CLOCK, json!({"show": "timeDate", "hours": "24"})),
-        // the official key names one of its own profiles by number: pick the HubDeck one again
+        // the official key names one of its own profiles by number: pick the MasterDeck one again
         "profile" => ok("core.profile", json!({"which": "named", "profile": ""})),
         "record-continue-pause" => ok("obs.recordPause", json!({})),
         "virtual-camera" => ok("obs.virtualCam", json!({})),
@@ -505,7 +505,7 @@ fn single_turn(r: &Value, cw: &str, ccw: &str) -> Option<Binding> {
     }
 }
 
-/// A knob or the dial: a list of functions, a press goes to the next one (HubDeck's Modes).
+/// A knob or the dial: a list of functions, a press goes to the next one (MasterDeck's Modes).
 fn turn_control(k: &Value, cw: &str, ccw: &str) -> Option<Binding> {
     let list = k.get("functionList").and_then(Value::as_array).cloned().unwrap_or_default();
     if list.is_empty() {

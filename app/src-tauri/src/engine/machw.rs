@@ -60,7 +60,7 @@ pub fn gpu_load() -> Option<f32> {
     some(unsafe { mh_gpu_load() })
 }
 
-/// Monitors HubDeck can set: the built-in screen first, then external ones (DDC).
+/// Monitors MasterDeck can set: the built-in screen first, then external ones (DDC).
 pub fn monitors() -> usize {
     // SAFETY: as above.
     unsafe { mh_monitors() }.max(0) as usize
@@ -81,7 +81,7 @@ pub fn set(index: Option<usize>, value: u32) -> bool {
 
 #[cfg(test)]
 mod tests {
-    /// Reads only; on a Mac: `cargo test -p hubdeck machw -- --ignored --nocapture`.
+    /// Reads only; on a Mac: `cargo test -p masterdeck machw -- --ignored --nocapture`.
     #[test]
     #[ignore]
     fn reads_this_mac() {

@@ -3,7 +3,7 @@
 //   1. started with a plugin file as a double click starts it: the window asks, Install installs it;
 //   2. a file encrypted for Elgato's app says so and offers no Install;
 //   3. Settings > Plugins lists the Stream Deck app's readable plugins (when it is installed), the
-//      encrypted ones as one line (owner's 5a, 2026-10-18), and "Use in HubDeck" copies one;
+//      encrypted ones as one line (owner's 5a, 2026-10-18), and "Use in MasterDeck" copies one;
 //   4. the Plugins tab (owner's pick A, 2026-10-18): Elgato Marketplace, OpenAction and GitHub with
 //      counts, nothing only Elgato's app installs, the filters and the sort do what they say, a
 //      GitHub plugin says "Not tried yet", one only on GitHub installs.
@@ -73,8 +73,8 @@ if (!fs.existsSync(mute)) {
 execFileSync("powershell", ["-NoProfile", "-Command", `Copy-Item '${mute}' '${mute}.zip'; Expand-Archive -Force '${mute}.zip' '${sdDir}'; Remove-Item '${mute}.zip'`]);
 fs.mkdirSync(path.join(sdDir, "com.elgato.tutorial.sdPlugin"));
 fs.writeFileSync(path.join(sdDir, "com.elgato.tutorial.sdPlugin", "manifest.json"), JSON.stringify({ Name: "Tutorial", CodePath: "app.html", Actions: [{ UUID: "com.elgato.tutorial.a" }] }));
-process.env.HUBDECK_STREAM_DECK_PLUGINS = sdDir;
-if (process.argv[2]) process.env.HUBDECK_PLUGIN_CATALOG = path.resolve(process.argv[2]);
+process.env.MASTERDECK_STREAM_DECK_PLUGINS = sdDir;
+if (process.argv[2]) process.env.MASTERDECK_PLUGIN_CATALOG = path.resolve(process.argv[2]);
 
 const results = [];
 const check = (what, ok, note = "") => (results.push({ what, ok, note }), console.log(`${ok ? "ok  " : "FAIL"} ${what}${note ? ` (${note})` : ""}`));
@@ -132,9 +132,9 @@ try {
       const usable = sd.find((p) => !p.problem);
       check("the Stream Deck app's own parts are not listed", !sd.some((p) => p.id === "com.elgato.tutorial"));
       if (usable) {
-        await section.locator("li", { hasText: usable.name }).getByRole("button", { name: "Use in HubDeck" }).click();
+        await section.locator("li", { hasText: usable.name }).getByRole("button", { name: "Use in MasterDeck" }).click();
         await sleep(3000);
-        check(`"Use in HubDeck" copies ${usable.id}`, (await invoke("plugins_list")).some((p) => p.id === usable.id));
+        check(`"Use in MasterDeck" copies ${usable.id}`, (await invoke("plugins_list")).some((p) => p.id === usable.id));
       }
     } else {
       check("no Stream Deck app: no section", (await page.getByText("Plugins from the Stream Deck app").count()) === 0);
@@ -156,11 +156,11 @@ try {
     check("most popular first: Elgato's best ranked", catalog.filter((e) => e.popular).sort((a, b) => a.popular - b.popular)[0]?.name === firstCard, firstCard);
     await shot(page, "4-catalog");
     const cards = () => page.locator(".plugin-card").count();
-    await filters.getByLabel("Tried in HubDeck").check();
+    await filters.getByLabel("Tried in MasterDeck").check();
     await sleep(300);
-    const triedTags = await page.locator(".plugin-card").evaluateAll((els) => els.every((el) => el.textContent.includes("Tried in HubDeck")));
-    check("Tried in HubDeck shows only tried ones", (await cards()) > 5 && triedTags, String(await cards()));
-    await filters.getByLabel("Tried in HubDeck").uncheck();
+    const triedTags = await page.locator(".plugin-card").evaluateAll((els) => els.every((el) => el.textContent.includes("Tried in MasterDeck")));
+    check("Tried in MasterDeck shows only tried ones", (await cards()) > 5 && triedTags, String(await cards()));
+    await filters.getByLabel("Tried in MasterDeck").uncheck();
     await filters.getByLabel("Uses the dial and knobs").check();
     await sleep(300);
     const dialTags = await page.locator(".plugin-card").evaluateAll((els) => els.every((el) => [...el.querySelectorAll(".pill")].some((p) => p.textContent === "Dial")));
@@ -170,7 +170,7 @@ try {
     await page.getByLabel("Sort").selectOption("updated");
     await sleep(300);
     const gh = await page.locator(".plugin-card").evaluateAll((els) => els.slice(0, 12).map((el) => el.textContent));
-    check("GitHub only: every card from GitHub, not tried yet", gh.length > 0 && gh.every((x) => x.includes("GitHub") && (x.includes("Not tried yet") || x.includes("Tried in HubDeck"))), gh[0]?.slice(0, 80));
+    check("GitHub only: every card from GitHub, not tried yet", gh.length > 0 && gh.every((x) => x.includes("GitHub") && (x.includes("Not tried yet") || x.includes("Tried in MasterDeck"))), gh[0]?.slice(0, 80));
     await shot(page, "5-github");
     for (const s of ["Elgato Marketplace", "OpenAction"]) await filters.getByLabel(s).check();
     await page.getByLabel("Sort").selectOption("popular");
@@ -193,7 +193,7 @@ try {
     const { browser, page } = await open(locked);
     const sheet = page.locator(".plugin-file");
     await sheet.waitFor({ timeout: 15000 }).catch(() => {});
-    await page.getByText("HubDeck cannot run it").first().waitFor({ timeout: 8000 }).catch(() => {});
+    await page.getByText("MasterDeck cannot run it").first().waitFor({ timeout: 8000 }).catch(() => {});
     const text = (await sheet.textContent().catch(() => "")) ?? "";
     check("an encrypted file says so and offers no Install", text.includes("encrypted for Elgato's Stream Deck app") && (await sheet.getByRole("button", { name: "Install" }).count()) === 0, text.slice(0, 160));
     await shot(page, "7-encrypted");

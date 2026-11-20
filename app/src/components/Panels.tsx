@@ -1907,7 +1907,7 @@ export function ProfilePanel({ view, onClose }: { view: EngineView; onClose: () 
   const isFallback = state.fallback === profile.id;
   return (
     <aside className="inspector sectioned side-panel">
-      <PanelHead title={draft.name || profile.name} crumb={t("topbar.profileSettings")} icon="layers" onClose={onClose} />
+      <PanelHead title={t("topbar.profileSettings")} crumb={draft.name || profile.name} icon="layers" onClose={onClose} />
       <section className="sec">
         <div className="field">
           <label htmlFor="profile-name" className="label">
@@ -1946,8 +1946,8 @@ export function ProfilePanel({ view, onClose }: { view: EngineView; onClose: () 
         </label>
         <p className="help">{t("profile.switchingWhere")}</p>
       </section>
-      <section className="sec">
-        <h3 className="sec-title">{t("profile.panel")}</h3>
+      <details className="sec profile-details">
+        <summary>{t("profile.panel")}</summary>
         <select
           id="panel-content"
           aria-label={t("profile.panel")}
@@ -1983,10 +1983,10 @@ export function ProfilePanel({ view, onClose }: { view: EngineView; onClose: () 
           </button>
         )}
         <p className="help">{t("profile.panelHelp")}</p>
-      </section>
+      </details>
       {issues.length > 0 && (
-        <section className="sec">
-          <h3 className="sec-title">{t("profile.checkTitle")}</h3>
+        <details className="sec profile-details">
+          <summary>{t("profile.checkTitle")} ({issues.length})</summary>
           {issues.map((i) => (
             <p key={`${i.control}${i.message}`} className="help">
               <span aria-hidden="true" style={{ display: "inline-block", width: 8, height: 8, borderRadius: 4, background: "#f5c518", marginRight: 6 }} />
@@ -1994,10 +1994,10 @@ export function ProfilePanel({ view, onClose }: { view: EngineView; onClose: () 
             </p>
           ))}
           <p className="help">{t("profile.checkHelp")}</p>
-        </section>
+        </details>
       )}
-      <section className="sec">
-        <h3 className="sec-title">{t("profile.manage")}</h3>
+      <details className="sec profile-details">
+        <summary>{t("profile.manage")}</summary>
         <div className="btn-grid">
           <button className="tool" title={t("suggest.fillHelp")} onClick={() => api.profileFill(profile.id, view.state?.page ?? null)}>
             <Icon name="sparkles" />
@@ -2011,9 +2011,9 @@ export function ProfilePanel({ view, onClose }: { view: EngineView; onClose: () 
             className="tool"
             onClick={async () => {
               const path = await save({
-                defaultPath: `${profile.name}.hubdeck`,
+                defaultPath: `${profile.name}.masterdeck`,
                 filters: [
-                  { name: t("profile.fileTypePackage"), extensions: ["hubdeck"] },
+                  { name: t("profile.fileTypePackage"), extensions: ["masterdeck"] },
                   { name: t("profile.fileTypeJson"), extensions: ["json"] },
                 ],
               });
@@ -2026,7 +2026,7 @@ export function ProfilePanel({ view, onClose }: { view: EngineView; onClose: () 
           <button
             className="tool"
             onClick={async () => {
-              const path = await open({ multiple: false, filters: [{ name: t("profile.fileType"), extensions: ["hubdeck", "json", "mhz"] }] });
+              const path = await open({ multiple: false, filters: [{ name: t("profile.fileType"), extensions: ["masterdeck", "hubdeck", "json", "mhz"] }] });
               if (typeof path === "string")
                 api.importProfile(path).then(
                   async (p) => (await keepImported(p)) && (setMessage(movedNote(p.moved, p.pages) || null), api.activate(p.id)),
@@ -2065,8 +2065,8 @@ export function ProfilePanel({ view, onClose }: { view: EngineView; onClose: () 
             {t("profile.delete")}
           </button>
         </div>
-        {message && <p className="help">{message}</p>}
-      </section>
+      </details>
+      {message && <p className="sec help" role="status">{message}</p>}
     </aside>
   );
 }
@@ -2090,7 +2090,7 @@ const SETTINGS_SECTIONS: { id: SettingsSection; icon: string; label: Key }[] = [
 
 /** Settings as a page of its own over the whole window (owner, 2026-10-13: a panel in the right
  *  column covered the key editor): sections on the left, one section's content on the right. */
-export function SettingsPanel({ live, view, section, updateCheckRequest, onSection, onClose, onCalibrate, onBrowsePlugins, onPickPlugin, onUsePlugin, onOpenEdge, onOpenScenes }: {
+export function SettingsPanel({ live, view, section, updateCheckRequest, onSection, onClose, onCalibrate, onBrowsePlugins, onPickPlugin, onPhone, onUsePlugin, onOpenEdge, onOpenScenes }: {
   live: LiveState;
   view: EngineView;
   section: SettingsSection;
@@ -2100,6 +2100,7 @@ export function SettingsPanel({ live, view, section, updateCheckRequest, onSecti
   onCalibrate: () => void;
   onBrowsePlugins: () => void;
   onPickPlugin: (update?: { id: string; name: string }) => void;
+  onPhone: () => void;
   onUsePlugin: (id: string) => void;
   onOpenEdge: () => void;
   onOpenScenes: () => void;
@@ -2151,7 +2152,7 @@ export function SettingsPanel({ live, view, section, updateCheckRequest, onSecti
           )}
           {section === "text" && <DeckTextSettings />}
           {section === "connections" && <Connections />}
-          {section === "plugins" && <PluginsList onBrowse={onBrowsePlugins} onPickFile={onPickPlugin} onUse={onUsePlugin} />}
+          {section === "plugins" && <PluginsList onBrowse={onBrowsePlugins} onPickFile={onPickPlugin} onPhone={onPhone} onUse={onUsePlugin} />}
           {section === "backups" && <Backups />}
           {section === "updates" && <UpdatesSettings checkRequest={updateCheckRequest} />}
           {section === "diagnostics" && <DiagnosticsSettings live={live} />}
@@ -2779,7 +2780,7 @@ export function PageBar({ view }: { view: EngineView }) {
   useLanguage();
   const profile = view.profile;
   const current = view.state?.page ?? null;
-  const [naming, setNaming] = useState<{ id: string | null; name: string } | null>(null);
+  const [naming, setNaming] = useState<{ id: string; name: string } | null>(null);
   if (!profile) return null;
   const pages = profile.pages ?? [];
   const currentPage = pages.find((p) => p.id === current);
@@ -2789,8 +2790,7 @@ export function PageBar({ view }: { view: EngineView }) {
     const editing = naming;
     setNaming(null);
     if (!name) return;
-    if (editing.id) api.renamePage(profile.id, editing.id, name).catch((e) => console.error(e));
-    else api.createPage(profile.id, name).then((p) => api.setPage(p.id)).catch((e) => console.error(e));
+    api.renamePage(profile.id, editing.id, name).catch((e) => told(t("pages.title"), String(e)));
   };
   return (
     <nav
@@ -2814,10 +2814,10 @@ export function PageBar({ view }: { view: EngineView }) {
       </span>
       {naming ? (
         <form onSubmit={(e) => (e.preventDefault(), submit())}>
-          <input className="input tab-input" autoFocus placeholder={t("pages.name")} value={naming.name} onChange={(e) => setNaming({ ...naming, name: e.target.value })} onBlur={submit} />
+          <input className="input tab-input" autoFocus placeholder={t("pages.name")} value={naming.name} onChange={(e) => setNaming({ ...naming, name: e.target.value })} onBlur={submit} onKeyDown={(event) => { if (event.key === "Escape") { event.preventDefault(); setNaming(null); } }} />
         </form>
       ) : (
-        <button className="tab icon-only" aria-label={t("pages.new")} title={t("pages.newHelp")} onClick={() => setNaming({ id: null, name: "" })}>
+        <button className="tab icon-only" aria-label={t("pages.new")} title={t("pages.newHelp")} onClick={() => void api.createPage(profile.id, "", t("pages.autoName", { n: "{n}" })).then((p) => api.setPage(p.id)).catch((e) => told(t("pages.title"), String(e)))}>
           <Icon name="plus" />
         </button>
       )}
@@ -3683,9 +3683,10 @@ function WheelChoices() {
 }
 
 /** Installed plugins, foreground operations, and local sources. */
-function PluginsList({ onBrowse, onPickFile, onUse }: {
+function PluginsList({ onBrowse, onPickFile, onPhone, onUse }: {
   onBrowse: () => void;
   onPickFile: (update?: { id: string; name: string }) => void;
+  onPhone: () => void;
   onUse: (id: string) => void;
 }) {
   useLanguage();
@@ -3729,6 +3730,7 @@ function PluginsList({ onBrowse, onPickFile, onUse }: {
           <button type="button" className="tool primary" onClick={() => onPickFile()}><Icon name="upload" />{t("plugins.installFile")}</button>
         </div>
         <div className="row wrap plugin-manager-links">
+          <button type="button" className="tool" onClick={onPhone}><Icon name="upload" />{t("phone.title")}</button>
           <button type="button" className="tool" onClick={onBrowse}><Icon name="search" />{t("plugins.browse")}</button>
           <button type="button" className="tool ghost" onClick={() => api.openPluginsFolder().catch((e) => setError(localizeError(String(e))))}><Icon name="folder-open" />{t("plugins.openFolder")}</button>
         </div>
@@ -4082,7 +4084,7 @@ export function Banner({ live, view, onOpenProfiles, onOpenConnections }: { live
  * An imported profile that runs commands, web requests or scripts: the user sees them and keeps it
  * or removes it before it is ever used (release audit, 2026-10-13). True = keep.
  */
-async function keepImported(p: Imported): Promise<boolean> {
+export async function keepImported(p: Imported): Promise<boolean> {
   const runs = p.runs ?? [];
   if (!runs.length) return true;
   const list = runs.slice(0, 8).map((r) => `• ${r.length > 90 ? `${r.slice(0, 90)}…` : r}`).join("\n") + (runs.length > 8 ? `\n${t("import.runsMore", { count: runs.length - 8 })}` : "");

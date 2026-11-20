@@ -25,7 +25,7 @@ const SORTS: Record<Sort, (a: CatalogPlugin, b: CatalogPlugin) => number> = {
 /** The plugin catalog as its own tab (owner's pick A, 2026-10-18): free Stream Deck plugins from
  * Elgato Marketplace, OpenAction and GitHub that install here with one click; filters on the left,
  * search and sort above the cards. */
-export function PluginsTab({ onClose, onManage, onPickFile, onUse }: { onClose: () => void; onManage: () => void; onPickFile: () => void; onUse: (pluginId: string) => void }) {
+export function PluginsTab({ onClose, onManage, onPickFile, onPhone, onUse }: { onClose: () => void; onManage: () => void; onPickFile: () => void; onPhone: () => void; onUse: (pluginId: string) => void }) {
   useLanguage();
   const [list, setList] = useState<CatalogPlugin[] | "loading" | "offline">("loading");
   const [installed, setInstalled] = useState<Map<string, PluginInfo>>(new Map());
@@ -86,6 +86,7 @@ export function PluginsTab({ onClose, onManage, onPickFile, onUse }: { onClose: 
         </button>
         <h2>{t("plugins.catalog")}</h2>
         <span className="grow" />
+        <button type="button" className="tool" onClick={onPhone}>{t("phone.title")}</button>
         <button type="button" className="tool" onClick={onManage}>{t("plugins.installedTitle")}</button>
         <button type="button" className="tool primary" onClick={onPickFile}><Icon name="upload" />{t("plugins.installFile")}</button>
       </header>

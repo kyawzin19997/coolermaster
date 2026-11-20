@@ -15,7 +15,7 @@ import path from 'node:path';
 
 const out = process.argv[2] || path.join(os.tmpdir(), 'hubdeck-tasks');
 fs.mkdirSync(out, { recursive: true });
-const base = process.env.HUBDECK_URL || 'http://localhost:1460/';
+const base = process.env.MASTERDECK_URL || 'http://localhost:1460/';
 
 function findChromium() {
   if (process.env.CHROMIUM) return process.env.CHROMIUM;
@@ -172,6 +172,7 @@ const TASKS = [
     name: 'A second page of keys and a key that opens it',
     run: async (page, t) => {
       await t.click(page.getByRole('button', { name: 'New page' }));
+      await t.click(page.locator('.page-bar').getByRole('button', { name: 'Rename', exact: true }));
       await t.type(page.locator('.tab-input'), 'Games', true);
       await t.click(page.locator('.page-bar .tab', { hasText: 'Main' }));
       await t.click(key(page, 6));

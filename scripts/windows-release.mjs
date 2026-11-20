@@ -9,7 +9,7 @@ const root = fileURLToPath(new URL("../", import.meta.url));
 const installer = "MasterDeck-windows-x64-setup.exe";
 const shaFile = "SHA256-windows.txt";
 const versionPattern = "(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)";
-const workspacePackages = ["hubdeck", "mh-device", "mh-protocol"];
+const workspacePackages = ["masterdeck", "mh-device", "mh-protocol"];
 const read = (file) => readFile(resolve(root, file), "utf8");
 const write = (file, content) => writeFile(resolve(root, file), content);
 const json = (value) => JSON.stringify(value, null, 2) + "\n";
@@ -80,7 +80,7 @@ async function updateVersions(version) {
   const versionEntry = (_entry, prefix) => prefix + version;
   const tauri = config.replace(/("version": ")[^"]+/, versionEntry);
   const workspace = cargo.replace(/(\[workspace\.package\]\r?\nversion = ")[^"]+/, versionEntry);
-  const lockVersions = lock.replace(/(name = "(?:hubdeck|mh-device|mh-protocol)"\r?\nversion = ")[^"]+/g, versionEntry);
+  const lockVersions = lock.replace(/(name = "(?:masterdeck|mh-device|mh-protocol)"\r?\nversion = ")[^"]+/g, versionEntry);
   const contents = [json(jsConfig), tauri, workspace, lockVersions];
   assertVersions(contents, version);
   await Promise.all(files.map((file, index) => write(file, contents[index])));

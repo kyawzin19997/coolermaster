@@ -1,11 +1,11 @@
 //! The guard: a small second process (`hubdeck --guard <data dir> <log dir>`) that waits for
-//! HubDeck to end. A clean exit says "bye" first; any other end (a crash, Task Manager) leaves
+//! MasterDeck to end. A clean exit says "bye" first; any other end (a crash, Task Manager) leaves
 //! keys and dial in software mode showing the last picture forever, because the firmware has no
 //! watchdog (2026-10-15: frozen from 00:27 to the morning). Then the guard hands the deck back
-//! and starts HubDeck again in the tray (release builds; at most 3 times in 10 minutes).
+//! and starts MasterDeck again in the tray (release builds; at most 3 times in 10 minutes).
 //!
-//! The guard learns of the end through its stdin: HubDeck holds the pipe's other end, and the
-//! system closes it however HubDeck ends. No polling, nothing to read while HubDeck runs.
+//! The guard learns of the end through its stdin: MasterDeck holds the pipe's other end, and the
+//! system closes it however MasterDeck ends. No polling, nothing to read while MasterDeck runs.
 
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
@@ -25,7 +25,7 @@ const REPORT_LINES: usize = 60;
 
 static PIPE: Mutex<Option<ChildStdin>> = Mutex::new(None);
 
-/// Start the guard for this HubDeck (once at start; again if an update could not install).
+/// Start the guard for this MasterDeck (once at start; again if an update could not install).
 pub fn spawn(data_dir: &Path, log_dir: &Path) {
     let Ok(exe) = std::env::current_exe() else { return };
     let mut cmd = Command::new(exe);
@@ -45,14 +45,14 @@ pub fn spawn(data_dir: &Path, log_dir: &Path) {
     }
 }
 
-/// HubDeck ends on purpose (Quit, an update): the guard goes away without touching anything.
+/// MasterDeck ends on purpose (Quit, an update): the guard goes away without touching anything.
 pub fn leaving() {
     if let Some(mut pipe) = PIPE.lock().unwrap_or_else(|e| e.into_inner()).take() {
         let _ = pipe.write_all(BYE).and_then(|_| pipe.flush());
     }
 }
 
-/// `hubdeck --guard <data dir> <log dir>`: runs until HubDeck ends.
+/// `hubdeck --guard <data dir> <log dir>`: runs until MasterDeck ends.
 pub fn run(args: &[String]) {
     let (Some(data_dir), Some(log_dir)) = (args.first().map(PathBuf::from), args.get(1).map(PathBuf::from)) else { return };
     let log = |msg: &str| line(&log_dir, msg);
@@ -61,14 +61,14 @@ pub fn run(args: &[String]) {
     if got.starts_with(BYE) {
         return;
     }
-    log("HubDeck ended without quitting: handing the deck back");
+    log("MasterDeck ended without quitting: handing the deck back");
     let ended = chrono::Local::now();
     let tail = log_tail(&log_dir);
     hand_back(&log);
     crate::deck::mark_released_in(&data_dir);
     let report = |restarted: bool| write_report(&data_dir, ended, &tail, restarted);
     if cfg!(debug_assertions) {
-        log("dev build: not starting HubDeck again");
+        log("dev build: not starting MasterDeck again");
         report(false);
         return;
     }
@@ -81,7 +81,7 @@ pub fn run(args: &[String]) {
     let path = data_dir.join(RESTARTS);
     let mut recent: Vec<i64> = std::fs::read_to_string(&path).unwrap_or_default().lines().filter_map(|l| l.trim().parse().ok()).filter(|t| now - t < RESTART_WINDOW_MS).collect();
     if recent.len() >= MAX_RESTARTS {
-        log(&format!("HubDeck ended {MAX_RESTARTS} times within 10 minutes: not starting it again (the deck stays handed back)"));
+        log(&format!("MasterDeck ended {MAX_RESTARTS} times within 10 minutes: not starting it again (the deck stays handed back)"));
         report(false);
         return;
     }
@@ -90,8 +90,8 @@ pub fn run(args: &[String]) {
     report(true);
     let Ok(exe) = std::env::current_exe() else { return };
     match Command::new(&exe).arg(crate::HIDDEN_ARG).stdin(Stdio::null()).stdout(Stdio::null()).stderr(Stdio::null()).spawn() {
-        Ok(child) => log(&format!("HubDeck started again in the tray (pid {}, restart {} of {MAX_RESTARTS} in 10 minutes)", child.id(), recent.len())),
-        Err(e) => log(&format!("could not start HubDeck again: {e}")),
+        Ok(child) => log(&format!("MasterDeck started again in the tray (pid {}, restart {} of {MAX_RESTARTS} in 10 minutes)", child.id(), recent.len())),
+        Err(e) => log(&format!("could not start MasterDeck again: {e}")),
     }
 }
 
@@ -121,11 +121,11 @@ fn hand_back(log: &dyn Fn(&str)) {
 /// The log's last lines before the end (the guard's own lines left out).
 fn log_tail(log_dir: &Path) -> Vec<String> {
     let text = std::fs::read(log_dir.join("hubdeck.log")).map(|b| String::from_utf8_lossy(&b).into_owned()).unwrap_or_default();
-    let lines: Vec<&str> = text.lines().filter(|l| !l.contains("[hubdeck_lib::guard]")).collect();
+    let lines: Vec<&str> = text.lines().filter(|l| !l.contains("[masterdeck_lib::guard]")).collect();
     lines[lines.len().saturating_sub(REPORT_LINES)..].iter().map(|l| l.to_string()).collect()
 }
 
-/// The report the window shows at the next start: when, whether HubDeck came back, the panic (if
+/// The report the window shows at the next start: when, whether MasterDeck came back, the panic (if
 /// the log has one) and the last log lines to copy (nothing is sent anywhere).
 fn write_report(data_dir: &Path, ended: chrono::DateTime<chrono::Local>, tail: &[String], restarted: bool) {
     let panic = tail.iter().rev().find(|l| l.contains("panic in thread")).cloned();
@@ -171,10 +171,10 @@ fn shutting_down() -> bool {
     false
 }
 
-/// A line in HubDeck's own log, in its format (the app is not running to write it).
+/// A line in MasterDeck's own log, in its format (the app is not running to write it).
 fn line(log_dir: &Path, msg: &str) {
     let at = chrono::Local::now().format("[%Y-%m-%d][%H:%M:%S]");
     if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(log_dir.join("hubdeck.log")) {
-        let _ = writeln!(f, "{at}[INFO][hubdeck_lib::guard] {msg}");
+        let _ = writeln!(f, "{at}[INFO][masterdeck_lib::guard] {msg}");
     }
 }

@@ -3,7 +3,7 @@
 //!
 //!     cargo run --release -p mh-device --example framerate -- [seconds per test] [jpeg quality]
 //!
-//! Quit HubDeck first: it redraws the deck and would mix its pictures in.
+//! Quit MasterDeck first: it redraws the deck and would mix its pictures in.
 
 use std::io::Cursor;
 use std::time::{Duration, Instant};

@@ -35,7 +35,7 @@ const profile = settings.active;
   p.effects = { layers: [{ kind: "snow" }, { kind: "fireflies" }] };
   fs.writeFileSync(file, JSON.stringify(p, null, 2));
 }
-const app = spawn(exe, [], { env: { ...process.env, HUBDECK_AUTOMATION: dir, HUBDECK_CDP_PORT: String(PORT) }, stdio: "ignore" });
+const app = spawn(exe, [], { env: { ...process.env, MASTERDECK_AUTOMATION: dir, MASTERDECK_CDP_PORT: String(PORT) }, stdio: "ignore" });
 for (let i = 0; i < 60 && !fs.existsSync(path.join(dir, "api-http-port")); i++) await sleep(500);
 await sleep(1500);
 let browser;

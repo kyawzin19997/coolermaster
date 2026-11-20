@@ -1,7 +1,7 @@
-// Do Stream Deck plugins learn their keys after HubDeck restarts? (#5, Zendeman, 2026-10-19:
+// Do Stream Deck plugins learn their keys after MasterDeck restarts? (#5, Zendeman, 2026-10-19:
 // Discord keys did nothing after a restart until any key was reassigned; he has Auto-switch off.)
 // A test copy of its own (no deck, never the focus) with a small plugin that writes down every
-// event it gets: put its action on a key, restart HubDeck, and check the plugin heard willAppear
+// event it gets: put its action on a key, restart MasterDeck, and check the plugin heard willAppear
 // for that key without anything else changing.
 //   node scripts/ui/plugin-restart.mjs [path to hubdeck.exe]    # default: the test build
 import { spawn } from "node:child_process";
@@ -33,7 +33,7 @@ fs.mkdirSync(pdir, { recursive: true });
 fs.writeFileSync(
   path.join(pdir, "manifest.json"),
   JSON.stringify({
-    Name: "Test appear", Version: "1.0.0", Author: "HubDeck", Description: "Writes down what it hears.", Icon: "icon", CodePath: "plugin.js",
+    Name: "Test appear", Version: "1.0.0", Author: "MasterDeck", Description: "Writes down what it hears.", Icon: "icon", CodePath: "plugin.js",
     Nodejs: { Version: "20" }, SDKVersion: 2, OS: [{ Platform: "windows", MinimumVersion: "10" }], Software: { MinimumVersion: "6.4" },
     Actions: [{ Name: "Ping", UUID: `${PLUGIN}.ping`, Icon: "icon", States: [{ Image: "icon" }], Controllers: ["Keypad"] }],
   }),
@@ -52,7 +52,7 @@ const events = () => (fs.existsSync(path.join(pdir, "events.log")) ? fs.readFile
 let app;
 const start = async () => {
   for (const f of ["api-http-port", "api-token"]) fs.rmSync(path.join(dir, f), { force: true });
-  app = spawn(exe, [], { env: { ...process.env, HUBDECK_AUTOMATION: dir, HUBDECK_CDP_PORT: "9471" }, stdio: "ignore" });
+  app = spawn(exe, [], { env: { ...process.env, MASTERDECK_AUTOMATION: dir, MASTERDECK_CDP_PORT: "9471" }, stdio: "ignore" });
   for (let i = 0; i < 60 && !fs.existsSync(path.join(dir, "api-http-port")); i++) await sleep(500);
   await sleep(500);
 };

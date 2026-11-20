@@ -1,4 +1,4 @@
-# Starts a test copy of HubDeck for checks driven from a script (Playwright over DevTools),
+# Starts a test copy of MasterDeck for checks driven from a script (Playwright over DevTools),
 # without touching the running app, its data or the deck, and without taking the focus:
 # its own data folder (a copy of the real data), virtual modules, the window off-screen.
 # See app/src-tauri/src/automation.rs and docs/KNOWLEDGE.md > "Testing the window yourself".
@@ -52,15 +52,15 @@ if (-not (Test-Path (Join-Path $Dir "settings.json"))) {
 }
 New-Item -ItemType Directory -Force (Join-Path $Dir "logs") | Out-Null
 
-if (-not (Test-Path $exe)) { throw "build it first: cargo build -p hubdeck" }
+if (-not (Test-Path $exe)) { throw "build it first: cargo build -p masterdeck" }
 
 $pids = @()
 # a debug build loads the window from Vite (devUrl, port 1460; other Tauri apps take 1420). Only
-# HubDeck's own page counts: anything else on the port is an error, never a window to test
+# MasterDeck's own page counts: anything else on the port is an error, never a window to test
 function Get-Vite {
     try {
         $r = Invoke-WebRequest -UseBasicParsing -TimeoutSec 2 http://localhost:1460/
-        if ($r.Content -notmatch "<title>HubDeck</title>") { throw "port 1460 serves another app's page, not HubDeck's: stop it first" }
+        if ($r.Content -notmatch "<title>MasterDeck</title>") { throw "port 1460 serves another app's page, not MasterDeck's: stop it first" }
         $r
     } catch [System.Net.WebException] { $null }
 }
@@ -74,9 +74,9 @@ if (-not $vite) {
     }
 }
 
-$env:HUBDECK_AUTOMATION = $Dir
-$env:HUBDECK_CDP_PORT = "$CdpPort"
-if ($Modules) { $env:HUBDECK_VIRTUAL_MODULES = $Modules }
+$env:MASTERDECK_AUTOMATION = $Dir
+$env:MASTERDECK_CDP_PORT = "$CdpPort"
+if ($Modules) { $env:MASTERDECK_VIRTUAL_MODULES = $Modules }
 $app = if ($Open) { Start-Process -PassThru -WindowStyle Hidden $exe -ArgumentList "`"$Open`"" } else { Start-Process -PassThru -WindowStyle Hidden $exe }
 $pids += $app.Id
 $pids | Set-Content $pidFile

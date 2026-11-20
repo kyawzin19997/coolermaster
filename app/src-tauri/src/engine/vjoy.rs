@@ -34,7 +34,7 @@ pub const HAT_DIRECTIONS: [(&str, &str); 8] =
 
 /// The vJoy calls the joystick logic needs; [`VJoy`] on Windows, a fake in tests.
 pub trait Driver {
-    /// Take device `dev` (1..=16) for HubDeck, with every control reset.
+    /// Take device `dev` (1..=16) for MasterDeck, with every control reset.
     fn acquire(&mut self, dev: u32) -> Result<(), String>;
     /// Reset the device's controls and hand it back.
     fn relinquish(&mut self, dev: u32);
@@ -51,7 +51,7 @@ pub trait Driver {
     fn set_hat4(&mut self, dev: u32, hat: u8, dir: Option<u8>) -> Result<(), String>;
 }
 
-/// The devices HubDeck holds and the axis values it set (knobs move from there).
+/// The devices MasterDeck holds and the axis values it set (knobs move from there).
 pub struct Joystick<D> {
     driver: D,
     owned: BTreeSet<u32>,
@@ -103,7 +103,7 @@ impl<D: Driver> Joystick<D> {
         Ok(v)
     }
 
-    /// Move an axis by `delta` (a share of its range) from the value HubDeck set last; a device
+    /// Move an axis by `delta` (a share of its range) from the value MasterDeck set last; a device
     /// just taken starts centered, as vJoy resets it.
     pub fn axis_by(&mut self, dev: u32, usage: u32, delta: f64) -> Result<f64, String> {
         self.device(dev)?;

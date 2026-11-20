@@ -1,6 +1,6 @@
 // Does a HWiNFO plugin key show its reading, not the plugin's logo? (owner's deck, 2026-10-20: the
 // key kept the HWiNFO logo with a sensor picked; a user with an AMD card saw the same.) Needs
-// HWiNFO running with Shared Memory Support on, and com.moeilijk.hwinfo installed in HubDeck.
+// HWiNFO running with Shared Memory Support on, and com.moeilijk.hwinfo installed in MasterDeck.
 // A test copy of its own (virtual modules, never the focus) with the owner's data and plugins:
 // a key with the plugin's reading action, then what the plugin put on it, sampled for 8 s.
 //   node scripts/ui/hwinfo-key.mjs [path to hubdeck.exe]    # default: the test build
@@ -30,7 +30,7 @@ settings.autoSwitch = false;
 fs.writeFileSync(path.join(dir, "settings.json"), JSON.stringify(settings, null, 2));
 const profile = settings.active;
 
-const app = spawn(exe, [], { env: { ...process.env, HUBDECK_AUTOMATION: dir, HUBDECK_CDP_PORT: String(PORT) }, stdio: "ignore" });
+const app = spawn(exe, [], { env: { ...process.env, MASTERDECK_AUTOMATION: dir, MASTERDECK_CDP_PORT: String(PORT) }, stdio: "ignore" });
 for (let i = 0; i < 60 && !fs.existsSync(path.join(dir, "api-http-port")); i++) await sleep(500);
 await sleep(1500);
 const api = (route, body) => {
@@ -69,7 +69,7 @@ try {
   const logos = new Set(["defaultImage.png", "defaultImage@2x.png"].filter((f) => fs.existsSync(path.join(pdir, f))).map((f) => fs.readFileSync(path.join(pdir, f)).toString("base64")));
   const images = new Set();
   let drawable = 0;
-  // what HubDeck's drawing accepts (images.rs safe_data_uri): a base64 image with nothing else in it
+  // what MasterDeck's drawing accepts (images.rs safe_data_uri): a base64 image with nothing else in it
   const safe = (s) => /^data:image\/(png|jpeg|gif|webp|svg\+xml);base64,[A-Za-z0-9+/=]+$/.test(s);
   for (let i = 0; i < 16; i++) {
     await sleep(500);
@@ -81,7 +81,7 @@ try {
     }
   }
   check("the plugin's picture reaches the key", images.size > 0, `${images.size} different pictures in 8 s`);
-  check("HubDeck draws the reading, not the plugin's logo", drawable > 0, `${drawable} of 16 samples are a drawable picture other than the logo`);
+  check("MasterDeck draws the reading, not the plugin's logo", drawable > 0, `${drawable} of 16 samples are a drawable picture other than the logo`);
   check("and it keeps changing (the reading's graph)", images.size > 1);
   // the key's label is the plugin's title (owner's 1a, 2026-10-20): it draws "CPU" itself
   const picture = async (name) => {
@@ -91,11 +91,11 @@ try {
     return l;
   };
   const plain = await picture("no-label");
-  check("no HubDeck label over the plugin's picture", !plain?.label, JSON.stringify(plain?.label ?? null));
+  check("no MasterDeck label over the plugin's picture", !plain?.label, JSON.stringify(plain?.label ?? null));
   await api(`profiles/${profile}/controls`, { control: "keys.0", binding: { action: ACTION, params, look: { label: "CPU" } } });
   await sleep(3000);
   const titled = await picture("cpu");
-  check("with the label CPU HubDeck still writes nothing over it", !titled?.label, JSON.stringify(titled?.label ?? null));
+  check("with the label CPU MasterDeck still writes nothing over it", !titled?.label, JSON.stringify(titled?.label ?? null));
   await win.setViewportSize({ width: 1280, height: 800 });
   await sleep(800);
   await win.screenshot({ path: path.join(root, "logs", "hwinfo-key.png") });

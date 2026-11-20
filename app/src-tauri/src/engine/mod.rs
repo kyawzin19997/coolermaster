@@ -124,7 +124,7 @@ pub const ERROR_EVENT: &str = "engine://error";
 pub const LEDS_EVENT: &str = "engine://leds";
 /// How long a pressed key shows its frame: long enough to see, short enough not to be in the way.
 const PRESS_FLASH: Duration = Duration::from_millis(160);
-/// How often HubDeck's rainbow moves on (10 steps a second: smooth on the LEDs, light on USB).
+/// How often MasterDeck's rainbow moves on (10 steps a second: smooth on the LEDs, light on USB).
 const RAINBOW_STEP: Duration = Duration::from_millis(leds::RAINBOW_TICK_MS);
 
 /// How often lights that follow the music are set; one still going out waits for the next step
@@ -459,7 +459,7 @@ pub struct EngineState {
     pub auto_profiles: bool,
     /// The draft shown on the deck for a try (`Engine::try_profile`).
     pub trying: Option<String>,
-    /// A draft that was on the deck for a try when HubDeck stopped (the window offers it back).
+    /// A draft that was on the deck for a try when MasterDeck stopped (the window offers it back).
     pub interrupted_try: Option<String>,
     /// Comparing drafts on the deck: (which one, of how many).
     pub comparing: Option<(usize, usize)>,
@@ -688,7 +688,7 @@ impl Engine {
                     let _ = w.destroy();
                 }
                 let Some(parsed) = url.and_then(|url| url.parse().ok()) else { return };
-                if let Err(e) = tauri::WebviewWindowBuilder::new(&app, &label, tauri::WebviewUrl::External(parsed)).visible(false).title("HubDeck plugin").build() {
+                if let Err(e) = tauri::WebviewWindowBuilder::new(&app, &label, tauri::WebviewUrl::External(parsed)).visible(false).title("MasterDeck plugin").build() {
                     log::warn!("HTML plugin window: {e}");
                 }
             });
@@ -712,7 +712,7 @@ impl Engine {
                 log::error!("could not save the default profile: {e}");
             }
         }
-        // HubDeck starts with the home profile at start; the user's pick replaces it until next time
+        // MasterDeck starts with the home profile at start; the user's pick replaces it until next time
         let active = store.fallback_id();
         let shared = Arc::new(Mutex::new(Shared {
             store,
@@ -846,7 +846,7 @@ impl Engine {
             homeassistant::start(media_tx.clone(), s.store.settings.ha_url.clone().unwrap_or_default(), secrets::get("homeassistant"));
             twitch::start(media_tx.clone());
             live::init(media_tx.clone());
-            // the user's own apps: HubDeck listens to their state (docs/APP-CONTRACT.md)
+            // the user's own apps: MasterDeck listens to their state (docs/APP-CONTRACT.md)
             states::init(media_tx.clone());
             states::connect_all(s.store.settings.apps.clone());
             sound::init(media_tx.clone());
@@ -960,7 +960,7 @@ impl Engine {
             if s.trying.take().is_some() {
                 s.draft_compare = None;
             }
-            // picked by hand: app profiles give back to it; HubDeck still starts on the home profile,
+            // picked by hand: app profiles give back to it; MasterDeck still starts on the home profile,
             // set only by "Set as home" (owner, 2026-10-22: a click made the profile home)
             s.active = Some(id.to_string());
             s.home = Some(id.to_string());
@@ -1407,7 +1407,7 @@ pub fn frame_cost() -> serde_json::Value {
     })
 }
 
-/// The key screen's pictures a second and HubDeck's CPU (% of one core) since the last call
+/// The key screen's pictures a second and MasterDeck's CPU (% of one core) since the last call
 /// (owner, 2026-10-26: "Da się zrobić żeby mi jakoś framerate pokazywało jaki mi to wszystko
 /// generuje na decku?"). The first call gives zeros; the window asks once a second.
 pub fn deck_rate() -> (f32, Option<f32>) {
@@ -1604,7 +1604,7 @@ impl Perf {
     }
 }
 
-/// The knobs', faders' and base's LED reports go out on a thread of their own (2026-10-14: HubDeck's
+/// The knobs', faders' and base's LED reports go out on a thread of their own (2026-10-14: MasterDeck's
 /// rainbow, sent every 100 ms on the engine thread, held the key panel back: 9 pictures a second
 /// on the Fun page instead of 15). In order, nothing dropped: each batch is the change from the one
 /// before. Those modules are not the keys or the dial, so their reports go alongside the pictures.
@@ -1853,7 +1853,7 @@ struct Worker {
     /// The app of the call that is on (it records the microphone), and when that was last looked at.
     in_call: Option<String>,
     call_checked: Instant,
-    /// HubDeck draws a rainbow now: the LEDs get the next color every `RAINBOW_STEP`.
+    /// MasterDeck draws a rainbow now: the LEDs get the next color every `RAINBOW_STEP`.
     rainbow_running: bool,
     rainbow_last: Instant,
     /// A light follows the music now (`beat.rs`): the LEDs are set every [`MUSIC_STEP`].
@@ -2931,7 +2931,7 @@ impl Worker {
                                 .map(|n| n == 1)
                                 .or_else(|| (b.action == actions::TOGGLE).then(|| self.toggle_on(&toggle_key(profile.as_ref().map(|p| p.id.as_str()), &id), b)))
                                 .or_else(|| self.state_of(b));
-                            // a Stream Deck action's state picks its picture, it is not HubDeck's red "on";
+                            // a Stream Deck action's state picks its picture, it is not MasterDeck's red "on";
                             // nor is a key of two audio devices': both its icons say which one is in use
                             let pair = audio_pair(b);
                             let shown_state = if sdplugins::is_sd_action(&b.action) || pair.is_some() { None } else { state };
@@ -3531,7 +3531,7 @@ impl Worker {
     }
 
     /// What plugins show on the active profile's controls, for the window's drawing of the deck
-    /// (it draws saved looks; these change while HubDeck runs). Sent when it changes.
+    /// (it draws saved looks; these change while MasterDeck runs). Sent when it changes.
     fn publish_looks(&mut self) {
         let profile = self.lock().active_profile().cloned();
         let mut now: HashMap<String, Look> = HashMap::new();
@@ -3772,7 +3772,7 @@ impl Worker {
     }
 
     /// Whether a toggle ran its first steps last (the next press runs the second). Read from the
-    /// system when its first steps have a state HubDeck can read (an audio device, mute, a light,
+    /// system when its first steps have a state MasterDeck can read (an audio device, mute, a light,
     /// OBS recording), so it follows a change made elsewhere or a restart of the PC; else the side
     /// it remembers.
     fn toggle_on(&self, key: &str, binding: &Binding) -> bool {
@@ -4350,7 +4350,7 @@ impl Worker {
                 }
                 _ => wanted,
             };
-            // HubDeck's own rainbow: the color of this moment, the same the window works out
+            // MasterDeck's own rainbow: the color of this moment, the same the window works out
             let (wanted, replaced) =
                 if light_cfg.hub_rainbow && !blanked && game.is_none() && (wanted.is_none() || wanted.as_ref().is_some_and(|l| l.leds.iter().any(|led| led.mode == LedMode::Rainbow))) {
                     let unix_ms = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_millis() as u64).unwrap_or(0);
@@ -4383,6 +4383,15 @@ impl Worker {
             // window is told the color as it is, with the effect's name
             let music_view: Vec<bool> = wanted.as_ref().map(|l| l.leds.iter().map(|led| led.pulse).collect()).unwrap_or_default();
             let as_set = wanted.clone();
+            let breathing = wanted
+                .as_mut()
+                .map(|lights| {
+                    let ms = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |d| d.as_millis() as u64);
+                    leds::breathing_frame(lights, ms)
+                })
+                .unwrap_or_default();
+            let breathing_now = breathing.iter().any(|enabled| *enabled);
+            rainbow_now |= breathing_now;
             if music_view.iter().any(|p| *p) && !blanked && game.is_none() {
                 music_now = true;
                 // one tuning for every light to the music (Settings > Lights)
@@ -4421,7 +4430,7 @@ impl Worker {
             // only the music's brightness changed and the last LEDs are still going out, or knobs
             // and faders had one 40 ms ago (their firmware takes fewer: the faders dropped off the
             // bus at 50 a second, 2026-10-19): this moment is skipped, a later step sends its own
-            let only_brightness = music_view.iter().any(|p| *p) && before.is_some() && self.leds_shown.get(&m.id) == Some(&as_set);
+            let only_brightness = (breathing_now || music_view.iter().any(|p| *p)) && before.is_some() && self.leds_shown.get(&m.id) == Some(&as_set);
             let too_soon = m.kind != "base" && self.music_sent.get(&m.id).is_some_and(|at| at.elapsed() < Duration::from_millis(40));
             if only_brightness && (led_sender().busy(&m.id) || too_soon) {
                 continue;
@@ -4441,10 +4450,20 @@ impl Worker {
                         led.effect = "music";
                     }
                 }
+                if breathing_now && let Some(frames) = wanted.as_ref() {
+                    for (index, enabled) in breathing.iter().enumerate() {
+                        if *enabled {
+                            let [r, g, b] = frames.leds[index].rgb;
+                            v[index] = leds::LedView { color: format!("#{r:02x}{g:02x}{b:02x}"), effect: "breathingFrame" };
+                        }
+                    }
+                }
                 v
             });
             // no device (a test copy's virtual module): the window and the API still see what it shows
             let Some(module) = self.deck.module(&m.id) else {
+                self.leds_sent.insert(m.id.clone(), wanted);
+                self.leds_shown.insert(m.id.clone(), as_set);
                 shown.push((m.id.clone(), view));
                 continue;
             };
@@ -4465,7 +4484,7 @@ impl Worker {
         self.rainbow_running = rainbow_now;
         self.music_running = music_now;
         beat::want(music_now);
-        // the window hears only real changes (HubDeck's rainbow turning is not one: it follows the clock)
+        // the window hears only real changes (MasterDeck's rainbow turning is not one: it follows the clock)
         let all = {
             let mut s = self.lock();
             for (id, colors) in out {

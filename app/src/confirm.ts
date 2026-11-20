@@ -3,10 +3,10 @@ import * as dialog from "@tauri-apps/plugin-dialog";
 import { t } from "./i18n";
 
 /**
- * Questions before something that cannot be undone, asked in HubDeck's own window (owner's pick
+ * Questions before something that cannot be undone, asked in MasterDeck's own window (owner's pick
  * 1b, 2026-10-23, https://claude.ai/artifact/GCr9VTUJX1bD4CseYo9h1d: like Discord, Spotify and VS
  * Code's custom dialogs, in the window's look, the button named for what it does). Not
- * `window.confirm`: in HubDeck's window it goes to a dialog command the plugin no longer has and
+ * `window.confirm`: in MasterDeck's window it goes to a dialog command the plugin no longer has and
  * returns a promise, which an `if` takes as yes; the profile was deleted without a question
  * (2026-10-18). `ConfirmHost` shows them, one at a time.
  */
@@ -50,7 +50,7 @@ export function confirmed(message: string, ok: string = t("confirm.delete")): Pr
 }
 
 /** Something went wrong: said in the window, in its look, with one OK (not `window.alert`, a system
- * box outside HubDeck's look; ROADMAP Now, 2026-11-01). */
+ * box outside MasterDeck's look; ROADMAP Now, 2026-11-01). */
 export function told(title: string, body?: string): Promise<void> {
   return askInWindow({ title, body, ok: t("confirm.gotIt"), notice: true }).then(() => undefined);
 }
@@ -64,12 +64,12 @@ export function useQuestion(): Asked | null {
 }
 
 /**
- * The system's file dialogs. A test copy (`HUBDECK_AUTOMATION`, its window off screen) never shows
+ * The system's file dialogs. A test copy (`MASTERDECK_AUTOMATION`, its window off screen) never shows
  * one: a dialog would come up on the owner's screen and take his focus (2026-10-23, a walk's
  * Uninstall question did, when it was still the system's). There the engine's start script sets
- * `__HUBDECK_TEST__` and a file dialog picks nothing.
+ * `__MASTERDECK_TEST__` and a file dialog picks nothing.
  */
-const testCopy = () => typeof window !== "undefined" && "__HUBDECK_TEST__" in window;
+const testCopy = () => typeof window !== "undefined" && "__MASTERDECK_TEST__" in window;
 
 export const open: typeof dialog.open = ((options) => (testCopy() ? Promise.resolve(null) : dialog.open(options))) as typeof dialog.open;
 

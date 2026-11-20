@@ -18,7 +18,7 @@ function loadGameIcons() {
 
 type Category = "recent" | "interface" | "emoji" | "games" | `pack:${string}`;
 
-/** Elgato's icon packs (Stream Deck's Marketplace); a pack downloaded there opens in HubDeck. */
+/** Elgato's icon packs (Stream Deck's Marketplace); a pack downloaded there opens in MasterDeck. */
 const MARKETPLACE_ICONS = "https://marketplace.elgato.com/stream-deck/icons";
 
 /** Emoji for a key, drawn in the system's color emoji font; looks name them `emoji:<emoji>`. A

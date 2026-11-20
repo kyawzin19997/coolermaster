@@ -2,7 +2,7 @@
 // audyt wydajności i optymalizacji zarówno samego decku jak i apki"): a test copy with his profiles
 // (virtual modules, its window off screen, never the focus) puts each theme from `engine.ts` on the
 // active profile, lets it settle, then reads the frame cost debugger (`frame_cost`: each layer's
-// ms, the keys, the JPEG) and HubDeck's CPU (`deck_rate`) once a second for `seconds`, and keeps a
+// ms, the keys, the JPEG) and MasterDeck's CPU (`deck_rate`) once a second for `seconds`, and keeps a
 // frame at rest and one after a press. USB is not in it (virtual modules): the gate measures that.
 //   node scripts/ui/theme-cost.mjs [seconds] [hubdeck.exe]     # writes logs/theme-cost/cost.json
 import { chromium } from "playwright-core";
@@ -57,7 +57,7 @@ const only = process.env.THEME_IDS?.split(",").filter(Boolean);
 if (only) themes.splice(0, themes.length, ...only.map((id) => themes.find((t) => t.id === id)).filter(Boolean));
 console.log(`${themes.length} themes: ${themes.map((t) => t.id).join(", ")}`);
 
-const app = spawn(exe, [], { env: { ...process.env, HUBDECK_AUTOMATION: dir, HUBDECK_CDP_PORT: String(PORT) }, stdio: "ignore" });
+const app = spawn(exe, [], { env: { ...process.env, MASTERDECK_AUTOMATION: dir, MASTERDECK_CDP_PORT: String(PORT) }, stdio: "ignore" });
 for (let i = 0; i < 60 && !fs.existsSync(path.join(dir, "api-http-port")); i++) await sleep(500);
 await sleep(1500);
 const api = (route, body) => {
@@ -118,7 +118,7 @@ try {
   await sleep(1500);
 }
 fs.writeFileSync(path.join(out, "cost.json"), JSON.stringify(results, null, 2));
-const log = fs.readFileSync(path.join(dir, "logs", "hubdeck.log"), "utf8").split("\n").filter((l) => /does not compile|panicked|ERROR \[hubdeck_lib::engine::canvas/.test(l));
+const log = fs.readFileSync(path.join(dir, "logs", "hubdeck.log"), "utf8").split("\n").filter((l) => /does not compile|panicked|ERROR \[masterdeck_lib::engine::canvas/.test(l));
 if (log.length) console.log(log.slice(-8).join("\n"));
 console.log(`screen clean: ${JSON.stringify(screenClean(dir))}`);
 fs.rmSync(dir, { recursive: true, force: true });

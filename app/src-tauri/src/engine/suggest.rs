@@ -137,7 +137,7 @@ pub fn for_control(profile: &Profile, control: &str) -> Vec<Binding> {
             break;
         }
     }
-    // in the window's language, like the profiles HubDeck makes
+    // in the window's language, like the profiles MasterDeck makes
     picked.into_iter().map(super::localize::binding).collect()
 }
 

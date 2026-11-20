@@ -1,6 +1,6 @@
 //! Spotify through its Web API, with the user's own app id (developer.spotify.com, free): like or
 //! unlike the playing track, remove it from the playlist it plays from, add it to a playlist. The
-//! sign-in is PKCE in the browser (no secret in HubDeck); the refresh token goes to the system's
+//! sign-in is PKCE in the browser (no secret in MasterDeck); the refresh token goes to the system's
 //! credential store. A worker thread does every call, so the deck never waits for the network.
 
 use std::sync::OnceLock;
@@ -39,7 +39,7 @@ pub enum Request {
 }
 
 /// The Liked Songs path for one track: `/me/library` by URI (Spotify, February 2026: apps in
-/// Development Mode, as every HubDeck user's own is, got 403 Forbidden on the old `/me/tracks`;
+/// Development Mode, as every MasterDeck user's own is, got 403 Forbidden on the old `/me/tracks`;
 /// issue #4).
 fn library_path(suffix: &str, uri: &str) -> String {
     format!("/me/library{suffix}?uris={}", urlencode(uri))
@@ -139,7 +139,7 @@ fn agent() -> ureq::Agent {
 }
 
 /// Who signed in, for the window: their Spotify name and whether they have Premium (None: Spotify
-/// did not say). Apps like HubDeck's (Development Mode) stop working without Premium.
+/// did not say). Apps like MasterDeck's (Development Mode) stop working without Premium.
 #[derive(Debug, Clone, serde::Serialize, PartialEq)]
 pub struct Account {
     pub name: String,
@@ -178,11 +178,11 @@ pub fn connect(client_id: &str, open_url: impl Fn(&str)) -> Result<Account, Stri
         let query = req.url().split_once('?').map(|(_, q)| q.to_string()).unwrap_or_default();
         let param = |k: &str| query.split('&').find_map(|kv| kv.split_once('=').filter(|(a, _)| *a == k).map(|(_, v)| v.to_string()));
         let page = |text: &str| {
-            tiny_http::Response::from_string(format!("<html><body style=\"font-family:sans-serif;padding:2em\"><h2>HubDeck</h2><p>{text}</p></body></html>"))
+            tiny_http::Response::from_string(format!("<html><body style=\"font-family:sans-serif;padding:2em\"><h2>MasterDeck</h2><p>{text}</p></body></html>"))
                 .with_header("Content-Type: text/html; charset=utf-8".parse::<tiny_http::Header>().expect("static header"))
         };
         if param("state").as_deref() != Some(state.as_str()) {
-            let _ = req.respond(page("This answer does not belong to the sign-in HubDeck started."));
+            let _ = req.respond(page("This answer does not belong to the sign-in MasterDeck started."));
             continue;
         }
         if let Some(err) = param("error") {
@@ -231,7 +231,7 @@ struct Worker {
     /// The track whose like was asked last, and when.
     liked_of: Option<(String, Instant)>,
     /// Calls to Spotify since `counted_since`: written to the log every 10 minutes, so a
-    /// diagnostics file shows how hard HubDeck asks.
+    /// diagnostics file shows how hard MasterDeck asks.
     calls: u32,
     counted_since: Instant,
     /// Spotify said "Too Many Requests": nothing is asked before this (its Retry-After).

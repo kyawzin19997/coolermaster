@@ -96,7 +96,7 @@ try {
   const template = path.join(dir, "languages", "template.json");
   const t = fs.existsSync(template) ? JSON.parse(fs.readFileSync(template, "utf8")) : {};
   check("Make a language file writes every English text", Object.keys(t.strings ?? {}).length > 1000 && Object.keys(t.actions ?? {}).length > 50 && t.strings["topbar.settings"] === "Settings", `${Object.keys(t.strings ?? {}).length} texts, ${Object.keys(t.actions ?? {}).length} actions, ${Object.keys(t.presets ?? {}).length} presets`);
-  // Japanese that comes with HubDeck (owner, 2026-10-18)
+  // Japanese that comes with MasterDeck (owner, 2026-10-18)
   check("Japanese is on the list", (await language.locator("option").allTextContents()).filter((x) => x === "日本語").length === 1);
   await language.selectOption({ label: "日本語" });
   await page.waitForFunction(() => document.querySelector(".settings-nav")?.textContent?.includes("ライトと画面"), null, { timeout: 8000 }).catch(() => {});

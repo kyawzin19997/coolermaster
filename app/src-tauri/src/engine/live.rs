@@ -447,7 +447,7 @@ fn run(engine: Option<Sender<Msg>>, rx: Receiver<Cmd>) {
 fn fetch(agent: &ureq::Agent, kind: &Kind) -> Reading {
     match kind {
         Kind::Url { url, path, secret } => {
-            let mut req = agent.get(url).header("User-Agent", concat!("HubDeck/", env!("CARGO_PKG_VERSION")));
+            let mut req = agent.get(url).header("User-Agent", concat!("MasterDeck/", env!("CARGO_PKG_VERSION")));
             if !secret.is_empty() {
                 match super::secrets::get(&format!("{SECRET_PREFIX}{secret}")) {
                     Some(token) => req = req.header("Authorization", format!("Bearer {token}")),

@@ -1,5 +1,5 @@
 //! The tour (owner, 2026-10-13: "show, then ask, then build"; `docs/ASSISTANT-TOUR.md`, after an
-//! audit): HubDeck makes a home deck for this person at once (their modules, their system, what
+//! audit): MasterDeck makes a home deck for this person at once (their modules, their system, what
 //! they do most at the computer, their apps and games), shows it on the deck as a draft and walks
 //! them through it part by part; each part can be kept or left out and has one or two looks. No
 //! AI is needed. Nothing of theirs changes: the deck, the microphone and the volume come back on
@@ -19,7 +19,7 @@ use super::Engine;
 use super::profile::{Page, Profile};
 use super::volume::{self, Target};
 
-/// What the person does most at the computer (one tap; HubDeck suggests one from what it sees).
+/// What the person does most at the computer (one tap; MasterDeck suggests one from what it sees).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
 pub enum Focus {
@@ -110,7 +110,7 @@ pub struct View {
     pub rollers: bool,
 }
 
-/// Before a tour: what HubDeck suggests and why (the window pre-selects it).
+/// Before a tour: what MasterDeck suggests and why (the window pre-selects it).
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Suggestion {
@@ -209,7 +209,7 @@ pub fn context(app: &AppHandle, focus: Option<Focus>, polish: bool) -> Ctx {
     ctx
 }
 
-/// What HubDeck guesses the deck is mostly for, from what it sees (the window shows it as the
+/// What MasterDeck guesses the deck is mostly for, from what it sees (the window shows it as the
 /// answer already picked, so a person who does not know yet just goes on; owner, 2026-10-13).
 pub fn suggest(ctx: &Ctx) -> Focus {
     let used = |any: &[&str]| ctx.apps.iter().take(6).any(|(exe, name, _)| exe_like(&format!("{exe} {name}"), any));
@@ -538,7 +538,7 @@ fn build(ctx: &Ctx, choices: &Choices, id: &str) -> (Profile, Vec<Stop>) {
         }
         stops.push(stop);
     }
-    // the Fun page: HubDeck's own animations to look through, Mochi on the dial and off again,
+    // the Fun page: MasterDeck's own animations to look through, Mochi on the dial and off again,
     // the screensavers one after another, and the way back
     if fun_page {
         controls.insert("keys.9".into(), binding("core.page", json!({"page": "fun"}), &ctx.tr("Fun", "Zabawa"), "sparkles"));
@@ -627,7 +627,7 @@ fn save_and_show(engine: &Engine, p: Profile) -> Result<(), String> {
     engine.try_profile(Some(&id))
 }
 
-/// What HubDeck would suggest, before anything is made (the first screen of the tour).
+/// What MasterDeck would suggest, before anything is made (the first screen of the tour).
 #[tauri::command]
 pub async fn tour_suggest(app: AppHandle, language: String) -> Result<Suggestion, String> {
     tauri::async_runtime::spawn_blocking(move || {

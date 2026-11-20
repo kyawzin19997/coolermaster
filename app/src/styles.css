@@ -5103,7 +5103,7 @@ button.lib-foot:focus-visible span {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-/* HubDeck's ideas inside the chooser read as one more section of it */
+/* MasterDeck's ideas inside the chooser read as one more section of it */
 .chooser-results > .field {
   gap: 6px;
 }

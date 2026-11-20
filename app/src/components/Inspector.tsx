@@ -152,7 +152,7 @@ export function InstalledPicker({ games, onPick }: { games: boolean; onPick: (it
   );
 }
 
-/** `C:\\x\\Spotify.exe`, `Spotify.app`, `spotify` -> `spotify`: how HubDeck matches an app. */
+/** `C:\\x\\Spotify.exe`, `Spotify.app`, `spotify` -> `spotify`: how MasterDeck matches an app. */
 const appStem = (name: string) =>
   name
     .trim()
@@ -1189,7 +1189,7 @@ function DialLooks({ onPick }: { onPick: (look: Look) => void }) {
 
 /** A Stream Deck action's settings page (its property inspector), as the plugin made it. The
  *  address is asked once per control and action: the page talks to the plugin itself and saves
- *  through HubDeck, so it is not reloaded while it edits. */
+ *  through MasterDeck, so it is not reloaded while it edits. */
 function SdInspector({ control, action, settings }: { control: string; action: string; settings: Record<string, unknown> }) {
   const [url, setUrl] = useState<string | null>(null);
   const [height, setHeight] = useState(120);
@@ -1198,7 +1198,7 @@ function SdInspector({ control, action, settings }: { control: string; action: s
   useEffect(() => {
     api.sdInspector(control, action, first.current).then(setUrl, () => setUrl(null));
   }, [control, action]);
-  // the page says how tall it is (HubDeck's script in it), so the box has no empty space
+  // the page says how tall it is (MasterDeck's script in it), so the box has no empty space
   useEffect(() => {
     const on = (e: MessageEvent) => {
       if (e.source === frame.current?.contentWindow && typeof e.data?.hubdeckInspectorHeight === "number") setHeight(Math.min(1200, Math.max(48, e.data.hubdeckInspectorHeight)));

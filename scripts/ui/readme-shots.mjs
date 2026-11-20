@@ -9,7 +9,7 @@ import path from 'node:path';
 
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1')), '..', '..');
 const out = process.argv[2] || path.join(root, 'docs', 'images');
-const base = process.env.HUBDECK_URL || 'http://localhost:1460/';
+const base = process.env.MASTERDECK_URL || 'http://localhost:1460/';
 
 function findChromium() {
   if (process.env.CHROMIUM) return process.env.CHROMIUM;

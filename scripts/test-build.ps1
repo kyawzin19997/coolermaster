@@ -19,7 +19,7 @@ $env:CARGO_PROFILE_RELEASE_CODEGEN_UNITS = "$half"
 $env:CARGO_PROFILE_RELEASE_INCREMENTAL = "true"
 # marks the app as a test build: only a test build reads shaders from the folder named in
 # `shader-dir.txt` (canvas.rs `shader_dir`); release builds (CI) never do
-$env:HUBDECK_TEST_BUILD = "1"
+$env:MASTERDECK_TEST_BUILD = "1"
 # every shader compiles before the build (2026-10-26: two layers never ran on the deck, the app's log
 # only said "Validation Error"); needs the `wgpu` package in .venv (docs/SETUP.md)
 $py = Join-Path $root ".venv\Scripts\python.exe"

@@ -1,5 +1,5 @@
 //! Macro recorder: while recording, a low-level keyboard hook notes every key the user presses
-//! (not the ones HubDeck itself sends), with the time; stopping turns them into multi-action steps:
+//! (not the ones MasterDeck itself sends), with the time; stopping turns them into multi-action steps:
 //! one Hotkey step per key with its modifiers, each waiting as long as the user did. Windows only
 //! for now; the hook runs on its own thread only while recording, and stops itself after two
 //! minutes if nobody stops it.
@@ -32,7 +32,7 @@ fn modifier(vk: u32) -> Option<&'static str> {
     })
 }
 
-/// A Windows virtual-key code as HubDeck's key name (see `hotkey.rs`); None for keys it cannot send.
+/// A Windows virtual-key code as MasterDeck's key name (see `hotkey.rs`); None for keys it cannot send.
 pub fn key_name(vk: u32) -> Option<String> {
     let s = match vk {
         0x30..=0x39 | 0x41..=0x5A => return char::from_u32(vk).map(|c| c.to_string()),
@@ -148,7 +148,7 @@ mod hook {
             let k = unsafe { &*(lparam.0 as *const KBDLLHOOKSTRUCT) };
             let down = matches!(wparam.0 as u32, WM_KEYDOWN | WM_SYSKEYDOWN);
             let up = matches!(wparam.0 as u32, WM_KEYUP | WM_SYSKEYUP);
-            // keys HubDeck (or any program) types are not the user's
+            // keys MasterDeck (or any program) types are not the user's
             if (down || up) && (k.flags.0 & LLKHF_INJECTED.0) == 0 {
                 let at = STARTED.lock().map(|s| s.map(|t| t.elapsed().as_millis() as u64).unwrap_or(0)).unwrap_or(0);
                 if let Ok(mut ev) = EVENTS.lock()
@@ -250,7 +250,7 @@ mod tests {
             ev(20_050, 0x0D, false),
             ev(20_100, 0x5B, true), // Win alone
             ev(20_150, 0x5B, false),
-            ev(20_200, 0xFF, true), // a key HubDeck cannot send
+            ev(20_200, 0xFF, true), // a key MasterDeck cannot send
         ];
         let steps = to_steps(&events);
         let keys: Vec<&str> = steps.iter().map(|s| s["params"]["keys"].as_str().unwrap()).collect();

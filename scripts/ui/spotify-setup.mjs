@@ -33,7 +33,7 @@ delete settings.spotifyClientId;
 settings.language = "en";
 fs.writeFileSync(path.join(dir, "settings.json"), JSON.stringify(settings, null, 2));
 
-const app = spawn(exe, [], { env: { ...process.env, HUBDECK_AUTOMATION: dir, HUBDECK_CDP_PORT: String(PORT) }, stdio: "ignore" });
+const app = spawn(exe, [], { env: { ...process.env, MASTERDECK_AUTOMATION: dir, MASTERDECK_CDP_PORT: String(PORT) }, stdio: "ignore" });
 const results = [];
 const check = (what, ok, detail) => {
   results.push(ok);
@@ -76,7 +76,7 @@ try {
       await spotify.locator("#spotify-id").fill("0123456789abcdef0123456789abcdef");
       check(`${shot}: a Client ID makes Connect clickable`, await connect.isEnabled());
       const uri = await spotify.locator(".spotify-uri").innerText();
-      check(`${shot}: the redirect address is the one HubDeck listens on`, uri.trim() === "http://127.0.0.1:43123/callback", uri);
+      check(`${shot}: the redirect address is the one MasterDeck listens on`, uri.trim() === "http://127.0.0.1:43123/callback", uri);
       await spotify.getByRole("button", { name: /Open the dashboard/ }).click();
       await sleep(300);
       const banner = await page.locator(".banner, .error-banner").count();

@@ -6,7 +6,7 @@
 
 <!-- Tests run, and on hardware: which modules, which system. -->
 
-- [ ] `cargo fmt`, `cargo clippy -p hubdeck --all-targets -- -D warnings`, `cargo test -p mh-protocol -p mh-device -p hubdeck`
+- [ ] `cargo fmt`, `cargo clippy -p masterdeck --all-targets -- -D warnings`, `cargo test -p mh-protocol -p mh-device -p masterdeck`
 - [ ] `app/node_modules/.bin/tsc --noEmit -p app` and `pnpm test` in `app/`
 - [ ] Texts through `app/src/i18n.ts`
 - [ ] No forbidden device commands (`crates/mh-protocol/src/safety.rs`)

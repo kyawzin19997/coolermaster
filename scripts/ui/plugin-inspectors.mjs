@@ -1,4 +1,4 @@
-// The settings pages of Stream Deck plugins (their property inspectors) in HubDeck's inspector, as
+// The settings pages of Stream Deck plugins (their property inspectors) in MasterDeck's inspector, as
 // a user sees them after putting an action on a key (owner, 2026-10-18: Toggle Audio Device's page
 // ran off the panel and left empty space under it; "Powinieneś być w stanie z kodu przypisać
 // element pluginu do przycisku i sprawdzić jak wygląda"). On a test copy of its own (no deck, never
@@ -17,7 +17,7 @@ const dir = path.join(os.tmpdir(), "hubdeck-plugin-inspectors");
 const out = path.join(root, "logs", "plugin-inspectors");
 const PORT = 9476;
 const args = process.argv.slice(2);
-if (args[0]?.endsWith(".json")) process.env.HUBDECK_PLUGIN_CATALOG = path.resolve(args.shift());
+if (args[0]?.endsWith(".json")) process.env.MASTERDECK_PLUGIN_CATALOG = path.resolve(args.shift());
 const ids = args.length
   ? args
   : ["com.fredemmott.audiooutputswitch", "com.fredemmott.micmutetoggle", "cz.danol.discordmixer", "com.geekyeggo.sounddeck", "de.perdoctus.streamdeck.homeassistant", "com.moeilijk.hwinfo", "com.chrisregado.googlemeet", "com.jk.weather", "me.amankhanna.oasystem", "com.ntanis.essentials-for-spotify", "com.elgato.philips-hue", "com.github.mjbnz.sd-api-request"];

@@ -1981,10 +1981,10 @@ struct OnGpu {
 }
 
 /// The folder a GPU layer's WGSL is read from instead of the built-in one, when one is set: the
-/// `HUBDECK_SHADER_DIR` variable, or a test build's `shader-dir.txt` in the app's data folder
+/// `MASTERDECK_SHADER_DIR` variable, or a test build's `shader-dir.txt` in the app's data folder
 /// (owner, 2026-10-26: "rustc znowu masakrycznie zwiększa usage … nie możemy bez tego testować i
-/// iterować?"). Release builds ignore the file (built without `HUBDECK_TEST_BUILD`).
-/// Whether looks being tried (`x-<name>.wgsl`) can run here: a test build or `HUBDECK_SHADER_DIR`.
+/// iterować?"). Release builds ignore the file (built without `MASTERDECK_TEST_BUILD`).
+/// Whether looks being tried (`x-<name>.wgsl`) can run here: a test build or `MASTERDECK_SHADER_DIR`.
 /// The layers of the built-in presets and the screensavers, compiled on the card in the background
 /// a while after start, so the first switch to a big scene does not hold the deck for 1-2 s while
 /// its program compiles (owner, 2026-10-30, "5. tak jak piszesz"; the compiled programs are kept in
@@ -2059,12 +2059,12 @@ pub fn trials() -> Vec<(String, String)> {
 }
 
 fn shader_dir() -> Option<std::path::PathBuf> {
-    if let Some(d) = std::env::var_os("HUBDECK_SHADER_DIR") {
+    if let Some(d) = crate::compat::var_os("MASTERDECK_SHADER_DIR") {
         return Some(d.into());
     }
-    // only a test build (`scripts/test-build.ps1` sets `HUBDECK_TEST_BUILD` while it compiles): a
+    // only a test build (`scripts/test-build.ps1` sets `MASTERDECK_TEST_BUILD` while it compiles): a
     // release reads its shaders from itself, whatever file is lying in the data folder
-    option_env!("HUBDECK_TEST_BUILD")?;
+    option_env!("MASTERDECK_TEST_BUILD")?;
     let file = dirs_data()?.join("shader-dir.txt");
     let dir = std::fs::read_to_string(file).ok()?;
     let dir = std::path::PathBuf::from(dir.trim());
@@ -2214,11 +2214,11 @@ impl OnGpu {
             // Tokyo Rain, made by the skill's agent and kept from its trial slot (owner, 2026-10-30: "bo jest spoko")
             "tokyorain" => ("tokyorain", include_str!("shaders/tokyorain.wgsl"), (1, 1)),
             // a look being tried: `x-<name>.wgsl` from the shader folder, so only where one is read
-            // (`HUBDECK_SHADER_DIR`, or a test build's `shader-dir.txt`; a release never)
+            // (`MASTERDECK_SHADER_DIR`, or a test build's `shader-dir.txt`; a release never)
             k if k.starts_with("x-") && shader_dir().is_some() => (Box::leak(k.to_string().into_boxed_str()), "", (W as u32, H as u32)),
             _ => return None,
         };
-        // a shader's WGSL from a folder instead (`HUBDECK_SHADER_DIR`, `<kind>.wgsl`): new looks are
+        // a shader's WGSL from a folder instead (`MASTERDECK_SHADER_DIR`, `<kind>.wgsl`): new looks are
         // tried without building the app again (`fx_film`)
         let body = if up {
             match kind {
@@ -3697,7 +3697,7 @@ mod tests {
 
     /// Each effect on a sample deck, frame by frame, as the engine draws it (backgrounds, the
     /// canvas, the keys' content; the bottom row's keys are opaque pictures with their own black
-    /// background, as many of the owner's are): `HUBDECK_SHEET=<dir> cargo test -p hubdeck
+    /// background, as many of the owner's are): `MASTERDECK_SHEET=<dir> cargo test -p masterdeck
     /// dump_canvas_frames -- --ignored` (`canvas-<name>.png`: shots in a grid of four, a press of
     /// key 7 at the start).
     #[test]
@@ -3706,7 +3706,7 @@ mod tests {
         use crate::engine::profile::Look;
         use crate::engine::render::{Renderer, panel_tiles};
         use base64::Engine as _;
-        let dir = std::path::PathBuf::from(std::env::var("HUBDECK_SHEET").expect("HUBDECK_SHEET"));
+        let dir = std::path::PathBuf::from(crate::compat::var("MASTERDECK_SHEET").expect("MASTERDECK_SHEET"));
         std::fs::create_dir_all(&dir).unwrap();
         let s = |v: &str| Some(v.to_string());
         // an opaque picture: black with a coloured disc, no alpha
@@ -3786,9 +3786,9 @@ mod tests {
     /// the JPEG bytes a frame at full quality, and the jitter test: a key whose picture moves a
     /// whole pixel between two frames (what the owner saw as keys jumping) is counted.
     ///
-    /// `HUBDECK_FX=scene,light` (or `HUBDECK_FX_JSON` = an `Effects`), `HUBDECK_SHEET=<dir>`,
-    /// optional `HUBDECK_SECONDS` (6), `HUBDECK_PRESSES=7@1.0,2@3.5`, `HUBDECK_SHADER_DIR` (WGSL
-    /// to try): `cargo test --release -p hubdeck fx_film -- --ignored --nocapture`; then
+    /// `MASTERDECK_FX=scene,light` (or `MASTERDECK_FX_JSON` = an `Effects`), `MASTERDECK_SHEET=<dir>`,
+    /// optional `MASTERDECK_SECONDS` (6), `MASTERDECK_PRESSES=7@1.0,2@3.5`, `MASTERDECK_SHADER_DIR` (WGSL
+    /// to try): `cargo test --release -p masterdeck fx_film -- --ignored --nocapture`; then
     /// `ffmpeg -framerate 24 -i <dir>/%04d.png ... film.mp4`.
     #[test]
     #[ignore]
@@ -3796,16 +3796,19 @@ mod tests {
         use crate::engine::profile::{Layer, Look};
         use crate::engine::render::{KEY_QUALITY, Renderer, encode_jpeg, panel_tiles};
         use base64::Engine as _;
-        let dir = std::path::PathBuf::from(std::env::var("HUBDECK_SHEET").expect("HUBDECK_SHEET"));
+        let dir = std::path::PathBuf::from(crate::compat::var("MASTERDECK_SHEET").expect("MASTERDECK_SHEET"));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
-        let f: Effects = match std::env::var("HUBDECK_FX_JSON") {
-            Ok(json) => serde_json::from_str(&json).expect("HUBDECK_FX_JSON"),
-            Err(_) => Effects { layers: std::env::var("HUBDECK_FX").expect("HUBDECK_FX").split(',').map(|k| Layer { kind: k.trim().to_string(), ..Layer::default() }).collect(), ..Effects::default() },
+        let f: Effects = match crate::compat::var("MASTERDECK_FX_JSON") {
+            Ok(json) => serde_json::from_str(&json).expect("MASTERDECK_FX_JSON"),
+            Err(_) => Effects {
+                layers: crate::compat::var("MASTERDECK_FX").expect("MASTERDECK_FX").split(',').map(|k| Layer { kind: k.trim().to_string(), ..Layer::default() }).collect(),
+                ..Effects::default()
+            },
         };
-        let seconds: f32 = std::env::var("HUBDECK_SECONDS").ok().and_then(|v| v.parse().ok()).unwrap_or(6.0);
+        let seconds: f32 = crate::compat::var("MASTERDECK_SECONDS").ok().and_then(|v| v.parse().ok()).unwrap_or(6.0);
         // "7@1.0" a press of key 7 at 1 s, "like:7@1.0" a Like, "page@2.0" a page turn
-        let presses: Vec<(String, f32)> = std::env::var("HUBDECK_PRESSES")
+        let presses: Vec<(String, f32)> = crate::compat::var("MASTERDECK_PRESSES")
             .unwrap_or_default()
             .split(',')
             .filter_map(|p| {
@@ -3813,8 +3816,8 @@ mod tests {
                 Some((k.trim().to_string(), t.trim().parse().ok()?))
             })
             .collect();
-        if let Ok(path) = std::env::var("HUBDECK_COVER") {
-            crate::engine::images::set_cover(Some(("image/png", &std::fs::read(path).expect("HUBDECK_COVER"))));
+        if let Ok(path) = crate::compat::var("MASTERDECK_COVER") {
+            crate::engine::images::set_cover(Some(("image/png", &std::fs::read(path).expect("MASTERDECK_COVER"))));
         }
         // a deck like the owner's: line icons on dark keys, two app logos as pictures with alpha,
         // and opaque pictures with their own black background on the bottom row
@@ -3851,12 +3854,12 @@ mod tests {
         }
         // the owner's real page instead of the made-up one (his "1 a", 2026-10-29): the main page's keys
         // of a profile file, their pictures from the images folder beside its profiles folder
-        if let Ok(path) = std::env::var("HUBDECK_PROFILE") {
+        if let Ok(path) = crate::compat::var("MASTERDECK_PROFILE") {
             let p = std::path::PathBuf::from(&path);
             if let Some(data) = p.parent().and_then(|d| d.parent()) {
                 crate::engine::images::init(data);
             }
-            let v: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(&p).expect("HUBDECK_PROFILE")).expect("a profile");
+            let v: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(&p).expect("MASTERDECK_PROFILE")).expect("a profile");
             looks = (0..15)
                 .map(|i| {
                     let mut look: Look = serde_json::from_value(v["controls"][format!("keys.{i}")]["look"].clone()).unwrap_or_default();
@@ -3870,13 +3873,13 @@ mod tests {
         }
         // the bare scene: keys with no icon, label or picture (owner, 2026-10-29: "Pokażesz mi gołe tła?
         // Bez ikon i ramek?")
-        if std::env::var("HUBDECK_BARE").is_ok() {
+        if crate::compat::var("MASTERDECK_BARE").is_ok() {
             looks = (0..15).map(|_| Look { bg: s("#1b1a20"), t: 0.0001, ..Look::default() }).collect();
         }
         let geometry = PanelGeometry::default();
         let r = Renderer::default();
         // the deck's turn (0, 90, 180, 270): 90 and 270 stand it upright (owner, 2026-10-29)
-        let turn: i32 = std::env::var("HUBDECK_TURN").ok().and_then(|v| v.parse().ok()).unwrap_or(0);
+        let turn: i32 = crate::compat::var("MASTERDECK_TURN").ok().and_then(|v| v.parse().ok()).unwrap_or(0);
         let tiles = panel_tiles(&looks, turn, &geometry);
         let keys = places();
         let mut c = Canvas::new(&f).expect("an effect");
@@ -3957,9 +3960,9 @@ mod tests {
 
     /// Where a frame's CPU goes on the owner's own keys (session 33, the CPU budget): his active
     /// profile's main page read from the app's data (read only), the living deck's layers from
-    /// `HUBDECK_FX` (default the night sky); per frame: making the tiles, painting (tiles and
+    /// `MASTERDECK_FX` (default the night sky); per frame: making the tiles, painting (tiles and
     /// layers), finding the changed keys, the keys' JPEGs and the whole panel's JPEG, in ms:
-    /// `cargo test --release -p hubdeck frame_cost -- --ignored --nocapture`.
+    /// `cargo test --release -p masterdeck frame_cost -- --ignored --nocapture`.
     #[test]
     #[ignore]
     fn frame_cost() {
@@ -3975,7 +3978,7 @@ mod tests {
         for l in &mut looks {
             l.t = l.t.max(0.0001);
         }
-        let kinds = std::env::var("HUBDECK_FX").unwrap_or_else(|_| "scene".into());
+        let kinds = crate::compat::var("MASTERDECK_FX").unwrap_or_else(|_| "scene".into());
         let f = Effects { layers: kinds.split(',').map(|k| Layer { kind: k.trim().to_string(), ..Layer::default() }).collect(), ..Effects::default() };
         let geometry = PanelGeometry::default();
         let r = Renderer::default();
@@ -4055,14 +4058,14 @@ mod tests {
     }
 
     /// Halloween theme variants for the owner's pick, as frames at 16 a second (3 presses along the
-    /// way): `HUBDECK_SHEET=<dir> cargo test --release -p hubdeck dump_halloween -- --ignored`
+    /// way): `MASTERDECK_SHEET=<dir> cargo test --release -p masterdeck dump_halloween -- --ignored`
     /// (`halloween-<variant>/NNN.png`).
     #[test]
     #[ignore]
     fn dump_halloween() {
         use crate::engine::profile::Look;
         use crate::engine::render::{Renderer, panel_tiles};
-        let dir = std::path::PathBuf::from(std::env::var("HUBDECK_SHEET").expect("HUBDECK_SHEET"));
+        let dir = std::path::PathBuf::from(crate::compat::var("MASTERDECK_SHEET").expect("MASTERDECK_SHEET"));
         let s = |v: &str| Some(v.to_string());
         let icons = ["music", "skip-forward", "headphones", "mic", "globe", "folder", "cpu", "moon", "star", "heart", "play", "bookmark", "zap", "sparkles", "trash-2"];
         let looks: Vec<Look> = icons.iter().map(|i| Look { icon: s(i), label: s(i), bg: s("#1b1a20"), fg: s("#e6e4ee"), icon_color: s("#f2b45a"), t: 0.0001, ..Look::default() }).collect();
@@ -4104,14 +4107,14 @@ mod tests {
     }
 
     /// The screensaver's scenes on black keys (`saver.rs`), frames 3 and 8 s in, and what a frame
-    /// costs: `HUBDECK_SHEET=<dir> cargo test --release -p hubdeck dump_saver_scenes -- --ignored
+    /// costs: `MASTERDECK_SHEET=<dir> cargo test --release -p masterdeck dump_saver_scenes -- --ignored
     /// --nocapture` (`saver-<scene>-<s>s.png`).
     #[test]
     #[ignore]
     fn dump_saver_scenes() {
         use crate::engine::profile::Look;
         use crate::engine::render::{Renderer, panel_tiles};
-        let dir = std::path::PathBuf::from(std::env::var("HUBDECK_SHEET").expect("HUBDECK_SHEET"));
+        let dir = std::path::PathBuf::from(crate::compat::var("MASTERDECK_SHEET").expect("MASTERDECK_SHEET"));
         std::fs::create_dir_all(&dir).unwrap();
         let looks = vec![Look { bg: Some("#000000".into()), t: 0.0001, ..Look::default() }; 15];
         let r = Renderer::default();
@@ -4143,7 +4146,7 @@ mod tests {
     /// How many bytes a frame of each effect takes over USB at full quality: the whole panel and the
     /// keys' squares one by one (2026-10-26: the hidden gaps kept still saved 5 % on snow and cost
     /// 5 % on fog, so they are drawn as they come):
-    /// `cargo test --release -p hubdeck canvas_bytes -- --ignored --nocapture`.
+    /// `cargo test --release -p masterdeck canvas_bytes -- --ignored --nocapture`.
     #[test]
     #[ignore]
     fn canvas_bytes() {
@@ -4191,7 +4194,7 @@ mod tests {
     }
 
     /// What each effect costs on the whole panel, a frame (release build):
-    /// `cargo test --release -p hubdeck canvas_cost -- --ignored --nocapture`.
+    /// `cargo test --release -p masterdeck canvas_cost -- --ignored --nocapture`.
     #[test]
     #[ignore]
     fn canvas_cost() {

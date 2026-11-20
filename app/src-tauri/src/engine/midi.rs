@@ -14,7 +14,7 @@ type CcValues = HashMap<(String, u8, u8), u8>;
 static CC: Mutex<Option<CcValues>> = Mutex::new(None);
 
 pub fn ports() -> Vec<String> {
-    let Ok(out) = MidiOutput::new("HubDeck") else { return Vec::new() };
+    let Ok(out) = MidiOutput::new("MasterDeck") else { return Vec::new() };
     out.ports().iter().filter_map(|p| out.port_name(p).ok()).collect()
 }
 
@@ -27,7 +27,7 @@ fn send(port: &str, bytes: &[u8]) -> Result<(), String> {
         }
         open.remove(port); // the port went away; reconnect below
     }
-    let out = MidiOutput::new("HubDeck").map_err(|e| e.to_string())?;
+    let out = MidiOutput::new("MasterDeck").map_err(|e| e.to_string())?;
     let found = out.ports().into_iter().find(|p| out.port_name(p).is_ok_and(|n| n == port));
     let Some(found) = found else {
         let available = ports();
@@ -37,7 +37,7 @@ fn send(port: &str, bytes: &[u8]) -> Result<(), String> {
             format!("MIDI port {port:?} not found; available: {}", available.join(", "))
         });
     };
-    let mut conn = out.connect(&found, "HubDeck").map_err(|e| e.to_string())?;
+    let mut conn = out.connect(&found, "MasterDeck").map_err(|e| e.to_string())?;
     conn.send(bytes).map_err(|e| e.to_string())?;
     open.insert(port.to_string(), conn);
     Ok(())

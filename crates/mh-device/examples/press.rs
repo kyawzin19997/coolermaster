@@ -1,12 +1,12 @@
 //! What a press looks like on the key screen, two ways, for the camera (A4, owner's "4 a",
 //! 2026-10-26): the owner's own key panel picture, then every 1.5 s key 5 ("Lubię to") "pressed":
-//!   a) as HubDeck does it now: the key's picture brightened, sent as a picture (a JPEG);
+//!   a) as MasterDeck does it now: the key's picture brightened, sent as a picture (a JPEG);
 //!   b) first the key's solid colour (`03 37`, 14 ms, no JPEG) in its own accent, then the
 //!      brightened picture, then the plain picture again.
 //!
 //!     cargo run --release -p mh-device --example press -- <panel.jpg> <a|b> [presses]
 //!
-//! Quit HubDeck first; the keys go back to the panel picture at the end.
+//! Quit MasterDeck first; the keys go back to the panel picture at the end.
 
 use std::io::Cursor;
 use std::time::Duration;

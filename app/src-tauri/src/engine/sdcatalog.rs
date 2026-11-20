@@ -12,7 +12,7 @@ use std::time::{Duration, Instant};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-/// The catalog built by `scripts/plugins/catalog.mjs`; `HUBDECK_PLUGIN_CATALOG` (a file) replaces it
+/// The catalog built by `scripts/plugins/catalog.mjs`; `MASTERDECK_PLUGIN_CATALOG` (a file) replaces it
 /// on a test copy.
 const CATALOG: &str = "https://openactionapi.github.io/plugins/catalogue.json";
 /// Plugin icons: `<ICONS><id>.png`.
@@ -26,7 +26,7 @@ const ELGATO_PAGE: &str = "https://marketplace.elgato.com/product/";
 const KEEP_FOR: Duration = Duration::from_secs(3600);
 const MAX_PLUGIN: u64 = 200 * 1024 * 1024;
 
-/// What the app and `scripts/plugins/catalog.mjs` share: the catalog plugins checked in HubDeck and
+/// What the app and `scripts/plugins/catalog.mjs` share: the catalog plugins checked in MasterDeck and
 /// on which systems, the Elgato Marketplace plugins whose authors publish an open file, and those
 /// that install but cannot run outside Elgato's app (left out, with why).
 #[derive(Deserialize)]
@@ -40,7 +40,7 @@ struct Shared {
 
 static SHARED: std::sync::LazyLock<Shared> = std::sync::LazyLock::new(|| serde_json::from_str(include_str!("sdcatalog.json")).expect("sdcatalog.json"));
 
-/// The systems a catalog plugin was checked on in HubDeck ("Windows", "Windows, macOS").
+/// The systems a catalog plugin was checked on in MasterDeck ("Windows", "Windows, macOS").
 fn tried(id: &str) -> Option<String> {
     SHARED.tried.get(id).cloned()
 }
@@ -59,7 +59,7 @@ pub struct Entry {
     pub download_url: Option<String>,
     /// The catalog marks plugins written with an AI's help.
     pub ai_assisted: bool,
-    /// Checked in HubDeck on these systems ("Windows", "Windows, macOS"); None = not tried yet.
+    /// Checked in MasterDeck on these systems ("Windows", "Windows, macOS"); None = not tried yet.
     pub tried: Option<String>,
     /// Its page on Elgato Marketplace, when it is there.
     pub elgato: Option<String>,
@@ -310,7 +310,7 @@ fn catalog() -> Result<Vec<Entry>, String> {
     {
         return Ok(list.clone());
     }
-    if let Some(file) = std::env::var_os("HUBDECK_PLUGIN_CATALOG") {
+    if let Some(file) = crate::compat::var_os("MASTERDECK_PLUGIN_CATALOG") {
         match std::fs::read(file).map_err(|e| e.to_string()).and_then(|bytes| parse_hosted(&bytes)) {
             Ok(list) if !list.is_empty() => return Ok(runnable(list)),
             Err(e) => log::warn!("plugin catalog: local catalog could not be read: {e}"),

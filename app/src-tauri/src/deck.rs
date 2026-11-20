@@ -322,7 +322,7 @@ pub struct Deck {
 #[cfg_attr(not(windows), allow(dead_code))]
 const RESUME_SETTLE: Duration = Duration::from_secs(2);
 
-/// When HubDeck last handed the modules back (`<data>/released-at`, written at exit).
+/// When MasterDeck last handed the modules back (`<data>/released-at`, written at exit).
 const RELEASED_AT: &str = "released-at";
 /// How long keys and dial get after a hand-back before the next start takes them. On macOS a module
 /// taken a second after the last app gave it back refused every command until it was reseated

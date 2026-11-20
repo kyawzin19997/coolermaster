@@ -16,6 +16,7 @@ Quit the official MasterHUB app before connecting the deck. Only one application
 - Select a key to open **Key settings** beside the deck. Use **Appearance** to change the key’s face. Profiles, pages, and local import/export are available from the profile controls.
 - Open **Appearance → Full editor** for a live preview, colors, and icons. Expand the sections for positioning, effects, batch styling, and export.
 - Open **Plugins → Install plugin** to review a `.streamDeckPlugin` file or a compatible `.zip`. Enable it after installation to add its actions. Installed plugins can be disabled, removed, or updated from a new local file.
+- Open **Plugins → Upload from Phone** to receive a profile, plugin, image, or configuration file. Scan the QR code and match the pairing code before approving the phone. Use the same trusted Wi-Fi for direct offline uploads. [Phone uploads and HTTPS relay setup](docs/phone-uploads.md)
 - Select **Updates** in the toolbar to check for the latest Windows release. MasterDeck installs an update when you choose **Install and restart**.
 - Open **Lighting** for base brightness, profile edge color, music sync, and scenes. Advanced effects, presets, screen brightness, and the screensaver remain available there.
 - Configure OBS, Spotify, Twitch, Streamlabs, Home Assistant, and other integrations under **Settings → Connections**. Local diagnostic export is in **Settings → Diagnostics**.

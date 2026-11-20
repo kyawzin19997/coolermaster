@@ -101,7 +101,7 @@ mod platform {
         let path = real.to_string_lossy();
         // Only the 128 px picture is rendered. Asking for the TIFF of the icon rendered every size
         // up to 1024 px (2048 at 2x): reading the icons of 102 apps for the window's lists took
-        // 4.9 GB and 90 s (2026-10-15; HubDeck jumped to 1.8 GB when the window opened). The
+        // 4.9 GB and 90 s (2026-10-15; MasterDeck jumped to 1.8 GB when the window opened). The
         // autorelease pool still matters: AppKit's objects are autoreleased and a Rust thread
         // has no pool of its own (2026-10-14: 5 GB at start).
         objc2::rc::autoreleasepool(|_| -> Result<Vec<u8>, String> {

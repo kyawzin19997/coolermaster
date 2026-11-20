@@ -135,7 +135,7 @@ pub fn catalog() -> Vec<ActionDef> {
                 p("counterClockwise", "Turn counter-clockwise / down", ParamKind::Hotkey, json!("")),
                 ParamDef {
                     help: Some(
-                        "For games: hardware scan codes, held a moment, so games that read the keyboard directly see the press. A game running as administrator needs HubDeck run as administrator too.",
+                        "For games: hardware scan codes, held a moment, so games that read the keyboard directly see the press. A game running as administrator needs MasterDeck run as administrator too.",
                     ),
                     ..p("mode", "Send as", ParamKind::Select { options: options(&[("normal", "Normal keys"), ("game", "For games")]) }, json!("normal"))
                 },
@@ -709,7 +709,7 @@ pub fn catalog() -> Vec<ActionDef> {
             id: "twitch.openClip",
             name: "Open last clip",
             group: "Twitch",
-            description: "Opens the clip made last with HubDeck, or your channel's clips page.",
+            description: "Opens the clip made last with MasterDeck, or your channel's clips page.",
             inputs: vec![Press],
             params: vec![],
             icon: "globe",
@@ -883,7 +883,7 @@ pub fn catalog() -> Vec<ActionDef> {
         ActionDef {
             id: DAY_MODE,
             name: "Day mode",
-            group: "HubDeck",
+            group: "MasterDeck",
             description: "One key for a whole setup: Work, Game, Meeting, Recording... It switches the profile, makes your speakers or headset and your microphone the default, and lights the base edge in the mode's color, all at once. The key lights up while its profile shows.",
             inputs: vec![Press],
             params: vec![
@@ -897,7 +897,7 @@ pub fn catalog() -> Vec<ActionDef> {
         ActionDef {
             id: TOGGLE,
             name: "Multi action switch",
-            group: "HubDeck",
+            group: "MasterDeck",
             description: "Runs the first steps on one press and the second on the next, e.g. start and stop. The key shows which one comes next.",
             inputs: vec![Press],
             params: vec![p("first", "First press", ParamKind::Steps, json!([])), p("second", "Second press", ParamKind::Steps, json!([]))],
@@ -927,7 +927,7 @@ pub fn catalog() -> Vec<ActionDef> {
         ActionDef {
             id: MULTI,
             name: "Multi action",
-            group: "HubDeck",
+            group: "MasterDeck",
             description: "Runs several actions one after another, with a pause before each if you want one.",
             inputs: vec![Press],
             params: vec![ParamDef { help: Some("Each step waits its delay, then runs. Steps cannot contain another multi-action."), ..p("steps", "Steps", ParamKind::Steps, json!([])) }],
@@ -936,7 +936,7 @@ pub fn catalog() -> Vec<ActionDef> {
         ActionDef {
             id: MODES,
             name: "Modes",
-            group: "HubDeck",
+            group: "MasterDeck",
             description: "Several jobs on one dial or knob: turning does the current one, a press switches to the next and shows its name.",
             inputs: vec![Press, Turn],
             params: vec![ParamDef { help: Some("Each mode turns something: volume, scroll, a hotkey per direction, media."), ..p("modes", "Modes", ParamKind::Modes, json!([])) }],
@@ -945,7 +945,7 @@ pub fn catalog() -> Vec<ActionDef> {
         ActionDef {
             id: super::gallery::ACTION,
             name: "Dial gallery",
-            group: "HubDeck",
+            group: "MasterDeck",
             description: "Shows what the dial can look like: turn it to go through the looks (volume, clock, now playing, computer load, timer...), live where it can be, each with its name at the top.",
             inputs: vec![Press, Turn],
             params: vec![],
@@ -954,7 +954,7 @@ pub fn catalog() -> Vec<ActionDef> {
         ActionDef {
             id: GAMES,
             name: "Games",
-            group: "HubDeck",
+            group: "MasterDeck",
             description: "Turns the deck into a small console: every key is a game. Hold the dial to go back.",
             inputs: vec![Press],
             params: vec![],
@@ -981,7 +981,7 @@ pub fn catalog() -> Vec<ActionDef> {
         ActionDef {
             id: "core.page",
             name: "Go to page",
-            group: "HubDeck",
+            group: "MasterDeck",
             description: "Shows another page of keys, like a folder. Put a key back to the main page on that page.",
             inputs: vec![Press],
             params: vec![p("page", "Page", ParamKind::Page, json!(""))],
@@ -991,7 +991,7 @@ pub fn catalog() -> Vec<ActionDef> {
         ActionDef {
             id: "core.nextPage",
             name: "Next page",
-            group: "HubDeck",
+            group: "MasterDeck",
             description: "Shows the next page of keys; after the last one, the main page again.",
             inputs: vec![Press],
             params: vec![],
@@ -1000,7 +1000,7 @@ pub fn catalog() -> Vec<ActionDef> {
         ActionDef {
             id: "core.previousPage",
             name: "Previous page",
-            group: "HubDeck",
+            group: "MasterDeck",
             description: "Shows the page of keys before this one; before the main page, the last one.",
             inputs: vec![Press],
             params: vec![],
@@ -1009,7 +1009,7 @@ pub fn catalog() -> Vec<ActionDef> {
         ActionDef {
             id: "core.profile",
             name: "Switch profile",
-            group: "HubDeck",
+            group: "MasterDeck",
             description: "Changes the active profile: a chosen one, or the next / previous (profiles in name order). Turning a knob or the dial steps through them.",
             inputs: vec![Press, Turn],
             params: vec![
@@ -1021,7 +1021,7 @@ pub fn catalog() -> Vec<ActionDef> {
         ActionDef {
             id: CLOCK,
             name: "Clock",
-            group: "HubDeck",
+            group: "MasterDeck",
             description: "Shows the time, the date or both on a key or the dial. Turning flips through time and date, seconds, the date and the week; a press can run a stopwatch.",
             inputs: vec![Press, Turn],
             params: vec![
@@ -1046,7 +1046,7 @@ pub fn catalog() -> Vec<ActionDef> {
         ActionDef {
             id: TIMER,
             name: "Timer",
-            group: "HubDeck",
+            group: "MasterDeck",
             description: "A countdown on a key or the dial. A press starts, pauses and resumes it; once it ran out, a press sets it back. On a knob or the dial, turning sets the minutes while it is stopped.",
             inputs: vec![Press, Turn],
             params: vec![
@@ -1063,7 +1063,7 @@ pub fn catalog() -> Vec<ActionDef> {
         ActionDef {
             id: super::pet::ACTION,
             name: "Dial pet",
-            group: "HubDeck",
+            group: "MasterDeck",
             description: "Mochi lives on the dial: turn to play, press to pet, double-press to feed, hold to put it to bed or wake it. It gets hungry and sad when left alone for hours, sleepy late at night and sleeps while the computer is locked; its mood shows in the dial's color. It never dies.",
             inputs: vec![Press, Turn],
             params: vec![
@@ -1093,7 +1093,7 @@ pub fn catalog() -> Vec<ActionDef> {
         ActionDef {
             id: SAVER,
             name: "Screensaver",
-            group: "HubDeck",
+            group: "MasterDeck",
             description: "Shows a screensaver on the keys for a few seconds; any touch ends it. With Next, every press shows the next one. The one that starts by itself is set under the deck, in Screensaver.",
             inputs: vec![Press],
             params: vec![p(
@@ -1118,7 +1118,7 @@ pub fn catalog() -> Vec<ActionDef> {
         ActionDef {
             id: POMODORO,
             name: "Pomodoro",
-            group: "HubDeck",
+            group: "MasterDeck",
             description: "Focus, a short break, again; after a few rounds a long break. The dial shows the time in a ring (red for focus, green for a break) and the rounds as dots. A press starts and pauses; turning sets the focus length while it is stopped; a phase that ends rings and waits for a press.",
             inputs: vec![Press, Turn],
             params: vec![
@@ -1134,7 +1134,7 @@ pub fn catalog() -> Vec<ActionDef> {
         ActionDef {
             id: "core.lighting",
             name: "Lighting effect",
-            group: "HubDeck",
+            group: "MasterDeck",
             description: "Sets an LED effect on the knobs, the faders, the base edge or all of them until the profile changes; \"The profile's own\" sets them back. Works in multi-actions and toggles too, e.g. the base breathing red while OBS records.",
             inputs: vec![Press],
             params: vec![
@@ -1156,7 +1156,7 @@ pub fn catalog() -> Vec<ActionDef> {
         ActionDef {
             id: "core.deckBrightness",
             name: "Deck brightness",
-            group: "HubDeck",
+            group: "MasterDeck",
             description: "Brightness of the key panel and the dial screen: faders set it, knobs and the dial turn it, a key makes it brighter or darker.",
             inputs: vec![Press, Turn, Slide],
             params: vec![

@@ -1,9 +1,9 @@
-"""An example app that speaks HubDeck's contract (docs/APP-CONTRACT.md), for trying it and as a
+"""An example app that speaks MasterDeck's contract (docs/APP-CONTRACT.md), for trying it and as a
 model for your own: three "agents" whose state changes every few seconds.
 
     python scripts/example-app.py [port]        # default 4317, on 127.0.0.1 only
 
-On start it announces itself to HubDeck (if HubDeck runs), which connects it without a click; by
+On start it announces itself to MasterDeck (if MasterDeck runs), which connects it without a click; by
 hand: Settings > Connections > Your apps > Add: http://127.0.0.1:4317/hubdeck/manifest
 GET /hubdeck/status, GET /hubdeck/events (Server-Sent Events), GET /hubdeck/manifest,
 POST /agents/<id>/focus (an action: marks that agent as working).
@@ -97,7 +97,7 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def hubdeck_dir():
-    """HubDeck's data folder, where it writes its local API port and token."""
+    """MasterDeck's data folder, where it writes its local API port and token."""
     if sys.platform == "win32":
         return os.path.join(os.environ.get("APPDATA", ""), "dev.hubdeck.app")
     if sys.platform == "darwin":
@@ -106,7 +106,7 @@ def hubdeck_dir():
 
 
 def announce(manifest):
-    """Tell HubDeck this app is here (docs/APP-CONTRACT.md, section 5); quiet if it is not running."""
+    """Tell MasterDeck this app is here (docs/APP-CONTRACT.md, section 5); quiet if it is not running."""
     try:
         folder = hubdeck_dir()
         port = open(os.path.join(folder, "api-http-port")).read().strip()
@@ -117,9 +117,9 @@ def announce(manifest):
             headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
             method="POST",
         )
-        print("HubDeck:", urllib.request.urlopen(req, timeout=10).read().decode())
-    except Exception as e:  # HubDeck not installed or not running, or the user disconnected this app
-        print("HubDeck not reached:", e)
+        print("MasterDeck:", urllib.request.urlopen(req, timeout=10).read().decode())
+    except Exception as e:  # MasterDeck not installed or not running, or the user disconnected this app
+        print("MasterDeck not reached:", e)
 
 
 server = ThreadingHTTPServer(("127.0.0.1", PORT), Handler)

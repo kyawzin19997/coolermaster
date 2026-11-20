@@ -613,7 +613,7 @@ mod tests {
 
     /// The window's lists read every installed app's icon (on a Mac each comes in every size up to
     /// 1024 px). Run under `/usr/bin/time -l` and read the maximum resident set size:
-    /// `cargo test -p hubdeck --release -- --ignored icons_of_every_app --nocapture`.
+    /// `cargo test -p masterdeck --release -- --ignored icons_of_every_app --nocapture`.
     #[test]
     #[ignore]
     fn icons_of_every_app() {
@@ -621,8 +621,8 @@ mod tests {
         let found = list_with_icons(true);
         let with = found.apps.iter().chain(&found.games).filter(|i| i.icon.is_some()).count();
         println!("{} apps, {} games, {with} icons in {:.1} s", found.apps.len(), found.games.len(), started.elapsed().as_secs_f32());
-        // HUBDECK_ICON_DIR=<dir>: also write the 128 px key icons of the first apps, to look at
-        if let Ok(dir) = std::env::var("HUBDECK_ICON_DIR") {
+        // MASTERDECK_ICON_DIR=<dir>: also write the 128 px key icons of the first apps, to look at
+        if let Ok(dir) = crate::compat::var("MASTERDECK_ICON_DIR") {
             for item in found.apps.iter().filter(|i| !i.exe.is_empty()).take(12) {
                 if let Ok(png) = super::super::appicon::png(&item.exe) {
                     let _ = std::fs::write(Path::new(&dir).join(format!("{}.png", item.name)), png);
@@ -660,7 +660,7 @@ mod tests {
         let _ = std::fs::remove_dir_all(dir);
     }
 
-    /// On a PC: `cargo test -p hubdeck installed_live -- --ignored --nocapture`
+    /// On a PC: `cargo test -p masterdeck installed_live -- --ignored --nocapture`
     #[test]
     #[ignore]
     fn installed_live() {

@@ -61,7 +61,7 @@ const LIMITS = {
 const dataDir = win
   ? path.join(process.env.APPDATA, "dev.hubdeck.app")
   : path.join(os.homedir(), "Library", "Application Support", "dev.hubdeck.app");
-const appPath = win ? path.join(process.env.LOCALAPPDATA, "HubDeck", "hubdeck.exe") : "/Applications/HubDeck.app";
+const appPath = win ? path.join(process.env.LOCALAPPDATA, "MasterDeck", "hubdeck.exe") : "/Applications/MasterDeck.app";
 
 const results = [];
 const report = (step, ok, text) => {
@@ -262,7 +262,7 @@ async function soak() {
     await call("POST", `profiles/${found.id}/try`);
     tried = found.name;
   } else {
-    // the busiest deck HubDeck draws: an animation on every key (the GIFs already in the user's
+    // the busiest deck MasterDeck draws: an animation on every key (the GIFs already in the user's
     // pictures, from any profile) and Mochi on the dial, as a draft thrown away at the end
     const gifs = new Set();
     for (const p of profiles) {
@@ -513,7 +513,7 @@ async function questionsStage() {
     try {
       const res = await fetch("http://localhost:1460/", { signal: AbortSignal.timeout(2000) });
       const text = await res.text();
-      if (!text.includes("<title>HubDeck</title>")) throw new Error("port 1460 serves another app's page, not HubDeck's: stop it first");
+      if (!text.includes("<title>MasterDeck</title>")) throw new Error("port 1460 serves another app's page, not MasterDeck's: stop it first");
       return true;
     } catch (e) {
       if (String(e.message).includes("another app")) throw e;
@@ -542,7 +542,7 @@ async function questionsStage() {
 // app's own process).
 function catalogStart() {
   const exe = win ? appPath : path.join(appPath, "Contents", "MacOS", "hubdeck");
-  // an app without the flag would start a second HubDeck instead. The check's own output line
+  // an app without the flag would start a second MasterDeck instead. The check's own output line
   // tells, not the flag: an optimised build compares "--catalog-check" as numbers and keeps no
   // such text (session 29: a 0.1.11 test build was called "a build before 0.1.11")
   if (!fs.existsSync(exe) || !fs.readFileSync(exe).includes("install and run here")) {

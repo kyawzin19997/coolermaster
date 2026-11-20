@@ -988,6 +988,7 @@ pub fn league_of_legends() -> Profile {
 /// `start`, `streaming`, `photo`, `video`, `games`, `tools`, `showcase`, `test`.
 pub fn group(id: &str) -> &'static str {
     match id {
+        id if id.starts_with("masterdeck-") => "start",
         "demo" | "everyday" => "start",
         "obs" | "meetings" | "showcase-stream" => "streaming",
         "photoshop" | "illustrator" | "lightroom" => "photo",
@@ -1030,7 +1031,7 @@ impl PresetInfo {
     pub fn make(&self) -> Profile {
         let mut p = (self.build)();
         // the showcase and the demo bring their own looks
-        if !self.test && !self.id.starts_with("showcase") && self.id != "demo" {
+        if !self.test && !self.id.starts_with("showcase") && !self.id.starts_with("masterdeck-") && self.id != "demo" {
             super::house::apply(&mut p);
         }
         // names and labels in the window's language (test profiles stay English)
@@ -1045,12 +1046,37 @@ fn editor_info(id: &'static str, build: fn() -> Profile) -> PresetInfo {
 }
 
 /// Every preset, in the order the catalog (`docs/PRESETS.md`) ranks them.
+macro_rules! current_template {
+    ($build:ident, $file:literal, $name:literal, $description:literal) => {{
+        fn $build() -> Profile {
+            let mut profile: Profile = serde_json::from_str(include_str!(concat!("../../assets/templates/", $file, ".json"))).expect("current template");
+            profile.id = uuid::Uuid::new_v4().to_string();
+            profile
+        }
+        PresetInfo { id: concat!("masterdeck-", $file), name: $name, description: $description, build: $build, test: false }
+    }};
+}
+
+pub fn current_templates() -> Vec<PresetInfo> {
+    vec![
+        current_template!(current_my_deck, "my-deck", "My deck · faders", "A deck with fader levels, pages, a timer and media controls."),
+        current_template!(current_everyday, "everyday", "Everyday desk", "An everyday layout with media, shortcuts and OBS controls."),
+        current_template!(current_obs, "obs", "OBS streaming", "Scenes, audio sources, recording, replay and streaming."),
+        current_template!(current_meetings, "meetings", "Discord & meetings", "Meeting shortcuts, playback and app volumes."),
+        current_template!(current_steam, "steam", "Steam", "Steam controls, media keys, microphone and scrolling."),
+        current_template!(current_telegram, "telegram", "Telegram", "Telegram shortcuts and desktop controls."),
+        current_template!(current_codex, "codex", "Codex", "Codex shortcuts and desktop controls."),
+        current_template!(current_chrome, "chrome", "Google Chrome", "Chrome shortcuts and desktop controls."),
+        current_template!(current_edge, "edge", "Microsoft Edge", "Microsoft Edge shortcuts and desktop controls."),
+    ]
+}
+
 pub fn catalog() -> Vec<PresetInfo> {
     vec![
         PresetInfo {
             id: "demo",
             name: "Starter deck",
-            description: "A tour on the deck: seven tabs of what HubDeck can do (the bottom-right key goes on), the dial as a gallery of its looks; press a key and the window says what it is and how to set it.",
+            description: "A tour on the deck: seven tabs of what MasterDeck can do (the bottom-right key goes on), the dial as a gallery of its looks; press a key and the window says what it is and how to set it.",
             build: super::demo::discover,
             test: false,
         },
@@ -1170,6 +1196,19 @@ mod tests {
     use crate::engine::{actions, render};
 
     #[test]
+    fn owner_templates_keep_their_controls_and_copy_to_a_fresh_profile() {
+        let templates = current_templates();
+        assert_eq!(templates.len(), 9);
+        for template in templates {
+            let one = template.make();
+            let two = template.make();
+            assert_ne!(one.id, two.id);
+            assert!(!one.controls.is_empty(), "{}", template.id);
+            assert_eq!(one.controls, two.controls);
+        }
+    }
+
+    #[test]
     fn game_presets_use_real_icons_and_game_keys() {
         let named = |k: &str| {
             k.len() == 1 && k.chars().all(|c| c.is_ascii_alphanumeric())
@@ -1222,7 +1261,7 @@ mod tests {
     /// Writes `app/src/demo/fixture.json`: the real action catalog, icons, presets as profiles and
     /// the engine's own pictures of their keys and dial, for the browser demo (`?demo`). Run after
     /// changing actions, icons, presets or drawing:
-    /// `cargo test -p hubdeck dump_demo_fixture -- --ignored`.
+    /// `cargo test -p masterdeck dump_demo_fixture -- --ignored`.
     #[test]
     #[ignore]
     fn dump_demo_fixture() {

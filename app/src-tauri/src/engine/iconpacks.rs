@@ -1,8 +1,8 @@
 //! Icon packs the user installs: pictures that show up as a category in the icon picker. Two
-//! formats are read: HubDeck's own (a folder or zip with `manifest.json`) and Elgato Stream Deck
+//! formats are read: MasterDeck's own (a folder or zip with `manifest.json`) and Elgato Stream Deck
 //! icon packs (`.streamDeckIconPack`: a zip with `<id>.sdIconPack/manifest.json`, `icons.json` and
 //! `icons/`). A pack is installed into `<data>/iconpacks/<id>/` as `pack.json` plus its pictures.
-//! Packs are never bundled with HubDeck; their licence is the pack author's. Format:
+//! Packs are never bundled with MasterDeck; their licence is the pack author's. Format:
 //! `docs/ICON-PACKS.md`.
 
 use std::collections::BTreeMap;
@@ -41,7 +41,7 @@ pub fn export_stream_deck(name: &str, keys: &[(String, super::profile::Look)], p
     }
     let Some((_, first)) = keys.first() else { return Err("no keys to export".into()) };
     files.push((format!("{root}icon.png"), r.png(&super::render::key_svg_sized(first, 56))?));
-    let manifest = serde_json::json!({ "Name": name, "Version": "1.0.0", "Author": "HubDeck", "Description": "Keys made in HubDeck", "Icon": "icon.png" });
+    let manifest = serde_json::json!({ "Name": name, "Version": "1.0.0", "Author": "MasterDeck", "Description": "Keys made in MasterDeck", "Icon": "icon.png" });
     files.push((format!("{root}manifest.json"), serde_json::to_vec_pretty(&manifest).map_err(|e| e.to_string())?));
     files.push((format!("{root}icons.json"), serde_json::to_vec_pretty(&list).map_err(|e| e.to_string())?));
     let mut out = std::fs::File::create(path).map_err(|e| e.to_string())?;
@@ -99,7 +99,7 @@ struct IconEntry {
     tags: Vec<String>,
 }
 
-/// HubDeck's own `manifest.json`.
+/// MasterDeck's own `manifest.json`.
 #[derive(Debug, Deserialize)]
 struct Manifest {
     name: String,
@@ -253,7 +253,7 @@ fn parse(files: &BTreeMap<String, Vec<u8>>) -> Result<Parsed<'_>, String> {
         Installed { name: m.name, author: m.author, version: m.version, license: m.license, source: "hubdeck".into(), icons }
     };
     if installed.icons.is_empty() {
-        return Err("the icon pack has no pictures HubDeck can use (PNG, JPG, GIF, WebP or SVG)".into());
+        return Err("the icon pack has no pictures MasterDeck can use (PNG, JPG, GIF, WebP or SVG)".into());
     }
     if installed.name.trim().is_empty() {
         return Err("the icon pack has no name".into());

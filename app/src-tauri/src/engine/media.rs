@@ -1,7 +1,7 @@
 //! What is playing now: title, artist, cover art and play state of the app the system shows in its
 //! media overlay (Spotify, a browser, a video player). Windows: the system media transport controls
 //! (no API key, no app plugin). macOS: Spotify and Apple Music through AppleScript (the system's
-//! own "now playing" is private there); the first time macOS asks the user to let HubDeck control
+//! own "now playing" is private there); the first time macOS asks the user to let MasterDeck control
 //! them. Elsewhere: not wired up yet, so nothing is reported.
 
 use std::time::Duration;
@@ -337,7 +337,7 @@ mod platform {
         Some(
             osascript(&format!(r#"tell application "{app}" to {verb}"#))
                 .map(|_| ())
-                .ok_or_else(|| format!("{app} did not answer (System Settings > Privacy & Security > Automation: allow HubDeck to control {app})")),
+                .ok_or_else(|| format!("{app} did not answer (System Settings > Privacy & Security > Automation: allow MasterDeck to control {app})")),
         )
     }
 
@@ -345,14 +345,14 @@ mod platform {
         let app = shown().ok_or("neither Spotify nor Music plays a song")?;
         osascript(&format!(r#"tell application "{app}" to set player position to (player position + ({seconds}))"#))
             .map(|_| ())
-            .ok_or_else(|| format!("{app} did not seek (System Settings > Privacy & Security > Automation: allow HubDeck to control {app})"))
+            .ok_or_else(|| format!("{app} did not seek (System Settings > Privacy & Security > Automation: allow MasterDeck to control {app})"))
     }
 
     pub fn seek_to(seconds: f64) -> Result<(), String> {
         let app = shown().ok_or("neither Spotify nor Music plays a song")?;
         osascript(&format!(r#"tell application "{app}" to set player position to {seconds:.1}"#))
             .map(|_| ())
-            .ok_or_else(|| format!("{app} did not seek (System Settings > Privacy & Security > Automation: allow HubDeck to control {app})"))
+            .ok_or_else(|| format!("{app} did not seek (System Settings > Privacy & Security > Automation: allow MasterDeck to control {app})"))
     }
 }
 

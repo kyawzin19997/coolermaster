@@ -1,4 +1,4 @@
-"""Get or set a secret for HubDeck's own scripts in the system's credential store: the Windows
+"""Get or set a secret for MasterDeck's own scripts in the system's credential store: the Windows
 Credential Manager (a generic credential named `hubdeck/<name>`) or the macOS Keychain (a generic
 password with the service `hubdeck/<name>`). No packages beyond the standard library.
 

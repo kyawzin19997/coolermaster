@@ -1,11 +1,11 @@
 //! Test mode, for checking the app from a script (Playwright over the web view's DevTools port)
 //! without getting in the way of the person at the computer.
 //!
-//! `HUBDECK_AUTOMATION=<folder>` starts a separate copy that keeps its data in `<folder>` (copy the
+//! `MASTERDECK_AUTOMATION=<folder>` starts a separate copy that keeps its data in `<folder>` (copy the
 //! real data there first to test on it), logs to `<folder>/logs`, has no tray icon, no single
 //! instance and no autostart or update check, and opens its window off-screen without focus or a
-//! taskbar button. The web view listens for DevTools on 127.0.0.1:`HUBDECK_CDP_PORT` (9333).
-//! Instead of the deck it shows virtual modules (`HUBDECK_VIRTUAL_MODULES`, see [`virtual_modules`])
+//! taskbar button. The web view listens for DevTools on 127.0.0.1:`MASTERDECK_CDP_PORT` (9333).
+//! Instead of the deck it shows virtual modules (`MASTERDECK_VIRTUAL_MODULES`, see [`virtual_modules`])
 //! and draws nothing, so the real deck stays with the running app; `POST /api/test/input` presses,
 //! turns and slides them. Never set outside tests: the DevTools port lets any local program drive
 //! the window.
@@ -20,20 +20,20 @@ pub struct Automation {
     pub cdp_port: u16,
 }
 
-/// The film mode of the test mode (`HUBDECK_FILM_DECK=1` with `HUBDECK_AUTOMATION`): the README film
+/// The film mode of the test mode (`MASTERDECK_FILM_DECK=1` with `MASTERDECK_AUTOMATION`): the README film
 /// (scripts/film/) needs the window driven by a script AND the real deck, with its own clean data
 /// (owner, 2026-10-15: "nie widziałem, żeby tam pokazywało jakieś klikanie, przełączanie"). The
-/// window is on screen and the real deck is used, so the running HubDeck must be quit first.
+/// window is on screen and the real deck is used, so the running MasterDeck must be quit first.
 pub fn real_deck() -> bool {
-    get().is_some() && std::env::var_os("HUBDECK_FILM_DECK").is_some_and(|v| !v.is_empty())
+    get().is_some() && crate::compat::var_os("MASTERDECK_FILM_DECK").is_some_and(|v| !v.is_empty())
 }
 
 /// The test mode, if this process was started in it.
 pub fn get() -> Option<&'static Automation> {
     static MODE: OnceLock<Option<Automation>> = OnceLock::new();
     MODE.get_or_init(|| {
-        let dir = std::env::var_os("HUBDECK_AUTOMATION").filter(|d| !d.is_empty())?;
-        let cdp_port = std::env::var("HUBDECK_CDP_PORT").ok().and_then(|p| p.parse().ok()).unwrap_or(9333);
+        let dir = crate::compat::var_os("MASTERDECK_AUTOMATION").filter(|d| !d.is_empty())?;
+        let cdp_port = crate::compat::var("MASTERDECK_CDP_PORT").ok().and_then(|p| p.parse().ok()).unwrap_or(9333);
         Some(Automation { data_dir: PathBuf::from(dir), cdp_port })
     })
     .as_ref()
@@ -62,7 +62,7 @@ pub fn blocks_opening(what: &str) -> bool {
 
 /// Marks the test copy's page so the system's dialogs answer from the walk instead of coming up on
 /// the owner's screen (`app/src/confirm.ts`; a walk's Uninstall question did, 2026-10-23).
-const NO_DIALOGS: &str = "window.__HUBDECK_TEST__ = { answers: [], asked: [] };";
+const NO_DIALOGS: &str = "window.__MASTERDECK_TEST__ = { answers: [], asked: [] };";
 
 /// The window, off-screen and never focused, without a taskbar button. Built hidden and shown
 /// by Win32 without activation: Tauri's own position and focus options at build time were
@@ -107,7 +107,7 @@ fn watch_screen() {}
 
 /// This process's visible top-level windows that lie on the screen: over the monitors' area, in the
 /// same (DPI-scaled) units the window's rectangle comes in for this thread; off-screen windows sit
-/// at -20000. `HUBDECK_SCREEN_FROM=<x>` moves the screen's left edge, so `scripts/ui/screen-check.mjs`
+/// at -20000. `MASTERDECK_SCREEN_FROM=<x>` moves the screen's left edge, so `scripts/ui/screen-check.mjs`
 /// can test the watch with a window still far off every monitor.
 #[cfg(windows)]
 fn on_screen() -> Vec<(isize, String)> {
@@ -122,7 +122,7 @@ fn on_screen() -> Vec<(isize, String)> {
         let (x, y) = (GetSystemMetrics(SM_XVIRTUALSCREEN), GetSystemMetrics(SM_YVIRTUALSCREEN));
         RECT { left: x, top: y, right: x + GetSystemMetrics(SM_CXVIRTUALSCREEN), bottom: y + GetSystemMetrics(SM_CYVIRTUALSCREEN) }
     };
-    if let Some(from) = std::env::var("HUBDECK_SCREEN_FROM").ok().and_then(|v| v.parse::<i32>().ok()) {
+    if let Some(from) = crate::compat::var("MASTERDECK_SCREEN_FROM").ok().and_then(|v| v.parse::<i32>().ok()) {
         (screen.left, screen.top) = (from, from);
     }
     struct Search {
@@ -186,7 +186,7 @@ fn show_off_screen(w: &tauri::WebviewWindow) {
 /// `kind@port.path` entries, comma separated (`keys@6.2.3`); the port path gives the slot in the
 /// base, so the copied placements apply. Without the variable: the owner's Creator Kit set.
 pub fn virtual_modules() -> Vec<(ModuleKind, Vec<u8>)> {
-    let spec = std::env::var("HUBDECK_VIRTUAL_MODULES").unwrap_or_else(|_| "base@6.1.4.4,keys@6.2.3,dial@6.1.3.4,knobs@6.1.4.3,rollers@6.3.3".into());
+    let spec = crate::compat::var("MASTERDECK_VIRTUAL_MODULES").unwrap_or_else(|_| "base@6.1.4.4,keys@6.2.3,dial@6.1.3.4,knobs@6.1.4.3,rollers@6.3.3".into());
     parse_modules(&spec)
 }
 

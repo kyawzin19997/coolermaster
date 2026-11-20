@@ -1,5 +1,5 @@
 //! The deck assistant (owner, 2026-10-12, roadmap phase 11): a conversation with Claude Code
-//! running without a window, with only HubDeck's MCP tools. It gets to know the user (what they
+//! running without a window, with only MasterDeck's MCP tools. It gets to know the user (what they
 //! have and use, from a scan they see first; an interview), proposes which profiles to make and
 //! builds two or three versions of each as drafts, which the user tries on the deck and picks.
 //!
@@ -53,7 +53,7 @@ pub enum AssistantEvent {
     Text { text: String, choices: Vec<String>, ideas: Vec<Idea> },
     /// A piece of the message being written (the window shows it growing; `Text` replaces it).
     Delta { text: String },
-    /// It proposed an idea (`propose_idea`): HubDeck made a draft of its sketch at once (None when
+    /// It proposed an idea (`propose_idea`): MasterDeck made a draft of its sketch at once (None when
     /// nothing of it checked out), and these controls were left out, with why.
     Idea { idea: Idea, draft: Option<String>, dropped: Vec<String> },
     /// Answers it offers as buttons (`offer_choices`).
@@ -82,7 +82,7 @@ pub struct Scan {
     pub used: Vec<(String, f32, u32)>,
     /// Since when that is counted (local time).
     pub since: String,
-    /// Installed apps HubDeck has a shortcut pack or a preset for (owner's pick 1a, 2026-10-14):
+    /// Installed apps MasterDeck has a shortcut pack or a preset for (owner's pick 1a, 2026-10-14):
     /// the assistant can give them checked keys.
     pub known: Vec<String>,
     /// Attached to the base now (the assistant builds for these).
@@ -97,7 +97,7 @@ pub struct Scan {
     pub deck_text: String,
 }
 
-/// A friendly name for an exe the user has used (its own name when HubDeck has seen its path).
+/// A friendly name for an exe the user has used (its own name when MasterDeck has seen its path).
 fn name_of(exe: &str) -> String {
     super::apps::path_of_seen(exe).and_then(|p| super::apps::friendly_name(&p)).unwrap_or_else(|| exe.trim_end_matches(".exe").trim_end_matches(".EXE").to_string())
 }
@@ -135,7 +135,7 @@ pub async fn assistant_scan(app: AppHandle) -> Result<Scan, String> {
 /// An app used: (name, hours in front, days).
 type Used = (String, f32, u32);
 
-/// Installed apps HubDeck knows by a preset or its own shortcut pack, by name (not every installed
+/// Installed apps MasterDeck knows by a preset or its own shortcut pack, by name (not every installed
 /// app: a short list the assistant can build checked keys for). From the cached scan: none before
 /// the first one.
 fn known_installed() -> Vec<String> {
@@ -156,24 +156,24 @@ fn known_installed() -> Vec<String> {
 }
 
 /// The scan as the assistant gets it: the apps used most (None: the user left them out) and the deck.
-/// Of the installed apps only those HubDeck knows go in; others and games the assistant looks up
+/// Of the installed apps only those MasterDeck knows go in; others and games the assistant looks up
 /// when an idea needs them.
 fn scan_text(used: Option<(&[Used], &str, &[String])>, modules: &[String], detached: &[String], profiles: &[String]) -> String {
     let list = |v: &[String], max: usize| if v.is_empty() { "none".to_string() } else { v.iter().take(max).cloned().collect::<Vec<_>>().join(", ") };
     let apps = match used {
         Some((used, since, known)) => {
             let used = if used.is_empty() {
-                "\n- Apps used most: nothing measured yet (HubDeck counts it from now on)".to_string()
+                "\n- Apps used most: nothing measured yet (MasterDeck counts it from now on)".to_string()
             } else {
                 format!("\n- Apps used most (time in front, counted since {since}): {}", used.iter().map(|(n, h, d)| format!("{n} ({h:.1} h on {d} days)")).collect::<Vec<_>>().join(", "))
             };
-            let known = if known.is_empty() { String::new() } else { format!("\n- Installed apps HubDeck has checked shortcuts or a preset for: {}", known.join(", ")) };
+            let known = if known.is_empty() { String::new() } else { format!("\n- Installed apps MasterDeck has checked shortcuts or a preset for: {}", known.join(", ")) };
             format!("{used}{known}")
         }
         None => "\n- Apps used most: the user chose not to send them (ask what they use, or look up installed apps with list_apps)".to_string(),
     };
     format!(
-        "What HubDeck found on this computer (the user saw this before it was sent):{apps}\n- Deck modules attached now (build for these): {}\n- Owned but not attached now: {}\n- Profiles the user has now: {}",
+        "What MasterDeck found on this computer (the user saw this before it was sent):{apps}\n- Deck modules attached now (build for these): {}\n- Owned but not attached now: {}\n- Profiles the user has now: {}",
         list(modules, 10),
         list(detached, 10),
         list(profiles, 40)
@@ -201,7 +201,7 @@ pub struct Idea {
     pub keys: Vec<SampleKey>,
     /// The whole deck as a sketch: `{keys: [binding x15], dial, knobs: [x3], rollers: [x2],
     /// faders: [x5], edge}` (with a second knobs, faders or rollers module its controls go on in the
-    /// same list: knobs x6), each binding `{action, params, label, icon}`. HubDeck makes a
+    /// same list: knobs x6), each binding `{action, params, label, icon}`. MasterDeck makes a
     /// draft of it at once, so it can be seen and tried without another turn.
     pub deck: Option<Value>,
     /// The id of the user's own profile this idea is a new version of ("" = a new deck).
@@ -353,7 +353,7 @@ fn unknown_app(b: &super::profile::Binding) -> Option<String> {
     (!opens.is_empty() && !opens.contains([':', '\\', '/']) && !super::check::name_opens(&opens)).then_some(opens)
 }
 
-/// Services whose actions need a connection set up in HubDeck: the action's prefix and the name the
+/// Services whose actions need a connection set up in MasterDeck: the action's prefix and the name the
 /// window gives it (ROADMAP Next, 2026-11-01: a Spotify Like without a client id showed "connect
 /// Spotify first" on a key the assistant made). OBS and Streamlabs answer without a setup, so they
 /// are not here.
@@ -383,7 +383,7 @@ fn connections_text(settings: &super::profile::Settings, has_secret: &dyn Fn(&st
         });
     let list = |v: &[&str]| if v.is_empty() { "none".to_string() } else { v.join(", ") };
     format!(
-        "\n- Services connected in HubDeck: {}; not connected: {} (never put a not-connected service's actions on keys; suggest connecting it in Settings > Connections instead)",
+        "\n- Services connected in MasterDeck: {}; not connected: {} (never put a not-connected service's actions on keys; suggest connecting it in Settings > Connections instead)",
         list(&on),
         list(&off)
     )
@@ -400,7 +400,7 @@ fn save_sketch(engine: &Engine, idea: &Idea) -> Result<(Option<String>, Vec<Stri
         let has = |k: &str| super::secrets::get(k).is_some();
         p.controls.retain(|id, b| match unconnected(&b.action, &settings, &has) {
             Some(service) => {
-                dropped.push(format!("{id}: {} needs {service}, which is not connected in HubDeck (Settings > Connections)", b.action));
+                dropped.push(format!("{id}: {} needs {service}, which is not connected in MasterDeck (Settings > Connections)", b.action));
                 false
             }
             None => true,
@@ -465,7 +465,7 @@ pub fn api_choices(app: &AppHandle, body: &Value) -> Result<Value, String> {
     Ok(json!({"ok": true}))
 }
 
-/// Programs nobody makes a deck for (the Windows shell, HubDeck, terminals, system tools).
+/// Programs nobody makes a deck for (the Windows shell, MasterDeck, terminals, system tools).
 pub fn not_for_a_deck(exe: &str) -> bool {
     let e = exe.to_lowercase();
     [
@@ -577,14 +577,14 @@ pub async fn assistant_sketch_app(app: AppHandle, exe: String, name: String, lan
     .map_err(|e| e.to_string())?
 }
 
-/// A personal HubDeck tour as a draft, made on this computer at once (it took the model ~6 min):
+/// A personal MasterDeck tour as a draft, made on this computer at once (it took the model ~6 min):
 /// "Starter deck" with the user's own apps (their real icons) on the first page and a page of
 /// their games with covers. The model only walks them through it.
 pub fn personal_tour(app: &AppHandle, polish: bool) -> Result<String, String> {
     super::demo::set_language(if polish { "pl" } else { "en" });
     let mut p = super::demo::discover();
     p.id = uuid::Uuid::new_v4().to_string();
-    p.name = if polish { "Twoja wycieczka po HubDecku".into() } else { "Your HubDeck tour".into() };
+    p.name = if polish { "Twoja wycieczka po HubDecku".into() } else { "Your MasterDeck tour".into() };
     let launch = |target: &str, label: &str, image: Option<String>| -> super::profile::Binding {
         let short: String = label.chars().take(12).collect();
         serde_json::from_value(json!({"action": "core.launch", "params": {"target": target}, "look": {"label": short, "image": image}})).unwrap_or_else(|_| super::profile::Binding {
@@ -785,7 +785,7 @@ fn input_line(text: &str) -> String {
 /// up before its first idea, and it stays in the prompt cache): every action with its inputs and
 /// params, the special hotkey names, the LED effects, the icons and the checked shortcut packs.
 pub fn catalog_text() -> String {
-    let mut lines = vec!["HubDeck's actions (id (name): inputs; params; list_actions with search gives a param's options and help):".to_string()];
+    let mut lines = vec!["MasterDeck's actions (id (name): inputs; params; list_actions with search gives a param's options and help):".to_string()];
     for a in super::actions::all().into_iter().filter(|a| super::games::GAMES_ENABLED || a.id != super::actions::GAMES) {
         let inputs: Vec<String> = a.inputs.iter().map(|i| format!("{i:?}").to_lowercase()).collect();
         let params: Vec<&str> = a.params.iter().map(|p| p.key).collect();
@@ -813,13 +813,13 @@ fn start(app: &AppHandle, language: &str) -> Result<(), String> {
     // the assistant's own MCP server: only drafts can be changed, closing shortcuts go on a hold
     let mut entry = super::mcp::assistant_entry(&exe);
     if let Some(a) = crate::automation::get() {
-        entry["env"] = json!({"HUBDECK_AUTOMATION": a.data_dir});
+        entry["env"] = json!({"MASTERDECK_AUTOMATION": a.data_dir});
     }
     let config = dir.join("mcp.json");
     std::fs::write(&config, json!({"mcpServers": {super::mcp::SERVER_NAME: entry}}).to_string()).map_err(|e| e.to_string())?;
     let power = app.state::<Engine>().lock().store.settings.assistant_power;
     if power {
-        entry["env"]["HUBDECK_ASSISTANT_POWER"] = json!("1");
+        entry["env"]["MASTERDECK_ASSISTANT_POWER"] = json!("1");
         std::fs::write(&config, json!({"mcpServers": {super::mcp::SERVER_NAME: entry}}).to_string()).map_err(|e| e.to_string())?;
     }
     let mut rules = rules(language);
@@ -851,7 +851,7 @@ fn start(app: &AppHandle, language: &str) -> Result<(), String> {
     if power {
         cmd.args(["--permission-prompt-tool", &format!("mcp__{}__permission_prompt", super::mcp::SERVER_NAME)]);
     }
-    // only what the user picked in HubDeck; otherwise Claude Code's own default model and effort
+    // only what the user picked in MasterDeck; otherwise Claude Code's own default model and effort
     let (model, effort) = {
         let engine = app.state::<Engine>();
         let s = engine.lock();
@@ -985,11 +985,11 @@ pub async fn assistant_tour(app: AppHandle, language: String) -> Result<String, 
 
 // ---------- more power: Claude Code's own tools, each command and web fetch asked first ----------
 
-/// What the session gets on top of HubDeck's tools when the user switched more power on.
+/// What the session gets on top of MasterDeck's tools when the user switched more power on.
 const POWER_TOOLS: &str = "Read,Glob,Grep,Bash,WebFetch,WebSearch";
 
 /// The rules added to the instructions while more power is on.
-const POWER_RULES: &str = "\nMore power is on: you can also read files, search them, fetch web pages and run commands on this computer, so you can learn how the user's own apps can be driven (their local HTTP endpoints, an event stream, deep links, command-line switches, shortcuts, a hubdeck.json manifest) and check that a key will really work before you build it. Every command and web fetch shows in the user's window and waits for their yes: say in one line what you want to run and why before you run it, prefer read-only checks (GET requests, reading code and docs), never change, move or delete the user's files or settings outside HubDeck, and never send their data anywhere. Then build keys with core.http (an app's API), core.launch (deep links) or core.run (a command of their own tools).";
+const POWER_RULES: &str = "\nMore power is on: you can also read files, search them, fetch web pages and run commands on this computer, so you can learn how the user's own apps can be driven (their local HTTP endpoints, an event stream, deep links, command-line switches, shortcuts, a hubdeck.json manifest) and check that a key will really work before you build it. Every command and web fetch shows in the user's window and waits for their yes: say in one line what you want to run and why before you run it, prefer read-only checks (GET requests, reading code and docs), never change, move or delete the user's files or settings outside MasterDeck, and never send their data anywhere. Then build keys with core.http (an app's API), core.launch (deep links) or core.run (a command of their own tools).";
 
 /// Questions Claude Code asks before it uses one of its own tools: id -> (tool, what, answer).
 struct Asks {
@@ -1113,7 +1113,7 @@ pub struct AssistantInfo {
     pub folder: String,
     pub command: String,
     pub rules: String,
-    /// Picked in HubDeck (None = Claude Code's default).
+    /// Picked in MasterDeck (None = Claude Code's default).
     pub chosen_model: Option<String>,
     pub chosen_effort: Option<String>,
     /// Claude Code's own defaults from its user settings (`~/.claude/settings.json`).
@@ -1123,7 +1123,7 @@ pub struct AssistantInfo {
     pub power: bool,
 }
 
-/// Model aliases and effort levels HubDeck offers (Claude Code resolves the aliases).
+/// Model aliases and effort levels MasterDeck offers (Claude Code resolves the aliases).
 pub const MODELS: [&str; 4] = ["fable", "opus", "sonnet", "haiku"];
 pub const EFFORTS: [&str; 5] = ["low", "medium", "high", "xhigh", "max"];
 
@@ -1181,7 +1181,7 @@ pub async fn assistant_info(engine: tauri::State<'_, Engine>, language: String) 
             ..AssistantInfo::default()
         };
         // a test copy can pretend Claude Code is missing, to check what such a user sees
-        let pretend_missing = crate::automation::get().is_some() && std::env::var_os("HUBDECK_TEST_NO_CLAUDE").is_some();
+        let pretend_missing = crate::automation::get().is_some() && crate::compat::var_os("MASTERDECK_TEST_NO_CLAUDE").is_some();
         let Some(cli) = super::mcp::find_claude_cli().filter(|_| !pretend_missing) else { return info };
         info.cli = Some(cli.to_string_lossy().to_string());
         info.version = quiet(&cli, &["--version"]);
@@ -1299,7 +1299,7 @@ mod tests {
         s.ha_url = Some("http://homeassistant.local:8123".into());
         assert_eq!(unconnected("ha.toggle", &s, &|k| k == "homeassistant"), None);
         let text = connections_text(&s, &|k| k == "spotify");
-        assert!(text.contains("connected in HubDeck: Spotify;") && text.contains("not connected: Home Assistant, Twitch"), "{text}");
+        assert!(text.contains("connected in MasterDeck: Spotify;") && text.contains("not connected: Home Assistant, Twitch"), "{text}");
     }
 
     #[test]
@@ -1396,7 +1396,7 @@ mod tests {
         assert!(catalog_text().contains("Spotify"));
     }
 
-    /// The installed apps HubDeck knows on this computer (run by hand: prints the list).
+    /// The installed apps MasterDeck knows on this computer (run by hand: prints the list).
     #[test]
     #[ignore]
     fn known_installed_apps_here() {

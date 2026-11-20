@@ -1,4 +1,4 @@
-//! Plugins: separate programs in `<app data>/plugins/<folder>/` with a `manifest.json`. HubDeck
+//! Plugins: separate programs in `<app data>/plugins/<folder>/` with a `manifest.json`. MasterDeck
 //! starts each one and talks to it over a WebSocket on 127.0.0.1, much like the Stream Deck SDK:
 //! the plugin hears presses, turns and slides of the controls bound to its actions and can set
 //! their title, picture and on/off state. The same server is the local API for scripts.
@@ -10,7 +10,7 @@
 //!                  "inputs": ["press"], "params": [ { "key": "start", "label": "Start at",
 //!                  "type": "number", "default": 0 } ] } ] }
 //! ```
-//! The plugin gets `HUBDECK_PORT`, `HUBDECK_PLUGIN` and `HUBDECK_TOKEN` in its environment and
+//! The plugin gets `MASTERDECK_PORT`, `MASTERDECK_PLUGIN` and `MASTERDECK_TOKEN` in its environment and
 //! first sends `{"event": "register", "plugin": ..., "token": ...}`.
 //!
 //! Host -> plugin: `willAppear` / `willDisappear` {action, context, settings}, `keyDown` / `keyUp`
@@ -53,7 +53,7 @@ pub struct Manifest {
     /// What the plugin says it needs: "network", "files", "processes", "input"...; shown to the user.
     #[serde(default)]
     pub permissions: Vec<String>,
-    /// A Stream Deck plugin (`sdplugins.rs`): its own manifest; None for HubDeck's own plugins.
+    /// A Stream Deck plugin (`sdplugins.rs`): its own manifest; None for MasterDeck's own plugins.
     #[serde(skip)]
     pub sd: Option<std::sync::Arc<super::sdplugins::SdManifest>>,
 }
@@ -151,8 +151,8 @@ struct Plugin {
 }
 
 /// A plugin's running program. On Windows it and everything it starts sit in a job object that
-/// ends them all when this is dropped, or when HubDeck itself ends however it ends: a killed or
-/// crashed HubDeck left Flight Tracker running, and stopping ScriptDeck ended its `cmd.exe` but
+/// ends them all when this is dropped, or when MasterDeck itself ends however it ends: a killed or
+/// crashed MasterDeck left Flight Tracker running, and stopping ScriptDeck ended its `cmd.exe` but
 /// not the PowerShell under it (2026-10-17). Chrome and VS Code keep their helpers the same way.
 struct Running {
     child: Child,
@@ -242,7 +242,7 @@ struct Record {
 }
 
 struct Host {
-    /// Installed plugins; Stream Deck plugins installed from the window join while HubDeck runs.
+    /// Installed plugins; Stream Deck plugins installed from the window join while MasterDeck runs.
     plugins: RwLock<Vec<Plugin>>,
     api_token: String,
     /// plugin id -> messages to its connection.
@@ -450,7 +450,8 @@ fn launch(p: &Plugin, port: u16) {
     let local = p.dir.join(program);
     let program = if local.is_file() { local.into_os_string() } else { program.into() };
     let mut cmd = Command::new(program);
-    cmd.args(parts).current_dir(&p.dir).env("HUBDECK_PORT", port.to_string()).env("HUBDECK_PLUGIN", &p.manifest.id).env("HUBDECK_TOKEN", &p.token);
+    cmd.args(parts).current_dir(&p.dir).env("MASTERDECK_PORT", port.to_string()).env("MASTERDECK_PLUGIN", &p.manifest.id).env("MASTERDECK_TOKEN", &p.token);
+    cmd.env("HUBDECK_PORT", port.to_string()).env("HUBDECK_PLUGIN", &p.manifest.id).env("HUBDECK_TOKEN", &p.token);
     #[cfg(windows)]
     {
         use std::os::windows::process::CommandExt;
@@ -613,9 +614,9 @@ pub fn start_one(id: &str) -> Result<(), String> {
     Ok(())
 }
 
-/// Plugin programs left running by an earlier HubDeck that crashed (no Exit, so `stop` never ran):
+/// Plugin programs left running by an earlier MasterDeck that crashed (no Exit, so `stop` never ran):
 /// a process started from the plugins folder whose parent is gone is stopped before new copies
-/// start. A plugin of a HubDeck that still runs keeps its parent and is left alone.
+/// start. A plugin of a MasterDeck that still runs keeps its parent and is left alone.
 fn stop_orphans(plugins_dir: &Path) {
     use sysinfo::{ProcessRefreshKind, ProcessesToUpdate, System, UpdateKind};
     if !plugins_dir.is_dir() {
@@ -810,9 +811,9 @@ pub fn remove(id: &str) -> Result<(), String> {
     let host = HOST.get().ok_or("plugins are not running")?;
     let _change = host.changes.lock().unwrap_or_else(|e| e.into_inner());
     let dir = host.plugins.read().unwrap_or_else(|e| e.into_inner()).iter().find(|p| p.manifest.id == id).map(|p| p.dir.clone()).ok_or_else(|| format!("no plugin {id}"))?;
-    // only a folder inside HubDeck's plugins folder is ever deleted
+    // only a folder inside MasterDeck's plugins folder is ever deleted
     if !dir.starts_with(&host.dir) {
-        return Err(format!("{id} is not in HubDeck's plugins folder"));
+        return Err(format!("{id} is not in MasterDeck's plugins folder"));
     }
     host.held.lock().unwrap_or_else(|e| e.into_inner()).insert(id.to_string());
     stop_running(host, id);
@@ -914,8 +915,9 @@ fn connection(stream: TcpStream, engine: Sender<Msg>) -> Result<(), String> {
     let (tx, rx): (Sender<String>, Receiver<String>) = unbounded();
     host.outbox.lock().unwrap_or_else(|e| e.into_inner()).insert(who.clone(), tx.clone());
     if sd_dir.is_some() {
-        let _ = ws
-            .send(Message::text(json!({"event": "deviceDidConnect", "device": super::sdplugins::DEVICE, "deviceInfo": {"name": "HubDeck", "size": {"columns": 5, "rows": 3}, "type": 7}}).to_string()));
+        let _ = ws.send(Message::text(
+            json!({"event": "deviceDidConnect", "device": super::sdplugins::DEVICE, "deviceInfo": {"name": "MasterDeck", "size": {"columns": 5, "rows": 3}, "type": 7}}).to_string(),
+        ));
     }
     // tell it about the controls it already has on screen
     for (context, (plugin, action, settings)) in host.visible.lock().unwrap_or_else(|e| e.into_inner()).iter() {
@@ -1000,7 +1002,7 @@ fn send_raw(plugin: &str, message: &Value) {
     }
 }
 
-/// A Stream Deck settings page: it registered with the uuid HubDeck put in its address.
+/// A Stream Deck settings page: it registered with the uuid MasterDeck put in its address.
 fn inspector_connection(mut ws: WebSocket<TcpStream>, uuid: &str, engine: Sender<Msg>) -> Result<(), String> {
     let (plugin, action, context) = super::sdplugins::inspector_for(uuid).ok_or("unknown settings page")?;
     let (tx, rx): (Sender<String>, Receiver<String>) = unbounded();

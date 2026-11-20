@@ -1,7 +1,7 @@
-// Questions before something that cannot be undone wait for the answer (2026-10-18: in HubDeck's
+// Questions before something that cannot be undone wait for the answer (2026-10-18: in MasterDeck's
 // window window.confirm returned a promise, taken as yes, and the owner's "test" profile went
 // without a question). In the browser demo, headless, never the focus: Delete page answered Cancel
-// keeps the page, answered Delete deletes it. Since 2026-10-23 the question is HubDeck's own, in the
+// keeps the page, answered Delete deletes it. Since 2026-10-23 the question is MasterDeck's own, in the
 // window (owner's pick 1b), so the walk clicks its buttons as the user does.
 //   node scripts/ui/confirm-check.mjs     # needs the Vite server (cd app && pnpm dev)
 import { chromium } from "playwright-core";
@@ -9,8 +9,9 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-const base = process.env.HUBDECK_URL || "http://localhost:1460/";
+const base = process.env.MASTERDECK_URL || "http://localhost:1460/";
 function findChromium() {
+  if (process.env.CHROMIUM) return process.env.CHROMIUM;
   const cache = path.join(os.homedir(), process.platform === "win32" ? "AppData/Local/ms-playwright" : process.platform === "darwin" ? "Library/Caches/ms-playwright" : ".cache/ms-playwright");
   for (const dir of fs.existsSync(cache) ? fs.readdirSync(cache).filter((d) => d.startsWith("chromium")).sort().reverse() : []) {
     const stack = [path.join(cache, dir)];
@@ -31,15 +32,18 @@ const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
 try {
   await page.goto(`${base}?demo`);
   await page.locator(".dk-ctl").first().waitFor();
-  // a page of its own to delete: New page, a name, Enter
+  // Add a page instantly, then rename it separately before testing deletion.
   const tabs = () => page.locator("button.tab", { hasText: /^Walk$/ }).count();
   await page.getByRole("button", { name: "New page" }).click();
-  await page.keyboard.type("Walk");
+  const pageBar = page.getByRole("navigation", { name: "Pages", exact: true });
+  await pageBar.getByRole("button", { name: "Page 2", exact: true }).waitFor();
+  await pageBar.getByRole("button", { name: "Rename", exact: true }).click();
+  await pageBar.getByRole("textbox").fill("Walk");
   await page.keyboard.press("Enter");
   await page.locator("button.tab", { hasText: /^Walk$/ }).first().click();
   await page.waitForTimeout(500);
   const before = await tabs();
-  // the question is HubDeck's own, in the window (owner's pick 1b, 2026-10-23)
+  // the question is MasterDeck's own, in the window (owner's pick 1b, 2026-10-23)
   const question = page.getByRole("alertdialog");
   await page.getByRole("button", { name: "Delete page" }).click();
   await page.waitForTimeout(500);

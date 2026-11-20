@@ -1,4 +1,4 @@
-//! Every call HubDeck makes to another service, counted by host (owner's pick 3a, 2026-10-22:
+//! Every call MasterDeck makes to another service, counted by host (owner's pick 3a, 2026-10-22:
 //! Spotify was asked every 3 s, the same fault he had met in another project). Once a minute the
 //! log gets `calls in the last minute: <host> N, ...`; the release gate adds those up over its soak
 //! and stops a release above its limit an hour (`scripts/release-gate.mjs`). Calls to this

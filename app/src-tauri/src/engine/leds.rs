@@ -22,7 +22,7 @@ pub const EFFECTS: [(&str, &str); 10] = [
     ("wave", "Wave"),
     ("water", "Shimmer"),
     ("rainbow", "Rainbow"),
-    // drawn by HubDeck: a flash at each beat of what plays, over a glow (`beat.rs`)
+    // drawn by MasterDeck: a flash at each beat of what plays, over a glow (`beat.rs`)
     ("music", "To the music"),
 ];
 
@@ -61,7 +61,7 @@ pub fn effect_mode(name: Option<&str>) -> LedMode {
 pub struct Led {
     pub rgb: Rgb,
     pub mode: LedMode,
-    /// It follows the music: HubDeck sets its brightness at each moment (`beat::glow`).
+    /// It follows the music: MasterDeck sets its brightness at each moment (`beat::glow`).
     pub pulse: bool,
 }
 
@@ -107,10 +107,10 @@ impl Override {
     }
 }
 
-/// How long HubDeck's rainbow takes to go round once. The window uses the same number.
+/// How long MasterDeck's rainbow takes to go round once. The window uses the same number.
 pub const RAINBOW_MS: u64 = 10_000;
 
-/// HubDeck's rainbow color at `unix_ms` (milliseconds since 1970): the hue goes round once every
+/// MasterDeck's rainbow color at `unix_ms` (milliseconds since 1970): the hue goes round once every
 /// `RAINBOW_MS`, full saturation. The window works it out the same way from the same clock.
 pub fn rainbow_rgb(unix_ms: u64) -> Rgb {
     let h = (unix_ms % RAINBOW_MS) as f32 / RAINBOW_MS as f32 * 6.0;
@@ -126,12 +126,31 @@ pub fn rainbow_rgb(unix_ms: u64) -> Rgb {
     [r, g, b].map(|v: f32| (v * 255.0).round() as u8)
 }
 
-/// HubDeck's rainbow moves on at most this often, however often the lights are set: while the
+/// MasterDeck's rainbow moves on at most this often, however often the lights are set: while the
 /// edge follows the music they are set every 20 ms, and the knobs and faders got a new rainbow
 /// color each time (up to 50 a second; the faders drop off the bus at that, 2026-10-19).
 pub const RAINBOW_TICK_MS: u64 = 100;
 
-/// The module's own rainbow (None) and rainbow effects drawn by HubDeck instead: each such LED gets
+/// Draw a breathing frame once for the physical hardware and the desktop preview.
+pub fn breathing_frame(lights: &mut Lights, unix_ms: u64) -> Vec<bool> {
+    let period = 5_800 - u64::from(lights.speed.unwrap_or(50).min(100)) * 42;
+    let tick = unix_ms - unix_ms % RAINBOW_TICK_MS;
+    let phase = (tick % period) as f32 / period as f32 * std::f32::consts::TAU;
+    let level = 0.06 + 0.94 * (1.0 - phase.cos()) * 0.5;
+    lights
+        .leds
+        .iter_mut()
+        .map(|led| {
+            let animate = led.mode == LedMode::Breathing && !led.pulse;
+            if animate {
+                *led = Led::solid(scale(led.rgb, level));
+            }
+            animate
+        })
+        .collect()
+}
+
+/// The module's own rainbow (None) and rainbow effects drawn by MasterDeck instead: each such LED gets
 /// the rainbow color of the moment (in `RAINBOW_TICK_MS` steps) as a static color, dimmed by
 /// `brightness`. Returns the lights and which LEDs were replaced.
 pub fn hub_rainbow(lights: Option<Lights>, count: usize, unix_ms: u64, brightness: u8) -> (Lights, Vec<bool>) {
@@ -316,7 +335,7 @@ pub fn lights(profile: Option<&Profile>, kind: &str, first: usize, count: usize,
             Led::solid(level.map(|l| scale(rgb, l)).unwrap_or(rgb))
         } else {
             // the rainbow: a control with a level keeps it in the LED's color (white = full), so
-            // HubDeck's rainbow gets darker as the volume goes down (owner's tour test, session 9)
+            // MasterDeck's rainbow gets darker as the volume goes down (owner's tour test, session 9)
             let level = levels.get(&format!("{kind}.{}", first + i)).copied().filter(|_| cfg.react.levels && binding(i).is_some_and(|b| b.look.led_level));
             let v = level.map_or(255, |l| (l.clamp(MIN_LEVEL, 1.0) * 255.0).round() as u8);
             any |= level.is_some();
@@ -369,6 +388,19 @@ pub fn edge_lights(profile: Option<&Profile>, cfg: &LightSettings, live: &Live) 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn breathing_produces_the_same_frames_for_preview_and_device() {
+        let saved = Lights { leds: vec![Led::new([240, 80, 20], LedMode::Breathing), Led::solid([50, 80, 100])], speed: Some(50) };
+        let mut dim = saved.clone();
+        let mut bright = saved;
+        assert_eq!(breathing_frame(&mut dim, 0), vec![true, false]);
+        breathing_frame(&mut bright, 1_800);
+        assert!(bright.leds[0].rgb[0] > dim.leds[0].rgb[0]);
+        assert_eq!(bright.leds[1], dim.leds[1]);
+        assert_eq!(bright.leds[0].mode, LedMode::Static);
+        assert_eq!(view(&bright)[0].color, "#f05014");
+    }
     use crate::engine::profile::Binding;
 
     fn with_look(p: &mut Profile, control: &str, look: Look) {

@@ -1,10 +1,10 @@
-// Finds window fields where the user types the name of something HubDeck could list instead (an
+// Finds window fields where the user types the name of something MasterDeck could list instead (an
 // app, an OBS or Streamlabs scene or source, a device, a Home Assistant entity, a profile...).
 // Owner's rule (2026-10-15): "Tam gdzie mamy mieć coś z apek to powinna być jakaś lista albo jakiś
 // wybór apek a nie miejsce na nazwę"; owner's pick 2a (2026-10-16): run before every release.
 //
 // Reads the action catalog the window gets (app/src/demo/fixture.json; make it fresh first with
-// `cargo test -p hubdeck dump_demo_fixture -- --ignored`) and lists every typed field (`text`)
+// `cargo test -p masterdeck dump_demo_fixture -- --ignored`) and lists every typed field (`text`)
 // whose key or label names a listable thing. Fields that are a list already have their own type
 // (app, audioDevice, profile, page, named, midiPort, game).
 //

@@ -14,7 +14,7 @@ import path from 'node:path';
 
 const out = process.argv[2] || path.join(os.tmpdir(), 'hubdeck-flows');
 fs.mkdirSync(out, { recursive: true });
-const base = process.env.HUBDECK_URL || 'http://localhost:1460/';
+const base = process.env.MASTERDECK_URL || 'http://localhost:1460/';
 
 /** A browser Playwright downloaded before, when none is given. */
 function findChromium() {

@@ -14,7 +14,7 @@ const DESTRUCTIVE_ACTIONS: [&str; 1] = ["twitch.clearChat"];
 
 /// The user let the assistant reach further (Settings: more power): then it may also put commands
 /// on keys (`core.run`, for the user's own tools); set in the app and in the assistant's MCP server
-/// (`HUBDECK_ASSISTANT_POWER`).
+/// (`MASTERDECK_ASSISTANT_POWER`).
 static POWER: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
 pub fn set_power(on: bool) {

@@ -1,4 +1,4 @@
-# Footprint soak test (pain point 16): how much CPU and memory HubDeck uses over a long run.
+# Footprint soak test (pain point 16): how much CPU and memory MasterDeck uses over a long run.
 #
 #   powershell -ExecutionPolicy Bypass -File scripts/soak.ps1 [-Minutes 30] [-Every 10] [-Out soak.csv]
 #

@@ -13,8 +13,8 @@ use super::profile::Look;
 const FONT: &[u8] = include_bytes!("../../assets/fonts/IBMPlexSans-SemiBold.ttf");
 pub const FONT_FAMILY: &str = "IBM Plex Sans";
 
-/// The fonts images are drawn with: HubDeck's own and the computer's, loaded once (memory-mapped,
-/// so the system's fonts cost address space, not memory). A letter HubDeck's font lacks (Japanese,
+/// The fonts images are drawn with: MasterDeck's own and the computer's, loaded once (memory-mapped,
+/// so the system's fonts cost address space, not memory). A letter MasterDeck's font lacks (Japanese,
 /// Chinese, Korean...) comes from a system font that has it (Discussions #3, 2026-10-18).
 static FONTS: std::sync::LazyLock<std::sync::Arc<usvg::fontdb::Database>> = std::sync::LazyLock::new(|| {
     let started = std::time::Instant::now();
@@ -25,7 +25,7 @@ static FONTS: std::sync::LazyLock<std::sync::Arc<usvg::fontdb::Database>> = std:
     std::sync::Arc::new(db)
 });
 
-/// Settings > Screens: the font for text on the deck (None = HubDeck's own).
+/// Settings > Screens: the font for text on the deck (None = MasterDeck's own).
 #[cfg(not(test))]
 static DECK_FONT: std::sync::RwLock<Option<String>> = std::sync::RwLock::new(None);
 // one per test thread: a test that picks a font must not change the text of tests drawing beside
@@ -35,7 +35,7 @@ thread_local! {
     static DECK_FONT: std::cell::RefCell<Option<String>> = const { std::cell::RefCell::new(None) };
 }
 
-/// Use `family` for text on the deck; one this computer does not have falls back to HubDeck's own.
+/// Use `family` for text on the deck; one this computer does not have falls back to MasterDeck's own.
 pub fn set_deck_font(family: Option<&str>) {
     let family = family.map(str::trim).filter(|f| !f.is_empty() && *f != FONT_FAMILY && deck_fonts().iter().any(|x| x == f)).map(str::to_string);
     #[cfg(not(test))]
@@ -1114,7 +1114,7 @@ fn key_parts_plain(look: &Look) -> (String, String, String) {
     (under, body, over)
 }
 
-/// The device in use on a two-icon key: green, as HubDeck's other "this is live" states (a live
+/// The device in use on a two-icon key: green, as MasterDeck's other "this is live" states (a live
 /// OBS scene) and the Audio Switcher plugin, in the house look's soft tone
 /// (`house::icon_color(130.0)`; owner's "1 a", 2026-11-02).
 const PAIR_ON: &str = "#79ec8c";
@@ -1977,8 +1977,8 @@ impl Renderer {
                 c.content(content.data());
                 // a test build can keep the keys' content as raw RGBA, premultiplied, 480x272 (to try
                 // other halos behind it offline: scripts/ui/halo-lab.py)
-                if option_env!("HUBDECK_TEST_BUILD").is_some()
-                    && let Some(path) = std::env::var_os("HUBDECK_DUMP_CONTENT")
+                if option_env!("MASTERDECK_TEST_BUILD").is_some()
+                    && let Some(path) = crate::compat::var_os("MASTERDECK_DUMP_CONTENT")
                 {
                     let _ = std::fs::write(path, content.data());
                 }
@@ -2053,8 +2053,8 @@ impl Renderer {
 mod tests {
     use super::super::house;
 
-    /// Everything HubDeck draws on the deck, as SVG files, for a look at all of it at once:
-    /// Every weather sky on the dial in one picture: `HUBDECK_OUT=<png> cargo test -p hubdeck weather_skies -- --ignored`.
+    /// Everything MasterDeck draws on the deck, as SVG files, for a look at all of it at once:
+    /// Every weather sky on the dial in one picture: `MASTERDECK_OUT=<png> cargo test -p masterdeck weather_skies -- --ignored`.
     #[test]
     #[ignore]
     fn weather_skies() {
@@ -2084,7 +2084,7 @@ mod tests {
         let size = tree.size().to_int_size();
         let mut pixmap = tiny_skia::Pixmap::new(size.width(), size.height()).unwrap();
         resvg::render(&tree, tiny_skia::Transform::default(), &mut pixmap.as_mut());
-        pixmap.save_png(std::env::var("HUBDECK_OUT").expect("HUBDECK_OUT")).unwrap();
+        pixmap.save_png(crate::compat::var("MASTERDECK_OUT").expect("MASTERDECK_OUT")).unwrap();
     }
 
     #[test]
@@ -2098,7 +2098,7 @@ mod tests {
     }
 
     /// The owner's Key 13 as the deck draws it, both states, 3x and 1x:
-    /// `HUBDECK_OUT=<png> cargo test -p hubdeck owners_key_13 -- --ignored`.
+    /// `MASTERDECK_OUT=<png> cargo test -p masterdeck owners_key_13 -- --ignored`.
     #[test]
     #[ignore]
     fn owners_key_13() {
@@ -2118,7 +2118,7 @@ mod tests {
         out += "</svg>";
         let tree = usvg::Tree::from_str(&out, &usvg::Options::default()).unwrap();
         let size = tree.size().to_int_size();
-        let path = std::env::var("HUBDECK_OUT").expect("HUBDECK_OUT");
+        let path = crate::compat::var("MASTERDECK_OUT").expect("MASTERDECK_OUT");
         for k in [3u32, 1] {
             let mut pixmap = tiny_skia::Pixmap::new(size.width() * k, size.height() * k).unwrap();
             resvg::render(&tree, tiny_skia::Transform::from_scale(k as f32, k as f32), &mut pixmap.as_mut());
@@ -2127,7 +2127,7 @@ mod tests {
     }
 
     /// Two-icon audio keys in three color variants, both states, on the owner's key color and a
-    /// light one: `HUBDECK_OUT=<png> cargo test -p hubdeck audio_pair_variants -- --ignored`.
+    /// light one: `MASTERDECK_OUT=<png> cargo test -p masterdeck audio_pair_variants -- --ignored`.
     #[test]
     #[ignore]
     fn audio_pair_variants() {
@@ -2155,7 +2155,7 @@ mod tests {
         let size = tree.size().to_int_size();
         let mut pixmap = tiny_skia::Pixmap::new(size.width() * 3, size.height() * 3).unwrap();
         resvg::render(&tree, tiny_skia::Transform::from_scale(3.0, 3.0), &mut pixmap.as_mut());
-        let out_path = std::env::var("HUBDECK_OUT").expect("HUBDECK_OUT");
+        let out_path = crate::compat::var("MASTERDECK_OUT").expect("MASTERDECK_OUT");
         pixmap.save_png(&out_path).unwrap();
         // and at the deck's own size (a key is 72 px on the module)
         let mut real = tiny_skia::Pixmap::new(size.width(), size.height()).unwrap();
@@ -2164,15 +2164,15 @@ mod tests {
     }
 
     /// App icons over the whole key, as they were (with the icon's own margin) and trimmed:
-    /// `HUBDECK_ICONS=<data dir> HUBDECK_OUT=<png> cargo test -p hubdeck app_icons_before_after -- --ignored`
-    /// with the images named in `HUBDECK_IMAGES` (comma-separated "file:label").
+    /// `MASTERDECK_ICONS=<data dir> MASTERDECK_OUT=<png> cargo test -p masterdeck app_icons_before_after -- --ignored`
+    /// with the images named in `MASTERDECK_IMAGES` (comma-separated "file:label").
     #[test]
     #[ignore]
     fn app_icons_before_after() {
-        let data = std::path::PathBuf::from(std::env::var("HUBDECK_ICONS").expect("HUBDECK_ICONS"));
+        let data = std::path::PathBuf::from(crate::compat::var("MASTERDECK_ICONS").expect("MASTERDECK_ICONS"));
         super::super::images::init(&data);
         set_app_icons("fillLabel");
-        let keys: Vec<(String, String)> = std::env::var("HUBDECK_IMAGES").expect("HUBDECK_IMAGES").split(',').filter_map(|p| p.split_once(':')).map(|(a, b)| (a.into(), b.into())).collect();
+        let keys: Vec<(String, String)> = crate::compat::var("MASTERDECK_IMAGES").expect("MASTERDECK_IMAGES").split(',').filter_map(|p| p.split_once(':')).map(|(a, b)| (a.into(), b.into())).collect();
         let s = KEY_PX as f32;
         let (gap, pad) = (16.0, 12.0);
         let w = pad * 2.0 + keys.len() as f32 * (s + gap) - gap;
@@ -2188,14 +2188,14 @@ mod tests {
         let size = tree.size().to_int_size();
         let mut pixmap = tiny_skia::Pixmap::new(size.width() * 3, size.height() * 3).unwrap();
         resvg::render(&tree, tiny_skia::Transform::from_scale(3.0, 3.0), &mut pixmap.as_mut());
-        pixmap.save_png(std::env::var("HUBDECK_OUT").expect("HUBDECK_OUT")).unwrap();
+        pixmap.save_png(crate::compat::var("MASTERDECK_OUT").expect("MASTERDECK_OUT")).unwrap();
     }
 
-    /// `HUBDECK_SHEET=<dir> cargo test -p hubdeck dump_render_sheet -- --ignored`.
+    /// `MASTERDECK_SHEET=<dir> cargo test -p masterdeck dump_render_sheet -- --ignored`.
     #[test]
     #[ignore]
     fn dump_render_sheet() {
-        let dir = std::path::PathBuf::from(std::env::var("HUBDECK_SHEET").expect("HUBDECK_SHEET"));
+        let dir = std::path::PathBuf::from(crate::compat::var("MASTERDECK_SHEET").expect("MASTERDECK_SHEET"));
         std::fs::create_dir_all(&dir).unwrap();
         let house_look = |action: &str, label: &str, icon: &str| {
             let mut l = Look { label: Some(label.into()), icon: Some(icon.into()), ..Look::default() };
@@ -2263,7 +2263,7 @@ mod tests {
         assert_eq!(image::load_from_memory(&dial).unwrap().width(), 240);
     }
 
-    /// Japanese on a key: HubDeck's font has no such letters, a system font draws them
+    /// Japanese on a key: MasterDeck's font has no such letters, a system font draws them
     /// (Discussions #3, 2026-10-18). Windows has Yu Gothic and Meiryo, macOS Hiragino.
     #[test]
     fn letters_our_font_lacks_come_from_a_system_font() {
@@ -2278,8 +2278,8 @@ mod tests {
         assert!(japanese > none + 20, "Japanese drawn: {japanese} lit pixels, {none} with no label");
     }
 
-    /// Before and after for Discussions #3: the same Japanese keys drawn with HubDeck's font only
-    /// (0.1.3) and with the computer's fonts, side by side, into `HUBDECK_OUT` (a PNG).
+    /// Before and after for Discussions #3: the same Japanese keys drawn with MasterDeck's font only
+    /// (0.1.3) and with the computer's fonts, side by side, into `MASTERDECK_OUT` (a PNG).
     #[test]
     #[ignore]
     fn japanese_before_after() {
@@ -2308,13 +2308,13 @@ mod tests {
         out.fill(tiny_skia::Color::from_rgba8(20, 20, 26, 255));
         out.draw_pixmap(0, 0, b.as_ref(), &tiny_skia::PixmapPaint::default(), tiny_skia::Transform::identity(), None);
         out.draw_pixmap(0, 88, a.as_ref(), &tiny_skia::PixmapPaint::default(), tiny_skia::Transform::identity(), None);
-        out.save_png(std::env::var("HUBDECK_OUT").expect("HUBDECK_OUT")).unwrap();
+        out.save_png(crate::compat::var("MASTERDECK_OUT").expect("MASTERDECK_OUT")).unwrap();
     }
 
     #[test]
     fn a_chosen_font_draws_the_text() {
         let fonts = deck_fonts();
-        assert!(fonts.iter().any(|f| f == FONT_FAMILY), "HubDeck's own font is on the list");
+        assert!(fonts.iter().any(|f| f == FONT_FAMILY), "MasterDeck's own font is on the list");
         let Some(other) = fonts.iter().find(|f| ["Arial", "Segoe UI", "Helvetica"].contains(&f.as_str())).cloned() else { return };
         let look = Look { label: Some("Mute".into()), ..Look::default() };
         set_deck_font(Some(&other));
@@ -2430,11 +2430,11 @@ mod tests {
     }
 
     /// Every frame of one cycle of each built-in motion at 3x, as PNGs for an animation to show:
-    /// `HUBDECK_SHEET=<dir> cargo test -p hubdeck dump_motion_frames -- --ignored`.
+    /// `MASTERDECK_SHEET=<dir> cargo test -p masterdeck dump_motion_frames -- --ignored`.
     #[test]
     #[ignore]
     fn dump_motion_frames() {
-        let dir = std::path::PathBuf::from(std::env::var("HUBDECK_SHEET").expect("HUBDECK_SHEET")).join("frames");
+        let dir = std::path::PathBuf::from(crate::compat::var("MASTERDECK_SHEET").expect("MASTERDECK_SHEET")).join("frames");
         std::fs::create_dir_all(&dir).unwrap();
         let s = |v: &str| Some(v.to_string());
         let heart = Look { label: s("Lubię to"), icon: s("heart"), style: s("gradient"), bg: s("#6a3fd8"), bg2: s("#e0457b"), angle: Some(135), fg: s("#ffffff"), ..Look::default() };
@@ -2462,7 +2462,7 @@ mod tests {
 
     /// What each built-in motion costs on a page of 15 moving keys: a cycle of frames drawn and
     /// encoded by a fresh renderer (no tiles kept), against still keys.
-    /// `cargo test --release -p hubdeck motion_cost -- --ignored --nocapture`
+    /// `cargo test --release -p masterdeck motion_cost -- --ignored --nocapture`
     #[test]
     #[ignore]
     fn motion_cost() {
@@ -2520,7 +2520,7 @@ mod tests {
     /// Where a placed label really stands: drawn alone (white on black, no icon) in every position,
     /// size, line count and with or without a frame, its lit rows measured. Prints the margins;
     /// the test with the limits is `placed_labels_keep_clear_of_the_edges`.
-    /// `cargo test -p hubdeck label_margins -- --ignored --nocapture`
+    /// `cargo test -p masterdeck label_margins -- --ignored --nocapture`
     #[test]
     #[ignore]
     fn label_margins() {
@@ -2599,7 +2599,7 @@ mod tests {
     }
 
     /// What a skin costs to draw, a still key and a moving one's top layer, ms (release build):
-    /// `cargo test --release -p hubdeck skin_draw_cost -- --ignored --nocapture`.
+    /// `cargo test --release -p masterdeck skin_draw_cost -- --ignored --nocapture`.
     #[test]
     #[ignore]
     fn skin_draw_cost() {
@@ -2657,11 +2657,11 @@ mod tests {
     }
 
     /// Built-in motion frame by frame at 3x:
-    /// `HUBDECK_SHEET=<dir> cargo test -p hubdeck dump_motion_sheet -- --ignored`.
+    /// `MASTERDECK_SHEET=<dir> cargo test -p masterdeck dump_motion_sheet -- --ignored`.
     #[test]
     #[ignore]
     fn dump_motion_sheet() {
-        let dir = std::path::PathBuf::from(std::env::var("HUBDECK_SHEET").expect("HUBDECK_SHEET"));
+        let dir = std::path::PathBuf::from(crate::compat::var("MASTERDECK_SHEET").expect("MASTERDECK_SHEET"));
         std::fs::create_dir_all(&dir).unwrap();
         let s = |v: &str| Some(v.to_string());
         let heart = Look { label: s("Lubię to"), icon: s("heart"), style: s("gradient"), bg: s("#6a3fd8"), bg2: s("#e0457b"), angle: Some(135), fg: s("#ffffff"), ..Look::default() };
@@ -2685,12 +2685,12 @@ mod tests {
     }
 
     /// The skins on six keys (rows: none and each skin) at 3x, and each skin's motion frame by
-    /// frame: `HUBDECK_SHEET=<dir> cargo test -p hubdeck dump_skin_sheet -- --ignored`
+    /// frame: `MASTERDECK_SHEET=<dir> cargo test -p masterdeck dump_skin_sheet -- --ignored`
     /// (`skins.png`, `skins-real.png` at the deck's own 72 px, `skin-motion.png`).
     #[test]
     #[ignore]
     fn dump_skin_sheet() {
-        let dir = std::path::PathBuf::from(std::env::var("HUBDECK_SHEET").expect("HUBDECK_SHEET"));
+        let dir = std::path::PathBuf::from(crate::compat::var("MASTERDECK_SHEET").expect("MASTERDECK_SHEET"));
         std::fs::create_dir_all(&dir).unwrap();
         let s = |v: &str| Some(v.to_string());
         let keys = [
@@ -2739,8 +2739,8 @@ mod tests {
                 std::fs::write(dir.join(format!("frame-{skin}-{motion}-{n:02}.png")), Renderer::default().png(&svg).unwrap()).unwrap();
             }
         }
-        // the owner's own page, every key in each skin: HUBDECK_PROFILE=<profile .json>
-        if let Ok(path) = std::env::var("HUBDECK_PROFILE") {
+        // the owner's own page, every key in each skin: MASTERDECK_PROFILE=<profile .json>
+        if let Ok(path) = crate::compat::var("MASTERDECK_PROFILE") {
             // its pictures from the same app data (read only)
             if let Some(data) = std::path::Path::new(&path).parent().and_then(|p| p.parent()) {
                 super::super::images::init(data);
@@ -2762,11 +2762,11 @@ mod tests {
     }
 
     /// The icon editor's templates and options at 3x, one sheet to look at:
-    /// `HUBDECK_SHEET=<dir> cargo test -p hubdeck dump_icon_editor_sheet -- --ignored`.
+    /// `MASTERDECK_SHEET=<dir> cargo test -p masterdeck dump_icon_editor_sheet -- --ignored`.
     #[test]
     #[ignore]
     fn dump_icon_editor_sheet() {
-        let dir = std::path::PathBuf::from(std::env::var("HUBDECK_SHEET").expect("HUBDECK_SHEET"));
+        let dir = std::path::PathBuf::from(crate::compat::var("MASTERDECK_SHEET").expect("MASTERDECK_SHEET"));
         std::fs::create_dir_all(&dir).unwrap();
         let heart = |l: Look| Look { label: Some("Lubię to".into()), icon: Some("heart".into()), ..l };
         let s = |v: &str| Some(v.to_string());
@@ -2932,7 +2932,7 @@ mod tests {
 mod timing {
     use super::*;
 
-    /// `cargo test -p hubdeck dump_key_styles -- --ignored`: the four key styles as JPEGs in the temp folder
+    /// `cargo test -p masterdeck dump_key_styles -- --ignored`: the four key styles as JPEGs in the temp folder
     #[test]
     #[ignore]
     fn dump_key_styles() {
@@ -2951,7 +2951,7 @@ mod timing {
         eprintln!("{}", path.display());
     }
 
-    /// `cargo test -p hubdeck render_timing -- --ignored --nocapture` (debug vs --release)
+    /// `cargo test -p masterdeck render_timing -- --ignored --nocapture` (debug vs --release)
     #[test]
     #[ignore]
     fn panel_with_gifs_memory() {
@@ -3171,7 +3171,7 @@ mod timing {
         }
     }
 
-    /// What the computer's fonts cost a key with a label: the same keys drawn with HubDeck's font
+    /// What the computer's fonts cost a key with a label: the same keys drawn with MasterDeck's font
     /// only and with the system's fonts too (2026-10-18: the gate's CPU went from 8.6 % to 11.5 %).
     #[test]
     #[ignore]

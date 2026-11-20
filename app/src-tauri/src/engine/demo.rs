@@ -1,5 +1,5 @@
 //! "Starter deck" (owner, 2026-10-12): a tour on the deck itself. Seven tabs (key pages) show
-//! what HubDeck can do; the bottom-right key goes to the next tab, the top-left key names the
+//! what MasterDeck can do; the bottom-right key goes to the next tab, the top-left key names the
 //! tab. Every key works (safely) and carries a note (`look.note`, `demo:<id>`) that the window
 //! shows when the key is pressed or picked: what it does and how to set it. The dial is the dial
 //! gallery; knobs, faders and rollers do their usual jobs with lit LEDs. Labels come in the
@@ -37,7 +37,7 @@ pub fn animation(name: &str) -> Option<String> {
     super::images::import_bytes(bytes, "gif").ok()
 }
 
-/// The window's language, for the labels of a demo made now (and of every profile HubDeck makes,
+/// The window's language, for the labels of a demo made now (and of every profile MasterDeck makes,
 /// see [`super::localize`]).
 pub fn set_language(language: &str) {
     super::localize::set_language(language);
@@ -111,7 +111,7 @@ fn put(p: &mut Profile, page: Option<&str>, keys: Vec<Binding>) {
 }
 
 pub fn discover() -> Profile {
-    let mut p = Profile::new(&tr("Starter deck", "Poznaj HubDeck"));
+    let mut p = Profile::new(&tr("Starter deck", "Poznaj MasterDeck"));
     p.color = Some("#8b7cf6".into());
     p.pages = vec![
         Page { id: "live".into(), name: tr("Live", "Na żywo") },
@@ -132,7 +132,7 @@ pub fn discover() -> Profile {
             key("core.launch", json!({"target": "notepad"}), ("Notepad", "Notatnik"), "app-window", hue::APP, "open-app"),
             key("core.launch", json!({"target": "https://github.com"}), ("Website", "Strona"), "globe", hue::APP, "open-web"),
             hotkey("Win+Shift+S", ("Snip", "Wycinek"), "camera", "shortcut"),
-            key("core.text", json!({"text": "Hello from HubDeck!"}), ("Type text", "Wpisz tekst"), "type", hue::TOOL, "type-text"),
+            key("core.text", json!({"text": "Hello from MasterDeck!"}), ("Type text", "Wpisz tekst"), "type", hue::TOOL, "type-text"),
             media("previous", ("Prev", "Poprz."), "skip-back", "media"),
             media("playPause", ("Play", "Graj"), "play", "media"),
             media("next", ("Next", "Dalej"), "skip-forward", "media"),
@@ -225,7 +225,7 @@ pub fn discover() -> Profile {
             big,
             game_icon,
             colors,
-            key("", json!({}), ("House look", "Styl HubDeck"), "star", hue::SHOW, "house"),
+            key("", json!({}), ("House look", "Styl MasterDeck"), "star", hue::SHOW, "house"),
             next("control"),
         ],
     );

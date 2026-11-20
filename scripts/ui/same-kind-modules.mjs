@@ -42,7 +42,7 @@ const GREEN = "#00ff66";
 
 async function run(spec, step) {
   for (const f of ["api-http-port", "api-port"]) fs.rmSync(path.join(dir, f), { force: true });
-  const app = spawn(exe, [], { env: { ...process.env, HUBDECK_AUTOMATION: dir, HUBDECK_CDP_PORT: "9491", HUBDECK_VIRTUAL_MODULES: spec }, stdio: "ignore" });
+  const app = spawn(exe, [], { env: { ...process.env, MASTERDECK_AUTOMATION: dir, MASTERDECK_CDP_PORT: "9491", MASTERDECK_VIRTUAL_MODULES: spec }, stdio: "ignore" });
   for (let i = 0; i < 60 && !fs.existsSync(path.join(dir, "api-http-port")); i++) await sleep(500);
   await sleep(1500);
   const port = fs.readFileSync(path.join(dir, "api-http-port"), "utf8").trim();

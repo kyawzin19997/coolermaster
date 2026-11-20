@@ -4,11 +4,11 @@
 #   scripts/check.sh && git commit ...
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
-cargo fmt --check -p hubdeck
-cargo clippy -p hubdeck --all-targets -q -- -D warnings
+cargo fmt --check -p masterdeck
+cargo clippy -p masterdeck --all-targets -q -- -D warnings
 app/node_modules/.bin/tsc --noEmit -p app
 (cd app && pnpm -s test >/dev/null)
-if ! out=$(cargo test -q -p mh-protocol -p mh-device -p hubdeck 2>&1); then
+if ! out=$(cargo test -q -p mh-protocol -p mh-device -p masterdeck 2>&1); then
   echo "$out" | grep -E "FAILED|panicked|failures:" -A3 | head -40
   exit 1
 fi

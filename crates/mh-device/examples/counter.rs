@@ -6,9 +6,9 @@
 //! go for the given seconds, then black.
 //!
 //!     cargo run --release -p mh-device --example counter -- [seconds]
-//!     (HUBDECK_PIPELINE=0 for one report at a time)
+//!     (MASTERDECK_PIPELINE=0 for one report at a time)
 //!
-//! Quit HubDeck first. The keys go back to their own animation at the end.
+//! Quit MasterDeck first. The keys go back to their own animation at the end.
 
 use std::io::Cursor;
 use std::time::{Duration, Instant};
@@ -53,7 +53,7 @@ fn picture(n: u32, calibrate: bool) -> Vec<u8> {
 
 fn main() {
     let seconds: f64 = std::env::args().nth(1).and_then(|s| s.parse().ok()).unwrap_or(6.0);
-    let pipelined = std::env::var("HUBDECK_PIPELINE").map_or(true, |v| v != "0");
+    let pipelined = mh_device::pipeline_enabled();
     let hub = Hub::start().expect("hub");
     std::thread::sleep(Duration::from_millis(800));
     let keys = hub.first(ModuleKind::Keys).expect("the keys module");

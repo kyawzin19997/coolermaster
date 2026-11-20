@@ -1,0 +1,289 @@
+{
+  "version": 1,
+  "id": "masterdeck-meetings",
+  "name": "Discord & meetings",
+  "apps": [
+    "Discord.exe",
+    "ms-teams.exe",
+    "Teams.exe",
+    "Zoom.exe"
+  ],
+  "controls": {
+    "dial": {
+      "action": "core.volume",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#9379ec",
+        "label": "Volume",
+        "icon": "volume-2"
+      },
+      "params": {
+        "step": 2,
+        "target": "system"
+      }
+    },
+    "faders.0": {
+      "action": "core.volume",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#9379ec",
+        "label": "System",
+        "icon": "volume-2"
+      },
+      "params": {
+        "target": "system"
+      }
+    },
+    "faders.1": {
+      "action": "core.volume",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#9379ec",
+        "label": "Discord",
+        "icon": "volume-2"
+      },
+      "params": {
+        "target": "app",
+        "app": "Discord.exe"
+      }
+    },
+    "faders.2": {
+      "action": "core.volume",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#9379ec",
+        "label": "Teams",
+        "icon": "volume-2"
+      },
+      "params": {
+        "target": "app",
+        "app": "ms-teams.exe"
+      }
+    },
+    "faders.3": {
+      "action": "core.volume",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#9379ec",
+        "label": "Zoom",
+        "icon": "volume-2"
+      },
+      "params": {
+        "target": "app",
+        "app": "Zoom.exe"
+      }
+    },
+    "faders.4": {
+      "action": "core.volume",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#9379ec",
+        "label": "Chrome",
+        "icon": "volume-2"
+      },
+      "params": {
+        "target": "app",
+        "app": "chrome.exe"
+      }
+    },
+    "keys.0": {
+      "action": "core.hotkey",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#b879ec",
+        "label": "Discord mute",
+        "icon": "mic-off"
+      },
+      "params": {
+        "keys": "Ctrl+Shift+M"
+      }
+    },
+    "keys.1": {
+      "action": "core.hotkey",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#b879ec",
+        "label": "Discord deafen",
+        "icon": "headphones"
+      },
+      "params": {
+        "keys": "Ctrl+Shift+D"
+      }
+    },
+    "keys.10": {
+      "action": "core.hotkey",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#b879ec",
+        "label": "Meet mic",
+        "icon": "mic-off"
+      },
+      "params": {
+        "keys": "Ctrl+D"
+      }
+    },
+    "keys.11": {
+      "action": "core.hotkey",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#b879ec",
+        "label": "Meet camera",
+        "icon": "video-off"
+      },
+      "params": {
+        "keys": "Ctrl+E"
+      }
+    },
+    "keys.12": {
+      "action": "core.hotkey",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#ec7986",
+        "label": "Mute all",
+        "icon": "volume-x"
+      },
+      "params": {
+        "keys": "VolumeMute"
+      }
+    },
+    "keys.13": {
+      "action": "core.media",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#79b1ec",
+        "label": "Music",
+        "icon": "music"
+      },
+      "params": {
+        "command": "playPause"
+      }
+    },
+    "keys.14": {
+      "action": "core.launch",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#79eca1",
+        "label": "New Meet",
+        "icon": "video"
+      },
+      "params": {}
+    },
+    "keys.2": {
+      "action": "core.hotkey",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#b879ec",
+        "label": "Teams mute",
+        "icon": "mic-off"
+      },
+      "params": {
+        "keys": "Ctrl+Shift+M"
+      }
+    },
+    "keys.3": {
+      "action": "core.hotkey",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#b879ec",
+        "label": "Teams camera",
+        "icon": "video-off"
+      },
+      "params": {
+        "keys": "Ctrl+Shift+O"
+      }
+    },
+    "keys.4": {
+      "action": "core.hotkey",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#ec7986",
+        "label": "Teams leave",
+        "icon": "x"
+      },
+      "params": {
+        "keys": "Ctrl+Shift+H"
+      }
+    },
+    "keys.5": {
+      "action": "core.hotkey",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#b879ec",
+        "label": "Zoom mute",
+        "icon": "mic-off"
+      },
+      "params": {
+        "keys": "Alt+A"
+      }
+    },
+    "keys.6": {
+      "action": "core.hotkey",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#b879ec",
+        "label": "Zoom camera",
+        "icon": "video-off"
+      },
+      "params": {
+        "keys": "Alt+V"
+      }
+    },
+    "keys.7": {
+      "action": "core.hotkey",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#b879ec",
+        "label": "Zoom hand",
+        "icon": "star"
+      },
+      "params": {
+        "keys": "Alt+Y"
+      }
+    },
+    "keys.8": {
+      "action": "core.hotkey",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#ec7986",
+        "label": "Zoom leave",
+        "icon": "x"
+      },
+      "params": {
+        "keys": "Alt+Q"
+      }
+    },
+    "keys.9": {
+      "action": "core.hotkey",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#b879ec",
+        "label": "Teams hand",
+        "icon": "star"
+      },
+      "params": {
+        "keys": "Ctrl+Shift+K"
+      }
+    }
+  }
+}

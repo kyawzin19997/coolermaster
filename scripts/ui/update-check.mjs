@@ -17,7 +17,7 @@ const [setup, want] = process.argv.slice(2);
 if (!setup || !want) throw new Error("usage: update-check.mjs <older setup.exe> <newest version>");
 const PORT = 9461;
 const data = path.join(process.env.APPDATA, "dev.hubdeck.app");
-const exe = path.join(process.env.LOCALAPPDATA, "HubDeck", "hubdeck.exe");
+const exe = path.join(process.env.LOCALAPPDATA, "MasterDeck", "hubdeck.exe");
 const realLog = path.join(process.env.LOCALAPPDATA, "dev.hubdeck.app", "logs", "hubdeck.log");
 const copy = path.join(process.env.TEMP, "hubdeck-update-check");
 const copyLog = path.join(copy, "logs", "hubdeck.log");
@@ -25,7 +25,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const ps = (cmd) => execFileSync("powershell", ["-NoProfile", "-Command", cmd], { encoding: "utf8" }).trim();
 const running = () => ps(`@(Get-Process -Name hubdeck -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq '${exe}' }).Count`) !== "0";
 const read = (file) => (fs.existsSync(file) ? fs.readFileSync(file, "utf8") : "");
-const starting = (version) => new RegExp(`HubDeck ${version.replaceAll(".", "\\.")} starting`);
+const starting = (version) => new RegExp(`MasterDeck ${version.replaceAll(".", "\\.")} starting`);
 const results = [];
 const check = (what, ok, note = "") => (results.push({ ok }), console.log(`${ok ? "ok  " : "FAIL"} ${what}${note ? ` (${note})` : ""}`));
 // the real app is asked to quit through its API: it hands the deck back
@@ -35,7 +35,7 @@ const quit = async () => {
   const port = fs.readFileSync(path.join(data, "api-http-port"), "utf8").trim();
   await fetch(`http://127.0.0.1:${port}/api/quit`, { method: "POST", headers: { Authorization: `Bearer ${token}` } }).catch(() => {});
   for (let i = 0; i < 30 && running(); i++) await sleep(500);
-  if (running()) throw new Error("HubDeck did not quit within 15 s");
+  if (running()) throw new Error("MasterDeck did not quit within 15 s");
 };
 
 // the modules attached now (the API's kinds): the same must come back after the update (2026-11-02:
@@ -62,13 +62,13 @@ await quit();
 fs.rmSync(copy, { recursive: true, force: true });
 fs.mkdirSync(path.join(copy, "logs"), { recursive: true });
 fs.copyFileSync(path.join(data, "settings.json"), path.join(copy, "settings.json"));
-ps(`$env:HUBDECK_AUTOMATION='${copy}'; $env:HUBDECK_CDP_PORT='${PORT}'; Start-Process '${exe}' -WindowStyle Hidden`);
+ps(`$env:MASTERDECK_AUTOMATION='${copy}'; $env:MASTERDECK_CDP_PORT='${PORT}'; Start-Process '${exe}' -WindowStyle Hidden`);
 let old = "";
 for (let i = 0; i < 60 && !old; i++) {
   await sleep(1000);
-  old = read(copyLog).match(/HubDeck (\d+\.\d+\.\d+) starting/)?.[1] ?? "";
+  old = read(copyLog).match(/MasterDeck (\d+\.\d+\.\d+) starting/)?.[1] ?? "";
 }
-check("the older release starts", !!old && old !== want, `HubDeck ${old}`);
+check("the older release starts", !!old && old !== want, `MasterDeck ${old}`);
 let browser;
 for (let i = 0; i < 40 && !browser; i++) browser = await chromium.connectOverCDP(`http://127.0.0.1:${PORT}`).catch(() => sleep(500).then(() => null));
 let page;
@@ -101,7 +101,7 @@ const from = read(realLog).length;
 ps(`Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{ CommandLine = '"${exe}" --hidden' } | Out-Null`);
 await sleep(12000);
 const real = read(realLog).slice(from);
-check("the installed app is now the newest", starting(want).test(real), real.match(/HubDeck [\d.]+ starting/)?.[0] ?? "no start line");
+check("the installed app is now the newest", starting(want).test(real), real.match(/MasterDeck [\d.]+ starting/)?.[0] ?? "no start line");
 const modules = [...new Set([...real.matchAll(/connected (keys|dial|knobs|rollers|base|faders) /g)].map((m) => m[1]))];
 check("every module of the deck back", expected.every((m) => modules.includes(m)), `${modules.join(", ")}; before: ${expected.join(", ")}`);
 const errors = real.split("\n").filter((l) => l.includes("[ERROR]"));

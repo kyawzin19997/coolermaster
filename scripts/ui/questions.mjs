@@ -1,5 +1,5 @@
-// Every question HubDeck asks before something that cannot be undone, as a user meets it (owner,
-// 2026-10-23: "dodaj ten test siedmiu pytań do bramki"; the questions are HubDeck's own since his
+// Every question MasterDeck asks before something that cannot be undone, as a user meets it (owner,
+// 2026-10-23: "dodaj ten test siedmiu pytań do bramki"; the questions are MasterDeck's own since his
 // pick 1b that day). Each must come up in the window, name what it is about, and Cancel (or
 // Escape) must change nothing: no delete, uninstall, restore or rollback reaches the engine.
 // On 2026-10-18 a question stopped asking and a profile went without one; this catches that.
@@ -11,7 +11,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-const base = process.env.HUBDECK_URL || "http://localhost:1460/";
+const base = process.env.MASTERDECK_URL || "http://localhost:1460/";
 const shots = process.argv[2];
 function findChromium() {
   const cache = path.join(os.homedir(), process.platform === "win32" ? "AppData/Local/ms-playwright" : process.platform === "darwin" ? "Library/Caches/ms-playwright" : ".cache/ms-playwright");
@@ -74,7 +74,8 @@ try {
   // 1. Delete page
   let page = await open();
   await page.getByRole("button", { name: "New page" }).click();
-  await page.keyboard.type("Walk");
+  await page.locator(".page-bar").getByRole("button", { name: "Rename", exact: true }).click();
+  await page.locator(".tab-input").fill("Walk");
   await page.keyboard.press("Enter");
   await page.locator("button.tab", { hasText: /^Walk$/ }).first().click();
   await sleep(400);
@@ -121,7 +122,7 @@ try {
 
   // 5. Go back to the version before
   await settings(page, "Updates");
-  await question(page, "Go back", () => page.getByRole("button", { name: /^Go back to/ }).click(), ["Go back to HubDeck 0.1.0"]);
+  await question(page, "Go back", () => page.getByRole("button", { name: /^Go back to/ }).click(), ["Go back to MasterDeck 0.1.0"]);
   await page.close();
 
   // 6. Remove an icon pack, from a key's Change icon

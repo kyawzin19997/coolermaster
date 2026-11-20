@@ -7,7 +7,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-/** [ok, detail] for a test copy's data folder (`HUBDECK_AUTOMATION`). */
+/** [ok, detail] for a test copy's data folder (`MASTERDECK_AUTOMATION`). */
 export function screenClean(dir) {
   const logs = path.join(dir, "logs");
   if (!fs.existsSync(logs)) return [false, `no log in ${logs}`];

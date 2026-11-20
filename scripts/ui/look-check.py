@@ -37,7 +37,7 @@ KW, KH, DX, DY, W, H = 79, 75, 100, 99, 480, 272
 
 def binary() -> pathlib.Path:
     # Windows: the .exe; Linux and macOS: the executable without an extension (a cloud session, 2026-10-29)
-    found = sorted([f for f in glob.glob(str(ROOT / "target" / "release" / "deps" / "hubdeck_lib-*"))
+    found = sorted([f for f in glob.glob(str(ROOT / "target" / "release" / "deps" / "masterdeck_lib-*"))
                     if f.endswith(".exe") or (os.name != "nt" and "." not in os.path.basename(f) and os.access(f, os.X_OK))],
                    key=os.path.getmtime)
     if not found:
@@ -50,12 +50,12 @@ PROFILE = None  # a profile file whose main page stands on the keys (--profile),
 
 def film(shader: pathlib.Path, turn: int, seconds: float, sheet: pathlib.Path, bare: bool = False) -> str:
     kind = shader.stem
-    env = dict(os.environ, HUBDECK_SHADER_DIR=str(shader.parent), HUBDECK_FX=kind, HUBDECK_SHEET=str(sheet),
-               HUBDECK_SECONDS=str(seconds), HUBDECK_PRESSES="7@1.0", HUBDECK_TURN=str(turn))
+    env = dict(os.environ, MASTERDECK_SHADER_DIR=str(shader.parent), MASTERDECK_FX=kind, MASTERDECK_SHEET=str(sheet),
+               MASTERDECK_SECONDS=str(seconds), MASTERDECK_PRESSES="7@1.0", MASTERDECK_TURN=str(turn))
     if bare:
-        env["HUBDECK_BARE"] = "1"
+        env["MASTERDECK_BARE"] = "1"
     if PROFILE:
-        env["HUBDECK_PROFILE"] = str(PROFILE)
+        env["MASTERDECK_PROFILE"] = str(PROFILE)
     run = subprocess.run([str(binary()), "fx_film", "--ignored", "--nocapture", "--exact", "engine::canvas::tests::fx_film"],
                          env=env, capture_output=True, text=True, timeout=600)
     text = run.stdout + run.stderr

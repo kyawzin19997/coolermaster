@@ -1,7 +1,7 @@
 //! "Play sound": a small soundboard. One audio thread, started on the first sound, plays files
 //! (WAV, MP3, FLAC, OGG) through rodio on the default speakers or a chosen device. A press plays,
 //! a press on a playing sound stops it (or starts it over), and "stop all" silences everything.
-//! The output streams close after a quiet half minute, so an idle HubDeck holds no audio device.
+//! The output streams close after a quiet half minute, so an idle MasterDeck holds no audio device.
 
 use std::collections::HashMap;
 use std::sync::OnceLock;

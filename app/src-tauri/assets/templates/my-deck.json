@@ -1,0 +1,426 @@
+{
+  "version": 1,
+  "id": "masterdeck-my-deck",
+  "name": "My deck · faders",
+  "apps": [],
+  "controls": {
+    "faders.0": {
+      "action": "core.volume",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#79d9ec",
+        "ledLevel": true,
+        "label": "App in front",
+        "icon": "app-window"
+      },
+      "params": {
+        "step": 2
+      }
+    },
+    "faders.1": {
+      "action": "core.volume",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#79d9ec",
+        "ledLevel": true,
+        "label": "Teams",
+        "icon": "headphones"
+      },
+      "params": {
+        "step": 2,
+        "target": "app",
+        "app": "ms-teams.exe"
+      }
+    },
+    "faders.2": {
+      "action": "core.volume",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#79d9ec",
+        "ledLevel": true,
+        "label": "Music",
+        "icon": "music"
+      },
+      "params": {
+        "step": 2,
+        "target": "app",
+        "app": "Spotify.exe"
+      }
+    },
+    "faders.3": {
+      "action": "core.volume",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#79d9ec",
+        "ledLevel": true,
+        "label": "Browser",
+        "icon": "globe"
+      },
+      "params": {
+        "step": 2,
+        "target": "app",
+        "app": "chrome.exe"
+      }
+    },
+    "faders.4": {
+      "action": "core.volume",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#79d9ec",
+        "ledLevel": true,
+        "label": "System",
+        "icon": "volume-2"
+      },
+      "params": {
+        "step": 2,
+        "target": "system"
+      }
+    },
+    "fun/keys.0": {
+      "action": "",
+      "look": {
+        "label": ""
+      },
+      "params": {}
+    },
+    "fun/keys.1": {
+      "action": "",
+      "look": {
+        "label": ""
+      },
+      "params": {}
+    },
+    "fun/keys.10": {
+      "action": "",
+      "look": {
+        "label": ""
+      },
+      "params": {}
+    },
+    "fun/keys.11": {
+      "action": "core.saver",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "label": "Screensaver",
+        "icon": "image"
+      },
+      "params": {}
+    },
+    "fun/keys.12": {
+      "action": "",
+      "look": {
+        "label": ""
+      },
+      "params": {}
+    },
+    "fun/keys.13": {
+      "action": "",
+      "look": {
+        "label": ""
+      },
+      "params": {}
+    },
+    "fun/keys.14": {
+      "action": "core.page",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#8c79ec",
+        "label": "Back",
+        "icon": "arrow-left"
+      },
+      "params": {}
+    },
+    "fun/keys.2": {
+      "action": "",
+      "look": {
+        "label": ""
+      },
+      "params": {}
+    },
+    "fun/keys.3": {
+      "action": "",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "label": ""
+      },
+      "params": {}
+    },
+    "fun/keys.4": {
+      "action": "",
+      "look": {
+        "label": ""
+      },
+      "params": {}
+    },
+    "fun/keys.5": {
+      "action": "",
+      "look": {
+        "label": ""
+      },
+      "params": {}
+    },
+    "fun/keys.6": {
+      "action": "",
+      "look": {
+        "label": ""
+      },
+      "params": {}
+    },
+    "fun/keys.7": {
+      "action": "",
+      "look": {
+        "label": ""
+      },
+      "params": {}
+    },
+    "fun/keys.8": {
+      "action": "",
+      "look": {
+        "label": ""
+      },
+      "params": {}
+    },
+    "fun/keys.9": {
+      "action": "",
+      "look": {
+        "label": ""
+      },
+      "params": {}
+    },
+    "keys.0": {
+      "action": "core.launch",
+      "look": {
+        "label": "Google Chrom",
+        "icon": "action:core.launch"
+      },
+      "params": {
+        "target": "chrome.exe"
+      }
+    },
+    "keys.1": {
+      "action": "core.launch",
+      "look": {
+        "label": "Codex",
+        "icon": "action:core.launch"
+      },
+      "params": {}
+    },
+    "keys.10": {
+      "action": "core.clock",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#79c6ec",
+        "label": "Clock",
+        "icon": "clock"
+      },
+      "params": {}
+    },
+    "keys.11": {
+      "action": "core.timer",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#79c6ec",
+        "label": "Focus 25",
+        "icon": "timer"
+      },
+      "params": {
+        "minutes": 25
+      }
+    },
+    "keys.12": {
+      "action": "core.hotkey",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#ecb379",
+        "label": "Screenshot",
+        "icon": "camera"
+      },
+      "params": {
+        "keys": "Win+Shift+S"
+      }
+    },
+    "keys.13": {
+      "action": "core.monitor",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#79c6ec",
+        "label": "CPU",
+        "icon": "cpu"
+      },
+      "params": {
+        "metric": "cpu"
+      }
+    },
+    "keys.14": {
+      "action": "core.hotkey",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#ecb379",
+        "label": "Lock",
+        "icon": "lock"
+      },
+      "params": {
+        "keys": "Win+L"
+      }
+    },
+    "keys.2": {
+      "action": "core.launch",
+      "look": {
+        "label": "OBS Studio",
+        "icon": "action:core.launch"
+      },
+      "params": {
+        "target": "OBS Studio"
+      }
+    },
+    "keys.3": {
+      "action": "core.launch",
+      "look": {
+        "label": "Ulanzi Studi",
+        "icon": "action:core.launch"
+      },
+      "params": {}
+    },
+    "keys.4": {
+      "action": "core.launch",
+      "look": {
+        "label": "Stream Deck",
+        "icon": "action:core.launch"
+      },
+      "params": {}
+    },
+    "keys.5": {
+      "action": "core.mic",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#ec798c",
+        "label": "Mic",
+        "icon": "mic"
+      },
+      "params": {}
+    },
+    "keys.5:hold": {
+      "action": "core.volume",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#79d9ec",
+        "label": "Sound off",
+        "icon": "volume-x"
+      },
+      "params": {
+        "target": "system"
+      }
+    },
+    "keys.6": {
+      "action": "core.hotkey",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#ecb379",
+        "label": "Teams mute",
+        "icon": "mic-off"
+      },
+      "params": {
+        "keys": "Ctrl+Shift+M"
+      }
+    },
+    "keys.6:double": {
+      "action": "core.audioDevice",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#79d9ec",
+        "icon": "headphones"
+      },
+      "params": {
+        "kind": "output"
+      }
+    },
+    "keys.7": {
+      "action": "core.hotkey",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#ecb379",
+        "label": "Camera",
+        "icon": "video-off"
+      },
+      "params": {
+        "keys": "Ctrl+Shift+O"
+      }
+    },
+    "keys.8": {
+      "action": "core.nowPlaying",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#79ecc6",
+        "label": "Now playing",
+        "icon": "music"
+      },
+      "params": {
+        "turn": "volume"
+      }
+    },
+    "keys.9": {
+      "action": "core.page",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#8c79ec",
+        "label": "Fun",
+        "icon": "sparkles"
+      },
+      "params": {
+        "page": "fun"
+      }
+    },
+    "rollers.0": {
+      "action": "core.scroll",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "label": "Scroll",
+        "icon": "arrow-up-down"
+      },
+      "params": {
+        "amount": 3,
+        "axis": "vertical"
+      }
+    },
+    "rollers.1": {
+      "action": "core.hotkey",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#ecb379",
+        "label": "Zoom",
+        "icon": "zoom-in"
+      },
+      "params": {
+        "counterClockwise": "Ctrl+-"
+      }
+    }
+  },
+  "pages": [
+    {
+      "id": "fun",
+      "name": "Fun"
+    }
+  ]
+}

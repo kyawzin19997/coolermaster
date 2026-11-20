@@ -2,7 +2,7 @@
 //! (Options > Remote Web Server > Run, port 8085), or, up to its 0.9.4, WMI
 //! (`root\LibreHardwareMonitor`, class `Sensor`; 0.9.5 dropped WMI with .NET 10, its issue #2143;
 //! a user with an AMD CPU and GPU saw only "-" on 2026-10-19). That gives the CPU temperature and AMD / Intel GPU
-//! load and temperature without HubDeck shipping a kernel driver (LibreHardwareMonitor brings its
+//! load and temperature without MasterDeck shipping a kernel driver (LibreHardwareMonitor brings its
 //! own, installed by the user's choice). Read only while a control shows one of these values.
 #![cfg_attr(not(windows), allow(dead_code))]
 
@@ -16,7 +16,7 @@ pub struct Sensor {
     pub value: f32,
 }
 
-/// What HubDeck uses from LibreHardwareMonitor.
+/// What MasterDeck uses from LibreHardwareMonitor.
 #[derive(Debug, Clone, Copy, Default, PartialEq)]
 pub struct Reading {
     pub cpu_temp: Option<f32>,
@@ -179,7 +179,7 @@ mod win {
 mod tests {
     use super::*;
 
-    /// With LibreHardwareMonitor running: `cargo test -p hubdeck lhm_live -- --ignored --nocapture`
+    /// With LibreHardwareMonitor running: `cargo test -p masterdeck lhm_live -- --ignored --nocapture`
     #[cfg(windows)]
     #[test]
     #[ignore]

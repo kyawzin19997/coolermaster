@@ -15,7 +15,8 @@ import { DeckView } from "./components/DeckView";
 import { Inspector, type InspectorHandle } from "./components/Inspector";
 import { ActionLibrary } from "./components/ActionChooser";
 import type { SettingsSection } from "./components/Panels";
-import { ArrangePanel, Banner, ControlMenu, BaseTurnPicker, DeckTools, EdgePanel, SaverPanel, MusicPanel, ForAppPanel, GamesPanel, LeftPanel, PageBar, PluginFileSheet, ProfilePanel, SettingsPanel, Sheet, TopBar } from "./components/Panels";
+import { ArrangePanel, Banner, ControlMenu, BaseTurnPicker, DeckTools, EdgePanel, SaverPanel, MusicPanel, ForAppPanel, GamesPanel, LeftPanel, PageBar, PluginFileSheet, ProfilePanel, SettingsPanel, Sheet, TopBar, keepImported } from "./components/Panels";
+import { PhoneUpload } from "./components/PhoneUpload";
 import { listen } from "@tauri-apps/api/event";
 import { askAssistant } from "./components/Assistant";
 import { Icon } from "./components/Icon";
@@ -25,7 +26,8 @@ import { clearIdentify, identifyModule } from "./identify";
 import { useEditing } from "./editing";
 import { BUILT_IN_LANGUAGES, setLanguage, storedLanguageFile, t, useLanguage, type Key } from "./i18n";
 import { demoParam } from "./demo/params";
-import { open, told } from "./confirm";
+import { askInWindow, open, told } from "./confirm";
+import { invoke } from "@tauri-apps/api/core";
 
 const Builder = lazy(() => import("./components/Builder").then(({ Builder }) => ({ default: Builder })));
 const DeckLook = lazy(() => import("./components/DeckLook").then(({ DeckLook }) => ({ default: DeckLook })));
@@ -54,7 +56,7 @@ export default function App() {
   const live = useDeck();
   const view = useEngine();
   const saverOn = !!useSaverShown();
-  // using the window is using HubDeck: it ends a screensaver and keeps the next one from starting
+  // using the window is using MasterDeck: it ends a screensaver and keeps the next one from starting
   // (owner, 2026-10-30: the deck's screensaver ran on while he worked in the window, and Deck look
   // then showed it instead of the preset he tried); a touch is sent at most every 20 s while none runs
   const saverOnRef = useRef(saverOn);
@@ -155,9 +157,31 @@ export default function App() {
   const [builderOpen, setBuilderOpen] = useState(DEMO_PANEL === "builder");
   // the tour (show, then ask, then build): a page of its own
   const [tourOpen, setTourOpen] = useState(DEMO_PANEL === "tour" || DEMO_PANEL === "welcome" || demoParam("demo") === "welcome");
-  // plugin files opened with HubDeck (a double click, Open with) or dropped on the window: one at a
+  // plugin files opened with MasterDeck (a double click, Open with) or dropped on the window: one at a
   // time, each asked about before it installs
   const [pluginFiles, setPluginFiles] = useState<PluginFile[]>(DEMO_PANEL === "pluginfile" ? [{ path: "AudioSwitcher.streamDeckPlugin" }] : []);
+  const [phoneOpen, setPhoneOpen] = useState(false);
+  const closePhone = () => setPhoneOpen(false);
+  const importPhoneFile = async (path: string, kind: string, name: string) => {
+    if (kind === "plugin") {
+      closePhone();
+      setPluginFiles((files) => [...files, { path }]);
+      return;
+    }
+    if (!(await askInWindow({ title: t("phone.confirmImport", { name }), ok: t("profile.import") }))) return;
+    if (kind === "profile") {
+      const imported = await api.importProfile(path);
+      if (await keepImported(imported)) {
+        await api.activate(imported.id);
+        closePhone();
+        setSettingsOpen(false);
+        setPluginsOpen(false);
+      }
+    } else if (kind === "icons") {
+      const pack = await iconPacks.install(path);
+      await told(t("icons.packAdded", { name: pack.name }));
+    }
+  };
   const choosePlugin = async (update?: PluginFile["update"]) => {
     try {
       const path = await open({ multiple: false, filters: [{ name: t("plugins.sdFile"), extensions: ["streamDeckPlugin", "zip"] }] });
@@ -350,7 +374,7 @@ export default function App() {
         </main>
       ) : pluginsOpen ? (
         <main className="workspace">
-          <PluginsTab onClose={() => setPluginsOpen(false)} onManage={openInstalledPlugins} onPickFile={choosePlugin} onUse={usePlugin} />
+          <PluginsTab onClose={() => setPluginsOpen(false)} onManage={openInstalledPlugins} onPickFile={choosePlugin} onPhone={() => setPhoneOpen(true)} onUse={usePlugin} />
         </main>
       ) : studio ? (
         <main className="workspace">
@@ -376,6 +400,7 @@ export default function App() {
             onCalibrate={() => { setCalibrating(true); setSettingsOpen(false); }}
             onBrowsePlugins={() => { setPluginsOpen(true); setSettingsOpen(false); }}
             onPickPlugin={choosePlugin}
+            onPhone={() => setPhoneOpen(true)}
             onUsePlugin={usePlugin}
             onOpenEdge={() => setEdgeOpen(true)}
             onOpenScenes={() => { setSaverOpen(false); setMusicOpen(false); setLivingOpen(true); }}
@@ -550,7 +575,8 @@ export default function App() {
         </Sheet>
       )}
       <ConfirmHost />
-      {pluginFiles.length > 0 && <PluginFileSheet key={pluginFiles[0].path} path={pluginFiles[0].path} update={pluginFiles[0].update} onUse={usePlugin} onManage={openInstalledPlugins} onClose={() => setPluginFiles((now) => now.slice(1))} />}
+      {phoneOpen && <PhoneUpload onClose={closePhone} onImport={importPhoneFile} />}
+      {!phoneOpen && pluginFiles.length > 0 && <PluginFileSheet key={pluginFiles[0].path} path={pluginFiles[0].path} update={pluginFiles[0].update} onUse={usePlugin} onManage={openInstalledPlugins} onClose={() => setPluginFiles((now) => now.slice(1))} />}
       {dropping && (
         <div className="drop-overlay" aria-hidden="true">
           <Icon name="plug" />

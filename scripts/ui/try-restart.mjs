@@ -1,5 +1,5 @@
-// A draft on the deck for a try when HubDeck restarts is offered back (owner, 2026-10-22: the
-// assistant's changes were on his deck as a try, an install restarted HubDeck and "wróciło mi do
+// A draft on the deck for a try when MasterDeck restarts is offered back (owner, 2026-10-22: the
+// assistant's changes were on his deck as a try, an install restarted MasterDeck and "wróciło mi do
 // poprzedniej wersji"). A test copy tries a draft, is stopped and started again: the window shows
 // the banner, "Put it back on the deck" shows the draft again, "Not now" drops the banner, "Use
 // this" keeps the draft as a profile. Screenshot in logs/try-restart.png.
@@ -31,7 +31,7 @@ const check = (name, ok, detail) => {
 let app, browser, win;
 async function launch() {
   fs.rmSync(path.join(dir, "api-http-port"), { force: true });
-  app = spawn(exe, [], { env: { ...process.env, HUBDECK_AUTOMATION: dir, HUBDECK_CDP_PORT: String(PORT) }, stdio: "ignore" });
+  app = spawn(exe, [], { env: { ...process.env, MASTERDECK_AUTOMATION: dir, MASTERDECK_CDP_PORT: String(PORT) }, stdio: "ignore" });
   for (let i = 0; i < 60 && !fs.existsSync(path.join(dir, "api-http-port")); i++) await sleep(500);
   await sleep(1500);
   browser = await chromium.connectOverCDP(`http://127.0.0.1:${PORT}`);

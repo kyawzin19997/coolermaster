@@ -103,7 +103,7 @@ let beforeBuilder: { active: string; page: string | null } | null = null;
 const builderDraft = "demo-builder-draft";
 let onboarded = new URLSearchParams(location.search).get("demo") !== "welcome" && demoParam("panel") !== "welcome";
 
-// "Ready for your apps": profiles HubDeck made for installed apps, switching in only once switched on
+// "Ready for your apps": profiles MasterDeck made for installed apps, switching in only once switched on
 const ready = new Map<string, boolean>();
 for (const [id, name, exe] of [["demo-ready-firefox", "Firefox", "firefox.exe"], ["demo-ready-steam", "Steam", "steam.exe"], ["demo-ready-whatsapp", "WhatsApp", "WhatsApp.exe"]]) {
   profiles.set(id, { ...(fixture.profiles[0] as unknown as Profile), id, name, apps: [exe], inBar: false });
@@ -320,7 +320,7 @@ const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
     return p;
   },
   claude_status: () => false,
-  // `&leds=hub`: HubDeck's own rainbow on the knobs and the edge, as on the owner's deck
+  // `&leds=hub`: MasterDeck's own rainbow on the knobs and the edge, as on the owner's deck
   leds_get: () =>
     demoParam("leds") === "hub"
       ? {
@@ -357,11 +357,11 @@ const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
           { action: "core.brightness", params: { monitor: "all" }, look: { label: "Brightness", icon: "sun" } },
         ],
   mcp_info: () => ({
-    exe: "C:\\Program Files\\HubDeck\\hubdeck.exe",
+    exe: "C:\\Program Files\\MasterDeck\\hubdeck.exe",
     desktop: false,
     codeCli: true,
-    codeCommand: 'claude mcp add --scope user hubdeck -- "C:\\Program Files\\HubDeck\\hubdeck.exe" --mcp',
-    snippet: '{ "mcpServers": { "hubdeck": { "command": "C:\\\\Program Files\\\\HubDeck\\\\hubdeck.exe", "args": ["--mcp"] } } }',
+    codeCommand: 'claude mcp add --scope user hubdeck -- "C:\\Program Files\\MasterDeck\\hubdeck.exe" --mcp',
+    snippet: '{ "mcpServers": { "hubdeck": { "command": "C:\\\\Program Files\\\\MasterDeck\\\\hubdeck.exe", "args": ["--mcp"] } } }',
   }),
   profile_adapt: () => [{ label: "Volume", from: "dial", to: ["knobs.0"] }],
   // a sample pack only when asked for (`&icons=pack:neon-shapes`), so other screenshots show no fake pack
@@ -410,8 +410,8 @@ const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
       modules: ["keys", "dial", "knobs", "rollers"],
       detached: ["faders"],
       profiles: ["Everyday desk", "OBS streaming"],
-      text: `What HubDeck found on this computer (the user saw this before it was sent):\n- Apps used most (time in front, counted since 2026-10-12 16:30): Visual Studio Code (12.5 h on 5 days), Spotify (6.2 h on 4 days)\n- Installed apps HubDeck has checked shortcuts or a preset for: Discord, Figma, Spotify, Visual Studio Code\n${deck}`,
-      deckText: `What HubDeck found on this computer (the user saw this before it was sent):\n- Apps used most: the user chose not to send them\n${deck}`,
+      text: `What MasterDeck found on this computer (the user saw this before it was sent):\n- Apps used most (time in front, counted since 2026-10-12 16:30): Visual Studio Code (12.5 h on 5 days), Spotify (6.2 h on 4 days)\n- Installed apps MasterDeck has checked shortcuts or a preset for: Discord, Figma, Spotify, Visual Studio Code\n${deck}`,
+      deckText: `What MasterDeck found on this computer (the user saw this before it was sent):\n- Apps used most: the user chose not to send them\n${deck}`,
     };
   },
   assistant_send: () => {
@@ -488,10 +488,13 @@ const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
   tour_saver: () => null,
   tour_highlight: () => null,
   // key pages: made, renamed and shown like the engine does
-  page_create: ({ profile, name }) => {
+  page_create: ({ profile, name, autoLabel }) => {
     const p = profiles.get(profile as string);
     if (!p) return null;
-    const made = { id: `page-${Date.now().toString(36)}`, name: name as string };
+    let number = 2;
+    const defaultName = () => String(autoLabel || "Page {n}").replace("{n}", String(number));
+    while (p.pages?.some((page) => page.name === defaultName())) number++;
+    const made = { id: `page-${Date.now().toString(36)}-${number}`, name: String(name || defaultName()) };
     p.pages = [...(p.pages ?? []), made];
     // as the engine does: the new page's bottom corners step back and on
     p.controls[`${made.id}/keys.10`] = { action: "core.previousPage", params: {}, look: { label: "Previous", icon: "arrow-left" } } as Profile["controls"][string];
@@ -555,7 +558,7 @@ const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
     pluginCatalogChanged();
     return localPlugin.id;
   },
-  profiles_dir_get: () => [String.raw`C:\Users\you\AppData\Roaming\HubDeck\profiles`, false],
+  profiles_dir_get: () => [String.raw`C:\Users\you\AppData\Roaming\MasterDeck\profiles`, false],
   spotify_status: () => ["", false],
   midi_ports: () => [],
   audio_devices: () => [[], []],

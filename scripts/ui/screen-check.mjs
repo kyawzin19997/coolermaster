@@ -42,7 +42,7 @@ $out = @()
 $out -join ";"
 `], { encoding: "utf8" }).trim();
 
-const app = spawn(exe, [], { env: { ...process.env, HUBDECK_AUTOMATION: dir, HUBDECK_CDP_PORT: "9478", HUBDECK_SCREEN_FROM: "-15000" }, stdio: "ignore" });
+const app = spawn(exe, [], { env: { ...process.env, MASTERDECK_AUTOMATION: dir, MASTERDECK_CDP_PORT: "9478", MASTERDECK_SCREEN_FROM: "-15000" }, stdio: "ignore" });
 try {
   for (let i = 0; i < 60 && !fs.existsSync(path.join(dir, "api-http-port")); i++) await sleep(500);
   await sleep(4000);
@@ -55,7 +55,7 @@ try {
   const back = win32(app.pid);
   check("the watch moved it back off screen", back.split(";").every((p) => Number(p.split(",")[0]) <= -12000), back);
   const [clean, said] = screenClean(dir);
-  check("screenClean fails on it, naming the window", !clean && said.includes("HubDeck"), said);
+  check("screenClean fails on it, naming the window", !clean && said.includes("MasterDeck"), said);
 } finally {
   app.kill();
   await sleep(1500);

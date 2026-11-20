@@ -3,7 +3,7 @@
 // over 60 s on his active profile). Samples GET /api/leds ten times a second while music plays:
 // every module whose lights follow the music must really change, knobs and faders must stay under
 // the rate their firmware takes (the faders dropped off the bus at 50 a second), CPU under 15 %.
-// Start it a minute or more after HubDeck starts: the first minute (plugins, pictures) read 14.6 %
+// Start it a minute or more after MasterDeck starts: the first minute (plugins, pictures) read 14.6 %
 // where the same deck took 3.7 % later; its own sampling costs nothing measurable (3.8 % without).
 //   node scripts/ui/music-check.mjs [--seconds 60]
 import { execFileSync } from "node:child_process";
@@ -24,7 +24,7 @@ const api = async (p) => (await fetch(`http://127.0.0.1:${port}/api/${p}`, { hea
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const LIMITS = { cpuPct: 15, knobsFadersPerSec: 30 };
 
-/** CPU seconds HubDeck used so far (its biggest process: the guard is a small second one). */
+/** CPU seconds MasterDeck used so far (its biggest process: the guard is a small second one). */
 function cpuSeconds() {
   if (win) {
     const out = execFileSync("powershell", ["-NoProfile", "-Command", "(Get-Process hubdeck | Sort-Object WorkingSet64 -Descending | Select-Object -First 1).TotalProcessorTime.TotalSeconds"], { encoding: "utf8" });

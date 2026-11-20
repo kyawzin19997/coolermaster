@@ -4,7 +4,7 @@ import path from "node:path";
 import { chromium } from "playwright-core";
 
 // Run against the browser demo; the separate native smoke validates real plugin packages.
-const url = process.env.HUBDECK_URL || "http://localhost:1460/";
+const url = process.env.MASTERDECK_URL || "http://localhost:1460/";
 const screenshots = process.argv[2];
 if (screenshots) fs.mkdirSync(screenshots, { recursive: true });
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM });

@@ -197,7 +197,7 @@ impl Binding {
     /// The look to draw for `state` (None = the action has no state). An action nobody provides
     /// (its plugin is not installed) shows that, keeping its label.
     pub fn look_for(&self, state: Option<bool>) -> Look {
-        // no action at all (a picture-only key, an imported action HubDeck cannot do): as set
+        // no action at all (a picture-only key, an imported action MasterDeck cannot do): as set
         if self.action.is_empty() {
             return self.look.clone();
         }
@@ -230,7 +230,7 @@ impl Binding {
 #[serde(rename_all = "camelCase")]
 pub struct Profile {
     /// The style new keys of this profile start in (a template's look: colors, background,
-    /// finish, effects), set in the full key editor; None = HubDeck's house look.
+    /// finish, effects), set in the full key editor; None = MasterDeck's house look.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub key_style: Option<Look>,
     #[serde(default = "default_version")]
@@ -600,7 +600,7 @@ pub struct LightSettings {
     /// 0..=100
     pub brightness: u8,
     pub react: Reactions,
-    /// The rainbow is drawn by HubDeck (one color for every LED, turning with the clock, so the
+    /// The rainbow is drawn by MasterDeck (one color for every LED, turning with the clock, so the
     /// window shows exactly what the deck does) instead of each module's own (owner, 2026-10-12).
     pub hub_rainbow: bool,
     /// Lights to the music, all of them: how dark between beats and from how loud a part they
@@ -648,7 +648,7 @@ impl Default for LightSettings {
 #[serde(rename_all = "camelCase")]
 pub struct Settings {
     pub active: Option<String>,
-    /// The home profile at start: the one HubDeck begins with (the user's pick replaces it until
+    /// The home profile at start: the one MasterDeck begins with (the user's pick replaces it until
     /// the next start). Stored as `fallback` for older settings files.
     pub fallback: Option<String>,
     /// "Pin this profile": no automatic switching at all until unpinned.
@@ -707,7 +707,7 @@ pub struct Settings {
     /// `<app data>/profiles`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub profiles_dir: Option<String>,
-    /// Look for a new HubDeck version at start (never installs without the user).
+    /// Look for a new MasterDeck version at start (never installs without the user).
     #[serde(default = "yes")]
     pub check_updates: bool,
     /// A system notification when a new version is found, once a version (owner's "2 a",
@@ -750,7 +750,7 @@ pub struct Settings {
     /// do poprzedniej wersji").
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub trying: Option<String>,
-    /// Profiles HubDeck made at once for the installed apps it knows ("Ready for your apps",
+    /// Profiles MasterDeck made at once for the installed apps it knows ("Ready for your apps",
     /// owner's pick 1a, 2026-10-14); they switch in with their app only once switched on.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub ready: Vec<String>,
@@ -765,7 +765,7 @@ pub struct Settings {
     /// web fetch asked in the window first (owner, 2026-10-12: "dajmy mu więcej mocy"); off by default.
     #[serde(default, skip_serializing_if = "is_false")]
     pub assistant_power: bool,
-    /// The user's own apps HubDeck listens to (Settings > Connections > Your apps).
+    /// The user's own apps MasterDeck listens to (Settings > Connections > Your apps).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub apps: Vec<super::states::AppSource>,
     /// Apps that connected themselves (`POST /api/apps/announce`) and the user has not looked at.
@@ -783,7 +783,7 @@ pub struct Settings {
     /// name under it), `fill` (the whole key, no name), `fillLabel` (the whole key with the name).
     #[serde(default = "icon_mode")]
     pub app_icons: String,
-    /// The font for text on the deck, a family on this computer (None = HubDeck's own).
+    /// The font for text on the deck, a family on this computer (None = MasterDeck's own).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub deck_font: Option<String>,
     /// During a call the deck shows the profile linked to the call app and stays on it.

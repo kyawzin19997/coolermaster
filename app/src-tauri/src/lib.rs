@@ -1,11 +1,13 @@
 #[cfg(windows)]
 mod assoc;
 mod automation;
+mod compat;
 mod deck;
 mod engine;
 mod guard;
 mod module_check;
 mod output;
+mod phone_upload;
 mod placements;
 mod system;
 mod tray;
@@ -70,7 +72,7 @@ fn placement_set(placements: State<'_, Placements>, engine: State<'_, Engine>, k
     Ok(())
 }
 
-/// `RUST_LOG` in its simplest forms: `debug`, or `hubdeck_lib=debug,mh_device=trace`.
+/// `RUST_LOG` in its simplest forms: `debug`, or `masterdeck_lib=debug,mh_device=trace`.
 fn log_levels() -> (LevelFilter, Vec<(String, LevelFilter)>) {
     let mut default = LevelFilter::Info;
     let mut per_module = Vec::new();
@@ -126,7 +128,7 @@ fn log_panics() {
     }));
 }
 
-/// Identifier the app had before it was named HubDeck; its data folder sits next to ours.
+/// Identifier the app had before it was named MasterDeck; its data folder sits next to ours.
 const OLD_IDENTIFIER: &str = "dev.masterhub.app";
 
 /// First start after the rename: copy profiles, settings and placements from the old folder.
@@ -181,18 +183,18 @@ pub fn mcp_deck() {
     engine::mcp::run_deck();
 }
 
-/// `hubdeck --mcp-assistant`: the tools of HubDeck's own deck assistant (drafts only).
+/// `hubdeck --mcp-assistant`: the tools of MasterDeck's own deck assistant (drafts only).
 pub fn mcp_assistant() {
     engine::mcp::run_assistant();
 }
 
-/// `hubdeck --guard <data dir> <log dir>`: hands the deck back and restarts HubDeck if it ends
+/// `hubdeck --guard <data dir> <log dir>`: hands the deck back and restarts MasterDeck if it ends
 /// without quitting (`guard.rs`).
 pub fn guard(args: &[String]) {
     guard::run(args);
 }
 
-/// One HubDeck on the real deck. The single-instance plugin lets a second start run on when it
+/// One MasterDeck on the real deck. The single-instance plugin lets a second start run on when it
 /// finds the first one's lock but not its message window (it only exits after handing the start
 /// over to that window), and on 2026-10-14 four copies ran on the deck at once, each with its own
 /// engine (flickering screensaver, the owner's "rozpierdol"). This lock is a file in the user's
@@ -214,7 +216,7 @@ fn take_the_deck_lock() {
             Ok(()) => break,
             Err(std::fs::TryLockError::WouldBlock) if waited.elapsed() < std::time::Duration::from_secs(10) => std::thread::sleep(std::time::Duration::from_millis(250)),
             Err(std::fs::TryLockError::WouldBlock) => {
-                log::warn!("another HubDeck has the deck (lock {}); this one quits", path.display());
+                log::warn!("another MasterDeck has the deck (lock {}); this one quits", path.display());
                 std::process::exit(0);
             }
             Err(std::fs::TryLockError::Error(e)) => {
@@ -229,8 +231,8 @@ fn take_the_deck_lock() {
     let _ = HELD.set(file);
 }
 
-/// Said in the log at every start (a user's log tells whether HubDeck starts with the system).
-/// When it is on, the entry is written again: an entry left by a copy of HubDeck in another
+/// Said in the log at every start (a user's log tells whether MasterDeck starts with the system).
+/// When it is on, the entry is written again: an entry left by a copy of MasterDeck in another
 /// folder (a build of one's own, an older install) starts that program or nothing, and the tray
 /// still shows it ticked (issue #10). Off stays off, also when turned off in the system's list.
 fn autostart_check(app: &tauri::AppHandle) {
@@ -266,7 +268,7 @@ pub fn run() {
         // first: a second start only shows the window of the running one
         builder = builder.plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
             tray::show_main(app);
-            // a double click on a plugin file while HubDeck runs
+            // a double click on a plugin file while MasterDeck runs
             engine::sdlocal::opened(app, engine::sdlocal::files_in(&args));
         }));
     }
@@ -280,9 +282,10 @@ pub fn run() {
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_notification::init())
         .manage(Deck::default())
+        .manage(phone_upload::Uploads::default())
         .setup(move |app| {
             let _ = engine::exec::APP.set(app.handle().clone());
-            log::info!("HubDeck {} starting", app.package_info().version);
+            log::info!("MasterDeck {} starting", app.package_info().version);
             log_panics();
             if testing.is_none() || automation::real_deck() {
                 take_the_deck_lock();
@@ -331,7 +334,7 @@ pub fn run() {
                 // the film copy: its own data, the real deck, the window on screen (or off it, to
                 // check the window against the hardware without taking the owner's screen)
                 deck.spawn(app.handle().clone());
-                if std::env::var_os("HUBDECK_OFFSCREEN").is_some() {
+                if crate::compat::var_os("MASTERDECK_OFFSCREEN").is_some() {
                     automation::open_window(app.handle());
                 } else {
                     tray::show_main(app.handle());
@@ -430,6 +433,13 @@ pub fn run() {
             engine::sdlocal::sd_peek,
             engine::sdlocal::sd_opened,
             engine::sdlocal::sd_drop_file,
+            phone_upload::phone_start,
+            phone_upload::phone_status,
+            phone_upload::phone_approve,
+            phone_upload::phone_cancel,
+            phone_upload::phone_path,
+            phone_upload::phone_save,
+            phone_upload::phone_stop,
             engine::tour::tour_suggest,
             engine::nudge::tour_done,
             engine::tour::tour_start,
@@ -576,7 +586,7 @@ pub fn run() {
             api.prevent_close();
             tray::hide_main(handle);
         }
-        // the last window closing is not quitting: only Quit in the tray (app.exit) ends HubDeck
+        // the last window closing is not quitting: only Quit in the tray (app.exit) ends MasterDeck
         if let RunEvent::ExitRequested { api, code: None, .. } = &event {
             api.prevent_exit();
         }
@@ -585,7 +595,7 @@ pub fn run() {
         if let RunEvent::Reopen { .. } = &event {
             tray::show_main(handle);
         }
-        // macOS: a plugin file opened with HubDeck (double click, Open with, dropped on the Dock icon)
+        // macOS: a plugin file opened with MasterDeck (double click, Open with, dropped on the Dock icon)
         #[cfg(target_os = "macos")]
         if let RunEvent::Opened { urls } = &event {
             let files: Vec<String> = urls.iter().filter_map(|u| u.to_file_path().ok()).map(|p| p.to_string_lossy().into_owned()).collect();
@@ -599,11 +609,11 @@ pub fn run() {
             engine::plugins::stop();
             engine::usage::flush();
             engine::presses::flush();
-            // macOS: apps whose volume HubDeck set play straight again
+            // macOS: apps whose volume MasterDeck set play straight again
             #[cfg(target_os = "macos")]
             engine::volume::release();
             guard::leaving();
-            log::info!("HubDeck stopped");
+            log::info!("MasterDeck stopped");
         }
     });
 }

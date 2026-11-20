@@ -1,6 +1,6 @@
 //! States from outside (roadmap phase 12 B, `docs/APP-CONTRACT.md`): the user's own apps publish
 //! their state (`GET /hubdeck/status`, `GET /hubdeck/events` as Server-Sent Events, a manifest
-//! with actions) and HubDeck listens; scripts without a server push to `/api/state`. Each item
+//! with actions) and MasterDeck listens; scripts without a server push to `/api/state`. Each item
 //! goes to the engine as `IntegrationValue { key: "state:<app>.<id>", value: <item JSON> }`; keys
 //! (`core.state`) and the dial show an item or count them, and an item waiting for the user
 //! pulses the edge like a Claude Code session does.
@@ -262,7 +262,7 @@ pub fn source_from(url: &str, answer: &Value, taken: &[String]) -> Result<AppSou
         let events = base.strip_suffix("/status").map(|b| format!("{b}/events")).unwrap_or_default();
         AppSource { name: answer["app"].as_str().unwrap_or("App").to_string(), status: base.to_string(), events, ..AppSource::default() }
     } else {
-        return Err("this address answers neither a HubDeck manifest nor a status (docs/APP-CONTRACT.md)".into());
+        return Err("this address answers neither a MasterDeck manifest nor a status (docs/APP-CONTRACT.md)".into());
     };
     if app.status.is_empty() {
         return Err("the manifest names no status address".into());
@@ -317,7 +317,7 @@ pub fn app_remove(engine: tauri::State<'_, super::Engine>, id: String) -> Result
 }
 
 /// The prompt that adds the contract to an app (docs/APP-CONTRACT.md, section 6).
-pub const CLAUDE_PROMPT: &str = "Add a HubDeck integration to this app (HubDeck's contract, docs/APP-CONTRACT.md in the HubDeck repository): serve on the app's local port (127.0.0.1 only) GET /hubdeck/status answering {\"app\": <name>, \"items\": [{\"id\", \"label\", \"state\", \"text\", \"value\"}]} with one item per session, job or thing worth seeing, state one of waiting (it needs the user), working, done, error, idle, offline; GET /hubdeck/events as Server-Sent Events, each event `data: {\"items\": [<the items that changed>]}`; and GET /hubdeck/manifest {\"app\", \"exe\", \"status\": <url>, \"events\": <url>, \"actions\": [{\"id\", \"label\", \"icon\", \"method\", \"url\" (may hold {id}), \"body\"} or {\"id\", \"label\", \"link\"}]} listing the app's useful actions. On start, announce the manifest to HubDeck: read its local API port from api-http-port and its token from api-token in HubDeck's data folder (%APPDATA%\\dev.hubdeck.app on Windows, ~/Library/Application Support/dev.hubdeck.app on macOS) and POST http://127.0.0.1:<port>/api/apps/announce with Authorization: Bearer <token> and {\"url\": <manifest url>}; stay quiet if the files are missing or the call fails (HubDeck not running). Read-only except the actions; no auth beyond 127.0.0.1. Add a test that the three endpoints answer in these shapes, and tell me the manifest address.";
+pub const CLAUDE_PROMPT: &str = "Add a MasterDeck integration to this app (MasterDeck's contract, docs/APP-CONTRACT.md in the MasterDeck repository): serve on the app's local port (127.0.0.1 only) GET /hubdeck/status answering {\"app\": <name>, \"items\": [{\"id\", \"label\", \"state\", \"text\", \"value\"}]} with one item per session, job or thing worth seeing, state one of waiting (it needs the user), working, done, error, idle, offline; GET /hubdeck/events as Server-Sent Events, each event `data: {\"items\": [<the items that changed>]}`; and GET /hubdeck/manifest {\"app\", \"exe\", \"status\": <url>, \"events\": <url>, \"actions\": [{\"id\", \"label\", \"icon\", \"method\", \"url\" (may hold {id}), \"body\"} or {\"id\", \"label\", \"link\"}]} listing the app's useful actions. On start, announce the manifest to MasterDeck: read its local API port from api-http-port and its token from api-token in MasterDeck's data folder (%APPDATA%\\dev.hubdeck.app on Windows, ~/Library/Application Support/dev.hubdeck.app on macOS) and POST http://127.0.0.1:<port>/api/apps/announce with Authorization: Bearer <token> and {\"url\": <manifest url>}; stay quiet if the files are missing or the call fails (MasterDeck not running). Read-only except the actions; no auth beyond 127.0.0.1. Add a test that the three endpoints answer in these shapes, and tell me the manifest address.";
 
 #[tauri::command]
 pub fn app_contract_prompt() -> &'static str {

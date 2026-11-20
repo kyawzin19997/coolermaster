@@ -26,7 +26,7 @@ fs.rmSync(shots, { recursive: true, force: true });
 fs.mkdirSync(shots, { recursive: true });
 for (const item of ["profiles", "images", "settings.json", "placements.json", "nudges.json"]) if (fs.existsSync(path.join(real, item))) fs.cpSync(path.join(real, item), path.join(dir, item), { recursive: true });
 const MODULES = "base@6.1.4.4,keys@6.2.3,dial@6.1.3.4,knobs@6.1.4.3,faders@6.1.1.3,rollers@6.3.3";
-const app = spawn(exe, [], { env: { ...process.env, HUBDECK_AUTOMATION: dir, HUBDECK_CDP_PORT: "9493", HUBDECK_VIRTUAL_MODULES: MODULES }, stdio: "ignore" });
+const app = spawn(exe, [], { env: { ...process.env, MASTERDECK_AUTOMATION: dir, MASTERDECK_CDP_PORT: "9493", MASTERDECK_VIRTUAL_MODULES: MODULES }, stdio: "ignore" });
 for (let i = 0; i < 60 && !fs.existsSync(path.join(dir, "api-http-port")); i++) await sleep(500);
 await sleep(1500);
 const results = [];

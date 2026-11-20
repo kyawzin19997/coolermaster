@@ -1,5 +1,5 @@
 // The README's moving picture of the Plugins tab (owner, 2026-10-18: "Jak chcesz zrobić gif do
-// readme to śmiało"): the browser demo with the real catalog, a search typed, "Tried in HubDeck"
+// readme to śmiało"): the browser demo with the real catalog, a search typed, "Tried in MasterDeck"
 // turned on. Frames from headless Chromium, the GIF from ffmpeg (two passes, one palette).
 //   node scripts/ui/readme-gif.mjs     # needs the Vite server and logs/plugins-catalog.json
 import { chromium } from "playwright-core";
@@ -9,7 +9,7 @@ import os from "node:os";
 import path from "node:path";
 
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1")), "..", "..");
-const base = process.env.HUBDECK_URL || "http://localhost:1460/";
+const base = process.env.MASTERDECK_URL || "http://localhost:1460/";
 const frames = fs.mkdtempSync(path.join(os.tmpdir(), "hubdeck-gif-"));
 const out = path.join(root, "docs", "images", "hubdeck-plugins.gif");
 function findChromium() {
@@ -53,7 +53,7 @@ await grab(12);
 await search.fill("");
 await page.waitForTimeout(500);
 await grab(4);
-await page.getByText("Tried in HubDeck", { exact: true }).first().click();
+await page.getByText("Tried in MasterDeck", { exact: true }).first().click();
 await page.waitForTimeout(700);
 await grab(14);
 await browser.close();

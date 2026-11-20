@@ -244,7 +244,7 @@ pub fn integrations() -> Profile {
     put(&mut p, "keys.10", b("core.audioDevice", json!({"kind": "output", "device": ""}), "Speakers", "headphones", KEY));
     put(&mut p, "keys.11", b("ha.toggle", json!({"entity": "light.example"}), "HA light", "lightbulb", STATE));
     put(&mut p, "keys.12", b("streamlabs.record", json!({}), "SL rec", "circle-dot", STATE));
-    put(&mut p, "keys.13", b("twitch.marker", json!({"description": "HubDeck test"}), "Twitch mark", "star", KEY));
+    put(&mut p, "keys.13", b("twitch.marker", json!({"description": "MasterDeck test"}), "Twitch mark", "star", KEY));
     put(&mut p, "keys.14", b("core.profile", json!({"which": "next"}), "Next profile", "skip-forward", INFO));
     put(&mut p, "knobs.0", b("obs.volume", json!({"input": "Desktop Audio", "step": 1}), "OBS desk", "volume-2", TURN));
     put(&mut p, "knobs.1", b("midi.cc", json!({"port": "", "channel": 1, "cc": 1, "step": 2}), "MIDI CC1", "music", TURN));
@@ -442,7 +442,7 @@ mod tests {
             }
             assert!(p.name.starts_with("Test: "));
         }
-        assert_eq!(expand("%HUBDECK_SURELY_UNSET%\\x"), None);
+        assert_eq!(expand("%MASTERDECK_SURELY_UNSET%\\x"), None);
         #[cfg(windows)]
         {
             assert!(find(r"%WINDIR%\System32\notepad.exe").is_some());

@@ -2,7 +2,7 @@
 //! line) so the user's own AI assistant (Claude Desktop, Claude Code, any MCP client) can design
 //! and build profiles. It is a thin client of the running app's local HTTP API (`api.rs`, token
 //! and port in the app data folder): no keys, no model, nothing leaves the computer through
-//! HubDeck. Also here: connecting Claude Desktop and Claude Code to it (Settings > Connections).
+//! MasterDeck. Also here: connecting Claude Desktop and Claude Code to it (Settings > Connections).
 //! See `docs/MCP.md`.
 
 use std::io::{BufRead, Read, Write};
@@ -22,8 +22,8 @@ pub const SERVER_NAME: &str = "hubdeck";
 pub const DESIGN_GUIDE: &str = include_str!("../../../../docs/PROFILE-DESIGN.md");
 const GUIDE_URI: &str = "hubdeck://design-guide";
 
-const TOO_OLD: &str = "The HubDeck that is running is too old for the assistant tools. Ask the user to update HubDeck (or restart it after an update).";
-const NOT_RUNNING: &str = "HubDeck is not running, so its profiles cannot be read or changed. Ask the user to start HubDeck (it lives in the system tray / menu bar) and try again.";
+const TOO_OLD: &str = "The MasterDeck that is running is too old for the assistant tools. Ask the user to update MasterDeck (or restart it after an update).";
+const NOT_RUNNING: &str = "MasterDeck is not running, so its profiles cannot be read or changed. Ask the user to start MasterDeck (it lives in the system tray / menu bar) and try again.";
 
 /// How the server reaches the app: `(method, path, body)` -> the JSON answer or an error text.
 pub trait Api {
@@ -41,15 +41,15 @@ impl Api for Http {
         let token = std::fs::read_to_string(self.dir.join("api-token")).map_err(|_| NOT_RUNNING.to_string())?;
         let port: u16 = std::fs::read_to_string(self.dir.join("api-http-port")).ok().and_then(|p| p.trim().parse().ok()).ok_or_else(|| NOT_RUNNING.to_string())?;
         let (status, answer) = request(port, token.trim(), method, path, body).map_err(|_| NOT_RUNNING.to_string())?;
-        // an older HubDeck takes unknown POSTs as plugin events (202) and answers other paths with
+        // an older MasterDeck takes unknown POSTs as plugin events (202) and answers other paths with
         // its usage line (404)
         let usage = answer.get("error").and_then(Value::as_str).is_some_and(|e| e.starts_with("use GET /api/state"));
         match status {
             202 => Err(TOO_OLD.into()),
             404 if usage || answer.get("error").is_none() => Err(TOO_OLD.into()),
             200..=299 => Ok(answer),
-            401 => Err("HubDeck refused the request (the API token changed); restart HubDeck and try again.".into()),
-            _ => Err(answer.get("error").and_then(Value::as_str).map(str::to_string).unwrap_or_else(|| format!("HubDeck answered {status}"))),
+            401 => Err("MasterDeck refused the request (the API token changed); restart MasterDeck and try again.".into()),
+            _ => Err(answer.get("error").and_then(Value::as_str).map(str::to_string).unwrap_or_else(|| format!("MasterDeck answered {status}"))),
         }
     }
 }
@@ -99,7 +99,7 @@ fn dechunk(mut rest: &str) -> String {
 pub enum Kind {
     Builder,
     Deck,
-    /// HubDeck's own deck assistant (`--mcp-assistant`): the builder's tools limited to drafts,
+    /// MasterDeck's own deck assistant (`--mcp-assistant`): the builder's tools limited to drafts,
     /// plus ideas, answer buttons, taste notes and the checked shortcut packs.
     Assistant,
 }
@@ -116,7 +116,7 @@ pub fn run_deck() {
 
 /// Entry point of `hubdeck --mcp-assistant` (started by the deck assistant's Claude Code).
 pub fn run_assistant() {
-    super::guard::set_power(std::env::var_os("HUBDECK_ASSISTANT_POWER").is_some());
+    super::guard::set_power(crate::compat::var_os("MASTERDECK_ASSISTANT_POWER").is_some());
     serve(Kind::Assistant)
 }
 
@@ -182,7 +182,7 @@ pub fn handle_message_for(kind: Kind, api: &dyn Api, msg: &Value) -> Option<Valu
                 json!({
                     "protocolVersion": version,
                     "capabilities": {"tools": {"listChanged": false}, "resources": {"listChanged": false}},
-                    "serverInfo": {"name": server_name, "title": "HubDeck", "version": env!("CARGO_PKG_VERSION")},
+                    "serverInfo": {"name": server_name, "title": "MasterDeck", "version": env!("CARGO_PKG_VERSION")},
                     "instructions": instructions,
                 }),
             )
@@ -207,7 +207,7 @@ pub fn handle_message_for(kind: Kind, api: &dyn Api, msg: &Value) -> Option<Valu
                 },
             )
         }
-        "resources/list" => result(id, json!({"resources": [{"uri": GUIDE_URI, "name": "design-guide", "title": "How to design great HubDeck profiles", "mimeType": "text/markdown"}]})),
+        "resources/list" => result(id, json!({"resources": [{"uri": GUIDE_URI, "name": "design-guide", "title": "How to design great MasterDeck profiles", "mimeType": "text/markdown"}]})),
         "resources/read" => match params.get("uri").and_then(Value::as_str) {
             Some(GUIDE_URI) => result(id, json!({"contents": [{"uri": GUIDE_URI, "mimeType": "text/markdown", "text": DESIGN_GUIDE}]})),
             _ => error(id, -32002, "resource not found"),
@@ -218,7 +218,7 @@ pub fn handle_message_for(kind: Kind, api: &dyn Api, msg: &Value) -> Option<Valu
     })
 }
 
-const INSTRUCTIONS: &str = "HubDeck drives a modular desk controller (Cooler Master MasterHUB modules): a 15-key module with screens, a round dial screen, 3 knobs, 5 faders and 2 rollers, plus the base's edge light. These tools let you design and build profiles for the user. Start with design_guide (how to make a profile that feels polished) and list_modules (build for the modules the user owns; a second knobs, faders or rollers module has its own controls, numbered on: knobs.3 .. knobs.5). Then look up list_actions, list_icons, list_apps or list_games as needed, build with create_profile (whole profile in one call) and refine with set_control, set_lights, add_page, add_image and add_animation; check keys with preview_control. Never replace or delete one of the user's profiles without asking first. HubDeck must be running.";
+const INSTRUCTIONS: &str = "MasterDeck drives a modular desk controller (Cooler Master MasterHUB modules): a 15-key module with screens, a round dial screen, 3 knobs, 5 faders and 2 rollers, plus the base's edge light. These tools let you design and build profiles for the user. Start with design_guide (how to make a profile that feels polished) and list_modules (build for the modules the user owns; a second knobs, faders or rollers module has its own controls, numbered on: knobs.3 .. knobs.5). Then look up list_actions, list_icons, list_apps or list_games as needed, build with create_profile (whole profile in one call) and refine with set_control, set_lights, add_page, add_image and add_animation; check keys with preview_control. Never replace or delete one of the user's profiles without asking first. MasterDeck must be running.";
 
 /// The binding schema, shared by the tools that take one.
 fn binding_schema() -> Value {
@@ -318,7 +318,7 @@ pub fn tools() -> Vec<Value> {
         tool(
             "design_guide",
             "Profile design guide",
-            "The rules for a polished HubDeck profile: layout by finger reach and frequency, color groups, icon style, short labels, contrast, one accent color, LED meanings, turn vs press vs hold, pictures and animations. Read it before designing.",
+            "The rules for a polished MasterDeck profile: layout by finger reach and frequency, color groups, icon style, short labels, contrast, one accent color, LED meanings, turn vs press vs hold, pictures and animations. Read it before designing.",
             json!({}),
             &[],
             true,
@@ -358,7 +358,7 @@ pub fn tools() -> Vec<Value> {
         tool(
             "list_games",
             "List games",
-            "Games installed through Steam, Epic or GOG: name and target (use core.game with params.game = target; HubDeck shows the cover on the key).",
+            "Games installed through Steam, Epic or GOG: name and target (use core.game with params.game = target; MasterDeck shows the cover on the key).",
             json!({"search": search}),
             &[],
             true,
@@ -366,7 +366,7 @@ pub fn tools() -> Vec<Value> {
         tool(
             "list_playlists",
             "List Spotify playlists",
-            "The user's Spotify playlists: name and playlist (use it as params.playlist of spotify.add, and the name as the key's label). connected false: Spotify is not connected in HubDeck; then say so instead of leaving playlist keys empty.",
+            "The user's Spotify playlists: name and playlist (use it as params.playlist of spotify.add, and the name as the key's label). connected false: Spotify is not connected in MasterDeck; then say so instead of leaving playlist keys empty.",
             json!({}),
             &[],
             true,
@@ -466,7 +466,7 @@ pub fn tools() -> Vec<Value> {
             &[],
             true,
         ),
-        tool("activate_profile", "Activate profile", "Show a profile on the deck now (it becomes the home profile until HubDeck restarts).", json!({"id": {"type": "string"}}), &["id"], false),
+        tool("activate_profile", "Activate profile", "Show a profile on the deck now (it becomes the home profile until MasterDeck restarts).", json!({"id": {"type": "string"}}), &["id"], false),
         tool(
             "app_picture",
             "App or game picture",
@@ -598,7 +598,7 @@ pub fn call_tool(api: &dyn Api, name: &str, args: &Value) -> Result<Vec<Value>, 
 
 // ---------- the deck assistant's own server (`--mcp-assistant`) ----------
 
-const ASSISTANT_INSTRUCTIONS: &str = "HubDeck's deck assistant tools. You work in drafts only: create_profile always makes a draft, and the other changing tools work on drafts, never on the user's own profiles or deck-wide settings. Propose ideas with propose_idea (one call per idea; HubDeck makes a draft of its sketch at once), offer answers with offer_choices, remember the user's taste with remember. Put only checked shortcuts on keys (list_shortcuts); shortcuts that close, quit or delete go on a hold.";
+const ASSISTANT_INSTRUCTIONS: &str = "MasterDeck's deck assistant tools. You work in drafts only: create_profile always makes a draft, and the other changing tools work on drafts, never on the user's own profiles or deck-wide settings. Propose ideas with propose_idea (one call per idea; MasterDeck makes a draft of its sketch at once), offer answers with offer_choices, remember the user's taste with remember. Put only checked shortcuts on keys (list_shortcuts); shortcuts that close, quit or delete go on a hold.";
 
 /// The draft is a new version of one of the user's own profiles (owner's pick 1a, 2026-10-14).
 fn version_of_schema() -> Value {
@@ -642,7 +642,7 @@ pub fn assistant_tools() -> Vec<Value> {
     list.push(tool(
         "propose_idea",
         "Propose an idea",
-        "Propose one idea for this person, as soon as you have it (one call per idea; do not wait to have them all). HubDeck makes a draft of its deck sketch at once and shows it as a card with a picture of their deck, Try and Pick. Returns the draft id and the controls left out, with why: fix those in the draft with set_control if they matter.",
+        "Propose one idea for this person, as soon as you have it (one call per idea; do not wait to have them all). MasterDeck makes a draft of its deck sketch at once and shows it as a card with a picture of their deck, Try and Pick. Returns the draft id and the controls left out, with why: fix those in the draft with set_control if they matter.",
         json!({
             "title": {"type": "string", "description": "Short, specific: \"Spotify mixer\", \"Rider debug desk\"."},
             "app": {"type": "string", "description": "The program it is for (Spotify.exe), or \"\" for a whole-desk idea."},
@@ -689,7 +689,7 @@ pub fn assistant_tools() -> Vec<Value> {
     list.push(tool(
         "hubdeck_state",
         "What is set up",
-        "What is set up in HubDeck now: Claude Code sessions on keys (connected or not), the light style and which reactions are on, the user's connected apps, the screensaver, screens off after, modules attached and owned, whether more power is on. Check it before you promise a reaction or an integration.",
+        "What is set up in MasterDeck now: Claude Code sessions on keys (connected or not), the light style and which reactions are on, the user's connected apps, the screensaver, screens off after, modules attached and owned, whether more power is on. Check it before you promise a reaction or an integration.",
         json!({}),
         &[],
         true,
@@ -705,7 +705,7 @@ pub fn assistant_tools() -> Vec<Value> {
     list.push(tool(
         "connect_app",
         "Connect an app",
-        "Connect one of the user's apps by the address of its HubDeck manifest or status on this computer (http://127.0.0.1:.../hubdeck/manifest, docs/APP-CONTRACT.md); HubDeck then listens to it. Only addresses on this computer.",
+        "Connect one of the user's apps by the address of its MasterDeck manifest or status on this computer (http://127.0.0.1:.../hubdeck/manifest, docs/APP-CONTRACT.md); MasterDeck then listens to it. Only addresses on this computer.",
         json!({"url": {"type": "string"}}),
         &["url"],
         false,
@@ -729,7 +729,7 @@ pub fn assistant_tools() -> Vec<Value> {
     list.push(tool(
         "make_tour",
         "Make a personal tour",
-        "Only when they ask what HubDeck can do: HubDeck makes a tour draft at once from their own apps (real icons) and games (covers), with pages for live values, looks, control, animations, a picture across the keys and integrations. Then show it with try_on_deck and walk them through it.",
+        "Only when they ask what MasterDeck can do: MasterDeck makes a tour draft at once from their own apps (real icons) and games (covers), with pages for live values, looks, control, animations, a picture across the keys and integrations. Then show it with try_on_deck and walk them through it.",
         json!({"language": {"type": "string", "description": "pl or en: the language of its labels (the user's)."}}),
         &[],
         false,
@@ -752,19 +752,19 @@ fn permission(api: &dyn Api, args: &Value) -> Value {
     let deny = |why: &str| json!({"behavior": "deny", "message": why});
     let asked = match api.call("POST", "/api/assistant/permission", Some(&json!({"tool": args["tool_name"], "input": input}))) {
         Ok(a) => a,
-        Err(e) => return deny(&format!("HubDeck could not ask the user: {e}")),
+        Err(e) => return deny(&format!("MasterDeck could not ask the user: {e}")),
     };
     let allow = json!({"behavior": "allow", "updatedInput": input});
     if asked["allow"] == true {
         return allow;
     }
-    let Some(id) = asked["id"].as_u64() else { return deny("HubDeck could not ask the user") };
+    let Some(id) = asked["id"].as_u64() else { return deny("MasterDeck could not ask the user") };
     let until = std::time::Instant::now() + std::time::Duration::from_secs(600);
     while std::time::Instant::now() < until {
         if let Ok(a) = api.call("GET", &format!("/api/assistant/permission/{id}"), None)
             && a["answered"] == true
         {
-            return if a["allow"] == true { allow } else { deny("The user said no in HubDeck's window. Ask what they want instead, or do it another way.") };
+            return if a["allow"] == true { allow } else { deny("The user said no in MasterDeck's window. Ask what they want instead, or do it another way.") };
         }
         std::thread::sleep(std::time::Duration::from_millis(300));
     }
@@ -888,7 +888,7 @@ pub fn assistant_entry(exe: &str) -> Value {
     json!({"command": exe, "args": ["--mcp-assistant"]})
 }
 
-/// The `mcpServers` entry for HubDeck.
+/// The `mcpServers` entry for MasterDeck.
 pub fn server_entry(exe: &str) -> Value {
     json!({"command": exe, "args": ["--mcp"]})
 }
@@ -898,7 +898,7 @@ pub fn snippet(exe: &str) -> String {
     serde_json::to_string_pretty(&json!({"mcpServers": {SERVER_NAME: server_entry(exe)}})).unwrap_or_default()
 }
 
-/// The Claude Code command that adds HubDeck for every project of the user.
+/// The Claude Code command that adds MasterDeck for every project of the user.
 pub fn code_command(exe: &str) -> String {
     format!("claude mcp add --scope user {SERVER_NAME} -- \"{exe}\" --mcp")
 }
@@ -918,7 +918,7 @@ pub fn desktop_config_path() -> Option<PathBuf> {
     return std::env::var_os("HOME").map(|h| PathBuf::from(h).join(".config/Claude/claude_desktop_config.json"));
 }
 
-/// The configuration with HubDeck's server added (or updated); everything else kept as it is.
+/// The configuration with MasterDeck's server added (or updated); everything else kept as it is.
 pub fn with_server(mut config: Value, exe: &str) -> Value {
     if !config.is_object() {
         config = json!({});
@@ -931,12 +931,12 @@ pub fn with_server(mut config: Value, exe: &str) -> Value {
     config
 }
 
-/// Whether a Claude Desktop configuration starts HubDeck.
+/// Whether a Claude Desktop configuration starts MasterDeck.
 pub fn has_server(config: &Value) -> bool {
     config["mcpServers"][SERVER_NAME]["args"].as_array().is_some_and(|a| a.iter().any(|x| x == "--mcp"))
 }
 
-/// Add HubDeck to the Claude Desktop configuration at `path`; the old file is kept as
+/// Add MasterDeck to the Claude Desktop configuration at `path`; the old file is kept as
 /// `<name>.hubdeck-backup`. Returns the backup's path when there was a file.
 pub fn connect_desktop_at(path: &Path, exe: &str) -> Result<Option<PathBuf>, String> {
     let old = std::fs::read_to_string(path).ok();
@@ -989,7 +989,7 @@ pub fn find_claude_cli() -> Option<PathBuf> {
 #[serde(rename_all = "camelCase")]
 pub struct McpInfo {
     pub exe: String,
-    /// Claude Desktop's configuration starts HubDeck.
+    /// Claude Desktop's configuration starts MasterDeck.
     pub desktop: bool,
     /// The `claude` command line was found.
     pub code_cli: bool,
@@ -1010,15 +1010,15 @@ pub async fn mcp_info() -> Result<McpInfo, String> {
     .map_err(|e| e.to_string())
 }
 
-/// Add HubDeck to Claude Desktop (the user restarts Claude Desktop); returns the backup's path.
+/// Add MasterDeck to Claude Desktop (the user restarts Claude Desktop); returns the backup's path.
 #[tauri::command]
 pub fn mcp_connect_desktop() -> Result<Option<String>, String> {
     let path = desktop_config_path().ok_or("no folder for Claude Desktop's settings")?;
     Ok(connect_desktop_at(&path, &exe()?)?.map(|b| b.display().to_string()))
 }
 
-/// Add HubDeck to Claude Code with its command line (`claude mcp add --scope user`); an older
-/// entry is replaced, so a moved HubDeck is found again.
+/// Add MasterDeck to Claude Code with its command line (`claude mcp add --scope user`); an older
+/// entry is replaced, so a moved MasterDeck is found again.
 #[tauri::command]
 pub async fn mcp_connect_code() -> Result<String, String> {
     let exe = exe()?;
@@ -1047,7 +1047,7 @@ pub async fn mcp_connect_code() -> Result<String, String> {
 }
 
 /// What "Build with AI" asks the assistant for: a whole profile for one app or game, built with
-/// HubDeck's tools for the user's modules, linked to the program and checked before it is shown.
+/// MasterDeck's tools for the user's modules, linked to the program and checked before it is shown.
 pub fn build_prompt(name: &str, exe: &str, target: &str, picture: Option<&str>, game: bool, language: &str) -> String {
     let what = if game { "the game" } else { "the app" };
     let opened = if target.trim().is_empty() || target == exe { String::new() } else { format!(", opened with {target}") };
@@ -1068,10 +1068,12 @@ pub fn build_prompt(name: &str, exe: &str, target: &str, picture: Option<&str>, 
         rules.insert(3, format!("Put the picture \"{pic}\" (already stored) on the key that opens {what}: look.image."));
     }
     let list: String = rules.iter().map(|r| format!("- {r}\n")).collect();
-    format!("Build a complete, polished HubDeck profile for {what} \"{name}\" (program {exe}{opened}) with the hubdeck tools.\n{list}When done, answer with one short sentence saying what you built.")
+    format!(
+        "Build a complete, polished MasterDeck profile for {what} \"{name}\" (program {exe}{opened}) with the hubdeck tools.\n{list}When done, answer with one short sentence saying what you built."
+    )
 }
 
-/// HubDeck's own key look (owner's pick, `house.rs`), so a built profile sits next to the others:
+/// MasterDeck's own key look (owner's pick, `house.rs`), so a built profile sits next to the others:
 /// without it the builder made glass keys on colored backgrounds.
 pub(crate) fn house_rule() -> String {
     use super::house::{BG, LABEL, hue, icon_color};
@@ -1088,7 +1090,7 @@ pub(crate) fn house_rule() -> String {
     ];
     let colors: Vec<String> = groups.iter().map(|(name, h)| format!("{name} {}", icon_color(*h))).collect();
     format!(
-        "Keep HubDeck's house look on keys and the dial: look.bg \"{BG}\", look.fg \"{LABEL}\", no look.style, and the icon colored by its group in look.iconColor ({}). Pictures (look.image) only for app or game covers.",
+        "Keep MasterDeck's house look on keys and the dial: look.bg \"{BG}\", look.fg \"{LABEL}\", no look.style, and the icon colored by its group in look.iconColor ({}). Pictures (look.image) only for app or game covers.",
         colors.join(", ")
     )
 }
@@ -1108,7 +1110,7 @@ fn answer_of(stdout: &str) -> Result<String, String> {
     if v["is_error"].as_bool().unwrap_or(false) { Err(if text.is_empty() { "Claude Code stopped with an error".into() } else { text }) } else { Ok(text) }
 }
 
-/// "Build with AI": run Claude Code without a window (`claude -p`) with only HubDeck's MCP tools
+/// "Build with AI": run Claude Code without a window (`claude -p`) with only MasterDeck's MCP tools
 /// (no files, no commands, no other servers), give it the request and wait for it (up to 15
 /// minutes). Returns its last sentence. `Err("no-cli")` when Claude Code is not installed.
 #[tauri::command]
@@ -1123,7 +1125,7 @@ pub async fn ai_build(prompt: String) -> Result<String, String> {
         let mut entry = server_entry(&exe);
         // a test copy's builder must reach that copy, not the real app
         if let Some(a) = crate::automation::get() {
-            entry["env"] = json!({"HUBDECK_AUTOMATION": a.data_dir});
+            entry["env"] = json!({"MASTERDECK_AUTOMATION": a.data_dir});
         }
         std::fs::write(&config, json!({"mcpServers": {SERVER_NAME: entry}}).to_string()).map_err(|e| e.to_string())?;
         let mut cmd = std::process::Command::new(&cli);
@@ -1436,9 +1438,9 @@ mod tests {
         let dir = std::env::temp_dir().join(format!("hubdeck-claude-desktop-{}", std::process::id()));
         let path = dir.join("Claude").join("claude_desktop_config.json");
         // no file yet: created, no backup
-        assert_eq!(connect_desktop_at(&path, "C:\\HubDeck\\hubdeck.exe").unwrap(), None);
+        assert_eq!(connect_desktop_at(&path, "C:\\MasterDeck\\hubdeck.exe").unwrap(), None);
         let made: Value = serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
-        assert_eq!(made["mcpServers"]["hubdeck"], json!({"command": "C:\\HubDeck\\hubdeck.exe", "args": ["--mcp"]}));
+        assert_eq!(made["mcpServers"]["hubdeck"], json!({"command": "C:\\MasterDeck\\hubdeck.exe", "args": ["--mcp"]}));
         // an existing file: other servers and settings stay, the old text is kept
         std::fs::write(&path, r#"{"mcpServers": {"files": {"command": "npx", "args": ["fs"]}, "hubdeck": {"command": "old.exe", "args": ["--mcp"]}}, "theme": "dark"}"#).unwrap();
         let backup = connect_desktop_at(&path, "D:\\new\\hubdeck.exe").unwrap().unwrap();

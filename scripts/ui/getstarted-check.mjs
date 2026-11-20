@@ -67,7 +67,7 @@ try {
   // the AI assistant's card shows what it knew, not its loading line, when the tab opens again
   const looking = again.filter((f) => f.looking).length;
   check('again: no "Looking for Claude Code..." for a moment', looking === 0, `in ${looking} frames`);
-  // the window opened anew (the window's own start, as after a restart of HubDeck)
+  // the window opened anew (the window's own start, as after a restart of MasterDeck)
   await page.reload();
   await page.waitForSelector(".lib-tabs [role=tab]", { timeout: 20000 });
   await sleep(300);

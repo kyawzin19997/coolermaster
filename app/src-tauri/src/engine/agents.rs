@@ -232,7 +232,7 @@ pub fn hook_report(input: &Value) -> Value {
 }
 
 /// Entry point of `hubdeck --claude-hook`: read the hook input, post the state, exit quietly. Any
-/// failure (HubDeck not running, no token) is silent: a hook must never disturb Claude Code.
+/// failure (MasterDeck not running, no token) is silent: a hook must never disturb Claude Code.
 pub fn run_hook() {
     use std::io::{Read, Write};
     let mut input = String::new();
@@ -266,7 +266,7 @@ pub fn run_hook() {
 }
 
 /// What the deck shows for a permission question: the tool and what it touches, short. Stays on
-/// this computer (it goes to the local HubDeck only).
+/// this computer (it goes to the local MasterDeck only).
 pub fn approve_question(input: &Value) -> Option<String> {
     let tool = input["tool_name"].as_str()?;
     if !SAFE_TOOLS.contains(&tool) {
@@ -287,7 +287,7 @@ pub fn approve_answer(allow: bool) -> Value {
     }
 }
 
-/// Ask on the deck and wait; None = no decision (not a safe tool, HubDeck not running, no press).
+/// Ask on the deck and wait; None = no decision (not a safe tool, MasterDeck not running, no press).
 fn approve(input: &Value) -> Option<Value> {
     let question = approve_question(input)?;
     let dir = data_dir()?;
@@ -315,7 +315,7 @@ fn approve(input: &Value) -> Option<Value> {
 
 // ---------- connecting Claude Code: hooks in the user's settings ----------
 
-/// Hook events HubDeck listens to.
+/// Hook events MasterDeck listens to.
 pub const HOOK_EVENTS: [&str; 9] = ["SessionStart", "UserPromptSubmit", "PreToolUse", "PostToolUse", "PermissionRequest", "Notification", "Stop", "SubagentStop", "SessionEnd"];
 /// Marks our hook entries so they can be found and removed again.
 pub const HOOK_ARG: &str = "--claude-hook";
@@ -338,7 +338,7 @@ fn hook_command(exe: &str, args: &str) -> String {
     format!("\"{exe}\" {args}")
 }
 
-/// Settings with HubDeck's hooks added (`exe` = this program) or, with `exe` None, removed. Other
+/// Settings with MasterDeck's hooks added (`exe` = this program) or, with `exe` None, removed. Other
 /// hooks and settings are kept as they are.
 #[cfg(test)]
 pub fn with_hooks(settings: Value, exe: Option<&str>) -> Value {
@@ -388,7 +388,7 @@ pub fn with_hooks_approve(mut settings: Value, exe: Option<&str>, approve: bool)
     settings
 }
 
-/// Whether the settings carry HubDeck's hooks.
+/// Whether the settings carry MasterDeck's hooks.
 pub fn has_hooks(settings: &Value) -> bool {
     settings["hooks"].as_object().is_some_and(|h| h.values().any(|g| g.as_array().is_some_and(|a| a.iter().any(|x| x["hooks"].as_array().is_some_and(|l| l.iter().any(is_ours))))))
 }
@@ -402,7 +402,7 @@ pub fn claude_settings_path() -> Option<std::path::PathBuf> {
     home.map(|h| std::path::PathBuf::from(h).join(".claude").join("settings.json"))
 }
 
-/// Add (connect) or remove HubDeck's hooks in the user's Claude Code settings. A copy of the old
+/// Add (connect) or remove MasterDeck's hooks in the user's Claude Code settings. A copy of the old
 /// file is kept next to it as `settings.json.hubdeck-backup`.
 /// `approve` adds the deck's answer to permission prompts of safe tools.
 pub fn set_connected_with(connect: bool, approve: bool) -> Result<bool, String> {
@@ -493,13 +493,13 @@ mod tests {
     fn hooks_merge_into_settings_and_come_out_again() {
         let mine = json!({"type": "command", "command": "my-linter"});
         let settings = json!({"model": "opus", "hooks": {"Stop": [{"hooks": [mine.clone()]}]}});
-        let on = with_hooks(settings.clone(), Some("C:\\HubDeck\\hubdeck.exe"));
+        let on = with_hooks(settings.clone(), Some("C:\\MasterDeck\\hubdeck.exe"));
         assert!(has_hooks(&on));
         assert_eq!(on["model"], "opus");
         assert_eq!(on["hooks"]["Stop"].as_array().unwrap().len(), 2, "the user's own Stop hook stays");
         assert_eq!(on["hooks"]["PreToolUse"][0]["hooks"][0]["async"], true);
-        assert_eq!(on["hooks"]["Stop"][1]["hooks"][0]["command"], "\"C:\\HubDeck\\hubdeck.exe\" --claude-hook");
-        let twice = with_hooks(on.clone(), Some("C:\\HubDeck\\hubdeck.exe"));
+        assert_eq!(on["hooks"]["Stop"][1]["hooks"][0]["command"], "\"C:\\MasterDeck\\hubdeck.exe\" --claude-hook");
+        let twice = with_hooks(on.clone(), Some("C:\\MasterDeck\\hubdeck.exe"));
         assert_eq!(twice, on, "connecting again changes nothing");
         let off = with_hooks(on, None);
         assert!(!has_hooks(&off));
@@ -514,7 +514,7 @@ mod tests {
         assert_eq!(approve_answer(true)["hookSpecificOutput"]["decision"]["behavior"], "allow");
         assert_eq!(approve_answer(false)["hookSpecificOutput"]["decision"]["behavior"], "deny");
         // the approve hook is added only when asked for, and goes away with the rest
-        let on = with_hooks_approve(json!({}), Some("C:\\HubDeck\\hubdeck.exe"), true);
+        let on = with_hooks_approve(json!({}), Some("C:\\MasterDeck\\hubdeck.exe"), true);
         let permission = on["hooks"]["PermissionRequest"].as_array().unwrap();
         assert_eq!(permission.len(), 2);
         assert!(permission[1]["hooks"][0]["command"].as_str().unwrap().ends_with("--claude-hook --approve"));

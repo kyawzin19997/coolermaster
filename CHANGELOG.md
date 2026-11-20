@@ -1,10 +1,14 @@
 # Changelog
 
-## Unreleased
+## 1.2.0
 
 - The full key editor puts the label, colors, and live preview first, with expandable controls for icons, positioning, effects, batch styling, and export.
 - Every built-in action has a new default icon in the Actions library and on newly assigned keys. Existing keys can switch to the new icon from the full editor.
 - The Plugins toolbar opens the installed list. Local files are validated and reviewed before installation, start disabled, and can be enabled, updated, or removed from the list.
+- The Actions list has larger buttons and icons. The + button creates and opens a numbered page immediately, with Rename available separately. Profile settings keep the common choices at the top.
+- The desk lighting preview and MasterHUB receive the same breathing color frames from the engine.
+- Nine current MasterDeck profile templates are bundled, with private assets and machine-specific settings removed from the public copies.
+- Upload from Phone pairs with an iPhone or Android browser. Local Wi-Fi works offline. An optional verified HTTPS relay enables Internet mode. Transfers resume after reconnecting and verify file integrity before desktop review.
 
 ## 1.1.0
 

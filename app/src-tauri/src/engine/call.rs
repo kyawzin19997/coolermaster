@@ -26,7 +26,7 @@ pub fn call_app(mic_users: &[String]) -> Option<String> {
 mod tests {
     use super::*;
 
-    /// `cargo test -p hubdeck mic_users_now -- --ignored --nocapture`: who records the microphone now
+    /// `cargo test -p masterdeck mic_users_now -- --ignored --nocapture`: who records the microphone now
     #[test]
     #[ignore]
     fn mic_users_now() {

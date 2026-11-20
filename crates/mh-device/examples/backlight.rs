@@ -3,7 +3,7 @@
 //!
 //!     cargo run -p mh-device --example backlight
 //!
-//! Quit HubDeck first.
+//! Quit MasterDeck first.
 
 use std::time::Duration;
 

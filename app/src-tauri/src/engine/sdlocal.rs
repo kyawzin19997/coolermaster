@@ -1,6 +1,6 @@
 //! Stream Deck plugins already on this computer: the ones Elgato's Stream Deck app installed (taken
-//! into HubDeck with one click; plugins whose files Elgato encrypted stay with Elgato's app) and
-//! `.streamDeckPlugin` files opened with HubDeck (a double click, Open with, a drop on the window).
+//! into MasterDeck with one click; plugins whose files Elgato encrypted stay with Elgato's app) and
+//! `.streamDeckPlugin` files opened with MasterDeck (a double click, Open with, a drop on the window).
 
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
@@ -15,7 +15,7 @@ use super::sdplugins;
 /// Where Elgato's Stream Deck app keeps its plugins (`<uuid>.sdPlugin` folders).
 pub fn stream_deck_folder() -> Option<PathBuf> {
     // a folder made for a check (`scripts/ui/plugin-sources.mjs`), so Elgato's own is never touched
-    if let Some(dir) = std::env::var_os("HUBDECK_STREAM_DECK_PLUGINS") {
+    if let Some(dir) = crate::compat::var_os("MASTERDECK_STREAM_DECK_PLUGINS") {
         return Some(dir.into());
     }
     #[cfg(windows)]
@@ -36,7 +36,7 @@ pub struct Local {
     pub version: String,
     /// Its icon as a data URI.
     pub icon: Option<String>,
-    /// Why HubDeck cannot run it; None: it can.
+    /// Why MasterDeck cannot run it; None: it can.
     pub problem: Option<String>,
     pub actions: usize,
     pub digest: Option<String>,
@@ -223,10 +223,10 @@ pub fn peek_file(path: &Path) -> Local {
     preview().unwrap_or_else(|e| Local { name: path.file_name().and_then(|n| n.to_str()).unwrap_or_default().to_string(), problem: Some(e), ..Local::default() })
 }
 
-/// Plugin files the system asked HubDeck to open, kept until the window takes them.
+/// Plugin files the system asked MasterDeck to open, kept until the window takes them.
 static OPENED: Mutex<Vec<String>> = Mutex::new(Vec::new());
 
-/// The plugin files among a start's arguments (a double click starts `HubDeck.exe <file>`).
+/// The plugin files among a start's arguments (a double click starts `MasterDeck.exe <file>`).
 pub fn files_in(args: &[String]) -> Vec<String> {
     // plugins, and icon packs (the window installs those at once: pictures only, nothing runs)
     args.iter().filter(|a| (a.to_lowercase().ends_with(".streamdeckplugin") || a.to_lowercase().ends_with(".streamdeckiconpack")) && Path::new(a).is_file()).cloned().collect()
@@ -264,7 +264,7 @@ pub async fn sd_peek(path: String) -> Result<Local, String> {
     tauri::async_runtime::spawn_blocking(move || peek_file(Path::new(&path))).await.map_err(|e| e.to_string())
 }
 
-/// Plugin files opened with HubDeck since the window last asked.
+/// Plugin files opened with MasterDeck since the window last asked.
 #[tauri::command]
 pub fn sd_opened() -> Vec<String> {
     std::mem::take(&mut *OPENED.lock().unwrap_or_else(|e| e.into_inner()))
@@ -343,7 +343,7 @@ mod tests {
         std::fs::create_dir_all(&out).unwrap();
         assert_eq!(sdplugins::install(&zip_folder(&dir).unwrap(), &out).unwrap(), "com.x.clock");
         assert_eq!(std::fs::read_to_string(out.join("com.x.clock.sdPlugin/bin/plugin.js")).unwrap(), "console.log(1)");
-        // a file opened with HubDeck is read without installing it
+        // a file opened with MasterDeck is read without installing it
         let file = base.join("clock.streamDeckPlugin");
         std::fs::write(&file, zip_folder(&dir).unwrap()).unwrap();
         let reviewed = peek_file(&file);
@@ -354,7 +354,7 @@ mod tests {
         std::fs::write(&bad, zip_folder(&dir).unwrap()).unwrap();
         assert!(peek_file(&bad).problem.unwrap().contains("program is missing"));
         std::fs::write(dir.join("manifest.json"), manifest.to_string()).unwrap();
-        assert_eq!(files_in(&["HubDeck.exe".into(), file.to_string_lossy().into_owned()]).len(), 1);
+        assert_eq!(files_in(&["MasterDeck.exe".into(), file.to_string_lossy().into_owned()]).len(), 1);
         // Elgato's encrypted program, then its encrypted manifest
         std::fs::write(dir.join("bin/plugin.js"), b"ELGATO\x01\x02\x03").unwrap();
         assert!(look(&dir).problem.unwrap().contains("encrypted"));

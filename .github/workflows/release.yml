@@ -42,7 +42,7 @@ jobs:
         run: |
           node scripts/windows-release.mjs check
           node --test scripts/windows-release.test.mjs
-          node scripts/windows-release.mjs updater-config "$env:RUNNER_TEMP/hubdeck-updater.json"
+          node scripts/windows-release.mjs updater-config "$env:RUNNER_TEMP/masterdeck-updater.json"
       - name: Install locked frontend dependencies and test
         working-directory: app
         shell: pwsh
@@ -59,7 +59,7 @@ jobs:
           if (!$env:TAURI_SIGNING_PRIVATE_KEY -or !$env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD) {
             throw 'Add TAURI_SIGNING_PRIVATE_KEY and TAURI_SIGNING_PRIVATE_KEY_PASSWORD to the repository Actions secrets.'
           }
-          pnpm exec tauri build --target x86_64-pc-windows-msvc --bundles nsis --config src-tauri/tauri.installers.conf.json --config src-tauri/tauri.release.conf.json --config "$env:RUNNER_TEMP/hubdeck-updater.json" -- --locked
+          pnpm exec tauri build --target x86_64-pc-windows-msvc --bundles nsis --config src-tauri/tauri.installers.conf.json --config src-tauri/tauri.release.conf.json --config "$env:RUNNER_TEMP/masterdeck-updater.json" -- --locked
       - name: Verify installer signature and generate GitHub update feed
         shell: pwsh
         run: node scripts/windows-release.mjs stage target/x86_64-pc-windows-msvc/release/bundle/nsis release-assets

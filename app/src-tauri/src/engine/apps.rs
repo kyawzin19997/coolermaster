@@ -129,7 +129,7 @@ pub fn list() -> Vec<AppInfo> {
 }
 
 /// The icon of a program a profile is linked to (`PathOfExile.exe`), also when it was never in
-/// front since HubDeck runs: from where it was seen, else the installed program or game of that
+/// front since MasterDeck runs: from where it was seen, else the installed program or game of that
 /// file name (or one in a game's install folder), else the game's cover. Cached, None included.
 pub fn icon_for_exe(exe: &str) -> Option<String> {
     let key = exe.trim().to_lowercase();
@@ -299,7 +299,7 @@ mod platform {
     use super::AppInfo;
 
     pub fn running() -> Vec<AppInfo> {
-        // HubDeck itself is not offered: its bundle holds the running program
+        // MasterDeck itself is not offered: its bundle holds the running program
         let own = std::env::current_exe().map(|p| p.to_string_lossy().to_string()).unwrap_or_default();
         // its own pool: AppKit's objects are autoreleased and a Rust thread has none (2026-10-14)
         objc2::rc::autoreleasepool(|_| {

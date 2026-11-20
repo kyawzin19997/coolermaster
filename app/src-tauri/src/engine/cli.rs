@@ -1,4 +1,4 @@
-//! `hubdeck cli ...`: HubDeck from a terminal or a script, through the running app's local API
+//! `hubdeck cli ...`: MasterDeck from a terminal or a script, through the running app's local API
 //! (roadmap phase 2, "CLI on top of the local API"). It changes nothing the app's own window
 //! could not, and prints plain lines.
 //!

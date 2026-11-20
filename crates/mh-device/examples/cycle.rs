@@ -1,4 +1,4 @@
-//! Start and stop the hub again and again, as HubDeck does at each restart, and count the cycles
+//! Start and stop the hub again and again, as MasterDeck does at each restart, and count the cycles
 //! where keys or dial do not come back (macOS wedges, 2026-10-13). The app must not be running.
 //!
 //!     cargo run -p mh-device --example cycle -- [cycles] [pause_ms]

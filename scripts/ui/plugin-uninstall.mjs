@@ -2,7 +2,7 @@
 // "I installed some plugin that I don't need anymore, and I can't find a way to uninstall it").
 // A test copy of its own (the owner's profiles, virtual modules, no deck, never the focus) with a
 // small plugin on a key: Uninstall answered Cancel keeps it, answered Uninstall stops it, takes it
-// off the list and deletes its folder. The question is HubDeck's own, in the window (owner's pick
+// off the list and deletes its folder. The question is MasterDeck's own, in the window (owner's pick
 // 1b, 2026-10-23), and names the keys that use the plugin; the walk clicks its buttons.
 //   node scripts/ui/plugin-uninstall.mjs [path to hubdeck.exe] [shots dir]   # default: the test build
 import { chromium } from "playwright-core";
@@ -36,7 +36,7 @@ fs.mkdirSync(pdir, { recursive: true });
 fs.writeFileSync(
   path.join(pdir, "manifest.json"),
   JSON.stringify({
-    Name: "Test uninstall", Version: "1.0.0", Author: "HubDeck", Description: "A plugin to uninstall.", Icon: "icon", CodePath: "plugin.js",
+    Name: "Test uninstall", Version: "1.0.0", Author: "MasterDeck", Description: "A plugin to uninstall.", Icon: "icon", CodePath: "plugin.js",
     Nodejs: { Version: "20" }, SDKVersion: 2, OS: [{ Platform: "windows", MinimumVersion: "10" }, { Platform: "mac", MinimumVersion: "12" }], Software: { MinimumVersion: "6.4" },
     Actions: [{ Name: "Ping", UUID: `${PLUGIN}.ping`, Icon: "icon", States: [{ Image: "icon" }], Controllers: ["Keypad"] }],
   }),
@@ -53,7 +53,7 @@ setInterval(() => fs.appendFileSync(${JSON.stringify(beat)}, Date.now() + "\\n")
 );
 const beats = () => (fs.existsSync(beat) ? fs.readFileSync(beat, "utf8").trim().split("\n").length : 0);
 
-const app = spawn(exe, [], { env: { ...process.env, HUBDECK_AUTOMATION: dir, HUBDECK_CDP_PORT: String(PORT) }, stdio: "ignore" });
+const app = spawn(exe, [], { env: { ...process.env, MASTERDECK_AUTOMATION: dir, MASTERDECK_CDP_PORT: String(PORT) }, stdio: "ignore" });
 for (let i = 0; i < 60 && !fs.existsSync(path.join(dir, "api-http-port")); i++) await sleep(500);
 await sleep(1500);
 const api = (route, body) => {

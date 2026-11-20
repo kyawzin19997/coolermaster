@@ -1,0 +1,348 @@
+{
+  "version": 1,
+  "id": "masterdeck-chrome",
+  "name": "Google Chrome",
+  "apps": [
+    "chrome.exe"
+  ],
+  "controls": {
+    "dial": {
+      "action": "core.volume",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#9379ec",
+        "label": "Google Chrome",
+        "icon": "volume-2"
+      },
+      "params": {
+        "step": 2,
+        "target": "app",
+        "app": "chrome.exe"
+      }
+    },
+    "faders.0": {
+      "action": "core.volume",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#9379ec",
+        "label": "System",
+        "icon": "volume-2"
+      },
+      "params": {
+        "step": 2,
+        "target": "system"
+      }
+    },
+    "faders.1": {
+      "action": "core.volume",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#9379ec",
+        "label": "Google Chrome",
+        "icon": "volume-2"
+      },
+      "params": {
+        "step": 2,
+        "target": "app",
+        "app": "chrome.exe"
+      }
+    },
+    "faders.2": {
+      "action": "core.volume",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#9379ec",
+        "label": "Discord",
+        "icon": "volume-2"
+      },
+      "params": {
+        "step": 2,
+        "target": "app",
+        "app": "Discord.exe"
+      }
+    },
+    "faders.3": {
+      "action": "core.volume",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#9379ec",
+        "label": "Spotify",
+        "icon": "volume-2"
+      },
+      "params": {
+        "step": 2,
+        "target": "app",
+        "app": "Spotify.exe"
+      }
+    },
+    "faders.4": {
+      "action": "core.volume",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#9379ec",
+        "label": "Browser",
+        "icon": "volume-2"
+      },
+      "params": {
+        "step": 2,
+        "target": "app",
+        "app": "chrome.exe"
+      }
+    },
+    "keys.0": {
+      "action": "core.launch",
+      "look": {
+        "bg": "#2b2733",
+        "label": "Google Chrome",
+        "icon": "action:core.launch"
+      },
+      "params": {
+        "target": "chrome.exe"
+      }
+    },
+    "keys.1": {
+      "action": "core.hotkey",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#79b8ec",
+        "label": "New tab",
+        "icon": "plus"
+      },
+      "params": {
+        "keys": "Ctrl+T"
+      }
+    },
+    "keys.10": {
+      "action": "core.media",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#79b1ec",
+        "label": "Prev",
+        "icon": "skip-back"
+      },
+      "params": {
+        "command": "previous"
+      }
+    },
+    "keys.11": {
+      "action": "core.media",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#79b1ec",
+        "label": "Play",
+        "icon": "play"
+      },
+      "params": {
+        "command": "playPause"
+      }
+    },
+    "keys.12": {
+      "action": "core.media",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#79b1ec",
+        "label": "Next",
+        "icon": "skip-forward"
+      },
+      "params": {
+        "command": "next"
+      }
+    },
+    "keys.13": {
+      "action": "core.hotkey",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#79b1ec",
+        "label": "Mute",
+        "icon": "volume-x"
+      },
+      "params": {
+        "keys": "VolumeMute"
+      }
+    },
+    "keys.14": {
+      "action": "core.mic",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#79b1ec",
+        "label": "Mic",
+        "icon": "mic"
+      },
+      "params": {}
+    },
+    "keys.2": {
+      "action": "core.hotkey",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#79b8ec",
+        "label": "Close tab",
+        "icon": "x"
+      },
+      "params": {
+        "keys": "Ctrl+W"
+      }
+    },
+    "keys.3": {
+      "action": "core.hotkey",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#79b8ec",
+        "label": "Reopen tab",
+        "icon": "rotate-ccw"
+      },
+      "params": {
+        "keys": "Ctrl+Shift+T"
+      }
+    },
+    "keys.4": {
+      "action": "core.hotkey",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#79b8ec",
+        "label": "Back",
+        "icon": "arrow-left"
+      },
+      "params": {
+        "keys": "Alt+Left"
+      }
+    },
+    "keys.5": {
+      "action": "core.hotkey",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#79b8ec",
+        "label": "Reload",
+        "icon": "refresh-cw"
+      },
+      "params": {
+        "keys": "F5"
+      }
+    },
+    "keys.6": {
+      "action": "core.hotkey",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#79b8ec",
+        "label": "Find",
+        "icon": "search"
+      },
+      "params": {
+        "keys": "Ctrl+F"
+      }
+    },
+    "keys.7": {
+      "action": "core.hotkey",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#79b8ec",
+        "label": "Address",
+        "icon": "globe"
+      },
+      "params": {
+        "keys": "Ctrl+L"
+      }
+    },
+    "keys.8": {
+      "action": "core.hotkey",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#79b8ec",
+        "label": "Private",
+        "icon": "lock"
+      },
+      "params": {
+        "keys": "Ctrl+Shift+N"
+      }
+    },
+    "knobs.0": {
+      "action": "core.volume",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#9379ec",
+        "label": "Google Chrome",
+        "icon": "volume-2"
+      },
+      "params": {
+        "step": 2,
+        "target": "app",
+        "app": "chrome.exe"
+      }
+    },
+    "knobs.1": {
+      "action": "core.volume",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#9379ec",
+        "label": "System",
+        "icon": "volume-2"
+      },
+      "params": {
+        "step": 2,
+        "target": "system"
+      }
+    },
+    "knobs.2": {
+      "action": "core.scroll",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#9379ec",
+        "label": "Scroll ↔",
+        "icon": "arrow-left-right"
+      },
+      "params": {
+        "amount": 3,
+        "axis": "horizontal"
+      }
+    },
+    "rollers.0": {
+      "action": "core.scroll",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#9379ec",
+        "label": "Scroll",
+        "icon": "arrow-up-down"
+      },
+      "params": {
+        "amount": 3,
+        "axis": "vertical"
+      }
+    },
+    "rollers.1": {
+      "action": "core.scroll",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#9379ec",
+        "label": "Scroll ↔",
+        "icon": "arrow-left-right"
+      },
+      "params": {
+        "amount": 3,
+        "axis": "horizontal"
+      }
+    }
+  }
+}

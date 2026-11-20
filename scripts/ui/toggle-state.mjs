@@ -49,7 +49,7 @@ const api = (route, body) => {
 };
 async function start() {
   fs.rmSync(path.join(dir, "api-http-port"), { force: true });
-  app = spawn(exe, [], { env: { ...process.env, HUBDECK_AUTOMATION: dir, HUBDECK_CDP_PORT: String(PORT) }, stdio: "ignore" });
+  app = spawn(exe, [], { env: { ...process.env, MASTERDECK_AUTOMATION: dir, MASTERDECK_CDP_PORT: String(PORT) }, stdio: "ignore" });
   for (let i = 0; i < 60 && !fs.existsSync(path.join(dir, "api-http-port")); i++) await sleep(500);
   await sleep(1500);
   browser = await chromium.connectOverCDP(`http://127.0.0.1:${PORT}`);

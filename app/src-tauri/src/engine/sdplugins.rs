@@ -1,14 +1,14 @@
 //! Stream Deck plugins (Elgato's SDK, also OpenAction's): the plugins people already use for
-//! Discord, Spotify, OBS, lights and hundreds more run in HubDeck (owner, 2026-10-13; research and
+//! Discord, Spotify, OBS, lights and hundreds more run in MasterDeck (owner, 2026-10-13; research and
 //! plan in docs/STREAMDECK-PLUGINS.md). Written from Elgato's public SDK documentation.
 //!
 //! A plugin is a folder `<uuid>.sdPlugin` with a `manifest.json` (`UUID`, `CodePath`, `Actions`...)
 //! in `<app data>/plugins/`. Its program is Node (`Nodejs` in the manifest), a native program, or an
-//! HTML page HubDeck opens in a hidden window. It connects to the plugin server's WebSocket and
+//! HTML page MasterDeck opens in a hidden window. It connects to the plugin server's WebSocket and
 //! registers with `{"event": "registerPlugin", "uuid": <the -pluginUUID it was given>}`; its
 //! settings pages (property inspectors) do the same with `registerPropertyInspector`.
 //!
-//! This module translates between that protocol and HubDeck's own plugin messages
+//! This module translates between that protocol and MasterDeck's own plugin messages
 //! (`plugins.rs`): the 15 keys are a 5x3 keypad, the dial and the knobs are encoders.
 
 use std::collections::HashMap;
@@ -22,13 +22,13 @@ use serde_json::{Value, json};
 use super::actions::InputKind;
 use super::plugins::{Manifest, ManifestAction};
 
-/// The Stream Deck version HubDeck says it is (manifests ask for 6.4 .. 7.6).
+/// The Stream Deck version MasterDeck says it is (manifests ask for 6.4 .. 7.6).
 const SD_VERSION: &str = "6.9.0";
-/// The one device HubDeck shows plugins: a keypad of 5x3 with encoders (typed as a Stream Deck +,
+/// The one device MasterDeck shows plugins: a keypad of 5x3 with encoders (typed as a Stream Deck +,
 /// type 7, so encoder actions are offered).
 pub const DEVICE: &str = "hubdeck";
 
-/// What HubDeck keeps of a Stream Deck manifest.
+/// What MasterDeck keeps of a Stream Deck manifest.
 #[derive(Debug, Clone, Default)]
 pub struct SdManifest {
     pub uuid: String,
@@ -63,7 +63,7 @@ pub struct SdAction {
     pub encoder: bool,
     pub inspector: Option<String>,
     /// The manifest's `ShowTitle` (default true): false = the plugin draws the key's title into its
-    /// own picture, so HubDeck writes no label over it (HWiNFO, 2026-10-20).
+    /// own picture, so MasterDeck writes no label over it (HWiNFO, 2026-10-20).
     pub show_title: bool,
 }
 
@@ -183,7 +183,7 @@ fn file_uri(p: &Path) -> Option<String> {
 }
 
 /// A picture a plugin sends with `setImage`: a base64 data URL, an SVG data URL in plain text, or a
-/// file in its folder. HubDeck keeps only base64 data URIs.
+/// file in its folder. MasterDeck keeps only base64 data URIs.
 pub fn normalize_image(dir: &Path, image: &str) -> Option<String> {
     let image = image.trim();
     if image.is_empty() {
@@ -277,7 +277,7 @@ pub fn read(v: &Value, dir: &Path) -> Result<SdManifest, String> {
     Ok(SdManifest { uuid, name: s("Name"), version: s("Version"), author: s("Author"), code_path, node, platforms, actions, inspector, category_icon })
 }
 
-/// The plugin as HubDeck's own manifest: its actions join the library under the plugin's name.
+/// The plugin as MasterDeck's own manifest: its actions join the library under the plugin's name.
 pub fn to_manifest(sd: SdManifest) -> Manifest {
     let actions = sd
         .actions
@@ -333,13 +333,13 @@ pub fn state_look(action_id: &str, state: Option<u8>) -> Option<(Option<String>,
     a.states.get(i).cloned()
 }
 
-/// Does HubDeck write the key's label over this Stream Deck action's picture? Not when its manifest
+/// Does MasterDeck write the key's label over this Stream Deck action's picture? Not when its manifest
 /// says `ShowTitle: false`: the plugin gets the label as its title and draws it itself.
 pub fn shows_title(action_id: &str) -> bool {
     action_id.split_once('/').and_then(|(_, uuid)| action(uuid)).is_none_or(|a| a.show_title)
 }
 
-/// The title a Stream Deck control's label gives its plugin: the label HubDeck set by itself until
+/// The title a Stream Deck control's label gives its plugin: the label MasterDeck set by itself until
 /// 2026-10-20 (the action name's first word, "HWiNFO") counts as none, as Stream Deck starts with none.
 pub fn title_of(action_id: &str, label: Option<&str>) -> String {
     let label = label.unwrap_or("").trim();
@@ -380,7 +380,7 @@ pub fn info(sd: &SdManifest) -> Value {
 }
 
 fn device() -> Value {
-    json!({"id": DEVICE, "name": "HubDeck", "size": {"columns": 5, "rows": 3}, "type": 7})
+    json!({"id": DEVICE, "name": "MasterDeck", "size": {"columns": 5, "rows": 3}, "type": 7})
 }
 
 /// Where a control sits for the plugin: keys are a 5x3 keypad, the rest encoders.
@@ -401,7 +401,7 @@ fn state_of(context: &str) -> u8 {
     with(&STATES, |s| s.get(context).copied().unwrap_or(0))
 }
 
-/// These are the settings HubDeck last told or heard from the plugin for this control.
+/// These are the settings MasterDeck last told or heard from the plugin for this control.
 pub fn settings_known(context: &str, settings: &Value) -> bool {
     with(&SETTINGS, |s| s.get(context) == Some(settings))
 }
@@ -467,7 +467,7 @@ pub fn feedback_parts(f: &Value) -> (Option<String>, Option<String>, Option<f32>
     (value, title, level)
 }
 
-/// HubDeck's message to a plugin, in Stream Deck's words.
+/// MasterDeck's message to a plugin, in Stream Deck's words.
 pub fn outgoing(m: &Value) -> Option<Value> {
     let event = m["event"].as_str()?;
     let context = m["context"].as_str().unwrap_or("");
@@ -529,7 +529,7 @@ fn action_states(uuid: &str) -> usize {
 /// What a plugin's message asks for.
 #[derive(Debug, PartialEq)]
 pub enum Incoming {
-    /// For the engine, in HubDeck's plugin words.
+    /// For the engine, in MasterDeck's plugin words.
     Engine(Value),
     /// An answer straight back to the plugin.
     Reply(Value),
@@ -582,7 +582,7 @@ pub fn incoming(plugin: &str, dir: &Path, m: &Value) -> Vec<Incoming> {
         }
         "getGlobalSettings" => vec![Incoming::Reply(json!({"event": "didReceiveGlobalSettings", "id": m["id"], "payload": {"settings": global(plugin)}}))],
         "setFeedback" => {
-            // pictures in a layout (`icon`, a cover...) as data URIs HubDeck can draw
+            // pictures in a layout (`icon`, a cover...) as data URIs MasterDeck can draw
             let mut f = p.clone();
             if let Some(o) = f.as_object_mut() {
                 for (_, v) in o.iter_mut() {
@@ -606,7 +606,7 @@ pub fn incoming(plugin: &str, dir: &Path, m: &Value) -> Vec<Incoming> {
         }
         "sendToPropertyInspector" => vec![Incoming::Inspector(context.clone(), json!({"event": "sendToPropertyInspector", "action": m["action"], "context": context, "payload": p}))],
         "logMessage" => vec![Incoming::Engine(json!({"event": "log", "message": p["message"]}))],
-        // profiles bundled with plugins, trigger descriptions, resources: not used by HubDeck
+        // profiles bundled with plugins, trigger descriptions, resources: not used by MasterDeck
         _ => vec![Incoming::Nothing],
     }
 }
@@ -885,7 +885,7 @@ const CONNECT_SCRIPT: &str = r#"
     else f(q.get("port"), q.get("uuid"), q.get("event"), q.get("info"));
   }
   if (document.readyState === "complete") setTimeout(go, 0); else window.addEventListener("load", go);
-  // a settings page in HubDeck's narrow inspector: shrink it to fit the width, tell the window its height
+  // a settings page in MasterDeck's narrow inspector: shrink it to fit the width, tell the window its height
   if (!q.get("actionInfo") || window.parent === window) return;
   // fields no wider than the panel, and no page stretched to the box: Stream Deck's styles give
   // fields fixed widths and the page the box's full height, which ran past the panel and grew the
@@ -983,7 +983,7 @@ pub fn download(url: &str) -> Result<Vec<u8>, String> {
         return Err("plugins are downloaded over https only".into());
     }
     let agent: ureq::Agent = crate::engine::calls::builder().timeout_global(Some(std::time::Duration::from_secs(300))).build().into();
-    let mut res = agent.get(url).header("User-Agent", "HubDeck").call().map_err(|e| format!("download failed: {e}"))?;
+    let mut res = agent.get(url).header("User-Agent", "MasterDeck").call().map_err(|e| format!("download failed: {e}"))?;
     res.body_mut().with_config().limit(300 * 1024 * 1024).read_to_vec().map_err(|e| format!("download failed: {e}"))
 }
 
@@ -1264,7 +1264,7 @@ mod tests {
         assert_eq!(t["payload"]["title"], "CPU");
         assert_eq!(t["payload"]["titleParameters"]["showTitle"], false, "so the plugin draws it");
         assert_eq!(t["payload"]["coordinates"], json!({"column": 2, "row": 0}));
-        // the label HubDeck used to set by itself is no title
+        // the label MasterDeck used to set by itself is no title
         assert_eq!(title_of("com.example.sd/com.example.sd.reading", Some("Sensor")), "");
         assert_eq!(title_of("com.example.sd/com.example.sd.reading", Some("CPU")), "CPU");
         assert_eq!(title_of("com.example.sd/com.example.sd.reading", None), "");

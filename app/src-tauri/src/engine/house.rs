@@ -1,6 +1,6 @@
-//! HubDeck's own key look (owner, 2026-10-12: option 3 "colored icon" of
+//! MasterDeck's own key look (owner, 2026-10-12: option 3 "colored icon" of
 //! `prototype/tools/gen_house_style.py`): a graphite key, the icon in its group's soft color, a
-//! light label. Everything HubDeck makes (ready-made profiles, starters, suggestions, the demo)
+//! light label. Everything MasterDeck makes (ready-made profiles, starters, suggestions, the demo)
 //! uses it, so it sits calmly next to app icons and game covers. The user's own colors stay theirs.
 
 use super::profile::{Look, Profile};
@@ -96,7 +96,7 @@ pub fn apply_look(look: &mut Look, action: &str, params: &serde_json::Value) {
     look.icon_color = hue.map(icon_color);
 }
 
-/// Every control of a profile HubDeck made, in the house style (the second look of stateful
+/// Every control of a profile MasterDeck made, in the house style (the second look of stateful
 /// keys stays as it was: it has to stand out).
 pub fn apply(profile: &mut Profile) {
     for b in profile.controls.values_mut() {

@@ -1,7 +1,7 @@
 //! Passwords and tokens for integrations (OBS, Home Assistant) live in the system's credential
 //! store (Windows Credential Manager, macOS Keychain), never in the settings file.
 
-const SERVICE: &str = "HubDeck";
+const SERVICE: &str = "MasterDeck";
 
 pub fn get(name: &str) -> Option<String> {
     keyring::Entry::new(SERVICE, name).ok()?.get_password().ok().filter(|s| !s.is_empty())

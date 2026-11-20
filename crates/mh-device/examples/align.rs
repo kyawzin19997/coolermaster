@@ -6,7 +6,7 @@
 //!
 //!     cargo run --release -p mh-device --example align -- [rounds] [dx dy]
 //!
-//! `dx dy` move every cut by whole pixels (to try a correction). Quit HubDeck first; the keys go
+//! `dx dy` move every cut by whole pixels (to try a correction). Quit MasterDeck first; the keys go
 //! black at the end.
 
 use std::io::Cursor;

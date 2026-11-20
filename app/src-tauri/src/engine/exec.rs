@@ -110,7 +110,7 @@ pub fn step_profile(ordered: &[String], current: Option<&str>, step: i32) -> Opt
     Some(ordered[next as usize].clone())
 }
 
-/// The actions a test copy (`automation`) runs: they change only HubDeck itself.
+/// The actions a test copy (`automation`) runs: they change only MasterDeck itself.
 /// `out.page` for Next page / Previous page: resolved against the active profile's pages.
 pub const NEXT_PAGE: &str = ":next";
 pub const PREVIOUS_PAGE: &str = ":previous";
@@ -120,7 +120,7 @@ const TEST_COPY_RUNS: [&str; 11] =
 
 /// The app, to send keys, clicks and text from its main thread: on macOS 26 enigo's keyboard
 /// layout lookup (TSMGetInputSourceProperty) stops the app when called from any other thread
-/// (the owner's deck test, session 9: a shortcut key crashed HubDeck).
+/// (the owner's deck test, session 9: a shortcut key crashed MasterDeck).
 pub static APP: std::sync::OnceLock<tauri::AppHandle> = std::sync::OnceLock::new();
 
 thread_local! {
@@ -174,7 +174,7 @@ const VOLUME_MEMORY: std::time::Duration = std::time::Duration::from_millis(1500
 impl Executor {
     pub fn run(&mut self, binding: &Binding, input: InputEvent) -> Result<Outcome, String> {
         // a test copy runs next to the person working at this computer: only what stays inside
-        // HubDeck (no media keys, volume, shortcuts, programs, smart home...)
+        // MasterDeck (no media keys, volume, shortcuts, programs, smart home...)
         // The film copy (`automation::real_deck`) drives the real deck for the owner's hands, so its
         // actions run (2026-10-15: his dial turn on the film changed nothing)
         if crate::automation::get().is_some() && !crate::automation::real_deck() && !TEST_COPY_RUNS.contains(&binding.action.as_str()) {
@@ -884,7 +884,7 @@ fn is_lock_combo(combo: &str) -> bool {
     parts.len() == 2 && ["win", "meta", "super", "cmd"].contains(&parts[0].as_str()) && parts[1] == "l"
 }
 
-/// A press on the volume of an app with no window open: open it, when HubDeck knows where it is
+/// A press on the volume of an app with no window open: open it, when MasterDeck knows where it is
 /// (Spotify by its own link). False when it is open already (it is only silent) or unknown.
 fn open_closed_app(target: &volume::Target) -> Result<bool, String> {
     let volume::Target::App(app) = target else { return Ok(false) };

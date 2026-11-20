@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// HubDeck's plugin catalog in one file (owner's pick A, 2026-10-18: "jedna zakładka z sortowaniem,
-// podaniem źródła, popularnością"): every free Stream Deck plugin that installs in HubDeck with one
+// MasterDeck's plugin catalog in one file (owner's pick A, 2026-10-18: "jedna zakładka z sortowaniem,
+// podaniem źródła, popularnością"): every free Stream Deck plugin that installs in MasterDeck with one
 // click, from three sources, with what the Plugins tab sorts and filters by.
 //   - Elgato Marketplace's 300 most downloaded: only those whose authors publish an open file
 //     (matched by hand, `elgatoOpen` in app/src-tauri/src/engine/sdcatalog.json); the rank, the
@@ -281,7 +281,7 @@ async function main() {
       continue;
     }
     if (DEVICE_DRIVER.test(e.description ?? "")) continue;
-    // installs but cannot run outside Elgato's app (checked in HubDeck; sdcatalog.json wontRun)
+    // installs but cannot run outside Elgato's app (checked in MasterDeck; sdcatalog.json wontRun)
     if (DATA.wontRun?.[e.id]) {
       dropped.push(`${e.name} (${DATA.wontRun[e.id]})`);
       continue;

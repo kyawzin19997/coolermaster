@@ -1,6 +1,6 @@
-// A PC without a graphics card HubDeck can use (before 0.2.0: "Layers without a graphics card say so
+// A PC without a graphics card MasterDeck can use (before 0.2.0: "Layers without a graphics card say so
 // in the panel; today they vanish silently"): a test copy with his profiles started as such a PC
-// (`HUBDECK_NO_GPU`), the Living deck panel opened as a user does, its line saying the GPU effects
+// (`MASTERDECK_NO_GPU`), the Living deck panel opened as a user does, its line saying the GPU effects
 // are left out, their GPU marks struck through, the CPU effects still marked plainly. Its window off
 // screen, never the focus.
 //   node scripts/ui/no-gpu.mjs [hubdeck.exe]
@@ -30,7 +30,7 @@ const settings = JSON.parse(fs.readFileSync(path.join(dir, "settings.json"), "ut
 settings.autoSwitch = false;
 fs.writeFileSync(path.join(dir, "settings.json"), JSON.stringify(settings, null, 2));
 
-const app = spawn(exe, [], { env: { ...process.env, HUBDECK_AUTOMATION: dir, HUBDECK_CDP_PORT: String(PORT), HUBDECK_NO_GPU: "1" }, stdio: "ignore" });
+const app = spawn(exe, [], { env: { ...process.env, MASTERDECK_AUTOMATION: dir, MASTERDECK_CDP_PORT: String(PORT), MASTERDECK_NO_GPU: "1" }, stdio: "ignore" });
 for (let i = 0; i < 60 && !fs.existsSync(path.join(dir, "api-http-port")); i++) await sleep(500);
 await sleep(1500);
 const results = [];
@@ -51,7 +51,7 @@ try {
   await win.getByRole("button", { name: /^Living deck/ }).first().click();
   await sleep(1500);
   const side = win.locator("aside.living-panel").first();
-  const line = side.getByText(/no graphics card HubDeck can use/);
+  const line = side.getByText(/no graphics card MasterDeck can use/);
   check("the panel says the GPU effects are left out", await line.isVisible().catch(() => false));
   const off = await side.locator(".fx-gpu.is-off").count();
   const marks = await side.locator(".fx-gpu").count();

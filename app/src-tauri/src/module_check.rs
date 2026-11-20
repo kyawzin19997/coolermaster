@@ -1,5 +1,5 @@
 //! Settings > Diagnostics: check one module (owner, 2026-11-02, after a faders user's "is it
-//! HubDeck or the module?": "panel do debugowania, w którym można zaznaczyć wybrany moduł i
+//! MasterDeck or the module?": "panel do debugowania, w którym można zaznaczyć wybrany moduł i
 //! zdebugować czy działa").
 //!
 //! - Reads every known feature report of the module (`mh_protocol::report::diagnostic_reads`), with

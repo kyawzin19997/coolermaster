@@ -1,5 +1,5 @@
 // The icon library like Stream Deck's (owner's "2 a", 2026-10-25, step 2): a Stream Deck icon pack
-// opened with HubDeck (as a double click does: the file on the command line) goes in at once with
+// opened with MasterDeck (as a double click does: the file on the command line) goes in at once with
 // a note; a search finds its icons by name and tag next to the built-in ones; a picked icon shows
 // in Recent, the first tab next time; "More icons" names Elgato's Marketplace. A test copy of its
 // own with the owner's profiles (virtual modules, its window off screen, never the focus).
@@ -37,7 +37,7 @@ const packDir = path.join(os.tmpdir(), "hubdeck-icon-library-pack");
 fs.rmSync(packDir, { recursive: true, force: true });
 const inner = path.join(packDir, "com.test.rockets.sdIconPack");
 fs.mkdirSync(path.join(inner, "icons"), { recursive: true });
-fs.writeFileSync(path.join(inner, "manifest.json"), JSON.stringify({ Name: "Test rockets", Version: "1.0.0", Author: "HubDeck walk", Icon: "icon.png" }));
+fs.writeFileSync(path.join(inner, "manifest.json"), JSON.stringify({ Name: "Test rockets", Version: "1.0.0", Author: "MasterDeck walk", Icon: "icon.png" }));
 // a 1x1 PNG (enough for a picture the pack lists)
 const onePixel = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==", "base64");
 for (const name of ["rocket", "planet", "comet"]) fs.writeFileSync(path.join(inner, "icons", `${name}.png`), onePixel);
@@ -51,7 +51,7 @@ execFileSync("powershell", ["-NoProfile", "-Command", `Compress-Archive -Path '$
 const packFile = path.join(packDir, "Test rockets.streamDeckIconPack");
 fs.renameSync(zip, packFile);
 
-const app = spawn(exe, [packFile], { env: { ...process.env, HUBDECK_AUTOMATION: dir, HUBDECK_CDP_PORT: String(PORT) }, stdio: "ignore" });
+const app = spawn(exe, [packFile], { env: { ...process.env, MASTERDECK_AUTOMATION: dir, MASTERDECK_CDP_PORT: String(PORT) }, stdio: "ignore" });
 for (let i = 0; i < 60 && !fs.existsSync(path.join(dir, "api-http-port")); i++) await sleep(500);
 await sleep(1500);
 const api = (route, body) => {
@@ -88,7 +88,7 @@ try {
   await win.setViewportSize({ width: 1280, height: 800 });
   await sleep(1500);
 
-  // the pack opened with HubDeck went in at once, with a note
+  // the pack opened with MasterDeck went in at once, with a note
   const installed = fs.existsSync(path.join(dir, "iconpacks")) ? fs.readdirSync(path.join(dir, "iconpacks")) : [];
   check("the opened .streamDeckIconPack is installed", installed.length === 1, installed.join(", "));
   check("the window says so", noted);

@@ -1,13 +1,13 @@
 //! Can the key panel take a full-quality picture faster when its reports are written several at a
 //! time? (2026-10-26: with snow on the owner's deck a q98 panel of ~80 KB took 76 ms, 10.9 pictures
 //! a second; hidapi writes one 320-byte report and waits for it before the next.) Sends the same
-//! busy pictures (a snowy panel, q98) for a few seconds each way: hidapi one by one as HubDeck does,
+//! busy pictures (a snowy panel, q98) for a few seconds each way: hidapi one by one as MasterDeck does,
 //! then Windows overlapped writes with 2, 4 and 8 in flight on a handle of its own; prints the
 //! time a picture takes and pictures a second.
 //!
 //!     cargo run --release -p mh-device --example pipeline -- [seconds per test]
 //!
-//! Quit HubDeck first (it would mix its pictures in); the keys go back to their own animation at
+//! Quit MasterDeck first (it would mix its pictures in); the keys go back to their own animation at
 //! the end. Windows only.
 
 #[cfg(windows)]
@@ -129,7 +129,7 @@ mod win {
         let reports: Vec<Vec<Vec<u8>>> = frames.iter().map(|f| report::panel_image(f, keys.output_len).iter().map(|r| report_bytes(r, keys.output_len)).collect()).collect();
         println!("pictures: q98, ~{} KB, {} reports of {} B each", avg / 1024, reports[0].len(), keys.output_len);
 
-        // hidapi, one report at a time (HubDeck today)
+        // hidapi, one report at a time (MasterDeck today)
         let cpu0 = cpu_ms();
         let start = Instant::now();
         let mut n = 0usize;

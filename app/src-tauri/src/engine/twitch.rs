@@ -1,10 +1,10 @@
 //! Twitch through the Helix API: chat message, clear chat, chat modes (followers, subscribers,
 //! emotes, slow), Shield Mode, ads, stream title and game, stream markers, clips. Sign-in is
-//! Twitch's device code flow with ONE public HubDeck app (no secret ships with HubDeck): the browser
-//! opens Twitch's activation page, the user approves, HubDeck receives the tokens. The refresh token
+//! Twitch's device code flow with ONE public MasterDeck app (no secret ships with MasterDeck): the browser
+//! opens Twitch's activation page, the user approves, MasterDeck receives the tokens. The refresh token
 //! goes to the system's credential store. A worker thread does every call.
 //!
-//! `TWITCH_CLIENT_ID` is empty until the owner registers the HubDeck app on dev.twitch.tv; until
+//! `TWITCH_CLIENT_ID` is empty until the owner registers the MasterDeck app on dev.twitch.tv; until
 //! then the actions say that sign-in is not set up in this build.
 
 use std::sync::OnceLock;
@@ -15,7 +15,7 @@ use serde_json::{Value, json};
 
 use super::{Msg, secrets};
 
-/// Client id of the public HubDeck app on dev.twitch.tv (category "Application Integration",
+/// Client id of the public MasterDeck app on dev.twitch.tv (category "Application Integration",
 /// client type "Public"). Empty = Twitch sign-in is not set up in this build.
 pub const TWITCH_CLIENT_ID: &str = "";
 

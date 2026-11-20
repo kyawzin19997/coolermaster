@@ -17,7 +17,7 @@ use super::presets::Moved;
 use super::profile::{Look, PROFILE_VERSION, PanelContent, Profile};
 
 /// File extension of a package.
-pub const EXT: &str = "hubdeck";
+pub const EXT: &str = "masterdeck";
 const PROFILE_ENTRY: &str = "profile.json";
 const IMAGES_DIR: &str = "images/";
 /// Limits against broken or hostile files: one picture, the whole unpacked package, entries.
@@ -46,7 +46,7 @@ pub fn image_names(profile: &Profile) -> BTreeSet<String> {
     names
 }
 
-/// Picture names HubDeck makes: letters, digits and one dot; never a path.
+/// Picture names MasterDeck makes: letters, digits and one dot; never a path.
 fn safe_name(name: &str) -> bool {
     !name.is_empty() && name.len() <= 64 && name.chars().all(|c| c.is_ascii_alphanumeric() || c == '.' || c == '-' || c == '_') && !name.starts_with('.') && name.contains('.')
 }
@@ -85,7 +85,7 @@ pub fn is_package(bytes: &[u8]) -> bool {
 /// Read a package: the profile, its pictures handed to `store(bytes, extension)`, which returns the
 /// name to use instead; a picture that cannot be stored is dropped from the looks.
 pub fn unpack(bytes: &[u8], store: &mut dyn FnMut(&[u8], &str) -> Option<String>) -> Result<Profile, String> {
-    let mut zip = zip::ZipArchive::new(Cursor::new(bytes)).map_err(|e| format!("not a HubDeck profile package: {e}"))?;
+    let mut zip = zip::ZipArchive::new(Cursor::new(bytes)).map_err(|e| format!("not a MasterDeck profile package: {e}"))?;
     if zip.len() > MAX_ENTRIES {
         return Err("the package has too many files".into());
     }

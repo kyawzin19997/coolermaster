@@ -48,8 +48,8 @@ pub fn hide_main(app: &AppHandle) {
     let this_hide = HIDDEN.fetch_add(1, std::sync::atomic::Ordering::SeqCst) + 1;
     let app = app.clone();
     std::thread::spawn(move || {
-        // a walk on the test copy shortens the wait (HUBDECK_KEEP_HIDDEN_SECS)
-        let keep = std::env::var("HUBDECK_KEEP_HIDDEN_SECS").ok().and_then(|v| v.parse().ok()).map(std::time::Duration::from_secs).unwrap_or(KEEP_HIDDEN);
+        // a walk on the test copy shortens the wait (MASTERDECK_KEEP_HIDDEN_SECS)
+        let keep = crate::compat::var("MASTERDECK_KEEP_HIDDEN_SECS").ok().and_then(|v| v.parse().ok()).map(std::time::Duration::from_secs).unwrap_or(KEEP_HIDDEN);
         std::thread::sleep(keep);
         if HIDDEN.load(std::sync::atomic::Ordering::SeqCst) != this_hide {
             return; // shown (or hidden again) meanwhile: `show_main` counts up

@@ -1,6 +1,6 @@
 //! Languages people add themselves (Discussions #3, 2026-10-18: "users could load their own language
 //! files externally, without having to modify and rebuild the application"): a JSON file per
-//! language in `languages/` in HubDeck's data folder, picked in Settings > General like English and
+//! language in `languages/` in MasterDeck's data folder, picked in Settings > General like English and
 //! Polish. A file holds the window's words (`strings`) and, when it has them, the actions', presets'
 //! and games' names; anything it lacks shows in English. "Make a language file" writes every English
 //! text into `languages/template.json` to start from.
@@ -12,9 +12,9 @@ use serde_json::Value;
 
 use super::Engine;
 
-/// Bigger files are not read (all of HubDeck's English is about 400 KB).
+/// Bigger files are not read (all of MasterDeck's English is about 400 KB).
 const MAX_FILE: u64 = 4 * 1024 * 1024;
-/// HubDeck's own languages: a file cannot take their place.
+/// MasterDeck's own languages: a file cannot take their place.
 const BUILT_IN: [&str; 2] = ["en", "pl"];
 const TEMPLATE: &str = "template";
 
@@ -30,7 +30,7 @@ fn folder(data: &Path) -> PathBuf {
     data.join("languages")
 }
 
-/// A language code from a file name: letters, digits, `-` and `_`, not one of HubDeck's own.
+/// A language code from a file name: letters, digits, `-` and `_`, not one of MasterDeck's own.
 fn code_of(path: &Path) -> Option<String> {
     if path.extension()?.to_str()? != "json" {
         return None;
@@ -140,7 +140,7 @@ mod tests {
         assert_eq!(
             langs,
             vec![LanguageFile { code: "de".into(), name: "de".into() }, LanguageFile { code: "ja".into(), name: "日本語".into() }],
-            "HubDeck's own, the template, broken and odd files left out"
+            "MasterDeck's own, the template, broken and odd files left out"
         );
         assert_eq!(load(&data, "ja").unwrap()["strings"]["topbar.settings"], "設定", "a byte order mark is fine");
         assert!(load(&data, "pl").is_err() && load(&data, "../ja").is_err() && load(&data, "missing").is_err());

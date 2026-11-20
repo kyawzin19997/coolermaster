@@ -1,5 +1,5 @@
 #!/bin/sh
-# Build HubDeck.app, sign it with the local "HubDeck Local" certificate when this Mac has one (so
+# Build MasterDeck.app, sign it with the local "MasterDeck Local" certificate when this Mac has one (so
 # macOS keeps its Accessibility and Automation permissions across versions; a private, self-signed
 # certificate, not for releases), and install it into /Applications. The running copy is quit and
 # the new one starts in the background, in the menu bar: it never takes the owner's focus.
@@ -24,7 +24,7 @@ for arg in "$@"; do
       export CARGO_PROFILE_RELEASE_CODEGEN_UNITS=$HALF
       export CARGO_PROFILE_RELEASE_INCREMENTAL=true
       # only a test build reads shaders from the folder named in `shader-dir.txt` (canvas.rs)
-      export HUBDECK_TEST_BUILD=1
+      export MASTERDECK_TEST_BUILD=1
       ;;
   esac
 done
@@ -38,16 +38,16 @@ if [ "$BUILD" = 1 ]; then
   echo "built in $(( ($(date +%s) - started) / 60 )) min"
 fi
 [ "$INSTALL" = 1 ] || exit 0
-APP=$TARGET/release/bundle/macos/HubDeck.app
-if security find-identity -p codesigning | grep -q '"HubDeck Local"'; then
-  codesign --force --deep --sign "HubDeck Local" "$APP"
-  echo "signed with HubDeck Local"
+APP=$TARGET/release/bundle/macos/MasterDeck.app
+if security find-identity -p codesigning | grep -q '"MasterDeck Local"'; then
+  codesign --force --deep --sign "MasterDeck Local" "$APP"
+  echo "signed with MasterDeck Local"
 fi
-if pgrep -f "/Applications/HubDeck.app/Contents/MacOS/hubdeck" > /dev/null; then
-  osascript -e 'tell application "HubDeck" to quit' || true
-  for _ in $(seq 1 20); do pgrep -f "/Applications/HubDeck.app/Contents/MacOS/hubdeck" > /dev/null || break; sleep 1; done
+if pgrep -f "/Applications/MasterDeck.app/Contents/MacOS/hubdeck" > /dev/null; then
+  osascript -e 'tell application "MasterDeck" to quit' || true
+  for _ in $(seq 1 20); do pgrep -f "/Applications/MasterDeck.app/Contents/MacOS/hubdeck" > /dev/null || break; sleep 1; done
 fi
-rm -rf /Applications/HubDeck.app
+rm -rf /Applications/MasterDeck.app
 cp -R "$APP" /Applications/
-open -g /Applications/HubDeck.app --args --hidden
+open -g /Applications/MasterDeck.app --args --hidden
 echo "installed and started in the menu bar"

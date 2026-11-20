@@ -153,7 +153,7 @@ const COLOR_EFFECTS = ["rainbow", "cycling", "random", "wave"];
 
 /** A LED as the engine set it; null = dark. */
 function litFrom(led: LedView, rainbow: string): Lit | null {
-  // HubDeck's own rainbow: the window works the color out from the clock (useLeds sets the variable)
+  // MasterDeck's own rainbow: the window works the color out from the clock (useLeds sets the variable)
   if (led.effect === "hubRainbow") return { color: "var(--hub-rainbow, #ff3b3b)", effect: "hub" };
   if (led.effect === "off" || led.color === "#000000") return null;
   return COLOR_EFFECTS.includes(led.effect) ? { color: rainbow, effect: "rainbow" } : led;
@@ -176,7 +176,7 @@ export function ledColors(profile: Profile | null | undefined, kind: "knobs" | "
 
 /** The base edge: what the deck shows now, else the profile's color; undefined = rainbow. */
 function edgeLight(profile: Profile | null | undefined, shown: LedView[] | null | undefined): Lit | null | undefined {
-  if (shown === undefined) return profile?.edge ? { color: profile.edge, effect: "static" } : undefined;
+  if (shown === undefined) return profile?.edge ? { color: profile.edge, effect: profile.edgeEffect ?? "static" } : undefined;
   const led = shown?.[0];
   if (!led) return undefined;
   const lit = litFrom(led, RAINBOW[0]);
@@ -1087,7 +1087,7 @@ export function DeckView(props: DeckViewProps) {
         {/* static layers: light on the desk, edge glow, the board */}
         <svg className="dk-layer dk-back" viewBox={viewBox} aria-hidden="true">
           <Defs id={(n) => id(`b-${n}`)} edge={edge} />
-          <ellipse cx={CX} cy={CY} rx={bw * 0.62} ry={bh * 0.68} fill={`url(#${id("b-halo-desk")})`} />
+          <ellipse className="dk-desk-light" data-effect={edgeLit?.effect} cx={CX} cy={CY} rx={bw * 0.62} ry={bh * 0.68} fill={`url(#${id("b-halo-desk")})`} />
           <ellipse cx={CX} cy={CY + bh / 2 + 18} rx={bw / 2} ry="22" style={{ fill: edge ?? "#8b5cf6" }} opacity=".12" filter={`url(#${id("b-blur")})`} />
           <g transform={`rotate(${baseTurn} ${CX} ${CY})`}>
             <rect className="dk-edge-glow" opacity=".32" x={-MARGIN} y={-MARGIN} width={GW + 2 * MARGIN} height={GH + 2 * MARGIN} rx="30" fill="none" stroke={`url(#${id("b-edge")})`} strokeWidth="14" filter={`url(#${id("b-blur")})`} />

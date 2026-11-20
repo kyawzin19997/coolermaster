@@ -43,30 +43,30 @@ Git may open GitHub in your browser the first time you push. Sign in to your own
 
 ## Publish the next Windows installer
 
-For a bug fix after `1.1.0`, use `1.1.1`. For new features, use `1.2.0`. Start on `main` and run the preparation command. Add a matching `## 1.1.1` heading and a short summary of what users will notice to `CHANGELOG.md`.
+For a bug fix after `1.2.0`, use `1.2.1`. For new features, use `1.3.0`. Start on `main` and run the preparation command. Add a matching `## 1.2.1` heading and a short summary of what users will notice to `CHANGELOG.md`.
 
 ```powershell
 git switch main
-node scripts/windows-release.mjs prepare 1.1.1
-# Add the 1.1.1 release notes in CHANGELOG.md.
-node scripts/windows-release.mjs check v1.1.1
+node scripts/windows-release.mjs prepare 1.2.1
+# Add the 1.2.1 release notes in CHANGELOG.md.
+node scripts/windows-release.mjs check v1.2.1
 git add README.md CHANGELOG.md Cargo.toml Cargo.lock app/package.json app/src-tauri/tauri.conf.json
-git commit -m "Prepare MasterDeck v1.1.1"
+git commit -m "Prepare MasterDeck v1.2.1"
 git push origin main
 ```
 
 Wait for the **CI** run for that commit to pass under Actions. Then tag the same commit and push the tag.
 
 ```powershell
-git tag -a v1.1.1 -m "MasterDeck v1.1.1"
-git push origin refs/tags/v1.1.1
+git tag -a v1.2.1 -m "MasterDeck v1.2.1"
+git push origin refs/tags/v1.2.1
 ```
 
 Watch **Windows release** in Actions. When it passes, open **Releases** and download `MasterDeck-windows-x64-setup.exe`. The existing Download for Windows link will serve the latest release automatically. Users already running a GitHub Windows build can select **Updates** in the toolbar, then choose **Install and restart** if MasterDeck finds a new release.
 
 ## Add a Mac download to a release
 
-1. Open **Actions → Desktop installers → Run workflow**. Select `macos` under **Installer to build** and enter the published tag, such as `v1.1.1`, under **Git branch or tag to package**.
+1. Open **Actions → Desktop installers → Run workflow**. Select `macos` under **Installer to build** and enter the published tag, such as `v1.2.1`, under **Git branch or tag to package**.
 2. After the build passes, open the run and download **MasterDeck-macOS-Universal** under **Artifacts**. Extract the ZIP. Keep the `.dmg` filename and rename `SHA256.txt` to `SHA256-macos.txt`.
 3. Open the same version under **Releases**, choose **Edit**, attach the disk image and its checksum, then save. Update the macOS download links in the README to point to that version's disk image.
 

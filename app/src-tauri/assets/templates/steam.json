@@ -1,0 +1,270 @@
+{
+  "version": 1,
+  "id": "masterdeck-steam",
+  "name": "Steam",
+  "apps": [
+    "Steam.exe"
+  ],
+  "controls": {
+    "dial": {
+      "action": "core.volume",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#9379ec",
+        "label": "Steam",
+        "icon": "volume-2"
+      },
+      "params": {
+        "step": 2,
+        "target": "app",
+        "app": "Steam.exe"
+      }
+    },
+    "faders.0": {
+      "action": "core.volume",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#9379ec",
+        "label": "System",
+        "icon": "volume-2"
+      },
+      "params": {
+        "step": 2,
+        "target": "system"
+      }
+    },
+    "faders.1": {
+      "action": "core.volume",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#9379ec",
+        "label": "Steam",
+        "icon": "volume-2"
+      },
+      "params": {
+        "step": 2,
+        "target": "app",
+        "app": "Steam.exe"
+      }
+    },
+    "faders.2": {
+      "action": "core.volume",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#9379ec",
+        "label": "Discord",
+        "icon": "volume-2"
+      },
+      "params": {
+        "step": 2,
+        "target": "app",
+        "app": "Discord.exe"
+      }
+    },
+    "faders.3": {
+      "action": "core.volume",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#9379ec",
+        "label": "Spotify",
+        "icon": "volume-2"
+      },
+      "params": {
+        "step": 2,
+        "target": "app",
+        "app": "Spotify.exe"
+      }
+    },
+    "faders.4": {
+      "action": "core.volume",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#9379ec",
+        "label": "Browser",
+        "icon": "volume-2"
+      },
+      "params": {
+        "step": 2,
+        "target": "app",
+        "app": "chrome.exe"
+      }
+    },
+    "keys.0": {
+      "action": "core.launch",
+      "look": {
+        "bg": "#2b2733",
+        "label": "Steam",
+        "icon": "action:core.launch"
+      },
+      "params": {
+        "target": "Steam.exe"
+      }
+    },
+    "keys.1": {
+      "action": "core.hotkey",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#8f79ec",
+        "label": "Overlay",
+        "icon": "gamepad-2"
+      },
+      "params": {
+        "keys": "Shift+Tab"
+      }
+    },
+    "keys.10": {
+      "action": "core.media",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#79b1ec",
+        "label": "Prev",
+        "icon": "skip-back"
+      },
+      "params": {
+        "command": "previous"
+      }
+    },
+    "keys.11": {
+      "action": "core.media",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#79b1ec",
+        "label": "Play",
+        "icon": "play"
+      },
+      "params": {
+        "command": "playPause"
+      }
+    },
+    "keys.12": {
+      "action": "core.media",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#79b1ec",
+        "label": "Next",
+        "icon": "skip-forward"
+      },
+      "params": {
+        "command": "next"
+      }
+    },
+    "keys.13": {
+      "action": "core.hotkey",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#79b1ec",
+        "label": "Mute",
+        "icon": "volume-x"
+      },
+      "params": {
+        "keys": "VolumeMute"
+      }
+    },
+    "keys.14": {
+      "action": "core.mic",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#79b1ec",
+        "label": "Mic",
+        "icon": "mic"
+      },
+      "params": {}
+    },
+    "keys.2": {
+      "action": "core.hotkey",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#8f79ec",
+        "label": "Screenshot",
+        "icon": "camera"
+      },
+      "params": {
+        "keys": "F12"
+      }
+    },
+    "knobs.0": {
+      "action": "core.volume",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#9379ec",
+        "label": "Steam",
+        "icon": "volume-2"
+      },
+      "params": {
+        "step": 2,
+        "target": "app",
+        "app": "Steam.exe"
+      }
+    },
+    "knobs.1": {
+      "action": "core.volume",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#9379ec",
+        "label": "System",
+        "icon": "volume-2"
+      },
+      "params": {
+        "step": 2,
+        "target": "system"
+      }
+    },
+    "knobs.2": {
+      "action": "core.scroll",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#9379ec",
+        "label": "Scroll ↔",
+        "icon": "arrow-left-right"
+      },
+      "params": {
+        "amount": 3,
+        "axis": "horizontal"
+      }
+    },
+    "rollers.0": {
+      "action": "core.scroll",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#9379ec",
+        "label": "Scroll",
+        "icon": "arrow-up-down"
+      },
+      "params": {
+        "amount": 3,
+        "axis": "vertical"
+      }
+    },
+    "rollers.1": {
+      "action": "core.scroll",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#9379ec",
+        "label": "Scroll ↔",
+        "icon": "arrow-left-right"
+      },
+      "params": {
+        "amount": 3,
+        "axis": "horizontal"
+      }
+    }
+  }
+}

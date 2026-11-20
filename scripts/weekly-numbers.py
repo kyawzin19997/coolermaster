@@ -1,7 +1,7 @@
 """The weekly number, without tracking anyone (owner's strategy, 2026-11-01: "1 a"; ROADMAP > Now N1).
 
 What it reads, all public counters or the server's own member list:
-  - update checks: every installed HubDeck downloads `latest.json` of the release that is Latest at
+  - update checks: every installed MasterDeck downloads `latest.json` of the release that is Latest at
     the moment, at start and every 6 hours (`update.rs` CHECK_EVERY); GitHub counts the downloads per
     release asset. Checks a day / 4 (always on) .. / 2 (started once a day, closed after a few hours)
     gives a rough range of running copies. The owner's own restarts and the release gate add some.
@@ -77,7 +77,7 @@ def snapshot() -> dict:
 
 
 def report(s: dict, last: dict | None) -> str:
-    out = [f"HubDeck numbers, {s['at'][:16].replace('T', ' ')} UTC"]
+    out = [f"MasterDeck numbers, {s['at'][:16].replace('T', ' ')} UTC"]
     # update checks while each release was Latest (the last three)
     for r in s["releases"][-3:]:
         days = max((parse(r["latest_to"]) - parse(r["latest_from"])).total_seconds() / 86400, 0.01)

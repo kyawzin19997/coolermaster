@@ -1,4 +1,4 @@
-//! The words of the profiles HubDeck makes (presets, profiles for an app, the ones that make
+//! The words of the profiles MasterDeck makes (presets, profiles for an app, the ones that make
 //! themselves, suggestions) in the window's language. They are written in English in the code; a
 //! profile made while the window is in Polish gets Polish names, page names and labels from
 //! [`PL`]. Profiles already made are never renamed, and a word missing here stays English.
@@ -20,7 +20,7 @@ pub fn polish() -> bool {
     *LANGUAGE.lock().unwrap_or_else(|e| e.into_inner()) == "pl"
 }
 
-/// English -> Polish for names and labels of what HubDeck makes.
+/// English -> Polish for names and labels of what MasterDeck makes.
 const PL: &[(&str, &str)] = &[
     ("1 star", "1 gwiazdka"),
     ("2 stars", "2 gwiazdki"),
@@ -98,7 +98,7 @@ const PL: &[(&str, &str)] = &[
     ("Discord & meetings", "Discord i spotkania"),
     ("Discord deafen", "Discord bez dźwięku"),
     ("Discord mute", "Discord wycisz"),
-    ("Starter deck", "Poznaj HubDeck"),
+    ("Starter deck", "Poznaj MasterDeck"),
     ("Disk free", "Wolne miejsce"),
     ("Drop", "Wyrzuć"),
     ("Duplicate", "Duplikuj"),
@@ -389,7 +389,7 @@ mod tests {
     use crate::engine::profile::{Look, Page};
     use crate::engine::starter::{self, AppKind};
 
-    /// Every name, page name and label HubDeck can make (test profiles aside).
+    /// Every name, page name and label MasterDeck can make (test profiles aside).
     fn everything() -> Vec<String> {
         let mut profiles: Vec<Profile> = crate::engine::presets::catalog().into_iter().filter(|p| !p.test).map(|p| p.make()).collect();
         for kind in [AppKind::Browser, AppKind::Editor, AppKind::Chat, AppKind::Media, AppKind::Game, AppKind::Other] {

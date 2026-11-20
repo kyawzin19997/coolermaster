@@ -1,4 +1,4 @@
-//! The keys' documented commands HubDeck has not used yet, watched on the deck (2026-10-26,
+//! The keys' documented commands MasterDeck has not used yet, watched on the deck (2026-10-26,
 //! PROTOCOL.md > What the hardware offers): a key filled with one colour (`03 37`), the whole
 //! screen filled (`03 36`), how long each takes, whether a picture after them shows again, and
 //! the backlight (`03 34`) changed fast enough for a flash (a lightning: 100 -> 20 -> 100), with
@@ -6,7 +6,7 @@
 //!
 //!     cargo run --release -p mh-device --example lights
 //!
-//! Quit HubDeck first. The keys go back to their own animation at the end.
+//! Quit MasterDeck first. The keys go back to their own animation at the end.
 
 use std::io::Cursor;
 use std::time::{Duration, Instant};

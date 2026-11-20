@@ -1,4 +1,4 @@
-// The installed HubDeck's own updater installs a signed release: "Go back to the version before"
+// The installed MasterDeck's own updater installs a signed release: "Go back to the version before"
 // run by the installed app (its window reached through WebView2's DevTools port), then the log must
 // show that version starting with every module back. Only while the owner is away: the window opens.
 // Put the newer build back afterwards (scripts/win-install.ps1).
@@ -11,7 +11,7 @@ import path from "node:path";
 const PORT = 9555;
 const data = path.join(process.env.APPDATA, "dev.hubdeck.app");
 const log = path.join(process.env.LOCALAPPDATA, "dev.hubdeck.app", "logs", "hubdeck.log");
-const exe = path.join(process.env.LOCALAPPDATA, "HubDeck", "hubdeck.exe");
+const exe = path.join(process.env.LOCALAPPDATA, "MasterDeck", "hubdeck.exe");
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const api = (route) => {
   const token = fs.readFileSync(path.join(data, "api-token"), "utf8").trim();
@@ -41,7 +41,7 @@ let started = "";
 for (let i = 0; i < 180 && !started; i++) {
   await sleep(1000);
   const tail = fs.readFileSync(log, "utf8").slice(before);
-  started = tail.match(new RegExp(`HubDeck ${previous.replace(/\./g, "\\.")} starting`))?.[0] ?? "";
+  started = tail.match(new RegExp(`MasterDeck ${previous.replace(/\./g, "\\.")} starting`))?.[0] ?? "";
 }
 await browser.close().catch(() => {});
 await sleep(8000);

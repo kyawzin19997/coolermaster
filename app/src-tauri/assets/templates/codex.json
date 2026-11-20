@@ -1,0 +1,304 @@
+{
+  "version": 1,
+  "id": "masterdeck-codex",
+  "name": "Codex",
+  "apps": [],
+  "controls": {
+    "dial": {
+      "action": "core.volume",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#9379ec",
+        "label": "Codex",
+        "icon": "volume-2"
+      },
+      "params": {
+        "step": 2,
+        "target": "app"
+      }
+    },
+    "faders.0": {
+      "action": "core.volume",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#9379ec",
+        "label": "System",
+        "icon": "volume-2"
+      },
+      "params": {
+        "step": 2,
+        "target": "system"
+      }
+    },
+    "faders.1": {
+      "action": "core.volume",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#9379ec",
+        "label": "Codex",
+        "icon": "volume-2"
+      },
+      "params": {
+        "step": 2,
+        "target": "app"
+      }
+    },
+    "faders.2": {
+      "action": "core.volume",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#9379ec",
+        "label": "Discord",
+        "icon": "volume-2"
+      },
+      "params": {
+        "step": 2,
+        "target": "app",
+        "app": "Discord.exe"
+      }
+    },
+    "faders.3": {
+      "action": "core.volume",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#9379ec",
+        "label": "Spotify",
+        "icon": "volume-2"
+      },
+      "params": {
+        "step": 2,
+        "target": "app",
+        "app": "Spotify.exe"
+      }
+    },
+    "faders.4": {
+      "action": "core.volume",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#9379ec",
+        "label": "Browser",
+        "icon": "volume-2"
+      },
+      "params": {
+        "step": 2,
+        "target": "app",
+        "app": "chrome.exe"
+      }
+    },
+    "keys.0": {
+      "action": "core.launch",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#9f79ec",
+        "label": "Codex",
+        "icon": "app-window"
+      },
+      "params": {}
+    },
+    "keys.1": {
+      "action": "core.hotkey",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#8f79ec",
+        "label": "Copy",
+        "icon": "copy"
+      },
+      "params": {
+        "keys": "Ctrl+C"
+      }
+    },
+    "keys.10": {
+      "action": "core.media",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#79b1ec",
+        "label": "Prev",
+        "icon": "skip-back"
+      },
+      "params": {
+        "command": "previous"
+      }
+    },
+    "keys.11": {
+      "action": "core.media",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#79b1ec",
+        "label": "Play",
+        "icon": "play"
+      },
+      "params": {
+        "command": "playPause"
+      }
+    },
+    "keys.12": {
+      "action": "core.media",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#79b1ec",
+        "label": "Next",
+        "icon": "skip-forward"
+      },
+      "params": {
+        "command": "next"
+      }
+    },
+    "keys.13": {
+      "action": "core.hotkey",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#79b1ec",
+        "label": "Mute",
+        "icon": "volume-x"
+      },
+      "params": {
+        "keys": "VolumeMute"
+      }
+    },
+    "keys.14": {
+      "action": "core.mic",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#79b1ec",
+        "label": "Mic",
+        "icon": "mic"
+      },
+      "params": {}
+    },
+    "keys.2": {
+      "action": "core.hotkey",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#8f79ec",
+        "label": "Paste",
+        "icon": "clipboard-paste"
+      },
+      "params": {
+        "keys": "Ctrl+V"
+      }
+    },
+    "keys.3": {
+      "action": "core.hotkey",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#8f79ec",
+        "label": "Undo",
+        "icon": "undo-2"
+      },
+      "params": {
+        "keys": "Ctrl+Z"
+      }
+    },
+    "keys.4": {
+      "action": "core.hotkey",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#8f79ec",
+        "label": "Save",
+        "icon": "save"
+      },
+      "params": {
+        "keys": "Ctrl+S"
+      }
+    },
+    "keys.5": {
+      "action": "core.hotkey",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#8f79ec",
+        "label": "Find",
+        "icon": "search"
+      },
+      "params": {
+        "keys": "Ctrl+F"
+      }
+    },
+    "knobs.0": {
+      "action": "core.volume",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#9379ec",
+        "label": "Codex",
+        "icon": "volume-2"
+      },
+      "params": {
+        "step": 2,
+        "target": "app"
+      }
+    },
+    "knobs.1": {
+      "action": "core.volume",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#9379ec",
+        "label": "System",
+        "icon": "volume-2"
+      },
+      "params": {
+        "step": 2,
+        "target": "system"
+      }
+    },
+    "knobs.2": {
+      "action": "core.scroll",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#9379ec",
+        "label": "Scroll ↔",
+        "icon": "arrow-left-right"
+      },
+      "params": {
+        "amount": 3,
+        "axis": "horizontal"
+      }
+    },
+    "rollers.0": {
+      "action": "core.scroll",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#9379ec",
+        "label": "Scroll",
+        "icon": "arrow-up-down"
+      },
+      "params": {
+        "amount": 3,
+        "axis": "vertical"
+      }
+    },
+    "rollers.1": {
+      "action": "core.scroll",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#9379ec",
+        "label": "Scroll ↔",
+        "icon": "arrow-left-right"
+      },
+      "params": {
+        "amount": 3,
+        "axis": "horizontal"
+      }
+    }
+  }
+}

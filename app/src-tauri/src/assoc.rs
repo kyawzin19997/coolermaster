@@ -1,5 +1,5 @@
-//! Windows: `.streamDeckPlugin` and `.streamDeckIconPack` files list HubDeck under Open with, for
-//! this user only. HubDeck becomes a file's app only when nothing else opens it; where Elgato's Stream Deck app opens
+//! Windows: `.streamDeckPlugin` and `.streamDeckIconPack` files list MasterDeck under Open with, for
+//! this user only. MasterDeck becomes a file's app only when nothing else opens it; where Elgato's Stream Deck app opens
 //! them it stays so (the installer's own file associations would take them over, so they are
 //! not used; the uninstaller takes these keys out, `windows/hooks.nsh`).
 
@@ -7,8 +7,8 @@ use windows::Win32::System::Registry::{HKEY_CLASSES_ROOT, HKEY_CURRENT_USER, REG
 use windows::Win32::UI::Shell::{SHCNE_ASSOCCHANGED, SHCNF_IDLIST, SHChangeNotify};
 use windows::core::{HSTRING, PCWSTR};
 
-/// The kinds of files: extension, HubDeck's ProgId for it, what Explorer calls it.
-const KINDS: [(&str, &str, &str); 2] = [(".streamDeckPlugin", "HubDeck.streamDeckPlugin", "Stream Deck plugin"), (".streamDeckIconPack", "HubDeck.streamDeckIconPack", "Stream Deck icon pack")];
+/// The kinds of files: extension, MasterDeck's ProgId for it, what Explorer calls it.
+const KINDS: [(&str, &str, &str); 2] = [(".streamDeckPlugin", "MasterDeck.streamDeckPlugin", "Stream Deck plugin"), (".streamDeckIconPack", "MasterDeck.streamDeckIconPack", "Stream Deck icon pack")];
 
 fn set(key: &str, name: Option<&str>, value: &str) -> bool {
     let data: Vec<u16> = value.encode_utf16().chain(std::iter::once(0)).collect();
@@ -29,7 +29,7 @@ fn current_app(ext: &str) -> Option<String> {
     (!s.is_empty()).then_some(s)
 }
 
-/// Register the installed HubDeck (not a dev build) at each start: the path follows updates.
+/// Register the installed MasterDeck (not a dev build) at each start: the path follows updates.
 pub fn register() {
     if cfg!(debug_assertions) {
         return;
@@ -47,10 +47,10 @@ pub fn register() {
             ok = set(&format!("Software\\Classes\\{ext}"), None, prog_id);
         }
         if !ok {
-            log::warn!("could not list HubDeck under Open with for {ext} files");
+            log::warn!("could not list MasterDeck under Open with for {ext} files");
             continue;
         }
-        log::info!("{ext} files: HubDeck under Open with; opened by {}", before.as_deref().unwrap_or(prog_id));
+        log::info!("{ext} files: MasterDeck under Open with; opened by {}", before.as_deref().unwrap_or(prog_id));
     }
     // SAFETY: no item pointers with SHCNE_ASSOCCHANGED
     unsafe { SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, None, None) };

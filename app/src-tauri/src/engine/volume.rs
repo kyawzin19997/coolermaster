@@ -47,7 +47,7 @@ pub fn playing() -> Vec<String> {
 }
 
 /// Call once on the thread that will use this module (COM on Windows).
-/// HubDeck quits: macOS apps whose volume it set (process taps) play straight again.
+/// MasterDeck quits: macOS apps whose volume it set (process taps) play straight again.
 #[cfg(target_os = "macos")]
 pub fn release() {
     platform::release();
@@ -295,7 +295,7 @@ mod platform {
     }
 
     /// The audio sessions of a per-app target: the app's (it can have several, e.g. one per tab),
-    /// or for `Others` every app's but the listed ones (and HubDeck's own).
+    /// or for `Others` every app's but the listed ones (and MasterDeck's own).
     fn sessions_of(target: &Target) -> Result<Vec<ISimpleAudioVolume>, String> {
         match target {
             Target::App(app) => sessions(app, &|exe| same_app(exe, app)),
@@ -516,7 +516,7 @@ mod platform {
                     Ok(())
                 }
                 2 => Err("per-app volume needs macOS 14.2 or later".into()),
-                3 => Err("allow HubDeck in System Settings > Privacy & Security > Screen & System Audio Recording (System Audio Recording only)".into()),
+                3 => Err("allow MasterDeck in System Settings > Privacy & Security > Screen & System Audio Recording (System Audio Recording only)".into()),
                 _ => Err("the sound output would not start for per-app volume".into()),
             }
         }
@@ -549,14 +549,14 @@ mod platform {
             }
         }
 
-        /// Every app back to playing straight (HubDeck quits).
+        /// Every app back to playing straight (MasterDeck quits).
         pub fn reset() {
             // SAFETY: no arguments; it stops and removes what it made.
             unsafe { mh_appvol_reset() }
         }
     }
 
-    /// HubDeck quits: apps whose volume it set play straight again.
+    /// MasterDeck quits: apps whose volume it set play straight again.
     pub fn release() {
         appvol::reset();
     }
@@ -682,7 +682,7 @@ mod platform {
 
         #[cfg(test)]
         mod tests {
-            /// Reads only; run by hand on a Mac: `cargo test -p hubdeck coreaudio -- --ignored`.
+            /// Reads only; run by hand on a Mac: `cargo test -p masterdeck coreaudio -- --ignored`.
             #[test]
             #[ignore]
             fn reads_the_output_volume() {
@@ -875,7 +875,7 @@ mod tests {
     use super::*;
 
     /// Switches the PC's default speakers for about two seconds and back: run only with the
-    /// owner's word (`cargo test -p hubdeck --lib follows_the_default -- --ignored --nocapture`).
+    /// owner's word (`cargo test -p masterdeck --lib follows_the_default -- --ignored --nocapture`).
     /// The system volume read on a thread that read it before the switch must be the new device's,
     /// as a fresh thread reads it (issue #10: the knob kept turning the old device).
     #[test]

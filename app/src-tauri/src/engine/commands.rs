@@ -19,7 +19,7 @@ pub fn engine_state(engine: State<'_, Engine>) -> EngineState {
     engine.lock().state()
 }
 
-/// The key screen's pictures a second and HubDeck's CPU since the last call (the Living deck
+/// The key screen's pictures a second and MasterDeck's CPU since the last call (the Living deck
 /// panel shows them live).
 #[tauri::command]
 pub fn deck_rate() -> serde_json::Value {
@@ -34,7 +34,7 @@ pub fn frame_cost() -> serde_json::Value {
     super::frame_cost()
 }
 
-/// Whether the living deck's GPU layers can run here (a graphics card HubDeck can use): the panel
+/// Whether the living deck's GPU layers can run here (a graphics card MasterDeck can use): the panel
 /// says so when not (they were left out of the deck without a word). The first call starts the
 /// card (about a second), on a blocking thread.
 #[tauri::command]
@@ -421,14 +421,18 @@ pub struct PresetSummary {
 
 #[tauri::command]
 pub fn presets_list() -> Vec<PresetSummary> {
-    super::presets::catalog().into_iter().map(|p| PresetSummary { id: p.id, name: p.name, description: p.description, test: p.test, group: super::presets::group(p.id) }).collect()
+    super::presets::current_templates()
+        .into_iter()
+        .chain(super::presets::catalog().into_iter().filter(|p| !matches!(p.id, "everyday" | "obs" | "meetings")))
+        .map(|p| PresetSummary { id: p.id, name: p.name, description: p.description, test: p.test, group: super::presets::group(p.id) })
+        .collect()
 }
 
 /// Add a preset as a new profile (a fresh copy; the user's profiles are never overwritten).
 #[tauri::command]
 /// `kinds`: the module kinds the user has (attached and owned); None = the preset as it is.
 pub fn preset_add(engine: State<'_, Engine>, id: String, kinds: Option<Vec<String>>, draft: Option<bool>) -> Res<Profile> {
-    let preset = super::presets::catalog().into_iter().find(|p| p.id == id).ok_or_else(|| format!("no preset {id}"))?;
+    let preset = super::presets::current_templates().into_iter().chain(super::presets::catalog()).find(|p| p.id == id).ok_or_else(|| format!("no preset {id}"))?;
     let profile = match kinds {
         Some(k) => super::presets::adapt(preset.make(), &k),
         None => preset.make(),
@@ -456,7 +460,7 @@ pub struct Screens {
     /// How app icons show on keys (Settings > Screens).
     #[serde(default)]
     app_icons: String,
-    /// The font for text on the deck (empty = HubDeck's own).
+    /// The font for text on the deck (empty = MasterDeck's own).
     #[serde(default)]
     deck_font: String,
     /// The screensaver's effect (empty = none) and its idle minutes.
@@ -965,7 +969,7 @@ pub fn names_list(what: String, arg: Option<String>) -> Option<Vec<super::names:
     }
 }
 
-/// A line from the window's page for HubDeck's log: that it started, and every error it hits (the
+/// A line from the window's page for MasterDeck's log: that it started, and every error it hits (the
 /// release window has no inspector; a black window on macOS left no trace, 2026-10-15).
 #[tauri::command]
 pub fn window_log(error: bool, message: String) {
@@ -1003,14 +1007,18 @@ pub fn page_set(engine: State<'_, Engine>, page: Option<String>) -> Res<()> {
 
 /// Add a key page to a profile; returns it.
 #[tauri::command]
-pub fn page_create(engine: State<'_, Engine>, profile: String, name: String) -> Res<Page> {
-    let page = Page { id: format!("p{}", &uuid::Uuid::new_v4().simple().to_string()[..8]), name: name.trim().to_string() };
-    if page.name.is_empty() {
-        return Err("a page needs a name".into());
-    }
+pub fn page_create(engine: State<'_, Engine>, profile: String, name: String, auto_label: Option<String>) -> Res<Page> {
+    let page;
     {
         let mut s = engine.lock();
         let mut p = s.store.profiles.get(&profile).cloned().ok_or_else(|| format!("no profile {profile}"))?;
+        let name = if name.trim().is_empty() {
+            let label = auto_label.as_deref().filter(|label| label.len() <= 60 && label.contains("{n}")).unwrap_or("Page {n}");
+            (2..).map(|n| label.replace("{n}", &n.to_string())).find(|name| !p.pages.iter().any(|page| page.name.eq_ignore_ascii_case(name))).expect("available page name")
+        } else {
+            name.trim().to_string()
+        };
+        page = Page { id: format!("p{}", &uuid::Uuid::new_v4().simple().to_string()[..8]), name };
         let before = p.pages.last().map(|pg| pg.id.clone());
         p.pages.push(page.clone());
         let polish = s.store.settings.language.starts_with("pl");
@@ -1151,7 +1159,7 @@ pub fn preview_svg(screen: String, mut look: Look, t: Option<f32>) -> String {
 #[tauri::command]
 pub fn profile_export(engine: State<'_, Engine>, id: String, path: String) -> Res<()> {
     // a .hubdeck package carries the pictures too; plain JSON only the settings
-    if path.to_lowercase().ends_with(&format!(".{}", super::share::EXT)) {
+    if path.to_lowercase().ends_with(&format!(".{}", super::share::EXT)) || path.to_lowercase().ends_with(".hubdeck") {
         return super::share::export_package(&engine, &id, std::path::Path::new(&path));
     }
     let profile = engine.lock().store.profiles.get(&id).cloned().ok_or_else(|| format!("no profile {id}"))?;
@@ -1183,7 +1191,7 @@ pub fn profile_import(app: tauri::AppHandle, engine: State<'_, Engine>, path: St
     super::backup::create(engine.data_dir(), "before import").map_err(io)?;
     let bytes = std::fs::read(&path).map_err(io)?;
     let adapt = |p: Profile| super::api::adapt_to_user(&app, p);
-    // a HubDeck package (.hubdeck): the profile with its pictures
+    // a MasterDeck package (.hubdeck): the profile with its pictures
     if super::share::is_package(&bytes) {
         return super::share::import_package(&engine, &bytes, &adapt);
     }
@@ -1206,7 +1214,7 @@ pub fn profile_import(app: tauri::AppHandle, engine: State<'_, Engine>, path: St
         // the caller activates the returned (first) profile
         return Ok(Imported::new(first, moved));
     }
-    let mut profile: Profile = serde_json::from_slice(&bytes).map_err(|e| format!("not a HubDeck profile: {e}"))?;
+    let mut profile: Profile = serde_json::from_slice(&bytes).map_err(|e| format!("not a MasterDeck profile: {e}"))?;
     if profile.version > PROFILE_VERSION {
         return Err(format!("this profile was made by a newer version (format {})", profile.version));
     }
@@ -1271,13 +1279,13 @@ pub fn language_set(engine: State<'_, Engine>, language: String) -> Res<()> {
     Ok(())
 }
 
-/// Whether Claude Code reports to HubDeck (HubDeck's hooks are in `~/.claude/settings.json`).
+/// Whether Claude Code reports to MasterDeck (MasterDeck's hooks are in `~/.claude/settings.json`).
 #[tauri::command]
 pub fn claude_status() -> bool {
     super::agents::connected()
 }
 
-/// Connect (add HubDeck's hooks to the user's Claude Code settings) or disconnect (remove them).
+/// Connect (add MasterDeck's hooks to the user's Claude Code settings) or disconnect (remove them).
 /// The previous settings are kept as `settings.json.hubdeck-backup`.
 #[tauri::command]
 pub fn claude_connect(on: bool, approve: Option<bool>) -> Res<bool> {
@@ -1290,7 +1298,7 @@ pub fn claude_approving() -> bool {
     super::agents::approving()
 }
 
-/// macOS: may HubDeck send keys and type (Accessibility)? Elsewhere always yes.
+/// macOS: may MasterDeck send keys and type (Accessibility)? Elsewhere always yes.
 #[tauri::command]
 pub fn accessibility_ok() -> bool {
     // the dev app gets its permissions from the program that started it (a terminal): it cannot be
@@ -1300,7 +1308,7 @@ pub fn accessibility_ok() -> bool {
 
 /// macOS: ask for Accessibility (the system's own dialog, which leads to System Settings). A switch
 /// left on for an earlier copy signed differently (another build, the local certificate) does not
-/// count for this one and stops the system from asking again, so HubDeck's own entry is cleared
+/// count for this one and stops the system from asking again, so MasterDeck's own entry is cleared
 /// first (the owner had to run `tccutil` by hand after installing the release .dmg, 2026-10-13).
 #[tauri::command]
 pub fn accessibility_ask(app: tauri::AppHandle) -> bool {

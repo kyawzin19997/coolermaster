@@ -59,7 +59,7 @@ impl Report {
 
     pub fn text(&self) -> String {
         let mut out = String::new();
-        let _ = writeln!(out, "HubDeck {} doctor, {} ({}, {})", env!("CARGO_PKG_VERSION"), sysinfo::System::long_os_version().unwrap_or_default(), std::env::consts::OS, std::env::consts::ARCH);
+        let _ = writeln!(out, "MasterDeck {} doctor, {} ({}, {})", env!("CARGO_PKG_VERSION"), sysinfo::System::long_os_version().unwrap_or_default(), std::env::consts::OS, std::env::consts::ARCH);
         for check in &self.checks {
             let _ = writeln!(out, "  {}  {:<22} {}", check.status.mark(), check.name, check.detail);
         }
@@ -88,7 +88,7 @@ fn deck(report: &mut Report, api: &dyn Api) {
                 report.ok("deck modules", attached.join(", "));
             }
         }
-        Err(e) => report.fail("deck modules", format!("HubDeck is not answering (start it first): {e}")),
+        Err(e) => report.fail("deck modules", format!("MasterDeck is not answering (start it first): {e}")),
     }
 }
 

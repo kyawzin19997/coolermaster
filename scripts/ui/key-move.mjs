@@ -1,6 +1,6 @@
 // Keys moved by dragging and page keys opened by a double click in the window (Discussions #3,
 // 8bitcanvascode, 2026-10-19: "rearrange keys simply by dragging them", "double-clicking a page
-// navigation key in the HubDeck editor could navigate to the corresponding page"). The mouse is
+// navigation key in the MasterDeck editor could navigate to the corresponding page"). The mouse is
 // the test copy's own (CDP input into its window, off screen): never the owner's cursor or focus.
 // Then every page key in the owner's own profiles (the test copy has his data) is double-clicked.
 // Screenshots in logs/key-move-*.png, in the dark and the light look.
@@ -30,7 +30,7 @@ settings.autoSwitch = false;
 fs.writeFileSync(path.join(dir, "settings.json"), JSON.stringify(settings, null, 2));
 const profile = settings.active;
 
-const app = spawn(exe, [], { env: { ...process.env, HUBDECK_AUTOMATION: dir, HUBDECK_CDP_PORT: String(PORT) }, stdio: "ignore" });
+const app = spawn(exe, [], { env: { ...process.env, MASTERDECK_AUTOMATION: dir, MASTERDECK_CDP_PORT: String(PORT) }, stdio: "ignore" });
 for (let i = 0; i < 60 && !fs.existsSync(path.join(dir, "api-http-port")); i++) await sleep(500);
 await sleep(1500);
 const api = (route, body) => {

@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>Upload to MasterDeck</title>
+  <link rel="stylesheet" href="/upload.css">
+  <script src="/upload.js" defer></script>
+</head>
+<body>
+  <main>
+    <header><span class="brand">MasterDeck</span><h1>Upload to your deck</h1></header>
+    <section aria-label="Connection">
+      <p id="status" role="status">Connecting to your desktop…</p>
+      <strong id="code" hidden></strong>
+    </section>
+    <section id="picker" aria-label="Choose files" hidden>
+      <label id="drop" for="files"><strong>Choose files</strong><small>or drop files here</small></label>
+      <input type="file" id="files" multiple accept=".masterdeck,.hubdeck,.mhz,.streamDeckPlugin,.zip,.streamDeckIconPack,.jpg,.jpeg,.png,.gif,.webp,.json,.yaml,.yml,.toml,.ini">
+      <p class="hint">Profiles, plugins, images, and configuration files. Up to 300 MB per file.</p>
+    </section>
+    <ul id="queue" aria-label="Transfers"></ul>
+    <noscript>Enable JavaScript to pair your phone and upload files.</noscript>
+  </main>
+</body>
+</html>

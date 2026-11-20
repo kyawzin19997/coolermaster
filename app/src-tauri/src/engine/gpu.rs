@@ -34,7 +34,7 @@ pub struct Gpu {
     device: wgpu::Device,
     queue: wgpu::Queue,
     /// Set when the driver lost the device (a sleep, a driver update or reset): nothing more is
-    /// sent to it, and [`get`] makes a new one (issue #15, 2026-11-09: HubDeck ended 93 s after
+    /// sent to it, and [`get`] makes a new one (issue #15, 2026-11-09: MasterDeck ended 93 s after
     /// the PC woke, with no error of its own in the log).
     lost: Arc<AtomicBool>,
     /// A card drawn by the processor (Windows' WARP on CI, lavapipe): right, but slow enough
@@ -94,7 +94,7 @@ pub fn get() -> Option<&'static Gpu> {
 
 fn make() -> Option<Gpu> {
     // a test copy can act as a PC without a card (the panel's "no graphics card" line)
-    if std::env::var_os("HUBDECK_NO_GPU").is_some() {
+    if crate::compat::var_os("MASTERDECK_NO_GPU").is_some() {
         return None;
     }
     let started = Instant::now();
@@ -113,7 +113,7 @@ fn make() -> Option<Gpu> {
             flag.store(true, Ordering::SeqCst);
         }
     });
-    // wgpu's default handler panics, and a panic ends HubDeck: an error is logged instead
+    // wgpu's default handler panics, and a panic ends MasterDeck: an error is logged instead
     device.on_uncaptured_error(Box::new(move |e| log::warn!("living deck: GPU error: {e}")));
     log::info!("living deck: GPU {name} ready in {} ms", started.elapsed().as_millis());
     Some(Gpu { device, queue, lost, software })

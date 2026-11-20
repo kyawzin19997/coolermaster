@@ -20,7 +20,7 @@ for (const plate of plates) {
   fs.rmSync(dir, { recursive: true, force: true });
   fs.mkdirSync(dir, { recursive: true });
   for (const item of ["profiles", "images", "settings.json", "placements.json"]) if (fs.existsSync(path.join(real, item))) fs.cpSync(path.join(real, item), path.join(dir, item), { recursive: true });
-  const app = spawn(exe, [], { env: { ...process.env, HUBDECK_AUTOMATION: dir, HUBDECK_DUMP_CONTENT: dump, HUBDECK_LABEL_PLATE: plate }, stdio: "ignore" });
+  const app = spawn(exe, [], { env: { ...process.env, MASTERDECK_AUTOMATION: dir, MASTERDECK_DUMP_CONTENT: dump, MASTERDECK_LABEL_PLATE: plate }, stdio: "ignore" });
   for (let i = 0; i < 40 && !fs.existsSync(dump); i++) await sleep(500);
   await sleep(3000);
   app.kill();

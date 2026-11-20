@@ -182,7 +182,7 @@ fn scan_once(shared: &Arc<Shared>, api: &mut HidApi, backoff: &mut Backoff, last
         // object off (0xe00002c5, 2026-10-30). Their reports are opaque byte arrays (usage
         // 0xFF00), so the system's own driver has nothing to act on.
         #[cfg(target_os = "macos")]
-        let pictured = matches!(kind, ModuleKind::Keys | ModuleKind::Dial) && std::env::var("HUBDECK_PIPELINE").as_deref() != Ok("0");
+        let pictured = matches!(kind, ModuleKind::Keys | ModuleKind::Dial) && crate::pipeline_enabled();
         #[cfg(target_os = "macos")]
         if pictured && !shared_open {
             api.set_open_exclusive(false);

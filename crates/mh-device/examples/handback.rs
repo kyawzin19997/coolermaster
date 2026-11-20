@@ -1,5 +1,5 @@
 //! Does handing the dial back to its firmware right after streaming pictures leave it stuck for the
-//! next start? (2026-10-14, macOS: the dial refused every command after HubDeck restarted while
+//! next start? (2026-10-14, macOS: the dial refused every command after MasterDeck restarted while
 //! Mochi was animating on it, twice; restarts without an animation went fine.)
 //!
 //! Each cycle starts the hub, waits for the dial, streams pictures for a few seconds (or not),
@@ -7,7 +7,7 @@
 //!
 //!     cargo run --release -p mh-device --example handback -- <cycles> <stream: yes|no> <gap seconds>
 //!
-//! Quit HubDeck first. A cycle that never sees the dial again means it got stuck.
+//! Quit MasterDeck first. A cycle that never sees the dial again means it got stuck.
 
 use std::io::Cursor;
 use std::time::{Duration, Instant};

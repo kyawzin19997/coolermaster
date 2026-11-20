@@ -22,7 +22,7 @@ mod module;
 mod notify;
 #[cfg(windows)]
 mod overlapped;
-/// Public for `examples/pipeline_mac.rs`; HubDeck uses it through [`Module::send_all`].
+/// Public for `examples/pipeline_mac.rs`; MasterDeck uses it through [`Module::send_all`].
 #[cfg(target_os = "macos")]
 #[doc(hidden)]
 pub mod pictures;
@@ -31,6 +31,10 @@ pub mod recover;
 pub use events::{Event, ModuleId};
 pub use hub::Hub;
 pub use module::Module;
+
+pub fn pipeline_enabled() -> bool {
+    std::env::var("MASTERDECK_PIPELINE").or_else(|_| std::env::var("HUBDECK_PIPELINE")).as_deref() != Ok("0")
+}
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {

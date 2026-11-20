@@ -1,4 +1,4 @@
-// Do Stream Deck plugins from the catalog run in HubDeck? (owner, 2026-10-16: "A te stream deck
+// Do Stream Deck plugins from the catalog run in MasterDeck? (owner, 2026-10-16: "A te stream deck
 // plugins to dobrze działają? Bo nawet tego dobrze nie sprawdzałem".) On a test copy of its own
 // (no deck, never the focus): installs each plugin from the catalog, waits for it to start and
 // connect, puts its first action on a key and checks the key got a picture or a title from it.

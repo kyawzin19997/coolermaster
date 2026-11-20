@@ -43,7 +43,7 @@ for (const f of fs.readdirSync(path.join(dir, "profiles"))) {
 check("a key with a device id is in his profiles", keys.length > 0, keys.map((k) => `${k.name} ${k.control}`).join(", "));
 if (!keys.length) process.exit(1);
 
-const app = spawn(exe, [], { env: { ...process.env, HUBDECK_AUTOMATION: dir, HUBDECK_CDP_PORT: String(PORT) }, stdio: "ignore" });
+const app = spawn(exe, [], { env: { ...process.env, MASTERDECK_AUTOMATION: dir, MASTERDECK_CDP_PORT: String(PORT) }, stdio: "ignore" });
 for (let i = 0; i < 60 && !fs.existsSync(path.join(dir, "api-http-port")); i++) await sleep(500);
 await sleep(1500);
 const api = (route, body) => {

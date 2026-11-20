@@ -1,5 +1,5 @@
 //! Profiles that make themselves, so nobody has to click a profile together for every app (owner,
-//! 2026-10-12): at start for the installed apps HubDeck knows (a preset or a shortcut pack), as
+//! 2026-10-12): at start for the installed apps MasterDeck knows (a preset or a shortcut pack), as
 //! "Ready for your apps" that switch in only once the user switches them on (owner's pick 1a,
 //! 2026-10-14), and for a game the first time it comes to the front (it then switches in at once). Each program gets one only once: a
 //! profile the user deleted is not made again (`settings.offered`). The window lists the new ones

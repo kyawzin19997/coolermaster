@@ -564,7 +564,7 @@ mod tests {
     }
 
     /// What it wants and the gesture, at moments of the 2.1 s gesture cycle:
-    /// `HUBDECK_OUT=<png> cargo test -p hubdeck mochi_gestures -- --ignored`.
+    /// `MASTERDECK_OUT=<png> cargo test -p masterdeck mochi_gestures -- --ignored`.
     #[test]
     #[ignore]
     fn mochi_gestures() {
@@ -589,16 +589,16 @@ mod tests {
         let size = tree.size().to_int_size();
         let mut pixmap = tiny_skia::Pixmap::new(size.width(), size.height()).unwrap();
         resvg::render(&tree, tiny_skia::Transform::default(), &mut pixmap.as_mut());
-        pixmap.save_png(std::env::var("HUBDECK_OUT").unwrap_or_else(|_| "mochi-gestures.png".into())).unwrap();
+        pixmap.save_png(crate::compat::var("MASTERDECK_OUT").unwrap_or_else(|_| "mochi-gestures.png".into())).unwrap();
     }
 
     /// One gesture cycle per mood as PNG frames, 15 a second, for an animated preview:
-    /// `HUBDECK_OUT=<dir> cargo test -p hubdeck mochi_gesture_frames -- --ignored`.
+    /// `MASTERDECK_OUT=<dir> cargo test -p masterdeck mochi_gesture_frames -- --ignored`.
     #[test]
     #[ignore]
     fn mochi_gesture_frames() {
         use resvg::{tiny_skia, usvg};
-        let dir = std::path::PathBuf::from(std::env::var("HUBDECK_OUT").unwrap_or_else(|_| "mochi-frames".into()));
+        let dir = std::path::PathBuf::from(crate::compat::var("MASTERDECK_OUT").unwrap_or_else(|_| "mochi-frames".into()));
         std::fs::create_dir_all(&dir).unwrap();
         let now = Instant::now();
         let pet = Pet { needs: Needs::default(), moment: None, look: 0.0, file: None };
@@ -615,7 +615,7 @@ mod tests {
         }
     }
 
-    /// Every mood and moment in one picture: `HUBDECK_OUT=<png> cargo test -p hubdeck mochi_sheet -- --ignored`.
+    /// Every mood and moment in one picture: `MASTERDECK_OUT=<png> cargo test -p masterdeck mochi_sheet -- --ignored`.
     #[test]
     #[ignore]
     fn mochi_sheet() {
@@ -662,19 +662,19 @@ mod tests {
         let size = tree.size().to_int_size();
         let mut pixmap = tiny_skia::Pixmap::new(size.width(), size.height()).unwrap();
         resvg::render(&tree, tiny_skia::Transform::default(), &mut pixmap.as_mut());
-        pixmap.save_png(std::env::var("HUBDECK_OUT").expect("HUBDECK_OUT")).unwrap();
+        pixmap.save_png(crate::compat::var("MASTERDECK_OUT").expect("MASTERDECK_OUT")).unwrap();
     }
 
     /// Mochi and the same moments with body pictures of the user's own (owner, 2026-10-18: only
     /// the body changes, the face and reactions stay):
-    /// `HUBDECK_OUT=<png> HUBDECK_PICTURES=<file>,<file> cargo test -p hubdeck pet_body_sheet -- --ignored`
+    /// `MASTERDECK_OUT=<png> MASTERDECK_PICTURES=<file>,<file> cargo test -p masterdeck pet_body_sheet -- --ignored`
     /// (one row of Mochi, then one row a picture)
     #[test]
     #[ignore]
     fn pet_body_sheet() {
         super::super::images::init(&std::env::temp_dir().join(format!("hubdeck-pet-sheet-{}", std::process::id())));
         let mut rows: Vec<Option<String>> = vec![None];
-        for file in std::env::var("HUBDECK_PICTURES").expect("HUBDECK_PICTURES").split(',') {
+        for file in crate::compat::var("MASTERDECK_PICTURES").expect("MASTERDECK_PICTURES").split(',') {
             let ext = file.rsplit('.').next().unwrap_or("png").to_lowercase();
             rows.push(Some(super::super::images::import_bytes(&std::fs::read(file).unwrap(), &ext).unwrap()));
         }
@@ -705,7 +705,7 @@ mod tests {
         }
         out += "</svg>";
         let r = super::super::render::Renderer::default();
-        std::fs::write(std::env::var("HUBDECK_OUT").expect("HUBDECK_OUT"), r.png(&out).unwrap()).unwrap();
+        std::fs::write(crate::compat::var("MASTERDECK_OUT").expect("MASTERDECK_OUT"), r.png(&out).unwrap()).unwrap();
     }
 
     /// A body picture of the user's own: only the body changes (owner, 2026-10-18).

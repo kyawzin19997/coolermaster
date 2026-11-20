@@ -6,7 +6,7 @@ the grid. The windows are laid out with the window's own proportions (`DeckView.
 wide, gaps 7.6, a 20 margin), so what this prints is what the owner sees in the app and on the
 deck, not the whole canvas (owner, 2026-10-28: "nie całe pole jest widoczne").
 
-`--turn` is the deck's turn (0, 90, 180, 270; `fx_film`'s `HUBDECK_TURN`): the frame is turned
+`--turn` is the deck's turn (0, 90, 180, 270; `fx_film`'s `MASTERDECK_TURN`): the frame is turned
 upright for the viewer, so 90 and 270 show the upright deck, 3 columns by 5 rows (owner,
 2026-10-29: "niektórzy mogą mieć ustawione te 15 klawiszy w pionie").
 

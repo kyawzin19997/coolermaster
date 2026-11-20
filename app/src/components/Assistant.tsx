@@ -17,7 +17,7 @@ type Line =
       sketches?: [string, string][];
       /** Still being written (pieces of it came in). */
       streaming?: boolean;
-      /** The cards of this turn's ideas (propose_idea and HubDeck's quick sketches). */
+      /** The cards of this turn's ideas (propose_idea and MasterDeck's quick sketches). */
       ideasLine?: boolean;
     }
   | { who: "work"; tools: string[] }
@@ -51,7 +51,7 @@ const talk = {
   prefill: "",
   /** Look at the apps at once when the panel shows (a message came from the tour's end). */
   wantScan: false,
-  /** HubDeck's own suggestion for now (an app without a deck, a new kind of module). */
+  /** MasterDeck's own suggestion for now (an app without a deck, a new kind of module). */
   nudge: null as Nudge | null,
   /** "Send without the app list": the first message goes with the deck only. */
   withoutApps: false,
@@ -86,7 +86,7 @@ export function askAssistant(message: string) {
   changed();
 }
 
-/** Ask HubDeck whether it has a suggestion now (the tab shows a dot, the panel a card). */
+/** Ask MasterDeck whether it has a suggestion now (the tab shows a dot, the panel a card). */
 export function refreshNudge() {
   if (!("__TAURI_INTERNALS__" in window)) return;
   api.nudgeGet().then(
@@ -146,7 +146,7 @@ function onEvent(e: AssistantEvent) {
     const line: Line = { who: "assistant", text: e.text, choices: e.choices, ideas: e.ideas };
     const streamed = talk.lines.length > 0 && last?.who === "assistant" && last.streaming;
     talk.lines = streamed ? [...talk.lines.slice(0, -1), line] : [...talk.lines, line];
-    // ideas with a whole deck sketched: HubDeck makes drafts of them at once, to see and try
+    // ideas with a whole deck sketched: MasterDeck makes drafts of them at once, to see and try
     if (e.ideas.some((i) => i.deck))
       api.sketchesMake(e.ideas.filter((i) => i.deck)).then((made) => {
         talk.knownDrafts = [...talk.knownDrafts, ...made.map(([, id]) => id)];
@@ -422,7 +422,7 @@ function IdeaCards({ ideas, live }: { ideas: Idea[]; live: boolean }) {
   );
 }
 
-/** How many shortcuts of a draft are not in HubDeck's checked packs (profile_check). */
+/** How many shortcuts of a draft are not in MasterDeck's checked packs (profile_check). */
 function useUnchecked(id: string, version?: string) {
   const [unchecked, setUnchecked] = useState(0);
   useEffect(() => {
@@ -557,7 +557,7 @@ function SketchCard({ id, title, idea, view, onDeck, live, tryIt, hidden }: { id
 function DraftCard({ id, view, pick }: { id: string; view: EngineView; pick?: () => void }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const summary = view.state?.profiles.find((p) => p.id === id);
-  // shortcuts the assistant chose that are not in HubDeck's checked packs (profile_check)
+  // shortcuts the assistant chose that are not in MasterDeck's checked packs (profile_check)
   const unchecked = useUnchecked(id, summary?.name);
   // the name of the user's deck this draft went into ("Use this" on a new version of it)
   const [replaced, setReplaced] = useState<string | null>(null);
@@ -824,7 +824,7 @@ function TasteCard() {
   );
 }
 
-/** HubDeck's suggestion as a calm card: try its sketch, ask the assistant, or let it be. */
+/** MasterDeck's suggestion as a calm card: try its sketch, ask the assistant, or let it be. */
 /** A suggestion's words: what it says, what it asks the assistant, and its short chip. */
 function nudgeWords(nudge: Nudge) {
   const kind = nudge.kind === "module" ? t(`kind.${nudge.exe}` as Key) : "";
@@ -838,7 +838,7 @@ function nudgeWords(nudge: Nudge) {
   return { kind, control, ask, chip };
 }
 
-/** Examples for the assistant from what HubDeck knows of this desk (2026-10-14 review: fixed ones
+/** Examples for the assistant from what MasterDeck knows of this desk (2026-10-14 review: fixed ones
  * said "my two free knobs" on a deck with three busy knobs). At most two. */
 function examplesFor(s: TourSuggestion): string[] {
   const out: string[] = [];
@@ -924,7 +924,7 @@ function useTourDone(when: unknown): boolean | null {
 }
 
 /**
- * The user has set HubDeck up: a tour profile was kept, or there are two profiles of their own (not
+ * The user has set MasterDeck up: a tour profile was kept, or there are two profiles of their own (not
  * drafts, not made at once for apps). Profiles then comes first in the left column and is open at
  * start; Get started stays as it is (owner's pick 2a, 2026-10-16; docs/FLOWS.md difference 3).
  */

@@ -246,7 +246,7 @@ mod find_tests {
 
 #[cfg(all(test, windows))]
 mod tests {
-    /// Lists (never changes) the audio devices: `cargo test -p hubdeck list_audio -- --ignored --nocapture`
+    /// Lists (never changes) the audio devices: `cargo test -p masterdeck list_audio -- --ignored --nocapture`
     #[test]
     #[ignore]
     fn list_audio_devices() {

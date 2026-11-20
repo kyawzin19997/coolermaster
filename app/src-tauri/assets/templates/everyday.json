@@ -1,0 +1,377 @@
+{
+  "version": 1,
+  "id": "masterdeck-everyday",
+  "name": "Everyday desk",
+  "apps": [],
+  "controls": {
+    "dial": {
+      "action": "core.volume",
+      "look": {
+        "bg": "#1f1d26",
+        "label": "Volume",
+        "icon": "volume-2"
+      },
+      "params": {
+        "step": 2,
+        "target": "system"
+      }
+    },
+    "faders.0": {
+      "action": "core.volume",
+      "look": {
+        "bg": "#1f1d26",
+        "label": "System",
+        "icon": "volume-2"
+      },
+      "params": {
+        "target": "system"
+      }
+    },
+    "faders.1": {
+      "action": "core.volume",
+      "look": {
+        "bg": "#1f1d26",
+        "led": "#dd6998",
+        "label": "Chrome",
+        "icon": "volume-2"
+      },
+      "params": {
+        "target": "app",
+        "app": "chrome.exe"
+      }
+    },
+    "faders.2": {
+      "action": "core.volume",
+      "look": {
+        "bg": "#1f1d26",
+        "label": "Discord",
+        "icon": "volume-2"
+      },
+      "params": {
+        "target": "app",
+        "app": "Discord.exe"
+      }
+    },
+    "faders.3": {
+      "action": "core.volume",
+      "look": {
+        "bg": "#1f1d26",
+        "label": "Spotify",
+        "icon": "volume-2"
+      },
+      "params": {
+        "target": "app",
+        "app": "Spotify.exe"
+      }
+    },
+    "faders.4": {
+      "action": "core.volume",
+      "look": {
+        "bg": "#1f1d26",
+        "label": "Firefox",
+        "icon": "volume-2"
+      },
+      "params": {
+        "target": "app",
+        "app": "firefox.exe"
+      }
+    },
+    "keys.0": {
+      "action": "core.launch",
+      "look": {
+        "bg": "#6a3fd8",
+        "bg2": "#e0457b",
+        "fg": "#ffffff",
+        "style": "gradient",
+        "gloss": "glass",
+        "angle": 135,
+        "label": "OBS Studio",
+        "icon": "app-window"
+      },
+      "params": {
+        "target": "OBS Studio"
+      }
+    },
+    "keys.0:hold": {
+      "action": "obs.source",
+      "look": {
+        "label": "Show",
+        "icon": "video"
+      },
+      "params": {}
+    },
+    "keys.1": {
+      "action": "core.media",
+      "look": {
+        "bg": "#6a3fd8",
+        "bg2": "#e0457b",
+        "fg": "#ffffff",
+        "style": "gradient",
+        "gloss": "glass",
+        "angle": 135,
+        "labelDx": 1,
+        "labelDy": -2,
+        "label": "Multimedia",
+        "icon": "play"
+      },
+      "params": {
+        "command": "playPause"
+      }
+    },
+    "keys.10": {
+      "action": "core.hotkey",
+      "look": {
+        "bg": "#2b2733",
+        "label": "F13",
+        "icon": "zap"
+      },
+      "params": {
+        "keys": "F13"
+      }
+    },
+    "keys.11": {
+      "action": "core.hotkey",
+      "look": {
+        "bg": "#2b2733",
+        "label": "F14",
+        "icon": "zap"
+      },
+      "params": {
+        "keys": "F14"
+      }
+    },
+    "keys.12": {
+      "action": "core.hotkey",
+      "look": {
+        "bg": "#2b2733",
+        "label": "F15",
+        "icon": "zap"
+      },
+      "params": {
+        "keys": "F15"
+      }
+    },
+    "keys.13": {
+      "action": "core.hotkey",
+      "look": {
+        "bg": "#2b2733",
+        "label": "F16",
+        "icon": "zap"
+      },
+      "params": {
+        "keys": "F16"
+      }
+    },
+    "keys.14": {
+      "action": "core.hotkey",
+      "look": {
+        "bg": "#2b2733",
+        "label": "F17",
+        "icon": "zap"
+      },
+      "params": {
+        "keys": "F17"
+      }
+    },
+    "keys.1:double": {
+      "action": "obs.scene",
+      "look": {
+        "label": "Scene",
+        "icon": "monitor"
+      },
+      "params": {
+        "scene": "Scene 4"
+      }
+    },
+    "keys.1:hold": {
+      "action": "obs.source",
+      "look": {
+        "label": "Show",
+        "icon": "video"
+      },
+      "params": {
+        "scene": "scene 1"
+      }
+    },
+    "keys.2": {
+      "action": "core.http",
+      "look": {
+        "bg": "#6a3fd8",
+        "bg2": "#e0457b",
+        "fg": "#ffffff",
+        "style": "gradient",
+        "gloss": "glass",
+        "angle": 135,
+        "label": "HTTP",
+        "icon": "send"
+      },
+      "params": {}
+    },
+    "keys.3": {
+      "action": "core.hotkey",
+      "look": {
+        "bg": "#6a3fd8",
+        "bg2": "#e0457b",
+        "fg": "#ffffff",
+        "style": "gradient",
+        "gloss": "glass",
+        "angle": 135,
+        "label": "Mute",
+        "icon": "volume-x"
+      },
+      "params": {
+        "keys": "VolumeMute"
+      }
+    },
+    "keys.4": {
+      "action": "core.hotkey",
+      "look": {
+        "bg": "#6a3fd8",
+        "bg2": "#e0457b",
+        "fg": "#ffffff",
+        "style": "gradient",
+        "gloss": "glass",
+        "angle": 135,
+        "label": "Screenshot",
+        "icon": "camera"
+      },
+      "params": {
+        "keys": "PrintScreen"
+      }
+    },
+    "keys.5": {
+      "action": "core.nowPlaying",
+      "look": {
+        "bg": "#262333",
+        "label": "Now",
+        "icon": "music"
+      },
+      "params": {
+        "turn": "volume",
+        "press": "playPause"
+      }
+    },
+    "keys.6": {
+      "action": "core.hotkey",
+      "look": {
+        "bg": "#6a3fd8",
+        "bg2": "#e0457b",
+        "fg": "#ffffff",
+        "style": "gradient",
+        "gloss": "glass",
+        "angle": 135,
+        "label": "Paste",
+        "icon": "clipboard-paste"
+      },
+      "params": {
+        "keys": "Ctrl+V"
+      }
+    },
+    "keys.7": {
+      "action": "core.hotkey",
+      "look": {
+        "bg": "#6a3fd8",
+        "bg2": "#e0457b",
+        "fg": "#ffffff",
+        "style": "gradient",
+        "gloss": "glass",
+        "angle": 135,
+        "label": "Undo",
+        "icon": "undo-2"
+      },
+      "params": {
+        "keys": "Ctrl+Z"
+      }
+    },
+    "keys.8": {
+      "action": "core.hotkey",
+      "look": {
+        "bg": "#6a3fd8",
+        "bg2": "#e0457b",
+        "fg": "#ffffff",
+        "style": "gradient",
+        "gloss": "glass",
+        "angle": 135,
+        "label": "Find",
+        "icon": "search"
+      },
+      "params": {
+        "keys": "Ctrl+F"
+      }
+    },
+    "keys.9": {
+      "action": "core.launch",
+      "look": {
+        "bg": "#1f3326",
+        "label": "Web",
+        "icon": "globe"
+      },
+      "params": {}
+    },
+    "knobs.0": {
+      "action": "core.volume",
+      "look": {
+        "bg": "#1f1d26",
+        "label": "Spotify",
+        "icon": "music"
+      },
+      "params": {
+        "step": 3,
+        "target": "app",
+        "app": "spotify.exe"
+      }
+    },
+    "knobs.1": {
+      "action": "core.media",
+      "look": {
+        "bg": "#1f1d26",
+        "label": "Tracks",
+        "icon": "play"
+      },
+      "params": {
+        "command": "playPause"
+      }
+    },
+    "knobs.2": {
+      "action": "core.scroll",
+      "look": {
+        "bg": "#1f1d26",
+        "label": "Scroll ↔",
+        "icon": "arrow-left-right"
+      },
+      "params": {
+        "amount": 3,
+        "axis": "horizontal"
+      }
+    },
+    "rollers.0": {
+      "action": "core.scroll",
+      "look": {
+        "bg": "#1f1d26",
+        "label": "Scroll",
+        "icon": "arrow-up-down"
+      },
+      "params": {
+        "amount": 3,
+        "axis": "vertical"
+      }
+    },
+    "rollers.1": {
+      "action": "core.hotkey",
+      "look": {
+        "bg": "#1f1d26",
+        "label": "Hotkey",
+        "icon": "keyboard"
+      },
+      "params": {
+        "hold": 30,
+        "mode": "normal",
+        "clockwise": "Up",
+        "counterClockwise": "Down"
+      }
+    }
+  },
+  "edge": "#8b7cf6",
+  "edgeEffect": "breathing",
+  "edgeSpeed": 50
+}

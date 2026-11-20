@@ -1,0 +1,290 @@
+{
+  "version": 1,
+  "id": "masterdeck-obs",
+  "name": "OBS streaming",
+  "apps": [
+    "OBS Studio"
+  ],
+  "controls": {
+    "dial": {
+      "action": "obs.volume",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#9379ec",
+        "label": "Mic level",
+        "icon": "mic"
+      },
+      "params": {
+        "step": 1,
+        "input": "Mic/Aux"
+      }
+    },
+    "faders.0": {
+      "action": "obs.volume",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#9379ec",
+        "label": "Desktop",
+        "icon": "volume-2"
+      },
+      "params": {
+        "step": 1,
+        "input": "Desktop Audio"
+      }
+    },
+    "faders.1": {
+      "action": "obs.volume",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#9379ec",
+        "label": "Mic",
+        "icon": "volume-2"
+      },
+      "params": {
+        "step": 1,
+        "input": "Mic/Aux"
+      }
+    },
+    "faders.2": {
+      "action": "core.volume",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#9379ec",
+        "label": "Discord",
+        "icon": "volume-2"
+      },
+      "params": {
+        "target": "app",
+        "app": "Discord.exe"
+      }
+    },
+    "faders.3": {
+      "action": "core.volume",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#9379ec",
+        "label": "Spotify",
+        "icon": "volume-2"
+      },
+      "params": {
+        "target": "app",
+        "app": "Spotify.exe"
+      }
+    },
+    "faders.4": {
+      "action": "core.volume",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#9379ec",
+        "label": "System",
+        "icon": "volume-2"
+      },
+      "params": {
+        "target": "system"
+      }
+    },
+    "keys.0": {
+      "action": "obs.scene",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#79b8ec",
+        "label": "Scene 1",
+        "icon": "monitor"
+      },
+      "params": {
+        "scene": "Scene 1"
+      }
+    },
+    "keys.1": {
+      "action": "obs.scene",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#79b8ec",
+        "label": "Scene 2",
+        "icon": "monitor"
+      },
+      "params": {
+        "scene": "Scene 2"
+      }
+    },
+    "keys.10": {
+      "action": "obs.source",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#79b8ec",
+        "label": "Camera",
+        "icon": "video"
+      },
+      "params": {}
+    },
+    "keys.11": {
+      "action": "core.mic",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#b879ec",
+        "label": "System mic",
+        "icon": "mic"
+      },
+      "params": {}
+    },
+    "keys.12": {
+      "action": "core.media",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#79b1ec",
+        "label": "Music",
+        "icon": "music"
+      },
+      "params": {
+        "command": "playPause"
+      }
+    },
+    "keys.13": {
+      "action": "core.launch",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#79eca1",
+        "label": "Dashboard",
+        "icon": "globe"
+      },
+      "params": {}
+    },
+    "keys.14": {
+      "action": "core.monitor",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#9f79ec",
+        "label": "CPU",
+        "icon": "monitor"
+      },
+      "params": {
+        "metric": "cpu"
+      }
+    },
+    "keys.2": {
+      "action": "obs.scene",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#79b8ec",
+        "label": "Scene 3",
+        "icon": "monitor"
+      },
+      "params": {
+        "scene": "Scene 3"
+      }
+    },
+    "keys.3": {
+      "action": "obs.scene",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#79b8ec",
+        "label": "Scene 4",
+        "icon": "monitor"
+      },
+      "params": {
+        "scene": "Scene 4"
+      }
+    },
+    "keys.4": {
+      "action": "obs.scene",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#79b8ec",
+        "label": "Scene 5",
+        "icon": "monitor"
+      },
+      "params": {
+        "scene": "Scene 5"
+      }
+    },
+    "keys.5": {
+      "action": "obs.record",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#ec7986",
+        "label": "Record",
+        "icon": "circle-dot"
+      },
+      "params": {}
+    },
+    "keys.6": {
+      "action": "obs.stream",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#ec7986",
+        "label": "Stream",
+        "icon": "radio"
+      },
+      "params": {}
+    },
+    "keys.7": {
+      "action": "obs.replay",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#ecdb79",
+        "label": "Replay",
+        "icon": "rocket"
+      },
+      "params": {}
+    },
+    "keys.8": {
+      "action": "obs.mute",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#b879ec",
+        "label": "Mic",
+        "icon": "mic"
+      },
+      "params": {
+        "input": "Mic/Aux"
+      }
+    },
+    "keys.9": {
+      "action": "obs.mute",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#b879ec",
+        "label": "Desktop",
+        "icon": "volume-2"
+      },
+      "params": {
+        "input": "Desktop Audio"
+      }
+    },
+    "rollers.0": {
+      "action": "core.scroll",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#9379ec",
+        "label": "Scroll",
+        "icon": "arrow-up-down"
+      },
+      "params": {
+        "amount": 3,
+        "axis": "vertical"
+      }
+    }
+  }
+}

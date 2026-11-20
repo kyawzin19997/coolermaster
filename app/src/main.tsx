@@ -3,7 +3,7 @@ import ReactDOM from "react-dom/client";
 import { invoke } from "@tauri-apps/api/core";
 import App from "./App";
 
-// the page's start and its errors go to HubDeck's log: the release window has no inspector
+// the page's start and its errors go to MasterDeck's log: the release window has no inspector
 // (2026-10-15: a black window on macOS left no trace)
 if ("__TAURI_INTERNALS__" in window) {
   const send = (error: boolean, message: string) => invoke("window_log", { error, message }).catch(() => {});

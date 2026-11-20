@@ -3,7 +3,7 @@
 //! time, and on macOS the module's USB power state from `ioreg` every few seconds. With
 //! `--keepalive <ms>` it reads the module's firmware version that often (a feature read, safe on
 //! the rollers: they are never in a hardware mode that wedges), to see whether a module that
-//! hears from the computer keeps sending. Quit HubDeck first on macOS (it opens modules
+//! hears from the computer keeps sending. Quit MasterDeck first on macOS (it opens modules
 //! exclusively); on Windows it can run alongside.
 //!
 //!     cargo run -p mh-device --example rollers -- [seconds] [--keepalive 1000] [--send 02:30:32] [--knobs]
@@ -42,7 +42,7 @@ fn main() {
     let dev = match found[0].open_device(&api) {
         Ok(d) => d,
         Err(e) => {
-            println!("open failed: {e} (on macOS quit HubDeck first: it opens modules exclusively)");
+            println!("open failed: {e} (on macOS quit MasterDeck first: it opens modules exclusively)");
             return;
         }
     };

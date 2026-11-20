@@ -85,7 +85,7 @@ pub fn record(profile: &str, control: &str, trying: Option<&str>, counting: bool
     });
 }
 
-/// Write what is not written yet (HubDeck stops).
+/// Write what is not written yet (MasterDeck stops).
 pub fn flush() {
     with(|s| {
         if s.dirty {

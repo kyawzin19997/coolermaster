@@ -298,7 +298,7 @@ fn starter_profile(kind: AppKind, exe: &str, name: &str, target: &str, picture: 
 /// The preset made for this app, if any (its apps list names the executable).
 pub fn preset_for(exe: &str) -> Option<Profile> {
     let name = exe.rsplit(['\\', '/']).next().unwrap_or(exe);
-    super::presets::catalog().into_iter().filter(|p| !p.test).map(|p| p.make()).find(|p| p.app_match(name, "").is_some())
+    super::presets::current_templates().into_iter().chain(super::presets::catalog()).filter(|p| !p.test).map(|p| p.make()).find(|p| p.app_match(name, "").is_some())
 }
 
 /// The profile for one app: its preset or a starter, named after it, linked to it, adapted to

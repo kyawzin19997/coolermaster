@@ -6,7 +6,7 @@
 //! in flight 21.7-28.2 ms and 2.2-2.5 ms; two in flight 21.9-42.1 ms, 3.3-3.6 ms). The reports
 //! still go in order: the HID class driver queues writes on a handle and the device takes them as
 //! they come; the camera saw every picture whole (two in flight).
-//! `HUBDECK_PIPELINE=0` turns it off (hidapi again), for comparing.
+//! `MASTERDECK_PIPELINE=0` turns it off (hidapi again), for comparing.
 
 use std::ffi::CStr;
 
@@ -42,7 +42,7 @@ unsafe impl Send for Pipelined {}
 impl Pipelined {
     /// Opens the device again for overlapped writes; None when Windows refuses it (hidapi then).
     pub fn open(path: &CStr) -> Option<Self> {
-        if std::env::var("HUBDECK_PIPELINE").is_ok_and(|v| v == "0") {
+        if !crate::pipeline_enabled() {
             return None;
         }
         let wide: Vec<u16> = path.to_string_lossy().encode_utf16().chain(std::iter::once(0)).collect();

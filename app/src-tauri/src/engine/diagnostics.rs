@@ -68,7 +68,7 @@ pub fn settings_view(v: &serde_json::Value) -> serde_json::Value {
 /// address; the person sees it in the form and can change it before sending.
 pub fn brief(log_file: &Path, version: &str, deck: &DeckSnapshot) -> String {
     let mut out = String::new();
-    let _ = writeln!(out, "HubDeck {version}, {} ({}, {})", sysinfo::System::long_os_version().unwrap_or_default(), std::env::consts::OS, std::env::consts::ARCH);
+    let _ = writeln!(out, "MasterDeck {version}, {} ({}, {})", sysinfo::System::long_os_version().unwrap_or_default(), std::env::consts::OS, std::env::consts::ARCH);
     let modules: Vec<String> = deck.modules.iter().map(|m| format!("{} {}", m.kind, m.firmware.as_deref().unwrap_or("?"))).collect();
     let _ = writeln!(out, "Modules: {}", if modules.is_empty() { "none".to_string() } else { modules.join(", ") });
     if !deck.unresponsive.is_empty() {
@@ -87,7 +87,7 @@ const BRIEF_LINES: usize = 20;
 
 pub fn write(dir: &Path, log_file: &Path, version: &str, deck: &DeckSnapshot, settings: &serde_json::Value, plugins: &[super::plugins::PluginInfo]) -> std::io::Result<PathBuf> {
     let mut out = String::new();
-    let _ = writeln!(out, "HubDeck {version} diagnostics, {}", chrono::Local::now().format("%Y-%m-%d %H:%M:%S"));
+    let _ = writeln!(out, "MasterDeck {version} diagnostics, {}", chrono::Local::now().format("%Y-%m-%d %H:%M:%S"));
     let _ = writeln!(out, "System: {} ({}, {})", sysinfo::System::long_os_version().unwrap_or_default(), std::env::consts::OS, std::env::consts::ARCH);
     let _ = writeln!(out, "\nModules (base turn {}, sensor {:?}, paused {}):", deck.turn, deck.orientation, deck.paused);
     for m in &deck.modules {
@@ -151,7 +151,7 @@ mod tests {
         }
         std::fs::write(&log, text).unwrap();
         let b = brief(&log, "0.1.0", &DeckSnapshot::default());
-        assert!(b.starts_with("HubDeck 0.1.0") && b.contains("Modules: none") && b.contains("(20 of 30)"), "{b}");
+        assert!(b.starts_with("MasterDeck 0.1.0") && b.contains("Modules: none") && b.contains("(20 of 30)"), "{b}");
         assert!(
             !b.contains("fine")
                 && !b.contains("MHKD15AA431251603100")

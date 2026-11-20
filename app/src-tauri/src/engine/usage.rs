@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 
 /// One stretch in front counts at most this long: an app left in front over lunch is not work.
 const MAX_STRETCH: Duration = Duration::from_secs(15 * 60);
-/// The file is written at most this often (and when HubDeck stops).
+/// The file is written at most this often (and when MasterDeck stops).
 const SAVE_EVERY: Duration = Duration::from_secs(120);
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
@@ -92,7 +92,7 @@ pub fn switched(exe: &str) {
         if let Some((prev, since)) = s.current.take() {
             add(&mut s.file.apps, &prev, now - since, &day);
         }
-        // not HubDeck itself, and not the lock screen (owner, 2026-10-14: "loginwindow" became a key)
+        // not MasterDeck itself, and not the lock screen (owner, 2026-10-14: "loginwindow" became a key)
         if !exe.is_empty() && !exe.to_lowercase().starts_with("hubdeck") && !super::idle::is_lock_screen(exe) {
             s.current = Some((exe.to_string(), now));
         }
@@ -106,7 +106,7 @@ pub fn switched(exe: &str) {
     }
 }
 
-/// Write what is counted so far (HubDeck stops).
+/// Write what is counted so far (MasterDeck stops).
 pub fn flush() {
     switched("");
     write(&with(|s| s.file.clone()));

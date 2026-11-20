@@ -3,7 +3,7 @@
 //! 121-133 ms on the Mac (2026-10-30, ~8 pictures a second, where the PC with eight in flight
 //! showed the same scene smoothly). `pictures_macos.m` opens the module again, shared, and keeps
 //! [`DEPTH`] writes in flight with IOKit's asynchronous set-report call.
-//! `HUBDECK_PIPELINE=0` turns it off (hidapi again), for comparing.
+//! `MASTERDECK_PIPELINE=0` turns it off (hidapi again), for comparing.
 
 use std::ffi::{CStr, c_void};
 
@@ -38,8 +38,8 @@ impl Pipelined {
 
     /// As [`Pipelined::open`] with this many writes in flight; the error says why it was refused.
     pub fn open_with(path: &CStr, depth: i32) -> std::result::Result<Self, String> {
-        if std::env::var("HUBDECK_PIPELINE").is_ok_and(|v| v == "0") {
-            return Err("HUBDECK_PIPELINE=0".into());
+        if !crate::pipeline_enabled() {
+            return Err("MASTERDECK_PIPELINE=0".into());
         }
         let id: u64 = path.to_str().ok().and_then(|p| p.strip_prefix("DevSrvsID:")).and_then(|n| n.parse().ok()).ok_or_else(|| format!("not a macOS HID path: {path:?}"))?;
         let mut code = 0;

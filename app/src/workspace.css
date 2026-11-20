@@ -669,8 +669,8 @@
 
 .action-sidebar .chooser-group-head,
 .action-sidebar .chooser-item {
-  min-height: 39px;
-  padding-inline: 8px;
+  min-height: 46px;
+  padding-inline: 10px;
 }
 
 .action-sidebar .chooser-group-head[aria-expanded="true"] {
@@ -679,9 +679,11 @@
 }
 
 .action-sidebar .chooser-item .library-icon {
-  width: 24px;
-  height: 24px;
+  width: 31px;
+  height: 31px;
 }
+.action-sidebar .chooser-item .library-icon svg { width: 19px; height: 19px; }
+.action-sidebar .chooser-item .nm { font-size: 13px; }
 
 .action-sidebar .chooser-item:hover,
 .action-sidebar .chooser-item:focus-visible {
@@ -796,6 +798,28 @@
 .plugin-preview-row { align-items: flex-start; }
 .plugin-filename { overflow-wrap: anywhere; }
 .plugin-review-controls { justify-content: flex-end; }
+
+.phone-panel { width: 100%; min-width: 0; overflow: auto; }
+.phone-heading { min-height: 54px; padding: 9px 16px; border-bottom: 1px solid var(--ln2); color: var(--acc2); }
+.phone-heading h2 { margin: 0; color: var(--tx); font-size: 16px; }
+.phone-body { display: grid; gap: 14px; padding: 16px; }
+.phone-body > .seg { justify-self: start; }
+.phone-body p { margin: 0; }
+.phone-qr-row { display: grid; grid-template-columns: minmax(114px, 168px) minmax(0, 1fr); align-items: center; gap: 16px; }
+.phone-qr-row > div:last-child { display: grid; gap: 8px; justify-items: start; }
+.phone-qr { background: #fff; line-height: 0; border-radius: 8px; overflow: hidden; }
+.phone-qr svg { display: block; width: 100%; height: auto; }
+.phone-approval { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-end; padding: 10px 0; }
+.phone-approval > div { flex: 1 1 130px; display: grid; gap: 4px; }
+.phone-approval strong { font-size: 22px; letter-spacing: .14em; }
+.phone-files { list-style: none; padding: 0; margin: 0; max-height: 300px; overflow: auto; }
+.phone-files li { display: flex; gap: 10px; align-items: center; padding: 9px 0; border-top: 1px solid var(--ln2); }
+.phone-files .grow { display: grid; gap: 4px; min-width: 0; overflow-wrap: anywhere; }
+.phone-files progress { width: 100%; height: 6px; accent-color: var(--acc); }
+.phone-files small { color: var(--tx2); }
+.phone-actions:empty { display: none; }
+.profile-details > summary { font-weight: 600; cursor: pointer; }
+.profile-details[open] > summary { margin-bottom: 8px; }
 
 .control-inspector .insp-head {
   background: transparent;

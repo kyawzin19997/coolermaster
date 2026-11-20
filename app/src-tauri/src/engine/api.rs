@@ -85,7 +85,7 @@ fn test_input(app: &AppHandle, b: &Value) -> Answer {
 /// `(method, path, body)` -> `(status, JSON)`; None for a path this module does not serve.
 pub fn handle(app: &AppHandle, method: &str, path: &str, body: &str) -> Option<(u16, Value)> {
     let parts: Vec<&str> = path.strip_prefix("/api/")?.split('/').collect();
-    let engine = || app.try_state::<Engine>().ok_or((503, "HubDeck is still starting".to_string()));
+    let engine = || app.try_state::<Engine>().ok_or((503, "MasterDeck is still starting".to_string()));
     let result: Answer = match (method, parts.as_slice()) {
         ("GET", ["catalog"]) => Ok(catalog()),
         ("GET", ["modules"]) => Ok(modules(app)),
@@ -144,7 +144,7 @@ pub fn handle(app: &AppHandle, method: &str, path: &str, body: &str) -> Option<(
         // the user's own apps (docs/APP-CONTRACT.md)
         ("POST", ["state"]) => body_json(body).and_then(|b| super::states::push(&b).map(|n| json!({"ok": true, "items": n})).map_err(bad)),
         ("GET", ["states"]) => engine().map(|e| e.app_states()),
-        ("GET", ["hubdeck"]) => engine().map(|e| hubdeck_state(app, &e)),
+        ("GET", ["masterdeck" | "hubdeck"]) => engine().map(|e| hubdeck_state(app, &e)),
         ("GET", ["presses", id]) => engine().map(|e| {
             let on = e.lock().store.settings.count_presses;
             json!({"counting": on, "controls": super::presses::counts(id).into_iter().map(|(c, n)| json!({"control": c, "count": n.count, "lastDay": n.last_day})).collect::<Vec<_>>()})
@@ -296,7 +296,7 @@ fn modules(app: &AppHandle) -> Value {
     })
 }
 
-/// What is set up in HubDeck, for the assistant (so it does not promise what is off): Claude Code
+/// What is set up in MasterDeck, for the assistant (so it does not promise what is off): Claude Code
 /// sessions on keys, the light reactions, connected apps, the screensaver, modules, more power.
 fn hubdeck_state(app: &AppHandle, engine: &Engine) -> Value {
     let settings = engine.lock().store.settings.clone();
@@ -897,7 +897,7 @@ fn add_image(body: &Value) -> Answer {
     Ok(json!({ "name": name }))
 }
 
-/// `{name}`: the icon of an app or the cover of a game HubDeck knows (installed, or seen in
+/// `{name}`: the icon of an app or the cover of a game MasterDeck knows (installed, or seen in
 /// front: by its name or program), stored for look.image. Only names from those lists, no paths.
 fn app_picture(body: &Value) -> Answer {
     let name = body.get("name").and_then(Value::as_str).map(str::trim).filter(|n| !n.is_empty()).ok_or_else(|| bad("name is missing (an app or game from list_apps / list_games)"))?;
@@ -922,7 +922,7 @@ pub fn picture_of(name: &str) -> Result<String, (u16, String)> {
     let seen = match (seen, from_installed) {
         (Some(s), _) => s,
         (None, Some(Err(e))) => return Err((500, e)),
-        (None, _) => return Err(not_found(format!("{name}: not an app or game HubDeck knows; see list_apps and list_games"))),
+        (None, _) => return Err(not_found(format!("{name}: not an app or game MasterDeck knows; see list_apps and list_games"))),
     };
     let png = super::appicon::png(&seen.path).map_err(|e| (500, e))?;
     super::images::import_bytes(&png, "png").map_err(|e| (500, e))

@@ -1,4 +1,4 @@
-"""Halo variants offline: the keys' content (a test build's HUBDECK_DUMP_CONTENT, raw RGBA premultiplied,
+"""Halo variants offline: the keys' content (a test build's MASTERDECK_DUMP_CONTENT, raw RGBA premultiplied,
 480x272) over scene frames (scripts/ui/look-loops.mjs, the scene alone), with the halo drawn each way,
 side by side as the deck shows them, plus a number for each: how far the content stands out from what
 is right round it (owner, 2026-10-30: "TE cienie pod ikonami strasznie slabo wygladaja").

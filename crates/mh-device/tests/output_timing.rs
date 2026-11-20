@@ -1,5 +1,5 @@
 //! How long one LED color takes to reach the base, through the interrupt pipe (`write`, what
-//! HubDeck uses) and through the control pipe (`send_output_report`, HID SET_REPORT). With a deck
+//! MasterDeck uses) and through the control pipe (`send_output_report`, HID SET_REPORT). With a deck
 //! attached: `cargo test -p mh-device --test output_timing -- --ignored --nocapture`. It only sets
 //! the edge's color (dim green and violet), which the running app sets again at its next change.
 use std::time::{Duration, Instant};

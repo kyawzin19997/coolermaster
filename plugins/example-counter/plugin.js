@@ -1,7 +1,7 @@
-// HubDeck example plugin: counts presses on each control that uses it and shows the number.
+// MasterDeck example plugin: counts presses on each control that uses it and shows the number.
 // Needs Node 22 or later (built-in WebSocket); no packages. See docs/PLUGINS.md.
 
-const { HUBDECK_PORT: port, HUBDECK_PLUGIN: plugin, HUBDECK_TOKEN: token } = process.env;
+const { MASTERDECK_PORT: port, MASTERDECK_PLUGIN: plugin, MASTERDECK_TOKEN: token } = process.env;
 const ws = new WebSocket(`ws://127.0.0.1:${port}`);
 const counts = new Map();
 const send = (message) => ws.send(JSON.stringify(message));
@@ -32,5 +32,5 @@ ws.onmessage = ({ data }) => {
   }
 };
 
-// HubDeck closed the connection: quit, it starts the plugin again next time
+// MasterDeck closed the connection: quit, it starts the plugin again next time
 ws.onclose = () => process.exit(0);

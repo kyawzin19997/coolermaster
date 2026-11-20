@@ -37,7 +37,7 @@ fs.writeFileSync(
     UUID,
     Version: "1.0.0",
     SDKVersion: 2,
-    Author: "HubDeck test",
+    Author: "MasterDeck test",
     Description: "Three states, as Google Meet's mic",
     Icon: "icon",
     CodePath: "plugin.js",
@@ -68,7 +68,7 @@ fs.writeFileSync(profileFile, JSON.stringify(profile, null, 2));
 
 const results = [];
 const check = (name, ok, detail) => (results.push(ok), console.log(`${ok ? "PASS" : "FAIL"}  ${name}${detail ? `: ${detail}` : ""}`));
-const app = spawn(exe, [], { env: { ...process.env, HUBDECK_AUTOMATION: dir, HUBDECK_CDP_PORT: "9492" }, stdio: "ignore" });
+const app = spawn(exe, [], { env: { ...process.env, MASTERDECK_AUTOMATION: dir, MASTERDECK_CDP_PORT: "9492" }, stdio: "ignore" });
 let browser;
 try {
   for (let i = 0; i < 60 && !fs.existsSync(path.join(dir, "api-http-port")); i++) await sleep(500);
