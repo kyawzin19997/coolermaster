@@ -8,8 +8,9 @@
 | File | What you need |
 | --- | --- |
 | `.masterdeck` | An export from MasterDeck with the profile and its available key pictures. Choose this when moving to another computer. |
-| `.hubdeck` | A profile package from an older version of the app. |
 | `.json` | A MasterDeck profile exported using **Settings only (JSON)**. It carries settings and omits picture files. |
 | `.mhz` | An export made in the official Cooler Master MasterHUB app. Check the imported action assignments before using them. |
+
+Older MasterDeck profile packages are also supported.
 
 Review exported actions before sharing a profile with someone else, especially commands, file paths, and service addresses.

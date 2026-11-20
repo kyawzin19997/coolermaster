@@ -343,7 +343,6 @@ async function exportProfileFile(profile: Pick<Profile, "id" | "name">, json = f
 
 const PROFILE_IMPORT_TYPES = [
   ["masterdeck", "profile.importPackage"],
-  ["hubdeck", "profile.importLegacy"],
   ["json", "profile.importSettings"],
   ["mhz", "profile.importOfficial"],
 ] as const;
@@ -352,12 +351,12 @@ async function importProfileFile() {
   const choose = await askInWindow({
     title: t("profile.importGuide"),
     body: `${t("profile.importBefore")}\n\n${t("profile.importAfter")}`,
-    details: PROFILE_IMPORT_TYPES.map(([ext, label]) => `.${ext} — ${t(label)}`),
+    details: [...PROFILE_IMPORT_TYPES.map(([ext, label]) => `.${ext} — ${t(label)}`), t("profile.importLegacy")],
     role: "dialog",
     ok: t("profile.importChoose"),
   });
   if (!choose) return null;
-  const path = await open({ multiple: false, filters: [{ name: t("profile.fileType"), extensions: PROFILE_IMPORT_TYPES.map(([ext]) => ext) }] });
+  const path = await open({ multiple: false, filters: [{ name: t("profile.fileType"), extensions: [...PROFILE_IMPORT_TYPES.map(([ext]) => ext), "hubdeck"] }] });
   if (typeof path !== "string") return null;
   const profile = await api.importProfile(path);
   if (!(await keepImported(profile))) return null;
@@ -3290,7 +3289,7 @@ function YourApps() {
           {t("apps.address")}
         </label>
         <div className="row">
-          <input id="app-url" className="input mono grow" placeholder="http://127.0.0.1:4317/hubdeck/manifest" value={url} onChange={(e) => setUrl(e.target.value)} />
+          <input id="app-url" className="input mono grow" placeholder="http://127.0.0.1:4317/masterdeck/manifest" value={url} onChange={(e) => setUrl(e.target.value)} />
           <button className="tool primary" disabled={busy || !url.trim()} onClick={add}>
             {t("apps.add")}
           </button>

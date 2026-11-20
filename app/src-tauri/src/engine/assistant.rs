@@ -990,7 +990,7 @@ pub async fn assistant_tour(app: AppHandle, language: String) -> Result<String, 
 const POWER_TOOLS: &str = "Read,Glob,Grep,Bash,WebFetch,WebSearch";
 
 /// The rules added to the instructions while more power is on.
-const POWER_RULES: &str = "\nMore power is on: you can also read files, search them, fetch web pages and run commands on this computer, so you can learn how the user's own apps can be driven (their local HTTP endpoints, an event stream, deep links, command-line switches, shortcuts, a hubdeck.json manifest) and check that a key will really work before you build it. Every command and web fetch shows in the user's window and waits for their yes: say in one line what you want to run and why before you run it, prefer read-only checks (GET requests, reading code and docs), never change, move or delete the user's files or settings outside MasterDeck, and never send their data anywhere. Then build keys with core.http (an app's API), core.launch (deep links) or core.run (a command of their own tools).";
+const POWER_RULES: &str = "\nMore power is on: you can also read files, search them, fetch web pages and run commands on this computer, so you can learn how the user's own apps can be driven (their local HTTP endpoints, an event stream, deep links, command-line switches, shortcuts, a MasterDeck-compatible manifest) and check that a key will really work before you build it. Every command and web fetch shows in the user's window and waits for their yes: say in one line what you want to run and why before you run it, prefer read-only checks (GET requests, reading code and docs), never change, move or delete the user's files or settings outside MasterDeck, and never send their data anywhere. Then build keys with core.http (an app's API), core.launch (deep links) or core.run (a command of their own tools).";
 
 /// Questions Claude Code asks before it uses one of its own tools: id -> (tool, what, answer).
 struct Asks {
@@ -1174,7 +1174,7 @@ pub async fn assistant_info(engine: tauri::State<'_, Engine>, language: String) 
             default_effort,
             power,
             command: format!(
-                "claude -p --input-format stream-json --output-format stream-json --verbose --include-partial-messages --tools {} --mcp-config mcp.json (hubdeck --mcp-assistant: drafts only) --strict-mcp-config --allowedTools mcp__{} --system-prompt <the instructions below> --setting-sources local --disable-slash-commands --settings {{\"autoMemoryEnabled\":false}} --model <yours or picked> --effort <yours or picked> [--resume <session>]{}",
+                "claude -p --input-format stream-json --output-format stream-json --verbose --include-partial-messages --tools {} --mcp-config mcp.json (MasterDeck assistant, drafts only) --strict-mcp-config --allowedTools mcp__{} --system-prompt <the instructions below> --setting-sources local --disable-slash-commands --settings {{\"autoMemoryEnabled\":false}} --model <yours or picked> --effort <yours or picked> [--resume <session>]{}",
                 if power { POWER_TOOLS } else { "\"\"" },
                 super::mcp::SERVER_NAME,
                 if power { " --permission-prompt-tool mcp__masterdeck__permission_prompt (each command and web fetch asked in the window)" } else { "" }

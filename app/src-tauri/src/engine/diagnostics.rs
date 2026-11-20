@@ -110,7 +110,7 @@ pub fn write(dir: &Path, log_file: &Path, version: &str, deck: &DeckSnapshot, se
         }
     }
     std::fs::create_dir_all(dir)?;
-    let path = dir.join(format!("hubdeck-diagnostics-{}.txt", chrono::Local::now().format("%Y-%m-%d_%H-%M-%S")));
+    let path = dir.join(format!("masterdeck-diagnostics-{}.txt", chrono::Local::now().format("%Y-%m-%d_%H-%M-%S")));
     std::fs::write(&path, out)?;
     Ok(path)
 }

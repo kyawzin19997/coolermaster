@@ -403,7 +403,7 @@ pub fn claude_settings_path() -> Option<std::path::PathBuf> {
 }
 
 /// Add (connect) or remove MasterDeck's hooks in the user's Claude Code settings. A copy of the old
-/// file is kept next to it as `settings.json.hubdeck-backup`.
+/// file is kept next to it as `settings.json.masterdeck-backup`.
 /// `approve` adds the deck's answer to permission prompts of safe tools.
 pub fn set_connected_with(connect: bool, approve: bool) -> Result<bool, String> {
     let path = claude_settings_path().ok_or("no home folder")?;
@@ -415,7 +415,7 @@ pub fn set_connected_with(connect: bool, approve: bool) -> Result<bool, String> 
     let exe = std::env::current_exe().map_err(|e| e.to_string())?;
     let next = with_hooks_approve(settings, connect.then(|| exe.to_str()).flatten(), approve);
     if let Some(text) = &old {
-        std::fs::write(path.with_extension("json.hubdeck-backup"), text).map_err(|e| e.to_string())?;
+        std::fs::write(path.with_extension("json.masterdeck-backup"), text).map_err(|e| e.to_string())?;
     }
     if let Some(dir) = path.parent() {
         std::fs::create_dir_all(dir).map_err(|e| e.to_string())?;

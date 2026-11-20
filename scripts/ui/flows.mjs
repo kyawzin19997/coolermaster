@@ -266,7 +266,9 @@ for (const [label, viewport] of [['wide', { width: 1440, height: 900 }], ['half'
     await choose.click();
     await guide.getByText('Have an exported profile file', { exact: false }).waitFor();
     const types = await guide.getByRole('listitem').allTextContents();
-    if (types.map(line => line.split(' — ')[0]).join(',') !== '.masterdeck,.hubdeck,.json,.mhz') return 'the guide did not list all supported formats';
+    if (types.slice(0, 3).map(line => line.split(' — ')[0]).join(',') !== '.masterdeck,.json,.mhz' ||
+        types[3] !== 'Older MasterDeck profile packages are also supported.') return 'the guide did not explain the supported formats';
+    if (/hubdeck/i.test(await guide.innerText())) return 'the guide used outdated branding';
     await guide.getByRole('button', { name: 'Cancel', exact: true }).click();
     if (await pickerCalls() !== before || await guide.isVisible()) return 'cancelling should leave the picker closed';
     await choose.click();

@@ -1322,7 +1322,7 @@ pub fn claude_status() -> bool {
 }
 
 /// Connect (add MasterDeck's hooks to the user's Claude Code settings) or disconnect (remove them).
-/// The previous settings are kept as `settings.json.hubdeck-backup`.
+/// The previous settings are kept as `settings.json.masterdeck-backup`.
 #[tauri::command]
 pub fn claude_connect(on: bool, approve: Option<bool>) -> Res<bool> {
     super::agents::set_connected_with(on, approve.unwrap_or_else(super::agents::approving))

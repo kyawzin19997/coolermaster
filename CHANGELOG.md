@@ -1,9 +1,10 @@
 # Changelog
 
-## 1.3.4
+## 1.3.5
 
 - Plugins, Settings, and Updates open as separate pages. Returning to the deck restores the selected key and Actions search.
-- Profiles → Import explains the four supported file formats, where to get an export, and what to check after moving a profile.
+- Profiles → Import explains supported formats, where to get an export, and what to check after moving a profile.
+- App screens and import guidance consistently use the MasterDeck name. Older profile packages can still be imported.
 
 ## 1.3.3
 

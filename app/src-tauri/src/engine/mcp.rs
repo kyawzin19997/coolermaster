@@ -706,7 +706,7 @@ pub fn assistant_tools() -> Vec<Value> {
     list.push(tool(
         "connect_app",
         "Connect an app",
-        "Connect one of the user's apps by the address of its MasterDeck manifest or status on this computer (http://127.0.0.1:.../hubdeck/manifest, docs/APP-CONTRACT.md); MasterDeck then listens to it. Only addresses on this computer.",
+        "Connect one of the user's apps by the address of its MasterDeck manifest or status on this computer (http://127.0.0.1:.../masterdeck/manifest, docs/APP-CONTRACT.md); MasterDeck then listens to it. Only addresses on this computer.",
         json!({"url": {"type": "string"}}),
         &["url"],
         false,
@@ -945,7 +945,7 @@ fn is_masterdeck_server(entry: &Value) -> bool {
 }
 
 /// Add MasterDeck to the Claude Desktop configuration at `path`; the old file is kept as
-/// `<name>.hubdeck-backup`. Returns the backup's path when there was a file.
+/// `<name>.masterdeck-backup`. Returns the backup's path when there was a file.
 pub fn connect_desktop_at(path: &Path, exe: &str) -> Result<Option<PathBuf>, String> {
     let old = std::fs::read_to_string(path).ok();
     let config: Value = match &old {
@@ -955,7 +955,7 @@ pub fn connect_desktop_at(path: &Path, exe: &str) -> Result<Option<PathBuf>, Str
     let next = with_server(config, exe);
     let mut backup = None;
     if let Some(text) = &old {
-        let b = path.with_extension("json.hubdeck-backup");
+        let b = path.with_extension("json.masterdeck-backup");
         std::fs::write(&b, text).map_err(|e| e.to_string())?;
         backup = Some(b);
     }
@@ -1077,7 +1077,7 @@ pub fn build_prompt(name: &str, exe: &str, target: &str, picture: Option<&str>, 
     }
     let list: String = rules.iter().map(|r| format!("- {r}\n")).collect();
     format!(
-        "Build a complete, polished MasterDeck profile for {what} \"{name}\" (program {exe}{opened}) with the hubdeck tools.\n{list}When done, answer with one short sentence saying what you built."
+        "Build a complete, polished MasterDeck profile for {what} \"{name}\" (program {exe}{opened}) with the MasterDeck tools.\n{list}When done, answer with one short sentence saying what you built."
     )
 }
 
