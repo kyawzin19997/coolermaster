@@ -10,7 +10,7 @@ Your project lives in [kyawzin19997/coolermaster](https://github.com/kyawzin1999
 | [Actions](https://github.com/kyawzin19997/coolermaster/actions) | Builds and tests. Open a run, then open the failed step to read its log. |
 | [Releases](https://github.com/kyawzin19997/coolermaster/releases) | Published versions, release notes, and downloads. |
 | [Download for Windows](https://github.com/kyawzin19997/coolermaster/releases/latest/download/MasterDeck-windows-x64-setup.exe) | The latest Windows installer. This is the link to share with users. |
-| [Download for macOS](https://github.com/kyawzin19997/coolermaster/releases/download/v1.2.2/MasterDeck-macOS-Universal.dmg) | The universal disk image for MasterDeck 1.2.2. |
+| [Download for macOS](https://github.com/kyawzin19997/coolermaster/releases/download/v1.2.4/MasterDeck-macOS-Universal.dmg) | The universal disk image for MasterDeck 1.2.4. |
 
 A **commit** saves a group of changes in Git. A **push** sends commits to GitHub. The **main** branch is your normal line of work. A **tag** such as `v1.0.1` names the exact commit GitHub should build and publish. You only need a tag when you want a public installer.
 
