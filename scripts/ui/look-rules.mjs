@@ -68,9 +68,11 @@ try {
   const box = await key.locator(".dk-hov").first().boundingBox();
   await win.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
   await sleep(800);
+  await win.getByRole("button", { name: "Appearance", exact: true }).click();
   await win.getByRole("button", { name: "Full editor" }).click();
   await sleep(1200);
   const studio = win.getByRole("region", { name: "Key editor" });
+  await studio.getByText("Styles and effects", { exact: true }).click();
 
   // a value in the label with a click
   await studio.getByRole("group", { name: "Show a value" }).getByRole("button", { name: "{cpu}" }).click();

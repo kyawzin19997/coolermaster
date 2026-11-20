@@ -697,6 +697,106 @@
   display: none;
 }
 
+.key-studio .studio-grid {
+  width: min(1040px, calc(100% - 32px));
+  align-items: start;
+  grid-template-columns: minmax(236px, 0.8fr) minmax(0, 1.25fr);
+  gap: clamp(20px, 4vw, 58px);
+  margin-inline: auto;
+  padding: 24px 0 28px;
+  overflow-y: auto;
+}
+
+.key-studio-heading { min-width: 0; }
+.key-studio-heading h1 { margin: 0; font-size: 16px; font-weight: 600; }
+.key-studio-heading > span { color: var(--tx2); font-size: 12px; }
+
+.key-studio .studio-stage {
+  position: sticky;
+  top: 0;
+  display: grid;
+  justify-items: center;
+  gap: 11px;
+  padding: 18px 10px;
+}
+
+.key-studio .studio-canvas {
+  padding: 14px;
+  border: 1px solid var(--ln2);
+  border-radius: 28px;
+  background: var(--glass);
+  box-shadow: var(--glass-sheen);
+}
+
+.key-studio .studio-key {
+  width: clamp(165px, 22vw, 244px);
+  border-radius: 20px;
+  cursor: default;
+  touch-action: auto;
+  box-shadow: none;
+}
+.key-studio .studio-key.is-positioning { cursor: grab; touch-action: none; }
+.key-studio .studio-key.is-positioning:active { cursor: grabbing; }
+.key-studio .studio-stage .help { margin: 0; }
+.studio-action { display: flex; align-items: center; gap: 8px; color: var(--tx); font-size: 13px; }
+
+.studio-props {
+  min-width: 0;
+  border: 1px solid var(--ln2);
+  border-radius: 10px;
+  background: var(--bg1);
+}
+.studio-basic { display: grid; gap: 12px; padding: 16px 16px 0; }
+.studio-basic h2 { margin: 0; font-size: 15px; font-weight: 600; }
+.studio-colors { display: flex; gap: 18px; flex-wrap: wrap; }
+.studio-colors .color { background: var(--bg2); border: 1px solid var(--ln2); border-radius: var(--r); padding: 4px 10px 4px 6px; }
+.studio-section { border-top: 1px solid var(--ln2); }
+.studio-section > summary {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 41px;
+  padding: 7px 16px;
+  cursor: pointer;
+  list-style: none;
+  font-weight: 500;
+}
+.studio-section > summary::-webkit-details-marker { display: none; }
+.studio-section > summary:hover { background: var(--hov); }
+.studio-section > summary .i:last-child { margin-left: auto; color: var(--tx2); }
+.studio-section[open] > summary .i:last-child { transform: rotate(180deg); }
+.studio-section-body { display: flex; flex-direction: column; align-items: stretch; gap: 10px; padding: 6px 16px 14px; }
+.studio-section-body.row { flex-direction: row; }
+.studio-icons { margin-inline: -16px; }
+.key-studio .studio-move { justify-content: flex-start; }
+.key-studio .studio-keys { justify-content: start; grid-template-columns: repeat(auto-fill, 39px); }
+.key-studio .studio-chip { width: 39px; height: 39px; }
+.key-studio .studio-section-body .help { margin: 0; }
+
+.plugin-manager { max-width: 920px; }
+.plugin-manager-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.plugin-manager-head h3 { margin: 0 0 3px; font-size: 17px; }
+.plugin-manager-head p { margin: 0; }
+.plugin-manager-head button { flex: none; }
+.plugin-manager-links { padding-block: 3px 6px; }
+.installed-plugins { list-style: none; padding: 0; margin: 0; display: grid; }
+.installed-plugin { display: grid; gap: 9px; border-top: 1px solid var(--ln2); padding: 13px 0; }
+.installed-plugin-title { display: flex; align-items: center; gap: 10px; }
+.installed-plugin-title > .grow { display: grid; gap: 3px; min-width: 0; }
+.installed-plugin-title .meta { display: block; }
+.installed-plugin-icon { flex: none; width: 34px; height: 34px; display: grid; place-items: center; background: var(--bg2); border: 1px solid var(--ln2); border-radius: var(--r); color: var(--acc2); }
+.installed-plugin-icon .catalog-icon { width: 28px; height: 28px; }
+.installed-plugin-tools, .installed-plugin-details, .plugin-runtime { margin-left: 44px; }
+.installed-plugin-details { color: var(--tx2); font-size: 12px; }
+.installed-plugin-details summary { cursor: pointer; }
+.installed-plugin-details .meta { margin-top: 7px; overflow-wrap: anywhere; }
+.plugin-manager-empty { color: var(--tx); padding: 14px 0; margin: 0; border-top: 1px solid var(--ln2); }
+.plugin-manager-empty span { color: var(--tx2); }
+.plugin-feedback { color: var(--errtx); overflow-wrap: anywhere; }
+.plugin-preview-row { align-items: flex-start; }
+.plugin-filename { overflow-wrap: anywhere; }
+.plugin-review-controls { justify-content: flex-end; }
+
 .control-inspector .insp-head {
   background: transparent;
   box-shadow: none;

@@ -103,7 +103,15 @@ pub const DIAL_PX: u32 = 240;
 /// Game icons are named `game:<name>` in looks.
 pub const GAME_PREFIX: &str = "game:";
 
+static ACTION_ICONS: std::sync::LazyLock<std::collections::HashMap<String, String>> = std::sync::LazyLock::new(|| {
+    let paths: std::collections::HashMap<String, String> = serde_json::from_str(include_str!("../../../src/action-icons.json")).expect("built-in action icon paths");
+    paths.into_iter().map(|(id, path)| (id, format!(r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="{path}"/></svg>"#))).collect()
+});
+
 pub fn icon_svg(name: &str) -> Option<&'static str> {
+    if let Some(action) = name.strip_prefix("action:") {
+        return ACTION_ICONS.get(action).map(String::as_str);
+    }
     match name.strip_prefix(GAME_PREFIX) {
         Some(game) => GAME_ICONS.iter().find(|(n, _)| *n == game).map(|(_, svg)| *svg),
         None => ICONS.iter().find(|(n, _)| *n == name).map(|(_, svg)| *svg),

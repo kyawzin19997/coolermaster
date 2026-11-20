@@ -1380,6 +1380,7 @@ mod tests {
         for a in &all {
             assert!(!a.inputs.is_empty(), "{} accepts some input", a.id);
             assert!(super::super::render::icon_svg(a.icon).is_some(), "{}: icon {} is built in", a.id, a.icon);
+            assert!(super::super::render::icon_svg(&format!("action:{}", a.id)).is_some(), "{} needs a MasterDeck action icon", a.id);
             for p in &a.params {
                 if let Some((other, _)) = &p.when {
                     assert!(a.params.iter().any(|q| q.key == *other), "{}.{} depends on a param that exists", a.id, p.key);

@@ -76,7 +76,7 @@ pub fn group_icons() -> std::collections::BTreeMap<String, String> {
 }
 
 /// An HTML plugin runs in a hidden window; the app sets how (a Tauri window per plugin).
-type HtmlLauncher = Box<dyn Fn(&str, &str) + Send + Sync>;
+type HtmlLauncher = Box<dyn Fn(&str, Option<&str>) + Send + Sync>;
 static HTML: OnceLock<HtmlLauncher> = OnceLock::new();
 
 pub fn set_html_launcher(f: HtmlLauncher) {
@@ -682,8 +682,14 @@ pub fn launch(sd: &SdManifest, dir: &Path, port: u16, uuid: &str) -> Result<Laun
 
 /// Open an HTML plugin in its hidden window.
 pub fn open_html(plugin: &str, url: &str) -> Result<(), String> {
-    HTML.get().ok_or("no window for HTML plugins")?(plugin, url);
+    HTML.get().ok_or("no window for HTML plugins")?(plugin, Some(url));
     Ok(())
+}
+
+pub fn close_html(plugin: &str) {
+    if let Some(window) = HTML.get() {
+        window(plugin, None);
+    }
 }
 
 fn percent_encode(s: &str) -> String {
@@ -989,18 +995,25 @@ pub fn without_bom(bytes: &[u8]) -> &[u8] {
 
 /// The `.streamDeckPlugin` inside a zip that holds only that file (DevOps for StreamDeck releases
 /// `<uuid>.streamDeckPlugin.zip`, 2026-10-17); any other file as it is.
+pub const MAX_PLUGIN_FILE: u64 = 300 * 1024 * 1024;
+const MAX_EXPANDED: u64 = 768 * 1024 * 1024;
+const MAX_ENTRIES: usize = 40_000;
+
 fn unwrap_zipped(bytes: &[u8]) -> std::borrow::Cow<'_, [u8]> {
     use std::io::Read as _;
     let Ok(mut zip) = zip::ZipArchive::new(std::io::Cursor::new(bytes)) else { return bytes.into() };
-    let names: Vec<String> = (0..zip.len()).filter_map(|i| zip.by_index(i).ok().map(|f| f.name().unwrap_or_default().replace('\\', "/"))).collect();
+    if zip.len() > MAX_ENTRIES {
+        return bytes.into();
+    }
+    let names: Vec<String> = (0..zip.len()).filter_map(|i| zip.by_index_raw(i).ok().map(|f| f.name().unwrap_or_default().replace('\\', "/"))).collect();
     if names.iter().any(|n| n.split('/').any(|p| p.ends_with(".sdPlugin"))) {
         return bytes.into();
     }
     let inner: Vec<&String> = names.iter().filter(|n| n.to_lowercase().ends_with(".streamdeckplugin")).collect();
     let [inner] = inner[..] else { return bytes.into() };
     let mut data = Vec::new();
-    match zip.by_name(inner).map(|mut f| f.read_to_end(&mut data)) {
-        Ok(Ok(_)) => data.into(),
+    match zip.by_name(inner).map(|f| f.take(MAX_PLUGIN_FILE + 1).read_to_end(&mut data)) {
+        Ok(Ok(n)) if n as u64 <= MAX_PLUGIN_FILE => data.into(),
         _ => bytes.into(),
     }
 }
@@ -1013,14 +1026,39 @@ pub fn is_encrypted(bytes: &[u8]) -> bool {
     bytes.starts_with(b"ELGATO")
 }
 
+pub fn encrypted_file(path: &Path) -> bool {
+    use std::io::Read as _;
+    let mut header = [0; 6];
+    std::fs::File::open(path).and_then(|mut file| file.read_exact(&mut header)).is_ok() && is_encrypted(&header)
+}
+
 /// The plugin uuid a `.streamDeckPlugin` file holds (its `<uuid>.sdPlugin` folder).
+#[cfg(test)]
 pub fn install_root(bytes: &[u8]) -> Result<String, String> {
     let bytes = &*unwrap_zipped(bytes);
     let mut zip = zip::ZipArchive::new(std::io::Cursor::new(bytes)).map_err(|e| format!("not a Stream Deck plugin file: {e}"))?;
-    (0..zip.len())
-        .filter_map(|i| zip.by_index(i).ok().map(|f| f.name().unwrap_or_default().replace('\\', "/")))
-        .find_map(|n| n.split('/').find(|p| p.ends_with(".sdPlugin")).map(|p| p.trim_end_matches(".sdPlugin").to_string()))
-        .ok_or_else(|| "no <uuid>.sdPlugin folder inside".to_string())
+    Ok(archive_root(&mut zip)?.trim_end_matches(".sdPlugin").to_string())
+}
+
+fn archive_root(zip: &mut zip::ZipArchive<std::io::Cursor<&[u8]>>) -> Result<String, String> {
+    if zip.len() > MAX_ENTRIES {
+        return Err("The plugin archive contains too many files.".into());
+    }
+    let mut root = None;
+    for i in 0..zip.len() {
+        let file = zip.by_index_raw(i).map_err(|e| e.to_string())?;
+        let name = file.name().unwrap_or_default().replace('\\', "/");
+        let Some(folder) = name.split('/').find(|p| p.ends_with(".sdPlugin")) else { continue };
+        let id = folder.trim_end_matches(".sdPlugin");
+        if !super::plugins::safe_id(id) || id.starts_with('.') || id.ends_with('.') {
+            return Err("The plugin folder has an invalid ID.".into());
+        }
+        if root.as_deref().is_some_and(|r| r != folder) {
+            return Err("Choose an archive with one plugin folder.".into());
+        }
+        root.get_or_insert_with(|| folder.to_string());
+    }
+    root.ok_or_else(|| "The archive has no .sdPlugin folder.".into())
 }
 
 /// Install a `.streamDeckPlugin` (a zip holding `<uuid>.sdPlugin/`) into the plugins folder;
@@ -1030,13 +1068,11 @@ pub fn install(bytes: &[u8], plugins_dir: &Path) -> Result<String, String> {
     let bytes = &*unwrap_zipped(bytes);
     let mut zip = zip::ZipArchive::new(std::io::Cursor::new(bytes)).map_err(|e| format!("not a Stream Deck plugin file: {e}"))?;
     // a zip made on Windows may separate folders with backslashes (Weather, 2026-10-16)
-    let root = (0..zip.len())
-        .filter_map(|i| zip.by_index(i).ok().map(|f| f.name().unwrap_or_default().replace('\\', "/")))
-        .find_map(|n| n.split('/').find(|p| p.ends_with(".sdPlugin")).map(str::to_string))
-        .ok_or("no <uuid>.sdPlugin folder inside")?;
+    let root = archive_root(&mut zip)?;
     let target = plugins_dir.join(&root);
     let tmp = plugins_dir.join(format!(".{root}.part"));
     let _ = std::fs::remove_dir_all(&tmp);
+    let mut remaining = MAX_EXPANDED;
     for i in 0..zip.len() {
         let mut f = zip.by_index(i).map_err(|e| e.to_string())?;
         // the path after `<uuid>.sdPlugin/`, as plain parts: nothing may climb out (`..`, a drive)
@@ -1044,7 +1080,7 @@ pub fn install(bytes: &[u8], plugins_dir: &Path) -> Result<String, String> {
         let parts: Vec<&str> = name.split('/').filter(|p| !p.is_empty()).collect();
         let Some(at) = parts.iter().position(|p| *p == root) else { continue };
         let rel = &parts[at + 1..];
-        if rel.iter().any(|p| *p == ".." || *p == "." || p.contains(':')) {
+        if rel.iter().any(|p| p.ends_with(['.', ' ']) || p.contains([':', '\0'])) || f.is_symlink() {
             continue;
         }
         let out = rel.iter().fold(tmp.clone(), |acc, p| acc.join(p));
@@ -1053,16 +1089,24 @@ pub fn install(bytes: &[u8], plugins_dir: &Path) -> Result<String, String> {
             continue;
         }
         std::fs::create_dir_all(out.parent().unwrap_or(&tmp)).map_err(|e| e.to_string())?;
-        let mut data = Vec::new();
-        f.read_to_end(&mut data).map_err(|e| e.to_string())?;
-        std::fs::write(&out, data).map_err(|e| e.to_string())?;
+        if f.size() > remaining {
+            return Err("The plugin archive expands beyond the supported size.".into());
+        }
+        let mut file = std::fs::File::create(&out).map_err(|e| e.to_string())?;
+        let bytes = std::io::copy(&mut (&mut f).take(remaining + 1), &mut file).map_err(|e| e.to_string())?;
+        remaining = remaining.checked_sub(bytes).ok_or("The plugin archive expands beyond the supported size.")?;
         #[cfg(unix)]
         if let Some(mode) = f.unix_mode() {
             use std::os::unix::fs::PermissionsExt;
             let _ = std::fs::set_permissions(&out, std::fs::Permissions::from_mode(mode & 0o777));
         }
     }
-    let raw = std::fs::read(tmp.join("manifest.json")).unwrap_or_default();
+    let manifest_path = tmp.join("manifest.json");
+    if std::fs::metadata(&manifest_path).is_ok_and(|meta| meta.len() > 8 * 1024 * 1024) {
+        let _ = std::fs::remove_dir_all(&tmp);
+        return Err("The plugin manifest is too large.".into());
+    }
+    let raw = std::fs::read(manifest_path).unwrap_or_default();
     let Some(manifest) = serde_json::from_slice::<Value>(without_bom(&raw)).ok() else {
         let _ = std::fs::remove_dir_all(&tmp);
         return Err(if is_encrypted(&raw) { ENCRYPTED } else { "the plugin has no readable manifest.json" }.into());
@@ -1072,7 +1116,7 @@ pub fn install(bytes: &[u8], plugins_dir: &Path) -> Result<String, String> {
     if named.get("UUID").and_then(Value::as_str).is_none_or(str::is_empty) {
         named["UUID"] = Value::from(root.trim_end_matches(".sdPlugin"));
     }
-    if read(&named, &tmp).is_ok_and(|sd| std::fs::read(tmp.join(&sd.code_path)).is_ok_and(|b| is_encrypted(&b))) {
+    if read(&named, &tmp).is_ok_and(|sd| inside(&tmp, &sd.code_path).is_some_and(|path| encrypted_file(&path))) {
         let _ = std::fs::remove_dir_all(&tmp);
         return Err(ENCRYPTED.into());
     }

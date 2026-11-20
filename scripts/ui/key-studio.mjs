@@ -70,13 +70,15 @@ try {
   await sleep(800);
 
   // the Look panel's "Full editor" opens the editor on the whole window
+  await win.getByRole("button", { name: "Appearance", exact: true }).click();
   await win.getByRole("button", { name: "Full editor" }).click();
   await sleep(1200);
   const studio = win.getByRole("region", { name: "Key editor" });
   check("Full editor opens the key editor on the window", await studio.isVisible());
   await win.screenshot({ path: path.join(shots, "1-open.png") });
 
-  // an icon from the library on the left
+  // the icon picker opens on demand
+  await studio.getByText("Choose icon or image", { exact: true }).click();
   await studio.getByRole("tab", { name: "Emoji" }).click();
   await sleep(400);
   await studio.getByRole("button", { name: "fire hot" }).click();
@@ -84,6 +86,7 @@ try {
   check("an emoji from the library becomes the icon", (await look()).icon === "emoji:🔥", (await look()).icon);
 
   // drag the icon 8 key pixels right on the big key, then nudge it up with the arrow
+  await studio.getByText("Position on the key", { exact: true }).click();
   const big = studio.getByRole("img", { name: "Preview of the key" });
   const b = await big.boundingBox();
   const zoom = b.width / 72;
@@ -117,16 +120,18 @@ try {
   check("the Undo button undoes too", (await look()).labelDy === 3);
   await studio.getByRole("button", { name: "Redo", exact: true }).click();
   await sleep(900);
-  // the checkered stage hugs the key
+  // the preview frame hugs the key
   const stage = await win.evaluate(() => {
     const c = document.querySelector(".studio-canvas")?.getBoundingClientRect();
     const k = document.querySelector(".studio-key")?.getBoundingClientRect();
     return c && k ? { canvas: Math.round(c.width), key: Math.round(k.width) } : null;
   });
-  check("the checkered stage is only around the key", !!stage && stage.canvas <= stage.key + 40, JSON.stringify(stage));
+  check("the preview frame is only around the key", !!stage && stage.canvas <= stage.key + 40, JSON.stringify(stage));
 
   // the key's own font, from the list of this computer's fonts
-  await studio.getByRole("tab", { name: "Label", exact: true }).click();
+  await studio.getByText("Styles and effects", { exact: true }).click();
+  const advanced = studio.locator(".designer");
+  await advanced.getByRole("tab", { name: "Label", exact: true }).click();
   await sleep(600);
   const fontSelect = studio.locator("label.field", { hasText: "Font" }).locator("select");
   const fonts = await fontSelect.locator("option").allTextContents();
@@ -137,7 +142,7 @@ try {
   check("the big key draws it", (await big.innerHTML()).includes(`font-family="${font}"`));
 
   // a moving look plays in the big preview
-  await studio.getByRole("tab", { name: "Extras", exact: true }).click();
+  await advanced.getByRole("tab", { name: "Extras", exact: true }).click();
   await sleep(400);
   await studio.getByRole("radiogroup", { name: "Motion" }).getByRole("radio", { name: "Pulse" }).click();
   await sleep(1200);
@@ -147,6 +152,7 @@ try {
   check("the pulse plays in the preview (its frames change)", f1 !== f2);
 
   // key 8 ticked: a template goes to both, key 8 keeps its label and emoji
+  await studio.getByText("Apply style to other keys", { exact: true }).click();
   await studio.getByRole("button", { name: "8. Oceń" }).click();
   await sleep(300);
   await studio.getByRole("tab", { name: "Templates", exact: true }).click();
@@ -177,20 +183,19 @@ try {
     await win.setViewportSize({ width: w, height: h });
     await sleep(500);
     for (const name of ["Templates", "Background", "Icon", "Label", "Extras"]) {
-      await studio.getByRole("tab", { name, exact: true }).click();
+      await advanced.getByRole("tab", { name, exact: true }).click();
       await sleep(250);
       const cut = (await clipped(win)).filter((x) => /Key editor|Back|Done|Drag|Icon|Label|Back to its place|Font|Templates|Background|Extras|Motion|Pulse|keys ticked|key ticked|Save PNG|Export page|New keys in|Undo|Redo/.test(x.text));
       check(`nothing of ${name} cut at ${w} wide`, cut.length === 0, cut.map((x) => x.text).join(" | "));
     }
     const out = await win.evaluate(() => [...document.querySelectorAll(".studio *")].filter((e) => e.getBoundingClientRect().right > window.innerWidth + 1).length);
     check(`nothing past the window's edge at ${w} wide`, out === 0, String(out));
-    // the icon library uses its column: tall, and no sideways scroll (it had the popover's 248 px)
+    // The expandable icon picker fits its available width.
     const lib = await win.evaluate(() => {
-      const g = document.querySelector(".studio-library .icon-grid");
-      const pane = document.querySelector(".studio-library");
-      return g && pane ? { h: g.clientHeight, pane: pane.clientHeight, sideways: g.scrollWidth > g.clientWidth + 1 } : null;
+      const g = document.querySelector(".studio-icons .icon-grid");
+      return g ? { h: g.clientHeight, sideways: g.scrollWidth > g.clientWidth + 1 } : null;
     });
-    check(`the icon library fills its column at ${w} wide, no sideways scroll`, !!lib && lib.h > lib.pane * 0.6 && !lib.sideways, JSON.stringify(lib));
+    check(`the icon picker fits at ${w} wide, no sideways scroll`, !!lib && lib.h > 0 && !lib.sideways, JSON.stringify(lib));
     await win.screenshot({ path: path.join(shots, `3-${w}.png`) });
   }
   for (const t of ["light", "dark"]) {

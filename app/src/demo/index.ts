@@ -7,7 +7,8 @@
 import { emit } from "@tauri-apps/api/event";
 import { mockIPC, mockWindows } from "@tauri-apps/api/mocks";
 import type { DeckSnapshot } from "../deck";
-import type { Binding, EngineState, LightSettings, Profile } from "../engine";
+import type { Binding, EngineState, LightSettings, PluginInfo, Profile } from "../engine";
+import { actionIconPath } from "../actionIcons";
 import { version } from "../../package.json";
 import fixture from "./fixture.json";
 import { setLanguage } from "../i18n";
@@ -124,16 +125,33 @@ const state = (): EngineState => ({
 });
 
 /** A plain key picture for looks the fixture does not have (edited in the demo). */
-function fallbackSvg(screen: string, look: { label?: string; bg?: string; fg?: string }) {
+function fallbackSvg(screen: string, look: { label?: string; bg?: string; fg?: string; icon?: string }) {
   const size = screen === "dial" ? 240 : 96;
   const label = (look.label ?? "").replace(/[<&>]/g, "");
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"><rect width="100%" height="100%" fill="${look.bg ?? "#26232e"}"/><text x="50%" y="55%" text-anchor="middle" font-family="IBM Plex Sans" font-size="${size / 6}" fill="${look.fg ?? "#fff"}">${label}</text></svg>`;
+  const icon = look.icon?.startsWith("action:") && actionIconPath(look.icon.slice(7));
+  const safeColor = (value: string | undefined, fallback: string) => value && /^#[0-9a-f]{3}(?:[0-9a-f]{3})?$/i.test(value) ? value : fallback;
+  const fg = safeColor(look.fg, "#fff");
+  const glyph = icon ? `<g transform="translate(${size / 4} ${size / 8}) scale(${size / 48})" fill="none" stroke="${fg}" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="${icon}"/></g>` : "";
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"><rect width="100%" height="100%" fill="${safeColor(look.bg, "#26232e")}"/>${glyph}<text x="50%" y="${icon ? 78 : 55}%" text-anchor="middle" font-family="IBM Plex Sans" font-size="${size / 6}" fill="${fg}">${label}</text></svg>`;
 }
 
 /** JSON with the keys in order, as the fixture writes them (the look's keys come in any order). */
 const sortedJson = (v: unknown) => JSON.stringify(v, (_k, x) => (x && typeof x === "object" && !Array.isArray(x) ? Object.fromEntries(Object.entries(x).sort(([a], [b]) => (a < b ? -1 : 1))) : x));
 
 const changed = () => void emit("engine://state", state());
+const localPlugin = { id: "com.example.studiotools", name: "Studio Tools", author: "Local developer", actions: 1, digest: "demo-reviewed-file", icon: null };
+const demoPlugins = new Map<string, PluginInfo>([
+  ["com.example.weather", { id: "com.example.weather", name: "Weather", version: "1.2.0", actions: 3, status: "running", connected: true, restarts: 0, permissions: ["network"], cpu: 0.4, memoryMb: 18, held: false, source: "marketplace" }],
+  ["com.example.meters", { id: "com.example.meters", name: "Hardware meters", version: "2.0.3", actions: 6, status: "running", connected: true, restarts: 0, permissions: ["processes"], cpu: 34.5, memoryMb: 212, held: false, source: "existing" }],
+  ["com.example.pomodoro", { id: "com.example.pomodoro", name: "Pomodoro", version: "0.9.1", actions: 2, status: "stopped by you", connected: false, restarts: 0, permissions: [], cpu: null, memoryMb: null, held: true, source: "streamDeck" }],
+]);
+const pluginCatalogChanged = () => void emit("engine://catalog", null);
+const demoPluginVersion = (path: unknown) => String(path).includes("-update") ? "1.1.0" : "1.0.0";
+const setPluginEnabled = (id: unknown, enabled: boolean) => {
+  const plugin = demoPlugins.get(String(id));
+  if (plugin) demoPlugins.set(plugin.id, { ...plugin, held: !enabled, connected: enabled, status: enabled ? "running" : "stopped by you" });
+  pluginCatalogChanged();
+};
 
 let demoTemplates: { name: string; look: Record<string, unknown> }[] = [];
 let lights: LightSettings = {
@@ -159,7 +177,10 @@ const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
     if (placement) placements[key as string] = placement as (typeof placements)[string];
     else delete placements[key as string];
   },
-  actions_list: () => fixture.catalog,
+  actions_list: () => ({ ...fixture.catalog, actions: [
+    ...fixture.catalog.actions,
+    ...(demoPlugins.get(localPlugin.id)?.connected ? [{ id: `${localPlugin.id}/switch`, name: "Studio switch", group: localPlugin.name, description: "Switch the studio output.", icon: "plug", inputs: ["press"], params: [] }] : []),
+  ] }),
   icons_list: () => fixture.icons,
   // the real catalog, test presets included
   presets_list: () => fixture.presets,
@@ -196,6 +217,13 @@ const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
     else delete p.controls[control as string];
     changed();
   },
+  bindings_set: ({ profile, bindings }) => {
+    const p = profiles.get(String(profile));
+    if (p) {
+      Object.assign(p.controls, bindings);
+      changed();
+    }
+  },
   preview_svg: ({ screen, look }) => (fixture.previews as Record<string, string>)[`${screen}|${sortedJson(look)}`] ?? fallbackSvg(screen as string, look as never),
   image_thumb: () => null,
   pet_preview: () => [],
@@ -207,14 +235,12 @@ const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
   deck_fonts: () => ["Arial", "Meiryo", "Segoe UI", "Yu Gothic"],
   screens_get: () => ({ brightness: 100, blankAfterMinutes: 0, blankWhenLocked: true }),
   integrations_get: () => ({ obsUrl: "ws://127.0.0.1:4455", obsPasswordSet: true, haUrl: "http://homeassistant.local:8123", haTokenSet: true, streamlabsUrl: "ws://127.0.0.1:59650", streamlabsTokenSet: false }),
-  plugins_list: () => [
-    { id: "com.example.weather", name: "Weather", version: "1.2.0", actions: 3, status: "running", connected: true, restarts: 0, permissions: ["network"], cpu: 0.4, memoryMb: 18, held: false },
-    { id: "com.example.meters", name: "Hardware meters", version: "2.0.3", actions: 6, status: "running", connected: true, restarts: 0, permissions: ["processes"], cpu: 34.5, memoryMb: 212, held: false },
-    { id: "com.example.pomodoro", name: "Pomodoro", version: "0.9.1", actions: 2, status: "exited (code 1)", connected: false, restarts: 2, permissions: [], cpu: null, memoryMb: null, held: false },
-  ],
-  plugin_stop: () => null,
+  plugins_list: () => [...demoPlugins.values()],
+  plugin_stop: ({ id }) => setPluginEnabled(id, false),
   // `&runs=1`: Import picks a shared profile that runs a script, so it asks first (scripts/ui/questions.mjs)
-  "plugin:dialog|open": () => (demoParam("runs") ? "C:/Users/you/Downloads/Photo backup.hubdeck" : null),
+  "plugin:dialog|open": () => demoParam("runs") ? "C:/Users/you/Downloads/Photo backup.hubdeck"
+    : demoParam("plugin") === "invalid" ? "Unreadable.zip"
+      : demoParam("plugin") ? (demoPlugins.has(localPlugin.id) ? "StudioTools-update.streamDeckPlugin" : "StudioTools.streamDeckPlugin") : null,
   profile_import: () => {
     const source = profiles.get("demo-everyday") ?? [...profiles.values()][0];
     const copy = { ...structuredClone(source), id: `import-${Date.now()}`, name: "Photo backup", runs: ["powershell -NoProfile -File backup-photos.ps1"], moved: [] };
@@ -223,9 +249,9 @@ const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
     return copy;
   },
   plugin_uses: ({ id }) => (id === "com.example.weather" ? [{ profile: "Everyday desk", pages: [], control: "keys.4", label: "Weather" }] : []),
-  plugin_uninstall: () => null,
+  plugin_uninstall: ({ id }) => { demoPlugins.delete(String(id)); pluginCatalogChanged(); },
   iconpack_remove: () => null,
-  plugin_start: () => null,
+  plugin_start: ({ id }) => setPluginEnabled(id, true),
   backups_list: () => [
     { id: "b3", when: "2026-10-11 09:12", reason: "daily", profiles: 7 },
     { id: "b2", when: "2026-10-10 22:40", reason: "before import", profiles: 6 },
@@ -521,9 +547,14 @@ const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
     { id: "com.example.store-only", name: "com.example.store-only", author: "", version: "", icon: null, problem: "this plugin is encrypted for Elgato's Stream Deck app; other apps cannot read it" },
   ],
   sd_import: ({ id }) => id,
-  sd_peek: () => ({ id: "com.fredemmott.audiooutputswitch", name: "Audio Switcher", author: "Fred Emmott", version: "3.2.1", icon: null, problem: null }),
+  sd_peek: ({ path }) => String(path).endsWith("Unreadable.zip") ? { id: "", name: "Unreadable.zip", problem: "The archive has no .sdPlugin folder." }
+    : { ...localPlugin, version: demoPluginVersion(path), installedVersion: demoPlugins.get(localPlugin.id)?.version ?? null, problem: null },
   sd_opened: () => [],
-  sd_install: ({ path }) => String(path),
+  sd_install: ({ path }) => {
+    demoPlugins.set(localPlugin.id, { id: localPlugin.id, name: localPlugin.name, version: demoPluginVersion(path), actions: localPlugin.actions, status: "not started", connected: false, restarts: 0, permissions: [], cpu: null, memoryMb: null, held: true, source: "manual" });
+    pluginCatalogChanged();
+    return localPlugin.id;
+  },
   profiles_dir_get: () => [String.raw`C:\Users\you\AppData\Roaming\HubDeck\profiles`, false],
   spotify_status: () => ["", false],
   midi_ports: () => [],

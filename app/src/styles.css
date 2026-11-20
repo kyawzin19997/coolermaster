@@ -5656,9 +5656,6 @@ button.lib-foot:focus-visible span {
   flex: 1;
   min-height: 0;
   display: grid;
-  grid-template-columns: minmax(250px, 300px) minmax(320px, 1fr) minmax(300px, 360px);
-  gap: 12px;
-  padding: 12px;
 }
 .studio-pane {
   min-width: 0;
@@ -5680,22 +5677,11 @@ button.lib-foot:focus-visible span {
   max-width: 100%;
   display: grid;
   place-items: center;
-  padding: 14px;
-  border-radius: 46px;
-  background: repeating-conic-gradient(var(--line) 0% 25%, transparent 0% 50%) 50% / 20px 20px;
 }
 .studio-key {
-  width: 288px;
   max-width: 100%;
   aspect-ratio: 1;
-  border-radius: 34px;
   overflow: hidden;
-  cursor: grab;
-  touch-action: none;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
-}
-.studio-key:active {
-  cursor: grabbing;
 }
 .studio-key:focus-visible {
   outline: 2px solid var(--acc);
@@ -5745,39 +5731,8 @@ button.lib-foot:focus-visible span {
 .studio-chip.is-current {
   cursor: default;
 }
-@media (max-width: 1100px) {
-  .studio-grid {
-    grid-template-columns: minmax(220px, 260px) minmax(280px, 1fr) minmax(280px, 320px);
-  }
-  .studio-key {
-    width: 216px;
-  }
-}
-/* the library on the editor's left takes the column's height; as many columns as fit, no sideways scroll */
-.studio-library .icon-picker {
-  flex: 1;
-  min-height: 0;
-}
-.studio-library .icon-grid {
-  max-height: none;
-  overflow-y: auto;
-  overflow-x: hidden;
-  min-height: 0;
-  flex: 1;
-  grid-template-columns: repeat(auto-fill, minmax(30px, 1fr));
-}
-.studio-library .icon-grid.pack {
-  grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
-}
 .studio-bar {
   flex-wrap: wrap;
-}
-.studio-note {
-  max-width: 40ch;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 /* looks by conditions (step 4) and the values a label can show */

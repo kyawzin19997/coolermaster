@@ -645,13 +645,19 @@ pub fn games_play(engine: State<'_, Engine>, on: bool) {
 }
 
 #[tauri::command]
-pub fn plugin_stop(id: String) -> Res<()> {
-    super::plugins::stop_one(&id)
+pub async fn plugin_stop(app: tauri::AppHandle, id: String) -> Res<()> {
+    use tauri::Emitter as _;
+    tauri::async_runtime::spawn_blocking(move || super::plugins::stop_one(&id)).await.map_err(|e| e.to_string())??;
+    let _ = app.emit("engine://catalog", ());
+    Ok(())
 }
 
 #[tauri::command]
-pub fn plugin_start(id: String) -> Res<()> {
-    super::plugins::start_one(&id)
+pub async fn plugin_start(app: tauri::AppHandle, id: String) -> Res<()> {
+    use tauri::Emitter as _;
+    tauri::async_runtime::spawn_blocking(move || super::plugins::start_one(&id)).await.map_err(|e| e.to_string())??;
+    let _ = app.emit("engine://catalog", ());
+    Ok(())
 }
 
 /// Where a plugin's actions stand in the profiles (the question before Uninstall names them):
@@ -677,9 +683,9 @@ pub fn plugin_uses(engine: State<'_, Engine>, id: String) -> Vec<serde_json::Val
 #[tauri::command]
 pub async fn plugin_uninstall(app: tauri::AppHandle, id: String) -> Res<()> {
     use tauri::Emitter as _;
-    tauri::async_runtime::spawn_blocking(move || super::plugins::remove(&id)).await.map_err(|e| e.to_string())??;
+    let result = tauri::async_runtime::spawn_blocking(move || super::plugins::remove(&id)).await.map_err(|e| e.to_string())?;
     let _ = app.emit("engine://catalog", ());
-    Ok(())
+    result
 }
 
 #[tauri::command]
@@ -687,12 +693,19 @@ pub fn plugins_list() -> Vec<super::plugins::PluginInfo> {
     super::plugins::list()
 }
 
-/// Install a Stream Deck plugin file (`.streamDeckPlugin`) and start it; the window re-reads the
-/// action library. Returns the plugin's id.
+/// Install the file reviewed in the window. The user enables the plugin separately.
 #[tauri::command]
-pub async fn sd_install(app: tauri::AppHandle, path: String) -> Res<String> {
+pub async fn sd_install(app: tauri::AppHandle, path: String, digest: String, id: String) -> Res<String> {
     use tauri::Emitter as _;
-    let id = tauri::async_runtime::spawn_blocking(move || std::fs::read(&path).map_err(|e| e.to_string()).and_then(|b| super::plugins::install_sd(&b))).await.map_err(|e| e.to_string())??;
+    let id = tauri::async_runtime::spawn_blocking(move || {
+        let bytes = super::sdlocal::package_bytes(std::path::Path::new(&path))?;
+        if super::sdlocal::package_digest(&bytes) != digest {
+            return Err("The file changed after validation. Select it again to review the new contents.".into());
+        }
+        super::plugins::install_sd_from(&bytes, super::plugins::Source::Manual, Some(&id))
+    })
+    .await
+    .map_err(|e| e.to_string())??;
     let _ = app.emit("engine://catalog", ());
     Ok(id)
 }

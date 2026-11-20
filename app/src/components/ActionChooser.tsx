@@ -4,6 +4,7 @@ import { actionFits, type ActionDef, type EngineView } from "../engine";
 import { groupName, localizeAction, t, useLanguage } from "../i18n";
 import { ACTION_MIME } from "./DeckView";
 import { Icon } from "./Icon";
+import { defaultActionIcon } from "../actionIcons";
 
 const GROUP_COLORS: Record<string, string> = {
   System: "#b6adfa", Media: "#71d8aa", Audio: "#7fcff5", OBS: "#f395a3",
@@ -29,9 +30,10 @@ export function ActionIcon({ action, icons }: { action: ActionDef; icons: Engine
   if (action.icon.startsWith("data:")) {
     return <span className="library-icon is-picture" aria-hidden="true"><img src={action.icon} alt="" /></span>;
   }
-  const icon = icons.find((item) => item.name === action.icon);
+  const svg = defaultActionIcon(action.id) ?? icons.find((item) => item.name === action.icon)?.svg;
   const color = GROUP_COLORS[action.group] ?? Object.entries(GROUP_COLORS).find(([group]) => groupName(group) === action.group)?.[1] ?? "#aebce7";
-  return <span className="library-icon" aria-hidden="true" style={{ "--h": color } as React.CSSProperties} dangerouslySetInnerHTML={{ __html: icon?.svg ?? "" }} />;
+  const style = { "--h": color } as React.CSSProperties;
+  return svg ? <span className="library-icon" aria-hidden="true" style={style} dangerouslySetInnerHTML={{ __html: svg }} /> : <span className="library-icon" aria-hidden="true" style={style}><Icon name="plug" /></span>;
 }
 
 /** Keep the query, expanded groups and scroll position as controls are edited. */

@@ -8,6 +8,7 @@ use std::sync::Mutex;
 use base64::Engine as _;
 use serde::Serialize;
 use serde_json::Value;
+use sha2::{Digest, Sha256};
 
 use super::sdplugins;
 
@@ -37,6 +38,9 @@ pub struct Local {
     pub icon: Option<String>,
     /// Why HubDeck cannot run it; None: it can.
     pub problem: Option<String>,
+    pub actions: usize,
+    pub digest: Option<String>,
+    pub installed_version: Option<String>,
 }
 
 /// What a `<uuid>.sdPlugin` folder holds.
@@ -57,7 +61,7 @@ pub fn look(dir: &Path) -> Local {
     found.icon = icon(dir, &s("Icon"));
     found.problem = match sdplugins::read(&v, dir) {
         Err(e) => Some(e),
-        Ok(sd) if std::fs::read(dir.join(&sd.code_path)).is_ok_and(|b| sdplugins::is_encrypted(&b)) => Some(sdplugins::ENCRYPTED.into()),
+        Ok(sd) if sdplugins::inside(dir, &sd.code_path).is_some_and(|path| sdplugins::encrypted_file(&path)) => Some(sdplugins::ENCRYPTED.into()),
         Ok(sd) => sdplugins::runs_here(&sd).err().map(|e| format!("this plugin is {e}")),
     };
     found
@@ -70,7 +74,7 @@ fn icon(dir: &Path, name: &str) -> Option<String> {
     }
     let bytes = [format!("{name}@2x.png"), format!("{name}.png"), name.to_string()]
         .iter()
-        .map(|n| dir.join(n))
+        .filter_map(|n| sdplugins::inside(dir, n))
         .filter(|p| p.metadata().is_ok_and(|m| m.is_file() && m.len() < 512 * 1024))
         .find_map(|p| std::fs::read(p).ok())
         .filter(|b| b.starts_with(b"\x89PNG"))?;
@@ -136,27 +140,87 @@ pub fn import(id: &str) -> Result<String, String> {
     if let Some(problem) = look(&dir).problem {
         return Err(problem);
     }
-    super::plugins::install_sd(&zip_folder(&dir)?)
+    super::plugins::install_sd_from(&zip_folder(&dir)?, super::plugins::Source::StreamDeck, Some(id))
 }
 
-/// What a plugin file holds, without installing it: unpacked into a temporary folder and read.
+/// A private staging directory. Preview and installation share the same validation.
+pub struct Stage(pub PathBuf);
+
+impl Stage {
+    pub fn new(parent: &Path) -> Result<Self, String> {
+        let dir = parent.join(format!(".masterdeck-plugin-{}", uuid::Uuid::new_v4().simple()));
+        std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+        Ok(Self(dir))
+    }
+
+    pub fn validate(&self, bytes: &[u8]) -> Result<(PathBuf, sdplugins::SdManifest), String> {
+        let id = sdplugins::install(bytes, &self.0)?;
+        let dir = self.0.join(format!("{id}.sdPlugin"));
+        let raw = std::fs::read(dir.join("manifest.json")).map_err(|e| e.to_string())?;
+        let manifest: Value = serde_json::from_slice(sdplugins::without_bom(&raw)).map_err(|e| e.to_string())?;
+        let sd = sdplugins::read(&manifest, &dir).map_err(|e| format!("Invalid plugin manifest. {e}"))?;
+        if sd.uuid != id {
+            return Err("The plugin ID in manifest.json does not match its folder name.".into());
+        }
+        if !sd.actions.iter().any(|action| (action.keypad || action.encoder) && super::plugins::safe_id(&action.uuid)) {
+            return Err("This plugin has no compatible key or dial actions.".into());
+        }
+        if !sdplugins::inside(&dir, &sd.code_path).is_some_and(|path| path.is_file()) {
+            return Err(format!("The plugin’s program is missing. Expected {} in the archive.", sd.code_path));
+        }
+        Ok((dir, sd))
+    }
+}
+
+impl Drop for Stage {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_dir_all(&self.0);
+    }
+}
+
+pub fn package_bytes(path: &Path) -> Result<Vec<u8>, String> {
+    use std::io::Read as _;
+    let file = std::fs::File::open(path).map_err(|e| format!("Couldn’t open the plugin file. {e}"))?;
+    let info = file.metadata().map_err(|e| e.to_string())?;
+    if !info.is_file() {
+        return Err("Select a .streamDeckPlugin or .zip file.".into());
+    }
+    let too_large = "The plugin file exceeds 300 MB.";
+    if info.len() > sdplugins::MAX_PLUGIN_FILE {
+        return Err(too_large.into());
+    }
+    let mut bytes = Vec::new();
+    file.take(sdplugins::MAX_PLUGIN_FILE + 1).read_to_end(&mut bytes).map_err(|e| format!("Couldn’t read the plugin file. {e}"))?;
+    if bytes.len() as u64 > sdplugins::MAX_PLUGIN_FILE {
+        return Err(too_large.into());
+    }
+    Ok(bytes)
+}
+
+pub fn package_digest(bytes: &[u8]) -> String {
+    base64::engine::general_purpose::STANDARD.encode(Sha256::digest(bytes))
+}
+
 pub fn peek_file(path: &Path) -> Local {
-    let file_name = path.file_stem().and_then(|n| n.to_str()).unwrap_or("").to_string();
-    let bytes = match std::fs::read(path) {
-        Ok(b) => b,
-        Err(e) => return Local { name: file_name, problem: Some(e.to_string()), ..Local::default() },
+    let preview = || -> Result<Local, String> {
+        let bytes = package_bytes(path)?;
+        let stage = Stage::new(&std::env::temp_dir())?;
+        let (dir, sd) = stage.validate(&bytes)?;
+        let raw = std::fs::read(dir.join("manifest.json")).map_err(|e| e.to_string())?;
+        let manifest: Value = serde_json::from_slice(sdplugins::without_bom(&raw)).map_err(|e| e.to_string())?;
+        Ok(Local {
+            installed_version: super::plugins::installed_version(&sd.uuid),
+            name: if sd.name.is_empty() { sd.uuid.clone() } else { sd.name },
+            id: sd.uuid,
+            author: sd.author,
+            version: sd.version,
+            icon: icon(&dir, manifest["Icon"].as_str().unwrap_or_default()),
+            problem: None,
+            actions: sd.actions.len(),
+            digest: Some(package_digest(&bytes)),
+        })
     };
-    // a folder of its own for each look: the window may ask twice at once
-    static LOOKS: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
-    let tmp = std::env::temp_dir().join(format!("hubdeck-peek-{}-{}", std::process::id(), LOOKS.fetch_add(1, std::sync::atomic::Ordering::Relaxed)));
-    let _ = std::fs::remove_dir_all(&tmp);
-    let _ = std::fs::create_dir_all(&tmp);
-    let found = match sdplugins::install(&bytes, &tmp) {
-        Ok(id) => look(&tmp.join(format!("{id}.sdPlugin"))),
-        Err(e) => Local { id: sdplugins::install_root(&bytes).unwrap_or_default(), name: file_name, problem: Some(e), ..Local::default() },
-    };
-    let _ = std::fs::remove_dir_all(&tmp);
-    found
+    preview().unwrap_or_else(|e| Local { name: path.file_name().and_then(|n| n.to_str()).unwrap_or_default().to_string(), problem: Some(e), ..Local::default() })
 }
 
 /// Plugin files the system asked HubDeck to open, kept until the window takes them.
@@ -282,7 +346,14 @@ mod tests {
         // a file opened with HubDeck is read without installing it
         let file = base.join("clock.streamDeckPlugin");
         std::fs::write(&file, zip_folder(&dir).unwrap()).unwrap();
-        assert_eq!(peek_file(&file).name, "Clock");
+        let reviewed = peek_file(&file);
+        assert_eq!((reviewed.name.as_str(), reviewed.actions, reviewed.problem), ("Clock", 1, None));
+        assert_eq!(reviewed.digest, Some(package_digest(&std::fs::read(&file).unwrap())));
+        let bad = base.join("missing-program.zip");
+        std::fs::write(dir.join("manifest.json"), manifest.to_string().replace("bin/plugin.js", "bin/missing.js")).unwrap();
+        std::fs::write(&bad, zip_folder(&dir).unwrap()).unwrap();
+        assert!(peek_file(&bad).problem.unwrap().contains("program is missing"));
+        std::fs::write(dir.join("manifest.json"), manifest.to_string()).unwrap();
         assert_eq!(files_in(&["HubDeck.exe".into(), file.to_string_lossy().into_owned()]).len(), 1);
         // Elgato's encrypted program, then its encrypted manifest
         std::fs::write(dir.join("bin/plugin.js"), b"ELGATO\x01\x02\x03").unwrap();

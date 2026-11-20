@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { api, markPluginNew, type CatalogPlugin } from "../engine";
+import { api, markPluginNew, type CatalogPlugin, type PluginInfo } from "../engine";
+import { listen } from "@tauri-apps/api/event";
 import { localizeError, t, useLanguage, type Key } from "../i18n";
 import { Icon } from "./Icon";
 import { askUninstall } from "./Panels";
@@ -24,10 +25,10 @@ const SORTS: Record<Sort, (a: CatalogPlugin, b: CatalogPlugin) => number> = {
 /** The plugin catalog as its own tab (owner's pick A, 2026-10-18): free Stream Deck plugins from
  * Elgato Marketplace, OpenAction and GitHub that install here with one click; filters on the left,
  * search and sort above the cards. */
-export function PluginsTab({ onClose, onInstalled, onUse }: { onClose: () => void; onInstalled: () => void; onUse: (pluginId: string) => void }) {
+export function PluginsTab({ onClose, onManage, onPickFile, onUse }: { onClose: () => void; onManage: () => void; onPickFile: () => void; onUse: (pluginId: string) => void }) {
   useLanguage();
   const [list, setList] = useState<CatalogPlugin[] | "loading" | "offline">("loading");
-  const [installed, setInstalled] = useState<Set<string>>(new Set());
+  const [installed, setInstalled] = useState<Map<string, PluginInfo>>(new Map());
   const [state, setState] = useState<Record<string, "installing" | string>>({});
   const [query, setQuery] = useState("");
   const [sources, setSources] = useState<Set<string>>(new Set(SOURCES));
@@ -41,16 +42,18 @@ export function PluginsTab({ onClose, onInstalled, onUse }: { onClose: () => voi
     setList("loading");
     api.sdCatalog().then(setList, () => setList("offline"));
   };
-  const refreshInstalled = () => api.plugins().then((p) => setInstalled(new Set(p.map((x) => x.id))), () => {});
+  const refreshInstalled = () => api.plugins().then((p) => setInstalled(new Map(p.map((x) => [x.id, x]))), () => {});
   useEffect(() => {
     load();
     refreshInstalled();
+    const off = listen("engine://catalog", refreshInstalled);
+    return () => { void off.then((unlisten) => unlisten(), () => {}); };
   }, []);
   useEffect(() => setShown(PAGE), [query, sources, hereOnly, dialOnly, triedOnly, category, sort]);
   const install = (p: CatalogPlugin) => {
     setState((s) => ({ ...s, [p.id]: "installing" }));
     api.sdCatalogInstall(p.id).then(
-      (id) => (markPluginNew(id || p.id), setState((s) => ({ ...s, [p.id]: "" })), refreshInstalled(), onInstalled()),
+      (id) => (markPluginNew(id || p.id), setState((s) => ({ ...s, [p.id]: "" })), refreshInstalled()),
       (e) => setState((s) => ({ ...s, [p.id]: localizeError(String(e)) })),
     );
   };
@@ -81,8 +84,10 @@ export function PluginsTab({ onClose, onInstalled, onUse }: { onClose: () => voi
           <Icon name="chevron-left" />
           {t("settings.back")}
         </button>
-        <h2>{t("topbar.plugins")}</h2>
+        <h2>{t("plugins.catalog")}</h2>
         <span className="grow" />
+        <button type="button" className="tool" onClick={onManage}>{t("plugins.installedTitle")}</button>
+        <button type="button" className="tool primary" onClick={onPickFile}><Icon name="upload" />{t("plugins.installFile")}</button>
       </header>
       <div className="settings-body">
         <aside className="settings-nav plugins-filters" aria-label={t("pluginsTab.filters")}>
@@ -157,7 +162,7 @@ export function PluginsTab({ onClose, onInstalled, onUse }: { onClose: () => voi
             <>
               <ul className="plugin-grid">
                 {found.slice(0, shown).map((p) => (
-                  <PluginCard key={p.id} plugin={p} installed={installed.has(p.id)} state={state[p.id]} onInstall={() => install(p)} onUse={() => onUse(p.id)} onUninstall={() => uninstall(p)} />
+                  <PluginCard key={p.id} plugin={p} installed={installed.get(p.id)} state={state[p.id]} onInstall={() => install(p)} onUse={() => installed.get(p.id)?.held ? onManage() : onUse(p.id)} onUninstall={() => uninstall(p)} />
                 ))}
               </ul>
               {found.length > shown && (
@@ -181,7 +186,7 @@ const SETUP: Record<string, Key> = {
   "com.5e.hwinfo-reader": "pluginsTab.setup.hwinfoGadget",
 };
 
-function PluginCard({ plugin: p, installed, state, onInstall, onUse, onUninstall }: { plugin: CatalogPlugin; installed: boolean; state?: string; onInstall: () => void; onUse: () => void; onUninstall: () => void }) {
+function PluginCard({ plugin: p, installed, state, onInstall, onUse, onUninstall }: { plugin: CatalogPlugin; installed?: PluginInfo; state?: string; onInstall: () => void; onUse: () => void; onUninstall: () => void }) {
   const { lang } = useLanguage();
   // in the window's language, not the system's (a Polish system wrote "maj 2024" in English)
   const updated = p.updated ? new Date(`${p.updated}T12:00:00`).toLocaleDateString(lang === "en" ? "en-GB" : lang, { month: "short", year: "numeric" }) : null;
@@ -215,7 +220,7 @@ function PluginCard({ plugin: p, installed, state, onInstall, onUse, onUninstall
         )}
         {installed ? (
           <>
-            <span className="pill is-ok">{t("plugins.isInstalled")}</span>
+            <span className={installed.held ? "pill" : "pill is-ok"}>{t(installed.held ? "plugins.disabled" : "plugins.isInstalled")}</span>
             {/* where he looked for it (owner's pick 1a, 2026-10-23); an icon: a word does not fit the line */}
             <button className="icon-btn" title={t("plugins.uninstall")} aria-label={t("plugins.uninstall")} onClick={onUninstall}>
               <Icon name="trash" />
@@ -223,7 +228,7 @@ function PluginCard({ plugin: p, installed, state, onInstall, onUse, onUninstall
             {/* where its actions are: the deck, with the library open at them */}
             <button className="tool small primary" onClick={onUse}>
               <Icon name="chevron-right" />
-              {t("pluginsTab.use")}
+              {t(installed.held ? "plugins.installedTitle" : "plugins.useActions")}
             </button>
           </>
         ) : (

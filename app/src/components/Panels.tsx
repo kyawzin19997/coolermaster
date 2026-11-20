@@ -1,6 +1,7 @@
 import { Fragment, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { askInWindow, confirmed, open, save, told } from "../confirm";
 import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import type { ControlRef, LiveState, ModuleKind } from "../deck";
 import { api, withUpright, type FrameCost, FX_OPTIONS, FX_TINT, fxName, GPU_KINDS, type FxKind, type FxLayer, SKIN_MOTION, type Skin, type Look, GAMES_ENABLED, pageReachable, setPreviewSalt, type AppInfo, type AppsState, type CrashReport, type LightSettings, LED_EFFECTS, METRICS, type EngineView, type GameSummary, type Imported, type Metric, type Moved, type PluginInfo, type LocalPlugin, type InstalledItem, type PresetSummary, type Profile, type ProfileSummary, type Screens, triedPresets, SAVER_SCENES, saverOf, knownScreens, SAVER_FROM_LOOK, saverPreset, PRESETS_HIDDEN, presetThumb, THEMES, themeTitle, layersOf } from "../engine";
 import { Icon } from "./Icon";
@@ -2089,7 +2090,7 @@ const SETTINGS_SECTIONS: { id: SettingsSection; icon: string; label: Key }[] = [
 
 /** Settings as a page of its own over the whole window (owner, 2026-10-13: a panel in the right
  *  column covered the key editor): sections on the left, one section's content on the right. */
-export function SettingsPanel({ live, view, section, updateCheckRequest, onSection, onClose, onCalibrate, onBrowsePlugins, onOpenEdge, onOpenScenes }: {
+export function SettingsPanel({ live, view, section, updateCheckRequest, onSection, onClose, onCalibrate, onBrowsePlugins, onPickPlugin, onUsePlugin, onOpenEdge, onOpenScenes }: {
   live: LiveState;
   view: EngineView;
   section: SettingsSection;
@@ -2098,6 +2099,8 @@ export function SettingsPanel({ live, view, section, updateCheckRequest, onSecti
   onClose: () => void;
   onCalibrate: () => void;
   onBrowsePlugins: () => void;
+  onPickPlugin: (update?: { id: string; name: string }) => void;
+  onUsePlugin: (id: string) => void;
   onOpenEdge: () => void;
   onOpenScenes: () => void;
 }) {
@@ -2148,7 +2151,7 @@ export function SettingsPanel({ live, view, section, updateCheckRequest, onSecti
           )}
           {section === "text" && <DeckTextSettings />}
           {section === "connections" && <Connections />}
-          {section === "plugins" && <PluginsList onBrowse={onBrowsePlugins} />}
+          {section === "plugins" && <PluginsList onBrowse={onBrowsePlugins} onPickFile={onPickPlugin} onUse={onUsePlugin} />}
           {section === "backups" && <Backups />}
           {section === "updates" && <UpdatesSettings checkRequest={updateCheckRequest} />}
           {section === "diagnostics" && <DiagnosticsSettings live={live} />}
@@ -3679,125 +3682,113 @@ function WheelChoices() {
   );
 }
 
-/** Installed plugins and where to put new ones. */
-/** Installed plugins (Settings > Plugins). */
-function PluginsList({ onBrowse }: { onBrowse?: () => void }) {
+/** Installed plugins, foreground operations, and local sources. */
+function PluginsList({ onBrowse, onPickFile, onUse }: {
+  onBrowse: () => void;
+  onPickFile: (update?: { id: string; name: string }) => void;
+  onUse: (id: string) => void;
+}) {
   useLanguage();
-  const [plugins, setPlugins] = useState<PluginInfo[]>([]);
-  const [message, setMessage] = useState<string | null>(null);
+  const [plugins, setPlugins] = useState<PluginInfo[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+  const refresh = useCallback(() => api.plugins().then((rows) => {
+    setPlugins([...rows].sort((a, b) => a.name.localeCompare(b.name)));
+  }), []);
   useEffect(() => {
-    const load = () => api.plugins().then(setPlugins, () => {});
-    load();
+    const load = () => refresh().catch(() => {});
+    refresh().catch((e) => setError(localizeError(String(e))));
+    const off = listen("engine://catalog", load);
     const timer = window.setInterval(load, 2000);
-    return () => window.clearInterval(timer);
-  }, []);
+    return () => { window.clearInterval(timer); void off.then((unlisten) => unlisten(), () => {}); };
+  }, [refresh]);
+  const run = async (plugin: PluginInfo, change: () => Promise<unknown>) => {
+    setBusy(plugin.id);
+    setError(null);
+    try {
+      await change();
+      await refresh();
+    } catch (e) {
+      setError(localizeError(String(e)));
+    } finally {
+      setBusy(null);
+    }
+  };
+  const sourceLabels = {
+    manual: "plugins.sourceManual",
+    marketplace: "plugins.sourceMarket",
+    streamDeck: "plugins.sourceStreamDeck",
+    existing: "plugins.sourceExisting",
+  } as const;
+
   return (
     <>
-      <section className="sec">
-        <div className="row wrap">
-          <button
-            className="tool primary align-start"
-            onClick={async () => {
-              const path = await open({ multiple: false, filters: [{ name: t("plugins.sdFile"), extensions: ["streamDeckPlugin", "zip"] }] });
-              if (typeof path !== "string") return;
-              setMessage(t("plugins.installing"));
-              api.sdInstall(path).then(
-                (id) => (setMessage(t("plugins.installed1", { id })), api.plugins().then(setPlugins)),
-                (e) => setMessage(localizeError(String(e))),
-              );
-            }}
-          >
-            <Icon name="download" />
-            {t("plugins.installSd")}
-          </button>
-          <button className="tool align-start" onClick={() => api.openPluginsFolder().catch((e) => setMessage(String(e)))}>
-            <Icon name="folder-open" />
-            {t("plugins.openFolder")}
-          </button>
+      <section className="sec plugin-manager">
+        <div className="plugin-manager-head">
+          <div><h3>{t("plugins.installedTitle")}</h3><p className="help">{t("plugins.installedIntro")}</p></div>
+          <button type="button" className="tool primary" onClick={() => onPickFile()}><Icon name="upload" />{t("plugins.installFile")}</button>
         </div>
-        <p className="help">{t("plugins.sdHelp")}</p>
-        {message && <p className="help">{message}</p>}
-      </section>
-      <SdFromStreamDeck installed={new Set(plugins.map((p) => p.id))} onInstalled={() => api.plugins().then(setPlugins, () => {})} />
-      {onBrowse && (
-        <section className="sec">
-          <h3 className="sec-title">{t("plugins.catalog")}</h3>
-          <p className="help">{t("plugins.browseHelp")}</p>
-          <button className="tool align-start" onClick={onBrowse}>
-            <Icon name="search" />
-            {t("plugins.browse")}
-          </button>
-        </section>
-      )}
-      <section className="sec">
-        <h3 className="sec-title">
-          {t("plugins.installed")} <span className="n">{plugins.length}</span>
-        </h3>
-        {plugins.length === 0 ? (
-          <div className="empty compact">
-            <span className="eic">
-              <Icon name="plug" />
-            </span>
-            <b>{t("plugins.none")}</b>
-            <span>{t("plugins.noneHelp")}</span>
-          </div>
-        ) : (
-          <ul className="cards">
-            {plugins.map((p) => (
-              <li key={p.id} className="card">
-                <div className="row">
-                  <strong className="grow">{p.name}</strong>
-                  <span className="mono chip-ver">{p.version}</span>
-                  <span className={`pill${p.connected ? " is-ok" : " is-err"}`}>{p.connected ? t("plugins.running") : t("plugins.stopped")}</span>
-                </div>
-                <div className="mono help">{p.id}</div>
-                <div className="meta">
-                  <span>{t("plugins.actions", { count: p.actions })}</span>
-                  {p.cpu !== null && <span className="mono">CPU {p.cpu.toFixed(1)}%</span>}
-                  {p.memoryMb !== null && <span className="mono">{p.memoryMb} MB</span>}
-                  {!p.connected && <span>{localizeError(p.status)}</span>}
-                  {p.restarts > 0 && <span>{t("plugins.restarts", { count: p.restarts })}</span>}
-                  {/* a plugin that eats the CPU says so (PAIN-POINTS SD11) */}
-                  {p.cpu !== null && p.cpu > 20 && <span className="pill is-warn">{t("plugins.busy")}</span>}
-                </div>
-                <div className="row">
-                  {p.held || !p.connected ? (
-                    <button className="tool" onClick={() => api.pluginStart(p.id).then(() => api.plugins().then(setPlugins), (e) => setMessage(String(e)))}>
-                      <Icon name="play" />
-                      {t("plugins.start")}
-                    </button>
-                  ) : (
-                    <button className="tool" onClick={() => api.pluginStop(p.id).then(() => api.plugins().then(setPlugins), (e) => setMessage(String(e)))}>
-                      <Icon name="x" />
-                      {t("plugins.stop")}
-                    </button>
-                  )}
-                  <button
-                    className="tool"
-                    onClick={async () => {
-                      await askUninstall(p).catch((e) => setMessage(localizeError(String(e))));
-                      api.plugins().then(setPlugins, () => {});
-                    }}
-                  >
-                    <Icon name="trash" />
-                    {t("plugins.uninstall")}
-                  </button>
-                </div>
-                {p.permissions.length > 0 && (
-                  <div className="perm">
-                    {t("plugins.uses")}
-                    {p.permissions.map((x) => (
-                      <span key={x} className="pill">
-                        {x}
+        <div className="row wrap plugin-manager-links">
+          <button type="button" className="tool" onClick={onBrowse}><Icon name="search" />{t("plugins.browse")}</button>
+          <button type="button" className="tool ghost" onClick={() => api.openPluginsFolder().catch((e) => setError(localizeError(String(e))))}><Icon name="folder-open" />{t("plugins.openFolder")}</button>
+        </div>
+        {error && <p className="help plugin-feedback" role="alert">{error}</p>}
+        {plugins === null && !error && <p className="help" role="status">{t("plugins.loadingInstalled")}</p>}
+        {plugins?.length === 0 && <p className="plugin-manager-empty">{t("plugins.none")} <span>{t("plugins.noneManualHelp")}</span></p>}
+        {!!plugins?.length && (
+          <ul className="installed-plugins">
+            {plugins.map((plugin) => {
+              const isBusy = busy === plugin.id;
+              const source = plugin.source ?? "existing";
+              return (
+                <li key={plugin.id} className="installed-plugin">
+                  <div className="installed-plugin-title">
+                    <span className="installed-plugin-icon"><Icon name="plug" /></span>
+                    <div className="grow">
+                      <strong>{plugin.name}</strong>
+                      <span className="meta">
+                        {t(sourceLabels[source])}
+                        {plugin.version && <span> · {t("plugins.version", { version: plugin.version })}</span>}
+                        <span> · {t("plugins.actions", { count: plugin.actions })}</span>
                       </span>
-                    ))}
+                    </div>
+                    <span className={plugin.connected ? "pill is-ok" : "pill"}>{t(plugin.held ? "plugins.disabled" : plugin.connected ? "plugins.running" : "plugins.enabled")}</span>
                   </div>
-                )}
-              </li>
-            ))}
+                  {!plugin.held && !plugin.connected && <p className="help plugin-runtime">{localizeError(plugin.status)}</p>}
+                  <div className="row wrap installed-plugin-tools">
+                    {plugin.held ? (
+                      <button className="tool small" disabled={busy !== null} onClick={() => run(plugin, () => api.pluginStart(plugin.id))}><Icon name="play" />{t("plugins.enable")}</button>
+                    ) : (
+                      <>
+                        <button className="tool small" disabled={busy !== null} onClick={() => onUse(plugin.id)}><Icon name="chevron-right" />{t("plugins.useActions")}</button>
+                        <button className="tool small ghost" disabled={busy !== null} onClick={() => run(plugin, () => api.pluginStop(plugin.id))}>{t("plugins.disable")}</button>
+                        {!plugin.connected && <button className="tool small ghost" disabled={busy !== null} onClick={() => run(plugin, () => api.pluginStart(plugin.id))}>{t("plugins.start")}</button>}
+                      </>
+                    )}
+                    {(source === "manual" || source === "existing") &&
+                      <button className="tool small ghost" disabled={busy !== null} onClick={() => onPickFile(plugin)}><Icon name="upload" />{t("plugins.updateFile")}</button>
+                    }
+                    <button className="tool small ghost" disabled={busy !== null} onClick={() => run(plugin, () => askUninstall(plugin))}><Icon name="trash" />{t("plugins.uninstall")}</button>
+                    {isBusy && <span className="help" role="status">{t("plugins.working")}</span>}
+                  </div>
+                  <details className="installed-plugin-details">
+                    <summary>{t("plugins.details")}</summary>
+                    <div className="meta">
+                      <span className="mono">{plugin.id}</span>
+                      {plugin.cpu !== null && <span>CPU {plugin.cpu.toFixed(1)}%</span>}
+                      {plugin.memoryMb !== null && <span>{plugin.memoryMb} MB</span>}
+                      {plugin.restarts > 0 && <span>{t("plugins.restarts", { count: plugin.restarts })}</span>}
+                      {plugin.cpu !== null && plugin.cpu > 20 && <span className="pill is-warn">{t("plugins.busy")}</span>}
+                      {plugin.permissions.length > 0 && <span>{t("plugins.uses")} {plugin.permissions.join(", ")}</span>}
+                    </div>
+                  </details>
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>
+      <SdFromStreamDeck installed={new Set(plugins?.map((p) => p.id))} onInstalled={() => void refresh().catch((e) => setError(localizeError(String(e))))} />
     </>
   );
 }
@@ -3863,75 +3854,103 @@ function SdFromStreamDeck({ installed, onInstalled }: { installed: Set<string>; 
   );
 }
 
-/** A plugin file to install: opened with MasterDeck (a double click) or dropped on the window. Says
- * what is in it and asks first, as a plugin is a program that runs on this computer. */
-export function PluginFileSheet({ path, onClose }: { path: string; onClose: () => void }) {
+/** A picker, drop, or file association all lead to the same preview and consent. */
+export function PluginFileSheet({ path, update, onClose, onManage, onUse }: {
+  path: string;
+  update?: { id: string; name: string };
+  onClose: () => void;
+  onManage: () => void;
+  onUse: (id: string) => void;
+}) {
   useLanguage();
   const [plugin, setPlugin] = useState<LocalPlugin | null>(null);
-  const [state, setState] = useState<"idle" | "installing" | "done" | string>("idle");
-  useEffect(() => {
-    setPlugin(null);
-    setState("idle");
-    api.sdPeek(path).then(setPlugin, (e) => setPlugin({ id: "", name: path, author: "", version: "", problem: String(e) }));
-  }, [path]);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState<"installing" | "enabling" | null>(null);
+  const [installed, setInstalled] = useState<string | null>(null);
+  const [enabled, setEnabled] = useState(false);
   const file = path.split(/[\\/]/).pop() ?? path;
-  const install = () => {
-    setState("installing");
-    api.sdInstall(path).then(
-      (id) => setState(t("plugins.installed1", { id: plugin?.name || id })),
-      (e) => setState(localizeError(String(e))),
+  const wrongPlugin = plugin?.id && update && plugin.id !== update.id;
+  const problem = plugin?.problem || (wrongPlugin ? t("plugins.wrongFile", { name: update.name }) : null);
+  const replacing = plugin?.installedVersion != null;
+
+  useEffect(() => {
+    let current = true;
+    api.sdPeek(path).then(
+      (result) => { if (current) setPlugin(result); },
+      (e) => { if (current) setError(localizeError(String(e))); },
     );
+    return () => { current = false; };
+  }, [path]);
+
+  const install = async () => {
+    if (!plugin?.digest || problem || busy) return;
+    setBusy("installing");
+    setError(null);
+    try {
+      setInstalled(await api.sdInstall(path, plugin.digest, plugin.id));
+    } catch (e) {
+      setError(localizeError(String(e)));
+    } finally {
+      setBusy(null);
+    }
   };
-  const done = state !== "idle" && state !== "installing";
+  const enable = async () => {
+    if (!installed || busy) return;
+    setBusy("enabling");
+    setError(null);
+    try {
+      await api.pluginStart(installed);
+      setEnabled(true);
+    } catch (e) {
+      setError(localizeError(String(e)));
+    } finally {
+      setBusy(null);
+    }
+  };
+  const manage = () => { onClose(); onManage(); };
+
   return (
-    <Sheet onClose={onClose}>
-      <aside className="inspector sectioned plugin-file">
-        <PanelHead title={t("plugins.fileTitle")} icon="plug" onClose={onClose} />
+    <Sheet label={t("plugins.reviewTitle")} onClose={() => { if (!busy) onClose(); }}>
+      <aside className="inspector sectioned plugin-file" aria-busy={!!busy}>
+        <PanelHead title={t("plugins.reviewTitle")} icon="plug" onClose={busy ? undefined : onClose} />
         <section className="sec">
-          {!plugin ? (
-            <p className="help">{t("plugins.fileReading")}</p>
-          ) : (
-            <>
-              <div className="card catalog-item">
-                {plugin.icon ? <img className="catalog-icon" src={plugin.icon} alt="" /> : <span className="catalog-icon" />}
-                <div className="grow">
-                  <strong>{plugin.name}</strong>
-                  <div className="meta">
-                    {plugin.author && <span>{t("plugins.byAuthor", { author: plugin.author })}</span>}
-                    {plugin.version && <span>{t("plugins.version", { version: plugin.version })}</span>}
-                  </div>
-                  <div className="help">{t("plugins.fileFrom", { file })}</div>
+          <p className="help plugin-filename">{file}</p>
+          {!plugin && !error && <p className="help" role="status">{t("plugins.fileReading")}</p>}
+          {plugin && !plugin.problem && (
+            <div className="row plugin-preview-row">
+              <span className="installed-plugin-icon">{plugin.icon ? <img className="catalog-icon" src={plugin.icon} alt="" /> : <Icon name="plug" />}</span>
+              <div className="grow">
+                <strong>{plugin.name}</strong>
+                <div className="meta">
+                  {plugin.author && <span>{t("plugins.byAuthor", { author: plugin.author })}</span>}
+                  {plugin.version && <span>{t("plugins.version", { version: plugin.version })}</span>}
+                  {plugin.actions !== undefined && <span>{t("plugins.actions", { count: plugin.actions })}</span>}
                 </div>
               </div>
-              {plugin.problem ? (
-                <p className="help catalog-err">
-                  {t("plugins.cannotRun")}: {localizeError(plugin.problem)}
-                </p>
-              ) : done ? (
-                <p className="help">{state}</p>
-              ) : (
-                <p className="help">{t("plugins.fileTrust")}</p>
-              )}
-              <div className="row">
-                <span className="grow" />
-                {plugin.problem || done ? (
-                  <button className="tool primary" onClick={onClose}>
-                    {t("profile.close")}
-                  </button>
-                ) : (
-                  <>
-                    <button className="tool" onClick={onClose}>
-                      {t("chooser.cancel")}
-                    </button>
-                    <button className="tool primary" disabled={state === "installing"} onClick={install}>
-                      <Icon name="download" />
-                      {state === "installing" ? t("plugins.installing") : t("plugins.install")}
-                    </button>
-                  </>
-                )}
-              </div>
-            </>
+            </div>
           )}
+          {replacing && !installed && !problem && <p className="help">{t("plugins.replaces", { version: plugin?.installedVersion || t("plugins.unknownVersion") })}</p>}
+          {problem && <p className="help plugin-feedback" role="alert">{localizeError(problem)}</p>}
+          {error && <p className="help plugin-feedback" role="alert">{error}</p>}
+          {!problem && plugin && (
+            <p className="help" role={busy || installed ? "status" : undefined}>
+              {t(busy === "installing" ? "plugins.installing" : busy === "enabling" ? "plugins.enabling" : enabled ? "plugins.readyActions" : installed ? "plugins.installedDisabled" : "plugins.reviewTrust")}
+            </p>
+          )}
+          <div className="row wrap plugin-review-controls">
+            {installed ? (
+              <>
+                <button className="tool" disabled={!!busy} onClick={manage}>{t("plugins.installedTitle")}</button>
+                {enabled ? <button className="tool primary" onClick={() => { onClose(); onUse(installed); }}>{t("plugins.useActions")}</button>
+                  : <button className="tool primary" disabled={!!busy} onClick={enable}>{t("plugins.enable")}</button>}
+              </>
+            ) : (
+              <>
+                <button className="tool ghost" disabled={!!busy} onClick={onClose}>{t(problem || !plugin && error ? "profile.close" : "chooser.cancel")}</button>
+                {plugin?.digest && !problem && <button className="tool primary" disabled={!!busy} onClick={install}><Icon name="download" />{t(replacing ? "plugins.applyUpdate" : "plugins.install")}</button>}
+              </>
+            )}
+          </div>
         </section>
       </aside>
     </Sheet>

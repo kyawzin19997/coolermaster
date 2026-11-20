@@ -437,16 +437,7 @@ pub async fn sd_catalog_install(app: tauri::AppHandle, id: String) -> Result<Str
             }
         };
         let bytes = file_url(&entry).and_then(|url| super::share::download_big(&url, MAX_PLUGIN)).map_err(gone)?;
-        let id = super::plugins::install_sd(&bytes)?;
-        // a plugin made for another system installs but cannot run here: say so and take it out
-        if let Some((sd, dir)) = super::plugins::sd_of(&id)
-            && let Err(e) = super::sdplugins::runs_here(&sd)
-        {
-            super::plugins::uninstall(&id);
-            let _ = std::fs::remove_dir_all(dir);
-            return Err(format!("{}: {e}", entry.name));
-        }
-        Ok(id)
+        super::plugins::install_sd_from(&bytes, super::plugins::Source::Marketplace, None)
     })
     .await
     .map_err(|e| e.to_string())??;

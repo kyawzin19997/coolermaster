@@ -1,9 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { api, controlId, inTauri, inWindow, usePreview, type Binding, type EngineView, type Look } from "../engine";
 import { withLook } from "../editing";
 import { save as saveDialog } from "../confirm";
 import { looksLike, templateOf } from "../lookTemplates";
-import { t } from "../i18n";
+import { actionName, t } from "../i18n";
+import { actionIconName } from "../actionIcons";
+import { ActionIcon } from "./ActionChooser";
 import { Icon } from "./Icon";
 import { IconPicker } from "./IconPicker";
 import { KeyDesigner } from "./KeyDesigner";
@@ -35,17 +37,20 @@ function useLivePreview(look: Look): string | null {
     const base = JSON.stringify(look);
     let step = 0;
     let live = true;
+    let drawing = false;
     const timer = window.setInterval(() => {
       step = (step + 1) % cycle;
       const key = `${base}#${step}`;
       const kept = frames.current.get(key);
       if (kept) return setFrame(kept);
+      if (drawing) return;
+      drawing = true;
       api.preview("key", look, step / 16 + 0.001).then((raw) => {
         const svg = inWindow(raw);
         if (frames.current.size > 400) frames.current.clear();
         frames.current.set(key, svg);
         if (live) setFrame(svg);
-      });
+      }, () => {}).finally(() => { drawing = false; });
     }, 1000 / 16);
     return () => {
       live = false;
@@ -71,21 +76,51 @@ function KeyChip({ look, on, current, name, onToggle }: { look: Look; on: boolea
   );
 }
 
-/**
- * The full key editor (owner's "2 a", 2026-10-25: mockup A, "w tym małym okienku słabo się tym
- * operuje"): the icon library on the left, the key big and live in the middle (drag the icon or
- * the label), the look's tabs on the right, and the page's other keys to change together.
- */
+/** Common appearance settings with a live preview and expandable precision tools. */
 export function KeyStudio({ view, control, onClose }: { view: EngineView; control: string; onClose: () => void }) {
   const profile = view.profile;
+  const profileId = profile?.id;
   const page = view.state?.page ?? null;
   const start = profile?.controls[control];
   const [look, setLook] = useState<Look>(start?.look ?? {});
   const [also, setAlso] = useState<Set<string>>(new Set());
   const [moving, setMoving] = useState<"icon" | "label">("icon");
+  const [iconsOpen, setIconsOpen] = useState(false);
+  const [positionOpen, setPositionOpen] = useState(false);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [applyOpen, setApplyOpen] = useState(false);
   const svg = useLivePreview(look);
   const pending = useRef<number | null>(null);
+  const dirty = useRef(false);
+  const writing = useRef(Promise.resolve(true));
   const [note, setNote] = useState<string | null>(null);
+  const latest = useRef({ look, also });
+  latest.current = { look, also };
+  const flush = useCallback(() => {
+    if (pending.current !== null) window.clearTimeout(pending.current);
+    pending.current = null;
+    if (!dirty.current || !profileId) return writing.current;
+    dirty.current = false;
+    const snapshot = latest.current;
+    writing.current = writing.current.then(async () => {
+      const current = await api.profile(profileId);
+      const binding = current.controls[control];
+      if (!binding) throw new Error(t("studio.gone"));
+      const changes: Record<string, Binding> = { [control]: { ...binding, look: snapshot.look } };
+      for (const id of snapshot.also) {
+        const other = current.controls[id];
+        if (other) changes[id] = { ...other, look: withLook(other.look, snapshot.look) };
+      }
+      await api.setBindings(profileId, changes);
+      return true;
+    }).catch((e) => {
+      dirty.current = true;
+      setNote(t("studio.saveFailed", { message: String(e) }));
+      return false;
+    });
+    return writing.current;
+  }, [control, profileId]);
+  useEffect(() => () => { void flush(); }, [flush]);
   // save the key as a picture, or the page's keys as a Stream Deck icon pack
   const savePng = async () => {
     const path = await saveDialog({ defaultPath: `${(look.label ?? "key").replace(/[\\/:*?"<>|\n]/g, " ").trim() || "key"}.png`, filters: [{ name: "PNG", extensions: ["png"] }] });
@@ -93,7 +128,7 @@ export function KeyStudio({ view, control, onClose }: { view: EngineView; contro
   };
   const savePack = async () => {
     if (!profile) return;
-    if (pending.current) (window.clearTimeout(pending.current), save());
+    if (!(await flush())) return;
     const path = await saveDialog({ defaultPath: `${profile.name.replace(/[\\/:*?"<>|]/g, " ").trim() || "keys"}.streamDeckIconPack`, filters: [{ name: "Stream Deck icon pack", extensions: ["streamDeckIconPack"] }] });
     if (path) api.exportKeysPack(profile.id, page, path).then((count) => setNote(t("studio.packSaved", { count, path })), (e) => setNote(String(e)));
   };
@@ -102,26 +137,12 @@ export function KeyStudio({ view, control, onClose }: { view: EngineView; contro
   const [styleOn, setStyleOn] = useState<boolean | null>(null);
   const styled = styleOn ?? (!!profile?.keyStyle && looksLike(look, profile.keyStyle));
   useEffect(() => setStyleOn(null), [profile?.keyStyle, look]);
-  const setStyle = (on: boolean) => {
+  const setStyle = async (on: boolean) => {
     if (!profile) return;
     setStyleOn(on);
-    api
-      .saveProfile({ ...profile, keyStyle: on ? templateOf(look) : undefined })
+    if (!(await flush())) { setStyleOn(null); return; }
+    api.profile(profile.id).then((fresh) => api.saveProfile({ ...fresh, keyStyle: on ? templateOf(look) : undefined }))
       .then(() => setNote(t(on ? "studio.styleSet" : "studio.styleOff", { name: profile.name })), (e) => setNote(String(e)));
-  };
-  const latest = useRef({ look, also });
-  latest.current = { look, also };
-
-  // saved a moment after the last change (as the panel does), the ticked keys with it
-  const save = () => {
-    pending.current = null;
-    const p = view.profile;
-    const b = p?.controls[control];
-    if (!p || !b) return;
-    const { look: l, also: more } = latest.current;
-    const changes: Record<string, Binding> = { [control]: { ...b, look: l } };
-    for (const id of more) if (p.controls[id]) changes[id] = { ...p.controls[id], look: withLook(p.controls[id].look ?? {}, l) };
-    api.setBindings(p.id, changes).catch((e) => console.error("bindings_set", e));
   };
   // undo and redo (owner, 2026-10-25: "brakuje mi opcji cofania i powtarzania akcji i skrótów
   // klawiszowych"): a quick run of changes (a drag, a color picker held, typing) is one step
@@ -131,9 +152,11 @@ export function KeyStudio({ view, control, onClose }: { view: EngineView; contro
   const holding = useRef(false);
   const [, setSteps] = useState(0);
   const apply = (next: Look) => {
+    latest.current = { look: next, also };
+    dirty.current = true;
     setLook(next);
-    if (pending.current) window.clearTimeout(pending.current);
-    pending.current = window.setTimeout(save, 300);
+    if (pending.current !== null) window.clearTimeout(pending.current);
+    pending.current = window.setTimeout(() => void flush(), 300);
   };
   const change = (next: Look) => {
     const now = Date.now();
@@ -175,13 +198,7 @@ export function KeyStudio({ view, control, onClose }: { view: EngineView; contro
     window.addEventListener("keydown", key, true);
     return () => window.removeEventListener("keydown", key, true);
   });
-  const close = () => {
-    if (pending.current) {
-      window.clearTimeout(pending.current);
-      save();
-    }
-    onClose();
-  };
+  const close = async () => { if (await flush()) onClose(); };
   useEffect(() => {
     const key = (e: KeyboardEvent) => e.key === "Escape" && !(e.target as HTMLElement)?.closest?.("input, select, textarea") && close();
     window.addEventListener("keydown", key);
@@ -193,6 +210,7 @@ export function KeyStudio({ view, control, onClose }: { view: EngineView; contro
   const field = moving === "icon" ? (["iconDx", "iconDy"] as const) : (["labelDx", "labelDy"] as const);
   const clamp = (v: number) => Math.max(-36, Math.min(36, Math.round(v)));
   const onDown = (e: React.PointerEvent) => {
+    if (!positionOpen || e.button !== 0) return;
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
     // screen pixels per key pixel (a key is 72; shown at 288, or 216 in a narrow window)
     const zoom = (e.currentTarget as HTMLElement).getBoundingClientRect().width / 72 || 4;
@@ -210,6 +228,7 @@ export function KeyStudio({ view, control, onClose }: { view: EngineView; contro
     if (dx !== (look[field[0]] ?? 0) || dy !== (look[field[1]] ?? 0)) change({ ...look, [field[0]]: dx || undefined, [field[1]]: dy || undefined });
   };
   const nudge = (e: React.KeyboardEvent) => {
+    if (!positionOpen) return;
     const by: Record<string, [number, number]> = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
     const step = by[e.key];
     if (!step) return;
@@ -225,6 +244,10 @@ export function KeyStudio({ view, control, onClose }: { view: EngineView; contro
         .map((id) => ({ id, n: Number(id.split(".").pop()) + 1, look: profile.controls[id].look ?? {} }))
     : [];
   const number = Number(control.split(".").pop()) + 1;
+  const action = view.catalog?.actions.find((a) => a.id === start?.action);
+  const defaultIcon = action && actionIconName(action.id, action.icon);
+  const isDefaultIcon = defaultIcon === look.icon && !look.image;
+  const stopDrag = () => { drag.current = null; holding.current = false; lastStep.current = Date.now(); };
 
   if (!start) {
     return (
@@ -237,110 +260,115 @@ export function KeyStudio({ view, control, onClose }: { view: EngineView; contro
     );
   }
   return (
-    <div className="studio" role="region" aria-label={t("studio.title")}>
+    <div className="studio key-studio" role="region" aria-label={t("studio.title")}>
       <div className="studio-bar">
-        <button className="tool small ghost" onClick={close}>
-          <Icon name="chevron-left" />
-          {t("studio.back")}
-        </button>
-        <span className="studio-title">
-          {t("studio.title")} <span className="tx2">· {profile?.name} · {t("studio.key", { n: number })}</span>
-        </span>
+        <button className="tool ghost" onClick={close}><Icon name="chevron-left" />{t("studio.back")}</button>
+        <div className="key-studio-heading"><h1>{t("studio.title")}</h1><span>{profile?.name} · {t("studio.key", { n: number })}</span></div>
         <span className="spacer" />
-        {note && (
-          <span className="studio-note help" role="status">
-            {note}
-          </span>
-        )}
-        <button className="tool small ghost" onClick={undo} disabled={past.current.length === 0} aria-label={t("studio.undo")} title={t("studio.undoHelp")}>
-          <Icon name="undo" />
-          {t("studio.undo")}
-        </button>
-        <button className="tool small ghost" onClick={redo} disabled={future.current.length === 0} aria-label={t("studio.redo")} title={t("studio.redoHelp")}>
-          <Icon name="redo" />
-          {t("studio.redo")}
-        </button>
-        <button className="tool small" onClick={savePng} title={t("studio.pngHelp")}>
-          <Icon name="download" />
-          {t("studio.png")}
-        </button>
-        <button className="tool small" onClick={savePack} title={t("studio.packHelp")}>
-          <Icon name="archive" />
-          {t("studio.pack")}
-        </button>
-        <button className="tool small primary" onClick={close}>
-          {t("studio.done")}
-        </button>
+        <button className="tool ghost icon-only" onClick={undo} disabled={past.current.length === 0} aria-label={t("studio.undo")} title={t("studio.undoHelp")}><Icon name="undo" /></button>
+        <button className="tool ghost icon-only" onClick={redo} disabled={future.current.length === 0} aria-label={t("studio.redo")} title={t("studio.redoHelp")}><Icon name="redo" /></button>
+        <button className="tool primary" onClick={close}>{t("studio.done")}</button>
       </div>
       <div className="studio-grid">
-        <section className="studio-pane studio-library" aria-label={t("look.icon")}>
-          <IconPicker value={look.icon} onChange={(icon) => change({ ...look, icon, image: undefined })} onPicture={(image) => change({ ...look, image })} view={view} />
-        </section>
-        <section className="studio-pane studio-stage">
+        <section className="studio-stage" aria-label={t("look.preview")}>
           <div className="studio-canvas">
             <div
-              className="studio-key"
+              className={"studio-key" + (positionOpen ? " is-positioning" : "")}
               role="img"
               aria-label={t("look.preview")}
-              tabIndex={0}
+              tabIndex={positionOpen ? 0 : undefined}
               onPointerDown={onDown}
               onPointerMove={onMove}
-              onPointerUp={() => ((drag.current = null), (holding.current = false), (lastStep.current = Date.now()))}
+              onLostPointerCapture={stopDrag}
               onKeyDown={nudge}
               dangerouslySetInnerHTML={{ __html: svg ?? "" }}
             />
           </div>
-          <div className="row studio-move">
-            <span className="label">{t("studio.drag")}</span>
-            <div className="seg" role="radiogroup" aria-label={t("studio.drag")}>
-              {(["icon", "label"] as const).map((m) => (
-                <button key={m} role="radio" aria-checked={moving === m} className={`tab${moving === m ? " is-active" : ""}`} onClick={() => setMoving(m)}>
-                  {t(m === "icon" ? "look.icon" : "look.label")}
-                </button>
-              ))}
+          {action && <div className="studio-action"><ActionIcon action={action} icons={view.icons} /><span>{actionName(action)}</span></div>}
+          <p className="help" role="status">{note ?? t(positionOpen ? "studio.dragHelp" : "studio.autoSave")}</p>
+        </section>
+        <div className="studio-props">
+          <section className="studio-basic" aria-label={t("studio.appearance")}>
+            <h2>{t("studio.appearance")}</h2>
+            <label className="field">
+              <span className="label">{t("look.label")}</span>
+              <input className="input" value={look.label ?? ""} onChange={(e) => change({ ...look, label: e.target.value || undefined })} />
+            </label>
+            <div className="studio-colors">
+              <label className="color"><input type="color" value={look.bg ?? "#1f1d26"} onChange={(e) => change({ ...look, bg: e.target.value })} />{t("look.background")}</label>
+              <label className="color"><input type="color" value={look.fg ?? "#f0eef6"} onChange={(e) => change({ ...look, fg: e.target.value })} />{t("studio.labelColor")}</label>
             </div>
-            {moved && (
-              <button className="tool small ghost" onClick={() => change({ ...look, iconDx: undefined, iconDy: undefined, labelDx: undefined, labelDy: undefined })}>
-                {t("studio.resetPlace")}
-              </button>
-            )}
-          </div>
-          <p className="help">{t("studio.dragHelp")}</p>
-          {keys.length > 1 && (
-            <>
-              <div className="studio-keys" role="group" aria-label={t("studio.together")}>
-                {keys.map((k) => (
-                  <KeyChip
-                    key={k.id}
-                    look={k.id === control ? look : k.look}
-                    current={k.id === control}
-                    on={k.id === control || also.has(k.id)}
-                    name={`${k.n}. ${k.look.label?.trim() || ""}`}
-                    onToggle={() => {
-                      const next = new Set(also);
-                      if (next.has(k.id)) next.delete(k.id);
-                      else next.add(k.id);
-                      setAlso(next);
-                    }}
-                  />
-                ))}
+            <details className="studio-section studio-icons" onToggle={(e) => setIconsOpen(e.currentTarget.open)}>
+              <summary><Icon name="image" />{t("studio.chooseIcon")}<Icon name="chevron-down" /></summary>
+              {iconsOpen && (
+                <div className="studio-section-body">
+                  {defaultIcon && <button type="button" className="tool small align-start" disabled={isDefaultIcon} onClick={() => change({ ...look, icon: defaultIcon, image: undefined })}>{t("studio.actionIcon")}</button>}
+                  <IconPicker value={look.icon} onChange={(icon) => change({ ...look, icon, image: undefined })} onPicture={(image) => change({ ...look, image })} view={view} />
+                </div>
+              )}
+            </details>
+          </section>
+          <details className="studio-section" onToggle={(e) => setPositionOpen(e.currentTarget.open)}>
+            <summary><Icon name="crosshair" />{t("studio.position")}<Icon name="chevron-down" /></summary>
+            <div className="studio-section-body">
+              <div className="row wrap studio-move">
+                <div className="seg" role="radiogroup" aria-label={t("studio.drag")}>
+                  {(["icon", "label"] as const).map((m) => (
+                    <button key={m} type="button" role="radio" aria-checked={moving === m} className={"tab" + (moving === m ? " is-active" : "")} onClick={() => setMoving(m)}>
+                      {t(m === "icon" ? "look.icon" : "look.label")}
+                    </button>
+                  ))}
+                </div>
+                <button className="tool small ghost" disabled={!moved} onClick={() => change({ ...look, iconDx: undefined, iconDy: undefined, labelDx: undefined, labelDy: undefined })}>{t("studio.resetPlace")}</button>
               </div>
-              <p className="help">{t("studio.togetherHelp", { count: also.size })}</p>
-            </>
-          )}
-        </section>
-        <section className="studio-pane studio-props">
-          <label className="field">
-            <span className="label">{t("look.label")}</span>
-            <input className="input" value={look.label ?? ""} onChange={(e) => change({ ...look, label: e.target.value || undefined })} />
-          </label>
-          <LabelValues label={look.label ?? ""} onChange={(label) => change({ ...look, label })} />
-          <KeyDesigner look={look} onChange={change} others={[]} onApplyTo={() => Promise.resolve()} />
-          <label className="check" title={t("studio.styleHelp")}>
-            <input type="checkbox" checked={styled} onChange={(e) => setStyle(e.target.checked)} />
-            {t("studio.style", { name: profile?.name ?? "" })}
-          </label>
-        </section>
+            </div>
+          </details>
+          <details className="studio-section" onToggle={(e) => setAdvancedOpen(e.currentTarget.open)}>
+            <summary><Icon name="sliders-horizontal" />{t("studio.advanced")}<Icon name="chevron-down" /></summary>
+            {advancedOpen && (
+              <div className="studio-section-body">
+                <KeyDesigner look={look} onChange={change} others={[]} onApplyTo={() => Promise.resolve()} />
+                <LabelValues label={look.label ?? ""} onChange={(label) => change({ ...look, label })} />
+              </div>
+            )}
+          </details>
+          <details className="studio-section" onToggle={(e) => setApplyOpen(e.currentTarget.open)}>
+            <summary><Icon name="layers" />{t("studio.applyStyle")}<Icon name="chevron-down" /></summary>
+            {applyOpen && (
+              <div className="studio-section-body">
+                {keys.length > 1 && (
+                  <>
+                    <p className="help">{t("studio.togetherHelp", { count: also.size })}</p>
+                    <div className="studio-keys" role="group" aria-label={t("studio.together")}>
+                      {keys.map((k) => (
+                        <KeyChip key={k.id} look={k.id === control ? look : k.look} current={k.id === control} on={k.id === control || also.has(k.id)} name={k.look.label?.trim() ? (k.n + ". " + k.look.label) : t("studio.key", { n: k.n })}
+                          onToggle={() => setAlso((selected) => {
+                            const next = new Set(selected);
+                            if (next.has(k.id)) next.delete(k.id);
+                            else next.add(k.id);
+                            return next;
+                          })}
+                        />
+                      ))}
+                    </div>
+                    <button type="button" className="tool small align-start" disabled={!also.size} onClick={() => { dirty.current = true; void flush(); }}>{t("studio.applyNow")}</button>
+                  </>
+                )}
+                <label className="check" title={t("studio.styleHelp")}>
+                  <input type="checkbox" checked={styled} onChange={(e) => void setStyle(e.target.checked)} />
+                  {t("studio.style", { name: profile?.name ?? "" })}
+                </label>
+              </div>
+            )}
+          </details>
+          <details className="studio-section">
+            <summary><Icon name="download" />{t("studio.export")}<Icon name="chevron-down" /></summary>
+            <div className="row wrap studio-section-body">
+              <button className="tool small" onClick={savePng} title={t("studio.pngHelp")}>{t("studio.png")}</button>
+              <button className="tool small" onClick={savePack} title={t("studio.packHelp")}>{t("studio.pack")}</button>
+            </div>
+          </details>
+        </div>
       </div>
     </div>
   );

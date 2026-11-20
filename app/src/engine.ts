@@ -4,6 +4,7 @@ import { Channel, invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import type { ModuleKind } from "./deck";
 import { actionName, t, type Key } from "./i18n";
+import { actionIconName } from "./actionIcons";
 
 /** Mirrors src-tauri/src/engine/profile.rs. */
 export interface Look {
@@ -1141,6 +1142,9 @@ export interface LocalPlugin {
   icon?: string | null;
   /** Why HubDeck cannot run it; null: it can. */
   problem?: string | null;
+  actions?: number;
+  digest?: string | null;
+  installedVersion?: string | null;
 }
 
 export interface PluginInfo {
@@ -1156,6 +1160,7 @@ export interface PluginInfo {
   memoryMb: number | null;
   /** Stopped on the Plugins page. */
   held: boolean;
+  source?: "existing" | "manual" | "marketplace" | "streamDeck";
 }
 
 export interface PresetSummary {
@@ -1344,7 +1349,7 @@ export function newBinding(action: ActionDef): Binding {
   // a plugin's action (`<plugin>/<action>`) starts with no label, as in Stream Deck: it draws its
   // own picture, and a Stream Deck plugin gets the label as its title (owner's 1a, 2026-10-20)
   if (action.id.includes("/")) return { action: action.id, params, look: { icon: action.icon } };
-  return { action: action.id, params, look: { label: actionName(action).split(" ")[0], icon: action.icon } };
+  return { action: action.id, params, look: { label: actionName(action).split(" ")[0], icon: actionIconName(action.id, action.icon) } };
 }
 
 export const inTauri = () => "__TAURI_INTERNALS__" in window;
@@ -1464,7 +1469,7 @@ export const api = {
   /** macOS: ask for Accessibility with the system's dialog. */
   accessibilityAsk: () => invoke<boolean>("accessibility_ask"),
   /** Install a Stream Deck plugin file; returns its id. */
-  sdInstall: (path: string) => invoke<string>("sd_install", { path }),
+  sdInstall: (path: string, digest: string, id: string) => invoke<string>("sd_install", { path, digest, id }),
   /** The catalog of open-source Stream Deck / OpenAction plugins (downloaded on request). */
   sdCatalog: () => invoke<CatalogPlugin[]>("sd_catalog"),
   /** Download a catalog plugin and install it; returns its id. */

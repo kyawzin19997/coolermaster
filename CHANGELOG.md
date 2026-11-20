@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- The full key editor puts the label, colors, and live preview first, with expandable controls for icons, positioning, effects, batch styling, and export.
+- Every built-in action has a new default icon in the Actions library and on newly assigned keys. Existing keys can switch to the new icon from the full editor.
+- The Plugins toolbar opens the installed list. Local files are validated and reviewed before installation, start disabled, and can be enabled, updated, or removed from the list.
+
 ## 1.1.0
 
 - Key settings open in a dedicated panel beside the deck when you select a key. Press, Hold, and Double press keep separate drop targets, and the Actions library stays visible.

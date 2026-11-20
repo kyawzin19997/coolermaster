@@ -25,6 +25,7 @@ import { clearIdentify, identifyModule } from "./identify";
 import { useEditing } from "./editing";
 import { BUILT_IN_LANGUAGES, setLanguage, storedLanguageFile, t, useLanguage, type Key } from "./i18n";
 import { demoParam } from "./demo/params";
+import { open, told } from "./confirm";
 
 const Builder = lazy(() => import("./components/Builder").then(({ Builder }) => ({ default: Builder })));
 const DeckLook = lazy(() => import("./components/DeckLook").then(({ DeckLook }) => ({ default: DeckLook })));
@@ -36,6 +37,7 @@ const Tour = lazy(() => import("./components/Tour").then(({ Tour }) => ({ defaul
 const DEMO_PANEL = demoParam("panel");
 // `&select=keys.6` (or `dial`, `knobs.1`...) selects that control at start
 const DEMO_SELECT = demoParam("select");
+type PluginFile = { path: string; update?: { id: string; name: string } };
 
 export default function App() {
   const { lang } = useLanguage();
@@ -82,13 +84,6 @@ export default function App() {
   const [settingsSection, setSettingsSection] = useState<SettingsSection>(DEMO_PANEL === "plugins" ? "plugins" : "general");
   const [updateCheckRequest, setUpdateCheckRequest] = useState(0);
   const [pluginsOpen, setPluginsOpen] = useState(DEMO_PANEL === "catalog");
-  const openPluginCatalog = useCallback(() => {
-    setPluginsOpen(true);
-    setSettingsOpen(false);
-    setGamesOpen(false);
-
-    setForAppOpen(false);
-  }, []);
   // "Use it" in the Plugins tab: the deck, with the library open at that plugin's actions
   const [focusPlugin, setFocusPlugin] = useState<{ id: string; at: number } | null>(null);
 
@@ -162,7 +157,32 @@ export default function App() {
   const [tourOpen, setTourOpen] = useState(DEMO_PANEL === "tour" || DEMO_PANEL === "welcome" || demoParam("demo") === "welcome");
   // plugin files opened with HubDeck (a double click, Open with) or dropped on the window: one at a
   // time, each asked about before it installs
-  const [pluginFiles, setPluginFiles] = useState<string[]>(DEMO_PANEL === "pluginfile" ? ["C:\Users\you\Downloads\com.fredemmott.audiooutputswitch.streamDeckPlugin"] : []);
+  const [pluginFiles, setPluginFiles] = useState<PluginFile[]>(DEMO_PANEL === "pluginfile" ? [{ path: "AudioSwitcher.streamDeckPlugin" }] : []);
+  const choosePlugin = async (update?: PluginFile["update"]) => {
+    try {
+      const path = await open({ multiple: false, filters: [{ name: t("plugins.sdFile"), extensions: ["streamDeckPlugin", "zip"] }] });
+      if (typeof path === "string") setPluginFiles((files) => [...files, { path, update }]);
+    } catch {
+      void told(t("plugins.pickFailed"));
+    }
+  };
+  const openInstalledPlugins = () => {
+    setPluginsOpen(false);
+    setGamesOpen(false);
+    setForAppOpen(false);
+    setLivingOpen(false);
+    setProfileOpen(false);
+    setStudio(null);
+    setSettingsSection("plugins");
+    setSettingsOpen(true);
+  };
+  const usePlugin = (id: string) => {
+    setPluginsOpen(false);
+    setSettingsOpen(false);
+    setStudio(null);
+    setSelected(null);
+    setFocusPlugin({ id, at: Date.now() });
+  };
   const [dropping, setDropping] = useState(false);
   useEffect(() => {
     if (!("__TAURI_INTERNALS__" in window)) return;
@@ -174,7 +194,7 @@ export default function App() {
     const add = (all: string[]) => {
       addPacks(all);
       const files = all.filter((f) => !isPack(f));
-      if (files.length > 0) setPluginFiles((now) => [...now, ...files.filter((f) => !now.includes(f))]);
+      if (files.length > 0) setPluginFiles((now) => [...now, ...files.filter((f) => !now.some(({ path }) => path === f)).map((path) => ({ path }))]);
     };
     const take = () => api.sdOpened().then(add, () => {});
     take();
@@ -203,7 +223,7 @@ export default function App() {
       depth = 0;
       setDropping(false);
       for (const f of [...(e.dataTransfer?.files ?? [])].filter((f) => isPlugin(f.name))) {
-        f.arrayBuffer().then((b) => api.sdDropFile(f.name, new Uint8Array(b))).then((path) => add([path]), () => {});
+        f.arrayBuffer().then((b) => api.sdDropFile(f.name, new Uint8Array(b))).then((path) => add([path]), (error) => notify(String(error)));
       }
     };
     window.addEventListener("dragenter", enter);
@@ -300,7 +320,7 @@ export default function App() {
           setSettingsOpen(true);
           setUpdateCheckRequest((n) => n + 1);
         }}
-        onOpenPlugins={() => (setPluginsOpen((o) => !o), setSettingsOpen(false), setGamesOpen(false), setForAppOpen(false))}
+        onOpenPlugins={() => settingsOpen && settingsSection === "plugins" ? setSettingsOpen(false) : openInstalledPlugins()}
         onOpenGames={() => (setGamesOpen((o) => !o), setSettingsOpen(false))}
       />
       <Banner
@@ -330,11 +350,11 @@ export default function App() {
         </main>
       ) : pluginsOpen ? (
         <main className="workspace">
-          <PluginsTab onClose={() => setPluginsOpen(false)} onInstalled={() => {}} onUse={(id) => (setPluginsOpen(false), setSelected(null), setFocusPlugin({ id, at: Date.now() }))} />
+          <PluginsTab onClose={() => setPluginsOpen(false)} onManage={openInstalledPlugins} onPickFile={choosePlugin} onUse={usePlugin} />
         </main>
       ) : studio ? (
         <main className="workspace">
-          <KeyStudio view={view} control={studio} onClose={() => setStudio(null)} />
+          <KeyStudio key={`${view.profile?.id}/${studio}`} view={view} control={studio} onClose={() => setStudio(null)} />
         </main>
       ) : livingOpen && !calibrating && !arranging ? (
         // the Deck look view over the whole window (owner, 2026-10-28: "edycja może powinna być w dedykowanym oknie")
@@ -355,6 +375,8 @@ export default function App() {
             onClose={() => { setUpdateCheckRequest(0); setSettingsOpen(false); }}
             onCalibrate={() => { setCalibrating(true); setSettingsOpen(false); }}
             onBrowsePlugins={() => { setPluginsOpen(true); setSettingsOpen(false); }}
+            onPickPlugin={choosePlugin}
+            onUsePlugin={usePlugin}
             onOpenEdge={() => setEdgeOpen(true)}
             onOpenScenes={() => { setSaverOpen(false); setMusicOpen(false); setLivingOpen(true); }}
           />
@@ -479,7 +501,7 @@ export default function App() {
           />
         )}
         <div className="editor-sidebar" hidden={arranging || calibrating}>
-          <ActionLibrary catalog={view.catalog} icons={view.icons} selectedKind={selected?.kind} focusPlugin={focusPlugin} disabled={arranging || calibrating} onOpenPlugins={openPluginCatalog} />
+          <ActionLibrary catalog={view.catalog} icons={view.icons} selectedKind={selected?.kind} focusPlugin={focusPlugin} disabled={arranging || calibrating} onOpenPlugins={openInstalledPlugins} />
         </div>
         {calibrating ? (
           <CalibrationPanel onClose={() => setCalibrating(false)} />
@@ -528,7 +550,7 @@ export default function App() {
         </Sheet>
       )}
       <ConfirmHost />
-      {pluginFiles.length > 0 && <PluginFileSheet key={pluginFiles[0]} path={pluginFiles[0]} onClose={() => setPluginFiles((now) => now.slice(1))} />}
+      {pluginFiles.length > 0 && <PluginFileSheet key={pluginFiles[0].path} path={pluginFiles[0].path} update={pluginFiles[0].update} onUse={usePlugin} onManage={openInstalledPlugins} onClose={() => setPluginFiles((now) => now.slice(1))} />}
       {dropping && (
         <div className="drop-overlay" aria-hidden="true">
           <Icon name="plug" />

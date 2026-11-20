@@ -95,7 +95,7 @@ fn leak(s: &str) -> &'static str {
     Box::leak(s.to_string().into_boxed_str())
 }
 
-fn safe_id(s: &str) -> bool {
+pub(super) fn safe_id(s: &str) -> bool {
     !s.is_empty() && s.len() <= 80 && s.chars().all(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '-' | '_'))
 }
 
@@ -140,7 +140,8 @@ impl Manifest {
 static ACTIONS: RwLock<Vec<ActionDef>> = RwLock::new(Vec::new());
 
 pub fn actions() -> Vec<ActionDef> {
-    ACTIONS.read().unwrap_or_else(|e| e.into_inner()).clone()
+    let held = HOST.get().map(|h| h.held.lock().unwrap_or_else(|e| e.into_inner()).clone()).unwrap_or_default();
+    ACTIONS.read().unwrap_or_else(|e| e.into_inner()).iter().filter(|a| a.id.split_once('/').is_none_or(|(id, _)| !held.contains(id))).cloned().collect()
 }
 
 struct Plugin {
@@ -224,6 +225,22 @@ mod job {
     }
 }
 
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum Source {
+    #[default]
+    Existing,
+    Manual,
+    Marketplace,
+    StreamDeck,
+}
+
+#[derive(Clone, Copy, serde::Serialize, serde::Deserialize)]
+struct Record {
+    source: Source,
+    enabled: bool,
+}
+
 struct Host {
     /// Installed plugins; Stream Deck plugins installed from the window join while HubDeck runs.
     plugins: RwLock<Vec<Plugin>>,
@@ -242,6 +259,33 @@ struct Host {
     titles: Mutex<HashMap<String, String>>,
     /// Plugins the user stopped on the Plugins page: the watchdog leaves them stopped.
     held: Mutex<std::collections::HashSet<String>>,
+    records_path: PathBuf,
+    records: Mutex<HashMap<String, Record>>,
+    changes: Mutex<()>,
+}
+
+impl Host {
+    fn record(&self, id: &str) -> Option<Record> {
+        self.records.lock().unwrap_or_else(|e| e.into_inner()).get(id).copied()
+    }
+
+    fn set_record(&self, id: &str, value: Option<Record>) -> Result<(), String> {
+        let mut current = self.records.lock().unwrap_or_else(|e| e.into_inner());
+        let mut next = current.clone();
+        if let Some(record) = value {
+            next.insert(id.to_string(), record);
+        } else {
+            next.remove(id);
+        }
+        let bytes = serde_json::to_vec(&next).map_err(|e| e.to_string())?;
+        super::profile::write_atomic(&self.records_path, &bytes).map_err(|e| format!("Couldn’t save the plugin settings. {e}"))?;
+        *current = next;
+        Ok(())
+    }
+
+    fn is_held(&self, id: &str) -> bool {
+        self.held.lock().unwrap_or_else(|e| e.into_inner()).contains(id)
+    }
 }
 
 static HOST: OnceLock<Host> = OnceLock::new();
@@ -363,6 +407,9 @@ pub fn start(data_dir: &Path, engine: Sender<Msg>) {
         Err(e) => log::warn!("local API over HTTP: {e}"),
     }
     let plugins = found.into_iter().map(|(manifest, dir)| Plugin { manifest, dir, token: random_token() }).collect();
+    let records_path = data_dir.join("plugin-sources.json");
+    let records: HashMap<String, Record> = std::fs::read(&records_path).ok().and_then(|bytes| serde_json::from_slice(&bytes).ok()).unwrap_or_default();
+    let held = records.iter().filter(|(_, record)| !record.enabled).map(|(id, _)| id.clone()).collect();
     let host = Host {
         plugins: RwLock::new(plugins),
         api_token,
@@ -373,7 +420,10 @@ pub fn start(data_dir: &Path, engine: Sender<Msg>) {
         dir: data_dir.join("plugins"),
         visible: Mutex::new(HashMap::new()),
         titles: Mutex::new(HashMap::new()),
-        held: Mutex::new(std::collections::HashSet::new()),
+        held: Mutex::new(held),
+        records_path,
+        records: Mutex::new(records),
+        changes: Mutex::new(()),
     };
     if HOST.set(host).is_err() {
         return;
@@ -388,6 +438,9 @@ pub fn start(data_dir: &Path, engine: Sender<Msg>) {
 }
 
 fn launch(p: &Plugin, port: u16) {
+    if HOST.get().is_some_and(|host| host.is_held(&p.manifest.id)) {
+        return;
+    }
     if let Some(sd) = &p.manifest.sd {
         return launch_sd(p, sd, port);
     }
@@ -461,11 +514,17 @@ fn watch() {
         let mut ended = Vec::new();
         for (id, child) in host.children.lock().unwrap_or_else(|e| e.into_inner()).iter_mut() {
             if let Ok(Some(code)) = child.try_wait() {
-                ended.push((id.clone(), code.to_string()));
+                ended.push((id.clone(), child.id(), code.to_string()));
             }
         }
-        for (id, code) in ended {
-            host.children.lock().unwrap_or_else(|e| e.into_inner()).remove(&id);
+        for (id, pid, code) in ended {
+            let _change = host.changes.lock().unwrap_or_else(|e| e.into_inner());
+            let mut children = host.children.lock().unwrap_or_else(|e| e.into_inner());
+            if children.get(&id).is_none_or(|child| child.id() != pid) {
+                continue;
+            }
+            children.remove(&id);
+            drop(children);
             // stopped on the Plugins page: not a crash, nothing to start again
             if host.held.lock().unwrap_or_else(|e| e.into_inner()).contains(&id) {
                 continue;
@@ -477,6 +536,10 @@ fn watch() {
         let due: Vec<String> = exited_at.iter().filter(|(_, at)| at.elapsed() >= Duration::from_secs(3)).map(|(id, _)| id.clone()).collect();
         for id in due {
             exited_at.remove(&id);
+            let _change = host.changes.lock().unwrap_or_else(|e| e.into_inner());
+            if host.is_held(&id) || host.children.lock().unwrap_or_else(|e| e.into_inner()).contains_key(&id) {
+                continue;
+            }
             let restarts = {
                 let mut status = host.status.lock().unwrap_or_else(|e| e.into_inner());
                 let entry = status.entry(id.clone()).or_insert((0, String::new()));
@@ -498,28 +561,55 @@ fn watch() {
 /// it stopped until Start (owner's pick, 2026-10-16; PAIN-POINTS SD11: plugins that eat the CPU).
 pub fn stop_one(id: &str) -> Result<(), String> {
     let host = HOST.get().ok_or("plugins are not running")?;
-    host.held.lock().unwrap_or_else(|e| e.into_inner()).insert(id.to_string());
-    if let Some(mut child) = host.children.lock().unwrap_or_else(|e| e.into_inner()).remove(id) {
-        let _ = child.kill();
-        let _ = child.wait();
+    let _change = host.changes.lock().unwrap_or_else(|e| e.into_inner());
+    if !installed(id) {
+        return Err("That plugin is no longer installed.".into());
     }
-    host.outbox.lock().unwrap_or_else(|e| e.into_inner()).remove(id);
+    if let Some(record) = host.record(id) {
+        host.set_record(id, Some(Record { enabled: false, ..record }))?;
+    }
+    host.held.lock().unwrap_or_else(|e| e.into_inner()).insert(id.to_string());
+    stop_running(host, id);
     host.status.lock().unwrap_or_else(|e| e.into_inner()).entry(id.to_string()).or_insert((0, String::new())).1 = "stopped by you".into();
     log::info!("plugin {id} stopped by the user");
     Ok(())
 }
 
+fn stop_running(host: &Host, id: &str) {
+    if let Some(mut child) = host.children.lock().unwrap_or_else(|e| e.into_inner()).remove(id) {
+        let _ = child.kill();
+        let _ = child.wait();
+    }
+    super::sdplugins::close_html(id);
+    host.outbox.lock().unwrap_or_else(|e| e.into_inner()).remove(id);
+}
+
 /// Start a plugin stopped by hand (or one the watchdog gave up on), with a fresh restart count.
 pub fn start_one(id: &str) -> Result<(), String> {
     let host = HOST.get().ok_or("plugins are not running")?;
+    let _change = host.changes.lock().unwrap_or_else(|e| e.into_inner());
+    let plugins = host.plugins.read().unwrap_or_else(|e| e.into_inner());
+    let p = plugins.iter().find(|p| p.manifest.id == id).ok_or_else(|| format!("no plugin {id}"))?;
+    let was_held = host.is_held(id);
+    if let Some(record) = host.record(id) {
+        host.set_record(id, Some(Record { enabled: true, ..record }))?;
+    }
     host.held.lock().unwrap_or_else(|e| e.into_inner()).remove(id);
     if host.children.lock().unwrap_or_else(|e| e.into_inner()).contains_key(id) {
         return Ok(());
     }
     host.status.lock().unwrap_or_else(|e| e.into_inner()).insert(id.to_string(), (0, "starting".into()));
-    let plugins = host.plugins.read().unwrap_or_else(|e| e.into_inner());
-    let p = plugins.iter().find(|p| p.manifest.id == id).ok_or_else(|| format!("no plugin {id}"))?;
     launch(p, host.port);
+    let failed = host.status.lock().unwrap_or_else(|e| e.into_inner()).get(id).filter(|(_, message)| message != "running").map(|(_, message)| message.clone());
+    if let Some(error) = failed {
+        if was_held {
+            host.held.lock().unwrap_or_else(|e| e.into_inner()).insert(id.to_string());
+            if let Some(record) = host.record(id) {
+                host.set_record(id, Some(Record { enabled: false, ..record }))?;
+            }
+        }
+        return Err(if error == "starting" { "The plugin has no command to start.".into() } else { error });
+    }
     Ok(())
 }
 
@@ -576,6 +666,7 @@ pub struct PluginInfo {
     pub memory_mb: Option<u64>,
     /// Stopped on the Plugins page.
     pub held: bool,
+    pub source: Source,
 }
 
 /// CPU and memory of the plugin processes, refreshed on each call (the page asks every 2 s).
@@ -588,9 +679,10 @@ pub fn list() -> Vec<PluginInfo> {
     let sys = usage.get_or_insert_with(sysinfo::System::new);
     let wanted: Vec<sysinfo::Pid> = pids.values().copied().collect();
     sys.refresh_processes(sysinfo::ProcessesToUpdate::Some(&wanted), true);
-    let status = host.status.lock().unwrap_or_else(|e| e.into_inner());
-    let outbox = host.outbox.lock().unwrap_or_else(|e| e.into_inner());
-    let held = host.held.lock().unwrap_or_else(|e| e.into_inner());
+    let status = host.status.lock().unwrap_or_else(|e| e.into_inner()).clone();
+    let connected: std::collections::HashSet<_> = host.outbox.lock().unwrap_or_else(|e| e.into_inner()).keys().cloned().collect();
+    let held = host.held.lock().unwrap_or_else(|e| e.into_inner()).clone();
+    let records = host.records.lock().unwrap_or_else(|e| e.into_inner()).clone();
     host.plugins
         .read()
         .unwrap_or_else(|e| e.into_inner())
@@ -603,12 +695,13 @@ pub fn list() -> Vec<PluginInfo> {
                 version: p.manifest.version.clone(),
                 actions: p.manifest.actions.len(),
                 status: s,
-                connected: outbox.contains_key(&p.manifest.id),
+                connected: connected.contains(&p.manifest.id),
                 restarts,
                 permissions: p.manifest.permissions.clone(),
                 cpu: pids.get(&p.manifest.id).and_then(|pid| sys.process(*pid)).map(|pr| pr.cpu_usage()),
                 memory_mb: pids.get(&p.manifest.id).and_then(|pid| sys.process(*pid)).map(|pr| pr.memory() / 1_048_576),
                 held: held.contains(&p.manifest.id),
+                source: records.get(&p.manifest.id).map(|record| record.source).unwrap_or_default(),
             }
         })
         .collect()
@@ -626,45 +719,87 @@ pub fn folder_of(plugin: &str) -> Option<PathBuf> {
 
 /// A Stream Deck plugin's manifest and folder.
 pub fn sd_of(plugin: &str) -> Option<(std::sync::Arc<super::sdplugins::SdManifest>, PathBuf)> {
-    HOST.get()?.plugins.read().unwrap_or_else(|e| e.into_inner()).iter().find(|p| p.manifest.id == plugin).and_then(|p| Some((p.manifest.sd.clone()?, p.dir.clone())))
+    let host = HOST.get()?;
+    if host.is_held(plugin) {
+        return None;
+    }
+    host.plugins.read().unwrap_or_else(|e| e.into_inner()).iter().find(|p| p.manifest.id == plugin).and_then(|p| Some((p.manifest.sd.clone()?, p.dir.clone())))
 }
 
-/// Install a Stream Deck plugin file and start it at once (an installed version is stopped and
-/// replaced). Returns the plugin's id.
 pub fn install_sd(bytes: &[u8]) -> Result<String, String> {
+    install_sd_from(bytes, Source::Existing, None)
+}
+
+/// Validate all files before touching an existing copy. File installs wait for explicit enablement.
+pub fn install_sd_from(bytes: &[u8], source: Source, expected: Option<&str>) -> Result<String, String> {
     let host = HOST.get().ok_or("plugins are not running")?;
-    std::fs::create_dir_all(&host.dir).map_err(|e| e.to_string())?;
-    // stop a running copy first: Windows cannot replace files in use
-    let peek = super::sdplugins::install_root(bytes)?;
-    if let Some(mut c) = host.children.lock().unwrap_or_else(|e| e.into_inner()).remove(&peek) {
-        let _ = c.kill();
-        let _ = c.wait();
+    let stage = super::sdlocal::Stage::new(&host.dir)?;
+    let (staged, sd) = stage.validate(bytes)?;
+    let id = sd.uuid.clone();
+    if expected.is_some_and(|expected| expected != id) {
+        return Err("This is a different plugin. Choose a file for the installed plugin you want to update.".into());
     }
-    let id = super::sdplugins::install(bytes, &host.dir)?;
+    let _change = host.changes.lock().unwrap_or_else(|e| e.into_inner());
     let dir = host.dir.join(format!("{id}.sdPlugin"));
-    let v: Value = std::fs::read(dir.join("manifest.json")).ok().and_then(|b| serde_json::from_slice(super::sdplugins::without_bom(&b)).ok()).ok_or("no manifest")?;
-    let manifest = super::sdplugins::to_manifest(super::sdplugins::read(&v, &dir)?);
+    if host.plugins.read().unwrap_or_else(|e| e.into_inner()).iter().any(|p| p.manifest.id == id && p.dir != dir) {
+        return Err("A plugin with this ID is installed in a different folder. Remove it before installing this file.".into());
+    }
+    let previous = host.record(&id);
+    let was_held = host.is_held(&id);
+    let enabled = source != Source::Manual && !was_held;
+    host.set_record(&id, Some(Record { source, enabled }))?;
+    host.held.lock().unwrap_or_else(|e| e.into_inner()).insert(id.clone());
+    stop_running(host, &id);
+    let backup = host.dir.join(format!(".plugin-backup-{}", random_token()));
+    let replace = || -> Result<(), String> {
+        if dir.exists() {
+            std::fs::rename(&dir, &backup).map_err(|e| format!("Couldn’t move the current version. {e}"))?;
+        }
+        if let Err(error) = std::fs::rename(&staged, &dir) {
+            if backup.exists()
+                && let Err(restore) = std::fs::rename(&backup, &dir)
+            {
+                return Err(format!("Couldn’t install the update or restore the old files. The previous version is at {}. {restore}", backup.display()));
+            }
+            return Err(format!("Couldn’t move the new plugin into place. {error}"));
+        }
+        Ok(())
+    };
+    if let Err(error) = replace() {
+        host.set_record(&id, previous)?;
+        if !was_held {
+            host.held.lock().unwrap_or_else(|e| e.into_inner()).remove(&id);
+            if let Some(plugin) = host.plugins.read().unwrap_or_else(|e| e.into_inner()).iter().find(|p| p.manifest.id == id && p.dir.is_dir()) {
+                launch(plugin, host.port);
+            }
+        }
+        return Err(error);
+    }
+    let _ = std::fs::remove_dir_all(backup);
+    let manifest = super::sdplugins::to_manifest(sd);
     let plugin = Plugin { manifest, dir, token: random_token() };
     {
         let mut actions = ACTIONS.write().unwrap_or_else(|e| e.into_inner());
         actions.retain(|a| !a.id.starts_with(&format!("{id}/")));
         actions.extend(plugin.manifest.action_defs());
     }
-    launch(&plugin, host.port);
+    let mut state = host.status.lock().unwrap_or_else(|e| e.into_inner());
+    state.remove(&id);
+    drop(state);
     let mut plugins = host.plugins.write().unwrap_or_else(|e| e.into_inner());
     plugins.retain(|p| p.manifest.id != id);
     plugins.push(plugin);
+    if enabled {
+        host.held.lock().unwrap_or_else(|e| e.into_inner()).remove(&id);
+        launch(plugins.last().expect("just installed"), host.port);
+    }
     log::info!("installed Stream Deck plugin {id}");
     Ok(id)
 }
 
 /// Stop a plugin and take its actions out of the library (its folder stays; the caller removes it).
-pub fn uninstall(id: &str) {
-    let Some(host) = HOST.get() else { return };
-    if let Some(mut c) = host.children.lock().unwrap_or_else(|e| e.into_inner()).remove(id) {
-        let _ = c.kill();
-        let _ = c.wait();
-    }
+fn uninstall(host: &Host, id: &str) {
+    stop_running(host, id);
     ACTIONS.write().unwrap_or_else(|e| e.into_inner()).retain(|a| !a.id.starts_with(&format!("{id}/")));
     host.plugins.write().unwrap_or_else(|e| e.into_inner()).retain(|p| p.manifest.id != id);
 }
@@ -673,34 +808,47 @@ pub fn uninstall(id: &str) {
 /// Windows keeps a file locked for a moment after its program ends, so the delete is tried again.
 pub fn remove(id: &str) -> Result<(), String> {
     let host = HOST.get().ok_or("plugins are not running")?;
+    let _change = host.changes.lock().unwrap_or_else(|e| e.into_inner());
     let dir = host.plugins.read().unwrap_or_else(|e| e.into_inner()).iter().find(|p| p.manifest.id == id).map(|p| p.dir.clone()).ok_or_else(|| format!("no plugin {id}"))?;
     // only a folder inside HubDeck's plugins folder is ever deleted
     if !dir.starts_with(&host.dir) {
         return Err(format!("{id} is not in HubDeck's plugins folder"));
     }
-    uninstall(id);
-    host.held.lock().unwrap_or_else(|e| e.into_inner()).remove(id);
-    host.status.lock().unwrap_or_else(|e| e.into_inner()).remove(id);
-    host.outbox.lock().unwrap_or_else(|e| e.into_inner()).remove(id);
+    host.held.lock().unwrap_or_else(|e| e.into_inner()).insert(id.to_string());
+    stop_running(host, id);
     let mut last = String::new();
     for _ in 0..20 {
         match std::fs::remove_dir_all(&dir) {
-            Ok(()) => {
-                log::info!("plugin {id} uninstalled by the user");
-                return Ok(());
-            }
-            Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(()),
+            Ok(()) => break,
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => break,
             Err(e) => last = e.to_string(),
         }
         std::thread::sleep(Duration::from_millis(250));
     }
-    log::warn!("plugin {id} uninstalled, its folder stays: {last}");
-    Err(format!("its folder could not be deleted ({last}): {}", dir.display()))
+    if dir.exists() {
+        if let Some(record) = host.record(id) {
+            host.set_record(id, Some(Record { enabled: false, ..record }))?;
+        }
+        return Err(format!("The plugin is disabled, but its folder could not be removed. {last}"));
+    }
+    uninstall(host, id);
+    host.held.lock().unwrap_or_else(|e| e.into_inner()).remove(id);
+    host.status.lock().unwrap_or_else(|e| e.into_inner()).remove(id);
+    if host.record(id).is_some()
+        && let Err(error) = host.set_record(id, None)
+    {
+        log::warn!("plugin {id}: {error}");
+    }
+    Ok(())
 }
 
 /// A plugin of this id is installed (running or not).
 pub fn installed(id: &str) -> bool {
-    HOST.get().is_some_and(|h| h.plugins.read().unwrap_or_else(|e| e.into_inner()).iter().any(|p| p.manifest.id == id))
+    installed_version(id).is_some()
+}
+
+pub fn installed_version(id: &str) -> Option<String> {
+    HOST.get()?.plugins.read().unwrap_or_else(|e| e.into_inner()).iter().find(|p| p.manifest.id == id).map(|p| p.manifest.version.clone())
 }
 
 /// Where plugin folders go (created if missing).
@@ -758,13 +906,13 @@ fn connection(stream: TcpStream, engine: Sender<Msg>) -> Result<(), String> {
     let ok = (sd_uuid.is_some() && !who.is_empty())
         || (first["event"] == "register"
             && ((who == "api" && token == host.api_token) || host.plugins.read().unwrap_or_else(|e| e.into_inner()).iter().any(|p| p.manifest.id == who && p.token == token)));
-    if !ok {
+    if !ok || host.is_held(&who) {
         let _ = ws.send(Message::text(json!({"event": "error", "message": "unknown plugin or token"}).to_string()));
         return Err(format!("refused {who}"));
     }
     log::info!("plugin {who} connected");
     let (tx, rx): (Sender<String>, Receiver<String>) = unbounded();
-    host.outbox.lock().unwrap_or_else(|e| e.into_inner()).insert(who.clone(), tx);
+    host.outbox.lock().unwrap_or_else(|e| e.into_inner()).insert(who.clone(), tx.clone());
     if sd_dir.is_some() {
         let _ = ws
             .send(Message::text(json!({"event": "deviceDidConnect", "device": super::sdplugins::DEVICE, "deviceInfo": {"name": "HubDeck", "size": {"columns": 5, "rows": 3}, "type": 7}}).to_string()));
@@ -788,6 +936,9 @@ fn connection(stream: TcpStream, engine: Sender<Msg>) -> Result<(), String> {
     }
     ws.get_mut().set_read_timeout(Some(Duration::from_millis(30))).map_err(|e| e.to_string())?;
     loop {
+        if !host.outbox.lock().unwrap_or_else(|e| e.into_inner()).get(&who).is_some_and(|current| current.same_channel(&tx)) {
+            break;
+        }
         for out in rx.try_iter() {
             ws.send(Message::text(out)).map_err(|e| e.to_string())?;
         }
@@ -822,7 +973,10 @@ fn connection(stream: TcpStream, engine: Sender<Msg>) -> Result<(), String> {
             }
         }
     }
-    host.outbox.lock().unwrap_or_else(|e| e.into_inner()).remove(&who);
+    let mut outbox = host.outbox.lock().unwrap_or_else(|e| e.into_inner());
+    if outbox.get(&who).is_some_and(|current| current.same_channel(&tx)) {
+        outbox.remove(&who);
+    }
     Ok(())
 }
 

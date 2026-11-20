@@ -681,13 +681,13 @@ impl Engine {
         let html_app = app.clone();
         sdplugins::set_html_launcher(Box::new(move |plugin, url| {
             let label: String = format!("sdplugin-{plugin}").chars().map(|c| if c.is_ascii_alphanumeric() || c == '-' { c } else { '-' }).collect();
-            let (app, url) = (html_app.clone(), url.to_string());
+            let (app, url) = (html_app.clone(), url.map(str::to_string));
             // windows are made on the main thread
             let _ = html_app.run_on_main_thread(move || {
                 if let Some(w) = app.get_webview_window(&label) {
                     let _ = w.destroy();
                 }
-                let Ok(parsed) = url.parse() else { return };
+                let Some(parsed) = url.and_then(|url| url.parse().ok()) else { return };
                 if let Err(e) = tauri::WebviewWindowBuilder::new(&app, &label, tauri::WebviewUrl::External(parsed)).visible(false).title("HubDeck plugin").build() {
                     log::warn!("HTML plugin window: {e}");
                 }

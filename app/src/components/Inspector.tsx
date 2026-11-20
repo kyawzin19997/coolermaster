@@ -1453,7 +1453,10 @@ export function Inspector({ ref, selected, view, onDropAction, onOpenStudio, onC
           view={view}
           onChange={(look) => update({ ...draft, look })}
           others={selected.kind === "keys" ? otherKeys : []}
-          onOpenStudio={selected.kind === "keys" && onOpenStudio && control ? () => (saver.flush(), onOpenStudio(control)) : undefined}
+          onOpenStudio={selected.kind === "keys" && onOpenStudio && control ? async () => {
+            await saver.flush();
+            onOpenStudio(control);
+          } : undefined}
           onApplyTo={(ids) => {
             if (!profile) return Promise.resolve();
             const changes = Object.fromEntries(ids.filter((id) => profile.controls[id]).map((id) => [id, { ...profile.controls[id], look: withLook(profile.controls[id].look ?? {}, draft.look ?? {}) }]));
