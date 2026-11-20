@@ -7,6 +7,7 @@ import { listen } from "@tauri-apps/api/event";
 import type { ControlRef, LiveState, ModuleKind } from "../deck";
 import { api, withUpright, type FrameCost, FX_OPTIONS, FX_TINT, fxName, GPU_KINDS, type FxKind, type FxLayer, SKIN_MOTION, type Skin, type Look, GAMES_ENABLED, pageReachable, setPreviewSalt, type AppInfo, type AppsState, type CrashReport, type LightSettings, LED_EFFECTS, METRICS, type EngineView, type GameSummary, type Imported, type Metric, type Moved, type PluginInfo, type LocalPlugin, type InstalledItem, type PresetSummary, type Profile, type ProfileSummary, type Screens, triedPresets, SAVER_SCENES, saverOf, knownScreens, screensChanged, saverEnd, useSaverShown, type CustomSaver, SAVER_FROM_LOOK, saverPreset, PRESETS_HIDDEN, THEMES, themeTitle, layersOf } from "../engine";
 import { Icon } from "./Icon";
+import { Thumb } from "./Thumb";
 import { AssistantPanel, refreshNudge, useNudge, useSetUp } from "./Assistant";
 import { InstalledPicker, pickImage } from "./Inspector";
 import { ModuleThumb } from "./DeckView";
@@ -1761,6 +1762,58 @@ export function FrameCostView({ cost }: { cost: FrameCost | null }) {
 
 
 const SAVER_NOT_PRESETS = ["music-spectrum", "music-spectrum-up"];
+let nextSaverPreview = 0;
+
+function InlineSaverPreview({ profile, effect, layers, theme }: { profile: string; effect: string; layers?: FxLayer[]; theme?: string }) {
+  const [frame, setFrame] = useState<string | null>(null);
+  const [unavailable, setUnavailable] = useState(false);
+  const demo = new URLSearchParams(location.search).has("demo");
+  const design = JSON.stringify(layers ?? null);
+  useEffect(() => {
+    if (demo) return;
+    const id = ++nextSaverPreview;
+    const layers: FxLayer[] | null = JSON.parse(design);
+    let active = true;
+    let scheduled: number | undefined;
+    let seen: number | null = null;
+    setFrame(null);
+    setUnavailable(false);
+
+    const draw = async () => {
+      if (document.hidden) {
+        scheduled = window.setTimeout(draw, 300);
+        return;
+      }
+      try {
+        const frame = await api.saverPreviewFrame(id, profile, effect, layers, seen);
+        if (!active) return;
+        seen = frame.sequence;
+        if (frame.jpeg) setFrame("data:image/jpeg;base64," + frame.jpeg);
+        if (frame.afterMs !== null) scheduled = window.setTimeout(draw, frame.afterMs);
+      } catch {
+        if (active) setUnavailable(true);
+      }
+    };
+    void draw();
+    return () => {
+      active = false;
+      window.clearTimeout(scheduled);
+      void api.saverPreviewClose(id).catch(() => {});
+    };
+  }, [demo, design, effect, profile]);
+
+  const thumbnail = effect === SAVER_FROM_LOOK ? theme : saverPreset(effect);
+  return (
+    <figure className="saver-preview">
+      <figcaption className="label">{t("saver.preview")}</figcaption>
+      <div className="saver-preview-image">
+        {demo ? <Thumb key={effect} id={thumbnail || ("saver-" + effect)} moving /> :
+          frame ? <img src={frame} alt={t("saver.preview")} /> :
+          <span className="help" role="status">{t(unavailable ? "saver.previewUnavailable" : "saver.previewLoading")}</span>}
+      </div>
+    </figure>
+  );
+}
 
 function SaverPanel({ view }: { view: EngineView }) {
   useLanguage();
@@ -1771,6 +1824,8 @@ function SaverPanel({ view }: { view: EngineView }) {
   const [busy, setBusy] = useState<"saving" | "importing" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [confirmRemove, setConfirmRemove] = useState(false);
+  const [chosen, setChosen] = useState<string | null>(null);
+  const [idleDelay, setIdleDelay] = useState<number | null>(null);
   const previewing = !!useSaverShown()?.preview;
 
   useEffect(() => setDraft(profile), [profile]);
@@ -1809,8 +1864,11 @@ function SaverPanel({ view }: { view: EngineView }) {
   );
 
   const now = saverOf(draft, shared);
-  const item = custom.find((entry) => entry.id === now.effect);
-  const effect = now.effect.startsWith("custom:") && !item ? "" : now.effect;
+  const applied = now.effect.startsWith("custom:") && !custom.some((entry) => entry.id === now.effect) ? "" : now.effect;
+  const effect = chosen ?? applied;
+  const item = custom.find((entry) => entry.id === effect);
+  const afterMinutes = idleDelay ?? now.afterMinutes;
+  const changed = effect !== applied || afterMinutes !== now.afterMinutes;
   const layersFor = (choice: string) => {
     if (choice === now.effect) return now.own ? draft.saver?.layers : shared.saverLayers;
     return THEMES.find((theme) => theme.id === saverPreset(choice))?.layers;
@@ -1838,7 +1896,7 @@ function SaverPanel({ view }: { view: EngineView }) {
     const media = await api.saverImport(path);
     setCustom((items) => [...items, media]);
     setConfirmRemove(false);
-    await save(media.id);
+    setChosen(media.id);
   }, "importing");
 
   return (
@@ -1848,8 +1906,8 @@ function SaverPanel({ view }: { view: EngineView }) {
           <span className="label">{t("screens.saver")}</span>
           <select className="input" value={effect} disabled={!!busy} onChange={(event) => {
             setConfirmRemove(false);
-            const choice = event.currentTarget.value;
-            void run(() => save(choice));
+            setError(null);
+            setChosen(event.currentTarget.value);
           }}>
             <option value="">{t("screens.saverOff")}</option>
             <optgroup label={t("saver.scenes")}>
@@ -1865,26 +1923,29 @@ function SaverPanel({ view }: { view: EngineView }) {
             </optgroup>
           </select>
         </label>
+        {effect && <InlineSaverPreview key={effect} effect={effect} profile={draft.id} layers={layersFor(effect)} theme={draft.effects?.theme} />}
         <label className="field">
           <span className="label">{t("screens.saverAfter")}</span>
-          <select className="input" value={now.afterMinutes} disabled={!!busy || !effect} onChange={(event) => {
-            const minutes = Number(event.currentTarget.value);
-            void run(() => save(effect, minutes));
-          }}>
+          <select className="input" value={afterMinutes} disabled={!!busy || !effect} onChange={(event) => setIdleDelay(Number(event.currentTarget.value))}>
             {choices([1, 2, 5, 10, 15, 30, 60], now.afterMinutes).map((minutes) =>
               <option key={minutes} value={minutes}>{t("screens.minutes", { count: minutes })}</option>)}
           </select>
         </label>
-        {effect && shared.blankAfterMinutes > 0 && shared.blankAfterMinutes <= now.afterMinutes &&
+        {effect && shared.blankAfterMinutes > 0 && shared.blankAfterMinutes <= afterMinutes &&
           <p className="help warn">{t("saver.blankWarning")}</p>}
         <div className="saver-buttons">
           <button type="button" className="tool" disabled={!!busy} onClick={() => void startImport()}>
             <Icon name="plus" />{t("saver.add")}
           </button>
-          <button type="button" className="tool" disabled={!!busy || !effect} onClick={() =>
+          <button type="button" className="tool" disabled={!!busy || (!effect && !previewing)} onClick={() =>
             void run(() => previewing ? saverEnd() : api.saverTry(effect, layersFor(effect)))}>
-            <Icon name={previewing ? "x" : "play"} />{t(previewing ? "saver.stopPreview" : "saver.preview")}
+            <Icon name={previewing ? "x" : "play"} />{t(previewing ? "saver.stopPreview" : "saver.try")}
           </button>
+          <button type="button" className="tool primary" disabled={!!busy || !changed} onClick={() => void run(async () => {
+            await save(effect, afterMinutes);
+            setChosen(null);
+            setIdleDelay(null);
+          })}>{t("saver.apply")}</button>
         </div>
         {busy === "importing" && <p className="help" role="status">{t("saver.importing")}</p>}
         {previewing && <p className="help" role="status">{t("saver.tryHelp")}</p>}
@@ -1896,6 +1957,7 @@ function SaverPanel({ view }: { view: EngineView }) {
             <button type="button" className="tool" disabled={!!busy} onClick={() => void run(async () => {
               await api.saverRemove(item.id);
               setCustom((items) => items.filter((entry) => entry.id !== item.id));
+              setChosen(null);
               setConfirmRemove(false);
               await refreshShared();
             })}>{t("saver.remove")}</button>
@@ -1908,7 +1970,7 @@ function SaverPanel({ view }: { view: EngineView }) {
         <label className="field">
           <span className="label">{t("saver.forProfile")}</span>
           <select className="input" value={now.own ? "own" : "shared"} disabled={!!busy} onChange={(event) => {
-            if (event.currentTarget.value === "own") void run(() => save(effect, now.afterMinutes, true));
+            if (event.currentTarget.value === "own") void run(() => save(applied, now.afterMinutes, true));
             else void run(async () => {
               await api.saverConfigure(draft.id, undefined);
               setDraft(await api.profile(draft.id));

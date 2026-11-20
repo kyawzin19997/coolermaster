@@ -164,13 +164,19 @@ for (const [label, viewport] of [['wide', { width: 1440, height: 900 }], ['half'
     await display.locator('#screen-brightness').waitFor();
     return !!deck && !!panel && deck.x + deck.width <= panel.x + 1;
   });
-  await step(page, `${label}: Screensavers can be selected from Deck tools`, async () => {
+  await step(page, `${label}: Screensavers preview in the tab before applying`, async () => {
     await page.getByRole('button', { name: 'Deck tools', exact: true }).click();
     await page.getByRole('menuitem', { name: 'Screensaver', exact: true }).click();
     const display = page.getByRole('complementary', { name: 'Lights and screens', exact: true });
     const picker = display.getByRole('combobox', { name: 'Screensaver', exact: true });
     await picker.selectOption('aurora');
-    await display.getByRole('button', { name: 'Preview', exact: true }).waitFor();
+    const preview = display.locator('.saver-preview img');
+    await preview.waitFor();
+    const apply = display.getByRole('button', { name: 'Apply screensaver', exact: true });
+    if (await apply.isDisabled()) return 'the preview changed the saved screensaver before applying';
+    await apply.click();
+    await apply.waitFor({ state: 'visible' });
+    if (!await apply.isDisabled()) return 'the screensaver was not saved';
     const selected = await picker.inputValue();
     await display.getByText('Advanced settings', { exact: true }).click();
     const scope = display.getByRole('combobox', { name: 'Apply to', exact: true });

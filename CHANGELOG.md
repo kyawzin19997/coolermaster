@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.4
+
+- Preview scenes, deck looks, and custom screensavers directly inside the Screensaver tab before applying them. Browsing leaves the saved screensaver in place.
+
 ## 1.2.3
 
 - MasterDeck automatically connects to local OBS Studio using OBS's configured port and authentication.

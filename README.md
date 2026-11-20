@@ -22,7 +22,7 @@ Quit the official MasterHUB app before connecting the hardware. One application 
 
 ## Set a screensaver
 
-Open **Deck tools → Screensaver**. Pick a built-in scene, use a deck look, or choose **Add screensaver** to import a GIF, WebP, PNG, or JPEG up to 15 MB. Set the idle delay and click **Preview** to see it across the keys. **Advanced settings** lets you apply a different screensaver to each profile and choose what the dial and lights do while it runs. MasterDeck keeps imported media on this computer. When moving a profile to another computer, add the image there and select it again.
+Open **Deck tools → Screensaver**. Pick a built-in scene, use a deck look, or choose **Add screensaver** to import a GIF, WebP, PNG, or JPEG up to 15 MB. The animation plays in the tab as you browse. Set the idle delay and choose **Apply screensaver** to save your choice. **Preview on the deck** is available if you want to see it across the keys. **Advanced settings** lets you use a different screensaver for each profile and choose what the dial and lights do while it runs. MasterDeck keeps imported media on this computer. When moving a profile to another computer, add the image there and select it again.
 
 ## Connect OBS Studio
 

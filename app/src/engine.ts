@@ -1388,6 +1388,9 @@ export const api = {
   saverImport: (path: string) => invoke<CustomSaver>("saver_import", { path }),
   saverRemove: (id: string) => invoke("saver_remove", { id }),
   saverConfigure: (profile: string | null, saver: Profile["saver"]) => invoke("saver_configure", { profile, saver: saver ?? null }),
+  saverPreviewFrame: (id: number, profile: string, effect: string, layers: FxLayer[] | null, seen: number | null) =>
+    invoke<{ sequence: number; jpeg: string | null; afterMs: number | null }>("saver_preview_frame", { id, profile, effect, layers, seen }),
+  saverPreviewClose: (id: number) => invoke("saver_preview_close", { id }),
   /** Try a look on the deck without saving it (the Deck look view); null goes back. */
   effectsTry: (effects: DeckEffects | null, bare = false) => invoke("effects_try", { effects, bare }),
   effectsPress: (key: number) => invoke("effects_press", { key }),

@@ -171,6 +171,75 @@ pub fn black_jpeg() -> Arc<[u8]> {
     JPEG.get_or_init(|| Arc::from(render::encode_jpeg(&blank_panel(), JPEG_QUALITY).expect("encode black key panel"))).clone()
 }
 
+struct InlinePreview {
+    id: u32,
+    playback: Playback,
+    geometry: render::PanelGeometry,
+}
+
+static INLINE_PREVIEW: std::sync::Mutex<Option<InlinePreview>> = std::sync::Mutex::new(None);
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct InlineFrame {
+    sequence: u64,
+    jpeg: Option<String>,
+    after_ms: Option<u64>,
+}
+
+/// Render the selected scene for the settings panel, without changing the deck or its saved assignment.
+#[tauri::command]
+pub async fn saver_preview_frame(app: tauri::AppHandle, id: u32, profile: String, effect: String, layers: Option<Vec<super::profile::Layer>>, seen: Option<u64>) -> Result<InlineFrame, String> {
+    use base64::Engine as _;
+    use tauri::Manager;
+    tauri::async_runtime::spawn_blocking(move || {
+        let mut preview = INLINE_PREVIEW.lock().map_err(|_| "The preview is unavailable.")?;
+        if preview.as_ref().is_none_or(|p| p.id != id) {
+            let engine = app.state::<super::Engine>();
+            let effect = current(&effect);
+            let (geometry, effects) = {
+                let shared = engine.lock();
+                if effect.is_empty() || !shared.knows_saver(&effect) {
+                    return Err("This screensaver is unavailable.".into());
+                }
+                let effects = if effect == FROM_LOOK {
+                    shared.store.profiles.get(&profile).and_then(|p| p.effects.as_ref()).map(still)
+                } else if let Some(layers) = layers.filter(|_| preset(&effect).is_some()) {
+                    Some(still(&super::profile::Effects { layers, ..Default::default() }))
+                } else {
+                    scene(&effect)
+                };
+                (shared.store.settings.panel, effects)
+            };
+            let playback = Playback::new(effect, engine.data_dir(), effects);
+            if matches!(playback.source, Source::Black) {
+                return Err("This screensaver has no preview frames.".into());
+            }
+            *preview = Some(InlinePreview { id, playback, geometry });
+        }
+        let preview = preview.as_mut().expect("initialized screensaver preview");
+        let frame = preview.playback.picture(Instant::now(), 0, &preview.geometry);
+        let sequence = preview.playback.sequence;
+        let jpeg = (seen != Some(sequence)).then(|| base64::engine::general_purpose::STANDARD.encode(frame));
+        let after_ms = preview.playback.next.map(|next| next.saturating_duration_since(Instant::now()).as_millis().clamp(80, 2_000_000_000) as u64);
+        Ok(InlineFrame { sequence, jpeg, after_ms })
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
+#[tauri::command]
+pub async fn saver_preview_close(id: u32) {
+    let _ = tauri::async_runtime::spawn_blocking(move || {
+        if let Ok(mut preview) = INLINE_PREVIEW.lock()
+            && preview.as_ref().is_some_and(|p| p.id == id)
+        {
+            *preview = None;
+        }
+    })
+    .await;
+}
+
 fn limits() -> image::Limits {
     let mut limits = image::Limits::default();
     limits.max_image_width = Some(MAX_DECODED_SIDE);

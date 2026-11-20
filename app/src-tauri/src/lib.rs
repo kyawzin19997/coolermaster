@@ -463,6 +463,8 @@ pub fn run() {
             engine::saver::saver_import,
             engine::saver::saver_remove,
             engine::saver::saver_configure,
+            engine::saver::saver_preview_frame,
+            engine::saver::saver_preview_close,
             engine::effects_try,
             engine::effects_press,
             engine::looks_list,
