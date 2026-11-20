@@ -503,9 +503,10 @@ function Keys({ ctx }: { ctx: Ctx }) {
               <path d={`M7 1.1H${KW - 7}`} fill="none" stroke="#fff" strokeOpacity=".8" strokeWidth="1.1" strokeLinecap="round" />
               <path d={`M1.1 7V${KH * 0.45}`} fill="none" stroke="#fff" strokeOpacity=".35" strokeWidth=".8" strokeLinecap="round" />
               {pressed && <rect className="dk-pressed" width={KW} height={KH} rx="8" />}
-              {!arranging && sceneTarget && <g className="dk-scene-target" transform={`translate(${KW / 2} ${KH - 10}) rotate(${ctx.upright})`} pointerEvents="none">
-                <rect x={-(KW - 8) / 2} y="-6" width={KW - 8} height="12" rx="4" />
-                <text x="0" y="2.8" textAnchor="middle">{sceneTarget}</text>
+              {!arranging && sceneTarget && <g className="dk-scene-target"
+                transform={`rotate(${ctx.upright} ${KW / 2} ${KH / 2}) translate(${KW / 2} 8)`} pointerEvents="none">
+                <rect x={-(KW - 14) / 2} y="-5" width={KW - 14} height="10" rx="3" />
+                <text x="0" y="2.6" textAnchor="middle">{sceneTarget}</text>
               </g>}
             </g>
           </Ctl>

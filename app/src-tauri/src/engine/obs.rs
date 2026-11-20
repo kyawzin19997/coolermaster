@@ -842,6 +842,34 @@ mod tests {
     }
 
     #[test]
+    fn preview_and_program_use_distinct_obs_requests() {
+        let listener = std::net::TcpListener::bind((Ipv4Addr::LOCALHOST, 0)).unwrap();
+        let port = listener.local_addr().unwrap().port();
+        let peer = std::thread::spawn(move || {
+            let (stream, _) = listener.accept().unwrap();
+            stream.set_read_timeout(Some(Duration::from_secs(5))).unwrap();
+            let mut socket = tungstenite::accept(MaybeTlsStream::Plain(stream)).unwrap();
+            socket.send(Message::text(json!({"op": 0, "d": {"rpcVersion": 1}}).to_string())).unwrap();
+            assert_eq!(read_json(&mut socket).unwrap()["op"], 1);
+            socket.send(Message::text(json!({"op": 2, "d": {"negotiatedRpcVersion": 1}}).to_string())).unwrap();
+            [read_json(&mut socket).unwrap(), read_json(&mut socket).unwrap()]
+        });
+        let (tx, rx) = unbounded();
+        let mut worker = Worker::new(tx, Connection::Manual { url: String::new(), password: None });
+        worker.socket = Some(Worker::handshake(&format!("ws://127.0.0.1:{port}"), None, Some(port)).unwrap());
+        worker.perform(Request::Scene { name: "Cue".into(), preview: true });
+        assert!(matches!(rx.recv_timeout(Duration::from_secs(1)).unwrap(), Msg::IntegrationError { .. }));
+        worker.perform(Request::Scene { name: "Live".into(), preview: false });
+        worker.studio_mode = true;
+        worker.perform(Request::Scene { name: "Cue".into(), preview: true });
+        let [program, preview] = peer.join().unwrap();
+        assert_eq!(program["d"]["requestType"], "SetCurrentProgramScene");
+        assert_eq!(program["d"]["requestData"]["sceneName"], "Live");
+        assert_eq!(preview["d"]["requestType"], "SetCurrentPreviewScene");
+        assert_eq!(preview["d"]["requestData"]["sceneName"], "Cue");
+    }
+
+    #[test]
     fn screenshot_names_are_safe() {
         let t = chrono::NaiveDate::from_ymd_opt(2026, 10, 11).unwrap().and_hms_opt(21, 5, 9).unwrap();
         assert_eq!(screenshot_path("C:\\Videos\\", "Game: 1/2", t), "C:\\Videos/Game_ 1_2 2026-10-11 21-05-09.png");

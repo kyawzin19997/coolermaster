@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.3.0
+## 1.3.1
 
 - The deck and Actions panel stay in place as you edit keys, open Settings, or navigate deck tools.
 - Workspace warnings, status messages, and update prompts appear as dismissible bottom toasts.
