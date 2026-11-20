@@ -1,12 +1,13 @@
 # Changelog
 
-## 1.3.2
+## 1.3.3
 
 - The deck and Actions panel stay in place as you edit keys, open Settings, or navigate deck tools.
 - Workspace warnings, status messages, and update prompts appear as dismissible bottom toasts.
 - OBS scene keys can send to Preview or Program in Studio Mode, with the target shown on the deck preview.
 - A new MasterDeck mark, more useful starter profiles, and a pinned Switch profile action.
 - Getting Started and Your Deck, Your Modules teach setup, gestures, profiles, screens, integrations, and plugins beside the live workspace.
+- Dropping a different action onto a key replaces its previous artwork while keeping the key's styling.
 
 ## 1.2.4
 

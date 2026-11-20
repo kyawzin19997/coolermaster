@@ -2,7 +2,7 @@
 // Run with `pnpm test` in app/.
 
 import { describe, expect, it } from "vitest";
-import { controlId, hasState, hubRainbow, pageReachable, pressable, RAINBOW_MS, type ActionDef, type Profile } from "./engine";
+import { controlId, hasState, hubRainbow, pageReachable, pressable, RAINBOW_MS, type ActionDef, type Binding, type Profile } from "./engine";
 import { actionFitsTrigger, bindingForDrop } from "./editing";
 import { clampToGrid, detachedKinds, keysOfKind, ownedKey, placeModules, rotatedSize } from "./layout";
 import { actionName, BUILT_IN_LANGUAGES, languageTemplate, localizeAction, localizeError, localizeGame, localizePreset, setLanguage, specialKeyName, t } from "./i18n";
@@ -42,12 +42,26 @@ describe("action drops", () => {
     expect(actionFitsTrigger(turn, "knobs", "double")).toBe(false);
   });
 
-  it("preserves custom appearance when replacing a trigger and keeps parameters on a no-op drop", () => {
-    const previous = { action: "core.hotkey", params: { keys: "Ctrl+A" }, look: { bg: "#123345", image: "saved.png" } };
+  it("shows the replacement action's icon while keeping the key's styling", () => {
+    const when = { kind: "micMuted" } as const;
+    const previous: Binding = {
+      action: "core.hotkey", params: { keys: "Ctrl+A" },
+      look: {
+        bg: "#123345", label: "Shortcut", icon: "keyboard", image: "saved.png", fit: "fill",
+        rules: [{ when, look: { icon: "moon", image: "muted.png", fit: "icon", fg: "#ffffff" } }],
+      },
+    };
     const profile: Profile = { id: "work", name: "Work", version: 1, apps: [], controls: { "page/keys.0:hold": previous } };
-    expect(bindingForDrop(press, profile, key, "page/keys.0:hold")).toMatchObject({ action: press.id, look: { bg: "#123345", image: "saved.png" } });
+    const replacement = bindingForDrop(press, profile, key, "page/keys.0:hold");
+    expect(replacement.look).toEqual({ bg: "#123345", label: "Microphone", icon: "action:core.mic", rules: [{ when, look: { fg: "#ffffff" } }] });
+    expect(previous.look.image).toBe("saved.png");
+    expect(previous.look.rules?.[0].look.image).toBe("muted.png");
+  });
+
+  it("keeps the settings and artwork when dropping the same action again", () => {
+    const previous = { action: "core.hotkey", params: { keys: "Ctrl+A" }, look: { image: "saved.png" } };
+    const profile: Profile = { id: "work", name: "Work", version: 1, apps: [], controls: { "page/keys.0:hold": previous } };
     expect(bindingForDrop({ ...press, id: previous.action }, profile, key, "page/keys.0:hold")).toBe(previous);
-    expect(profile.controls["page/keys.0:hold"]).toBe(previous);
   });
 });
 

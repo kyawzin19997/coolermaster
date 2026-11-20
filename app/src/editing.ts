@@ -12,12 +12,19 @@ export function actionFitsTrigger(action: ActionDef, kind: ModuleKind, trigger: 
   return trigger === "tap" ? actionFits(action, kind) : pressable(kind) && action.inputs.includes("press");
 }
 
+function withoutArtwork({ icon: _icon, image: _image, fit: _fit, ...style }: Look): Look {
+  return style;
+}
+
 export function bindingForDrop(action: ActionDef, profile: Profile, control: ControlRef, id: string): Binding {
   const previous = profile.controls[id];
   if (previous?.action === action.id) return previous;
   const binding = newBinding(action);
   if (previous) {
-    binding.look = { ...previous.look, label: binding.look.label, icon: binding.look.icon };
+    binding.look = { ...withoutArtwork(previous.look), ...binding.look, label: binding.look.label };
+    if (binding.look.rules) {
+      binding.look.rules = binding.look.rules.map(rule => ({ ...rule, look: withoutArtwork(rule.look) }));
+    }
   } else if (control.kind === "keys" && profile.keyStyle) {
     binding.look = withTemplate(binding.look, profile.keyStyle);
   }

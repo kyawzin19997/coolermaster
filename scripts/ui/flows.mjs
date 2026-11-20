@@ -15,6 +15,7 @@ import path from 'node:path';
 const out = process.argv[2] || path.join(os.tmpdir(), 'hubdeck-flows');
 fs.mkdirSync(out, { recursive: true });
 const base = process.env.MASTERDECK_URL || 'http://localhost:1460/';
+const actionIcons = JSON.parse(fs.readFileSync(new URL('../../app/src/action-icons.json', import.meta.url), 'utf8'));
 
 /** A browser Playwright downloaded before, when none is given. */
 function findChromium() {
@@ -152,6 +153,29 @@ for (const [label, viewport] of [['wide', { width: 1440, height: 900 }], ['half'
       if (!await library.evaluate((el, before) => el === before, original)) return 'the library remounted';
     }
     return true;
+  });
+  await step(page, `${label}: replacing an action replaces its custom icon on the deck`, async () => {
+    const control = 'keys.11';
+    await page.evaluate(async control => {
+      const { invoke } = window.__TAURI_INTERNALS__;
+      const { active: profile } = await invoke('engine_state');
+      await invoke('binding_set', {
+        profile, control,
+        binding: { action: 'core.hotkey', params: { keys: 'Ctrl+A' }, look: { label: 'Shortcut', icon: 'keyboard', image: 'shortcut.png', fit: 'fill', bg: '#123345' } },
+      });
+    }, control);
+    const key = deckStage.locator('.dk-ctl[data-kind="keys"][data-index="11"]');
+    await key.getByText('Shortcut', { exact: true }).waitFor();
+    await actionPane.getByRole('button', { name: 'Microphone mute', exact: true }).dragTo(key);
+    await page.locator('#action-name[data-action="core.mic"]').waitFor();
+    await key.locator(`.dk-screen-content path[d="${actionIcons['core.mic']}"]`).waitFor({ state: 'attached' });
+    const look = await page.evaluate(async control => {
+      const { invoke } = window.__TAURI_INTERNALS__;
+      const { active: id } = await invoke('engine_state');
+      const profile = await invoke('profile_get', { id });
+      return profile.controls[control].look;
+    }, control);
+    return look.icon === 'action:core.mic' && look.image === undefined && look.bg === '#123345' && await layoutStays();
   });
   await step(page, `${label}: a key click opens its editor`, async () => {
     await page.locator('.dk-ctl').first().click();
