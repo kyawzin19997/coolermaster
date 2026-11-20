@@ -29,4 +29,4 @@ For interface work without a MasterHUB, run `pnpm --dir app dev` and open `http:
 - Keep HID I/O on device threads. Follow the protocol’s command restrictions and hardware-mode rules. [Device protocol](PROTOCOL.md)
 - Keep local profiles, credentials, diagnostics, and assets without redistribution permission out of the checkout.
 
-Changes to the project code use the existing MIT or Apache 2.0 terms. [License and credits](LICENSE.md)
+Changes to the project code use the existing MIT or Apache 2.0 terms. [License and credits](docs/licensing.md)

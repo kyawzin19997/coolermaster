@@ -32,4 +32,4 @@ Open **Plugins → Install Plugin** to review a compatible plugin package before
 
 The desktop app uses Tauri and Rust, with a React interface. The [contributing guide](CONTRIBUTING.md) covers setup and tests. See the [architecture](ARCHITECTURE.md), [GitHub beginner guide](docs/github-for-beginners.md), and [Windows release guide](docs/windows-release.md) for development and releases.
 
-MasterDeck is independent of Cooler Master and builds on HubDeck by Przemysław Tarkowski. The code is available under the [MIT License](LICENSE-MIT) or [Apache License 2.0](LICENSE-APACHE). [License and credits](LICENSE.md) · [Security](SECURITY.md) · [Privacy](PRIVACY.md)
+MasterDeck is independent of Cooler Master and builds on HubDeck by Przemysław Tarkowski. The code is available under the [MIT License](LICENSE) or [Apache License 2.0](LICENSE-APACHE). [License and credits](docs/licensing.md) · [Security](SECURITY.md) · [Privacy](PRIVACY.md)

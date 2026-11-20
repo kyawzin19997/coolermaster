@@ -1,10 +1,10 @@
 # Import and export profiles
 
-A MasterDeck profile can be exported as a local file.
+A MasterDeck profile can be exported as a local file. [Move a profile to another deck](profile-transfer.md)
 
-## The package: `.hubdeck`
+## The `.masterdeck` package
 
-A `.hubdeck` file is a zip archive:
+A `.masterdeck` file is a ZIP archive with these entries.
 
 ```
 profile.json          the profile, exactly as MasterDeck stores it
@@ -23,11 +23,9 @@ images/<name>         every picture the profile uses
   is missing or cannot be read is dropped from its look (the key keeps its icon and label).
 - Limits: 15 MB per picture, 100 MB unpacked, 1000 files. Anything else in the zip is ignored.
 
-Export: Profile panel > Export, file type "MasterDeck profile with its pictures". The plain JSON file
-type ("Settings only") is still there for editing by hand; it has no pictures.
+Choose **Export** from a profile’s three-dot menu or from **Profile Settings → Use on another deck**. For configuration text, use **Settings only (JSON)** under the advanced profile options.
 
-Import: Profile panel > Import takes `.hubdeck`, `.json` (MasterDeck) and `.mhz` (the official app's
-export).
+Choose **Profiles → Import** to open a `.masterdeck` package. The importer also accepts earlier `.hubdeck` packages, MasterDeck `.json` settings, and `.mhz` exports from the official app.
 
 Sounds of the Play sound action and programs of Open app, file or website are paths on the
 author's computer; they are not packed. After importing, check such keys.
