@@ -63,7 +63,7 @@ interface Props {
   onControlMenu?: (c: ControlRef, x: number, y: number) => void;
 }
 
-export const ACTION_MIME = "application/x-hubdeck-action";
+export const ACTION_MIME = "application/x-masterdeck-action";
 
 /** Everything a module drawing needs. */
 interface Ctx extends Props {
@@ -479,7 +479,7 @@ function Keys({ ctx }: { ctx: Ctx }) {
                   </text>
                 </>
               ) : (
-                <KeyFace
+                <g className="dk-screen-content"><KeyFace
                   ctx={ctx}
                   i={n}
                   look={look}
@@ -489,7 +489,7 @@ function Keys({ ctx }: { ctx: Ctx }) {
                     // asked for shows as the deck shows it (2026-10-27)
                     (!shown || shown.preview) && frame && frame.rects[i] ? { src: `#${id("kpanel")}`, rect: frame.rects[i], frame: frame.src } : null
                   }
-                />
+                /></g>
               )}
               {/* glossy glass top: a thin bright rim, a sheen over the upper part, a hard highlight on the top edge */}
               <rect width={KW} height={KH} rx="8" fill={`url(#${id("vign")})`} pointerEvents="none" />
@@ -631,9 +631,9 @@ function Dial({ ctx }: { ctx: Ctx }) {
             </text>
           </g>
         ) : frame ? (
-          <image href={frame} x={cx - r} y={cy - r} width={2 * r} height={2 * r} clipPath={`url(#${id("dclip")})`} />
+          <image className="dk-screen-content" href={frame} x={cx - r} y={cy - r} width={2 * r} height={2 * r} clipPath={`url(#${id("dclip")})`} />
         ) : preview ? (
-          <g transform={`rotate(${ctx.upright} ${cx} ${cy})`}>
+          <g className="dk-screen-content" transform={`rotate(${ctx.upright} ${cx} ${cy})`}>
             <Screen svg={preview} prefix={`${id("d")}-`} x={cx - r} y={cy - r} w={2 * r} h={2 * r} clip={`url(#${id("dclip")})`} />
           </g>
         ) : (
@@ -970,10 +970,10 @@ function useConnecting(lookingMs: number | null | undefined): boolean {
 }
 
 function useIssues(profile: Profile | null | undefined): Record<string, string> {
-  const [issues, setIssues] = useState<Record<string, string>>({});
+  const [report, setReport] = useState<{ signature: string; issues: Record<string, string> } | null>(null);
   const signature = useMemo(() => profile ? profile.id + JSON.stringify(profile.controls) : "", [profile]);
   useEffect(() => {
-    if (!profile || !("__TAURI_INTERNALS__" in window)) return setIssues({});
+    if (!profile || !("__TAURI_INTERNALS__" in window)) return;
     let current = true;
     api.checkProfile(profile.id).then(
       (list) => {
@@ -986,16 +986,16 @@ function useIssues(profile: Profile | null | undefined): Record<string, string> 
           map[id] = map[id] ? `${map[id]}
 ${message}` : message;
         }
-        setIssues(map);
+        setReport({ signature, issues: map });
       },
-      () => current && setIssues({}),
+      () => { if (current) setReport(null); },
     );
     return () => {
       current = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [signature]);
-  return issues;
+  return report?.signature === signature ? report.issues : {};
 }
 
 export function DeckView(props: DeckViewProps) {
@@ -1013,6 +1013,7 @@ export function DeckView(props: DeckViewProps) {
   const shown = useLiveLooks();
   const liveLooks = profile && shown.profile === profile.id ? shown.looks : NO_LOOKS;
   const leds = useLeds();
+  const screenBrightness = useScreens()?.brightness ?? 100;
   const placed = useMemo(() => placeModules(live.deck.modules, saved), [live.deck.modules, saved]);
   const hasBase = live.deck.modules.some((m) => m.kind === "base");
   // the first seconds after a start the hub is still taking the deck: "Connecting", then "No MasterHUB"
@@ -1073,7 +1074,10 @@ export function DeckView(props: DeckViewProps) {
   };
 
   const viewBox = vb.join(" ");
-  const stageStyle = { "--dk-ratio": vb[2] / vb[3] } as CSSProperties;
+  const stageStyle = {
+    "--dk-ratio": vb[2] / vb[3],
+    "--dk-screen-filter": !arranging && screenBrightness < 100 ? `brightness(${screenBrightness / 100})` : "none",
+  } as CSSProperties;
 
   return (
     <div

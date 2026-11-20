@@ -6,6 +6,7 @@ import { actionFits, api, controlId, newBinding, pressable, type ActionDef, type
 
 const GESTURES: Gesture[] = ["tap", "hold", "double"];
 const HISTORY = 50;
+type CopiedControl = { kind: ModuleKind; bindings: Record<Gesture, Binding | null> };
 
 export function actionFitsTrigger(action: ActionDef, kind: ModuleKind, trigger: Gesture) {
   return trigger === "tap" ? actionFits(action, kind) : pressable(kind) && action.inputs.includes("press");
@@ -49,8 +50,9 @@ const inField = (e: KeyboardEvent) => {
  * control's bindings (press, hold and double press), Delete to clear it, Ctrl+Z to undo the last
  * change to the profile.
  */
-export function useEditing(view: EngineView, selected: ControlRef | null, notify: (text: string) => void) {
-  const clipboard = useRef<Binding | null>(null);
+export function useEditing(view: EngineView, selected: ControlRef | null, notify: (text: string) => void, flush: () => Promise<void> | undefined) {
+  const clipboard = useRef<CopiedControl | null>(null);
+  const copying = useRef<Promise<void> | undefined>(undefined);
   const history = useRef<Profile[]>([]);
   const last = useRef<Profile | null>(null);
   const undoing = useRef(false);
@@ -86,8 +88,8 @@ export function useEditing(view: EngineView, selected: ControlRef | null, notify
   // the key handler reads what is selected and shown at the moment of the key press: a handler
   // made at an earlier render copied the key selected before, or pasted over a change the window
   // had not heard of yet (8bitcanvascode, Discussions #3, 2026-10-19)
-  const now = useRef({ view, selected, page, notify });
-  now.current = { view, selected, page, notify };
+  const now = useRef({ view, selected, page, notify, flush });
+  now.current = { view, selected, page, notify, flush };
 
   const gestureIds = (c: ControlRef, page: string | null) => Object.fromEntries(GESTURES.map((g) => [g, controlId(c.kind, c.index, page, g)])) as Record<Gesture, string>;
 
@@ -97,45 +99,93 @@ export function useEditing(view: EngineView, selected: ControlRef | null, notify
     const ids = gestureIds(c, page);
     return !!view.profile && GESTURES.some((g) => view.profile?.controls[ids[g]]);
   };
-  const canPaste = () => !!clipboard.current;
+  const canPaste = () => !!clipboard.current || !!copying.current;
 
-  /** Use the press look, then fall back to another assigned trigger. */
   const copy = (control: ControlRef) => {
-    const { view, page, notify } = now.current;
+    const { view, page, notify, flush } = now.current;
     const profile = view.profile;
     if (!profile) return;
     const ids = gestureIds(control, page);
-    const binding = GESTURES.map((gesture) => profile.controls[ids[gesture]]).find(Boolean);
-    if (!binding) {
-      notify(t("edit.empty"));
-      return;
+    const capture = (source: Profile) => {
+      const bindings = Object.fromEntries(GESTURES.map((g) => [g, structuredClone(source.controls[ids[g]] ?? null)])) as CopiedControl["bindings"];
+      if (!GESTURES.some((g) => bindings[g])) return notify(t("edit.empty"));
+      clipboard.current = { kind: control.kind, bindings };
+      notify(t("edit.copied"));
+    };
+    const pending = flush();
+    if (!pending) {
+      capture(profile);
+    } else {
+      const task = pending.then(() => api.profile(profile.id)).then(capture, (e) => notify(String(e)));
+      copying.current = task;
+      void task.finally(() => { if (copying.current === task) copying.current = undefined; });
     }
-    clipboard.current = structuredClone(binding);
-    notify(t("edit.copied"));
+  };
+
+  const paste = async (c: ControlRef) => {
+    const { view, page, notify, flush } = now.current;
+    const profile = view.profile;
+    if (!profile) return;
+    try {
+      await copying.current;
+      const from = clipboard.current;
+      if (!from) return;
+      await flush();
+      const ids = gestureIds(c, page);
+      const changes: Record<string, Binding | null> = {};
+      let skipped = 0;
+      let pasted = 0;
+      for (const gesture of GESTURES) {
+        const binding = from.bindings[gesture];
+        const action = binding && view.catalog?.actions.find((a) => a.id === binding.action);
+        if (binding && (from.kind !== c.kind && (!action || !actionFitsTrigger(action, c.kind, gesture))
+          || binding.action === "core.page" && binding.params?.page && !profile.pages?.some((p) => p.id === binding.params.page))) {
+          skipped++;
+          continue;
+        }
+        changes[ids[gesture]] = binding;
+        if (binding) pasted++;
+      }
+      if (!pasted) return notify(t("edit.pasteUnavailable"));
+      await api.setBindings(profile.id, changes);
+      notify(t(skipped ? "edit.pastedPartly" : "edit.pasted"));
+    } catch (err) {
+      notify(String(err));
+    }
   };
 
   /** Paste only the look of what was copied onto the control's press: its action stays. */
-  const pasteLook = (c: ControlRef) => {
-    const { view, page, notify } = now.current;
+  const pasteLook = async (c: ControlRef) => {
+    const { view, page, notify, flush } = now.current;
     const profile = view.profile;
-    const from = clipboard.current;
-    if (!profile || !from) return;
-    const id = controlId(c.kind, c.index, page);
-    const to = profile.controls[id];
-    if (!to) return notify(t("edit.lookNeedsAction"));
-    const next: Binding = { ...to, look: withLook(to.look ?? {}, from.look ?? {}) };
-    // the "on" look follows only where both have one (a new one would lose the control's own red)
-    if (to.lookOn && from.lookOn) next.lookOn = withLook(to.lookOn, from.lookOn);
-    api.setBindings(profile.id, { [id]: next }).then(() => notify(t("edit.lookPasted")), (err) => notify(String(err)));
+    if (!profile) return;
+    try {
+      await copying.current;
+      const copied = clipboard.current;
+      const from = copied && GESTURES.map((g) => copied.bindings[g]).find(Boolean);
+      if (!from) return;
+      const pending = flush();
+      const current = pending ? await pending.then(() => api.profile(profile.id)) : profile;
+      const id = controlId(c.kind, c.index, page);
+      const to = current.controls[id];
+      if (!to) return notify(t("edit.lookNeedsAction"));
+      const next: Binding = { ...to, look: withLook(to.look ?? {}, from.look ?? {}) };
+      if (to.lookOn && from.lookOn) next.lookOn = withLook(to.lookOn, from.lookOn);
+      await api.setBindings(profile.id, { [id]: next });
+      notify(t("edit.lookPasted"));
+    } catch (err) {
+      notify(String(err));
+    }
   };
 
   /** Clear a control's press, hold and double press (Ctrl+Z brings them back). */
   const clear = (c: ControlRef) => {
-    const { view, page, notify } = now.current;
+    const { view, page, notify, flush } = now.current;
     const profile = view.profile;
     if (!profile || !isSet(c)) return;
-    const changes: Record<string, Binding | null> = Object.fromEntries(GESTURES.map((g) => [gestureIds(c, page)[g], null]));
-    api.setBindings(profile.id, changes).then(() => notify(t("edit.cleared")), (err) => notify(String(err)));
+    const ids = gestureIds(c, page);
+    const changes: Record<string, Binding | null> = Object.fromEntries(GESTURES.map((g) => [ids[g], null]));
+    void Promise.resolve(flush()).then(() => api.setBindings(profile.id, changes)).then(() => notify(t("edit.cleared")), (err) => notify(String(err)));
   };
 
   useEffect(() => {
@@ -156,9 +206,10 @@ export function useEditing(view: EngineView, selected: ControlRef | null, notify
       if (mod && key === "c") {
         if (isSet(selected)) e.preventDefault();
         copy(selected);
-      } else if (mod && e.shiftKey && key === "v" && clipboard.current) {
+      } else if (mod && key === "v" && canPaste()) {
         e.preventDefault();
-        pasteLook(selected);
+        if (e.shiftKey) void pasteLook(selected);
+        else void paste(selected);
       } else if ((key === "delete" || key === "backspace") && !mod) {
         if (!isSet(selected)) return;
         e.preventDefault();
@@ -214,5 +265,5 @@ export function useEditing(view: EngineView, selected: ControlRef | null, notify
     return a === "core.page" || a === "core.nextPage" || a === "core.previousPage";
   };
 
-  return { dropAction, moveKey, openControl, copy, pasteLook, clear, isSet, canPaste, opensPage };
+  return { dropAction, moveKey, openControl, copy, paste, pasteLook, clear, isSet, canPaste, opensPage };
 }

@@ -14,8 +14,8 @@ import { api, saverEnd, triedPresets, useEngine, useSaverShown } from "./engine"
 import { DeckView } from "./components/DeckView";
 import { Inspector, type InspectorHandle } from "./components/Inspector";
 import { ActionLibrary } from "./components/ActionChooser";
-import type { SettingsSection } from "./components/Panels";
-import { ArrangePanel, Banner, ControlMenu, BaseTurnPicker, DeckTools, EdgePanel, SaverPanel, MusicPanel, ForAppPanel, GamesPanel, LeftPanel, PageBar, PluginFileSheet, ProfilePanel, SettingsPanel, Sheet, TopBar, keepImported } from "./components/Panels";
+import type { DeckDisplaySection, SettingsSection } from "./components/Panels";
+import { ArrangePanel, Banner, ControlMenu, BaseTurnPicker, DeckDisplayPanel, DeckTools, ForAppPanel, GamesPanel, LeftPanel, PageBar, PluginFileSheet, ProfilePanel, SettingsPanel, Sheet, TopBar, keepImported } from "./components/Panels";
 import { PhoneUpload } from "./components/PhoneUpload";
 import { listen } from "@tauri-apps/api/event";
 import { askAssistant } from "./components/Assistant";
@@ -92,23 +92,8 @@ export default function App() {
   const [profileLibrary, setProfileLibrary] = useState<LeftTab | null>(null);
   const [modulesOpen, setModulesOpen] = useState(false);
   const [forAppOpen, setForAppOpen] = useState(DEMO_PANEL === "forapp");
-  // "Edge" under the drawing: this profile's lights (owner's pick 3a, 2026-10-16)
-  const [edgeOpen, setEdgeOpen] = useState(false);
+  const [displayPanel, setDisplayPanel] = useState<DeckDisplaySection | null>(null);
   const [livingOpen, setLivingOpen] = useState(false);
-  // "Screensaver" under the deck, beside the living deck (owner, 2026-10-26)
-  const [saverOpen, setSaverOpen] = useState(false);
-  // "Music" under the deck, beside the screensaver (owner's "3 a", 2026-10-30)
-  const [musicOpen, setMusicOpen] = useState(false);
-  useEffect(() => {
-    const open = () => (setSettingsOpen(false), setLivingOpen(false), setSaverOpen(false), setSelected(null), setMusicOpen(true));
-    window.addEventListener("hubdeck:open-music", open);
-    return () => window.removeEventListener("hubdeck:open-music", open);
-  }, []);
-  useEffect(() => {
-    const open = () => (setSettingsOpen(false), setLivingOpen(false), setSelected(null), setSaverOpen(true));
-    window.addEventListener("hubdeck:open-saver", open);
-    return () => window.removeEventListener("hubdeck:open-saver", open);
-  }, []);
   // a profile just made for an app: the inspector suggests next steps until something is picked
   const { saved, save } = usePlacements();
   const [toast, setToast] = useState<string | null>(null);
@@ -118,7 +103,7 @@ export default function App() {
     window.clearTimeout(toastTimer.current);
     toastTimer.current = window.setTimeout(() => setToast(null), ms);
   }, []);
-  const { dropAction, moveKey, openControl, copy, pasteLook, clear, isSet, canPaste, opensPage } = useEditing(view, selected, notify);
+  const { dropAction, moveKey, openControl, copy, paste, pasteLook, clear, isSet, canPaste, opensPage } = useEditing(view, selected, notify, () => inspector.current?.flush());
   // a ready-made profile tried and left without Add (Back, or another profile picked) is thrown away
   const tried = useRef<string | null>(null);
   useEffect(() => {
@@ -135,13 +120,21 @@ export default function App() {
   // a control picked in the window is to be edited: whatever covers the inspector goes away
   const showInspector = () => {
     setLivingOpen(false);
-    setSaverOpen(false);
-    setMusicOpen(false);
+    setDisplayPanel(null);
     setProfileOpen(false);
     setSettingsOpen(false);
     setGamesOpen(false);
 
     setForAppOpen(false);
+  };
+  const openDisplay = () => {
+    setSettingsOpen(false);
+    setPluginsOpen(false);
+    setLivingOpen(false);
+    setProfileOpen(false);
+    setForAppOpen(false);
+    setGamesOpen(false);
+    setDisplayPanel("lights");
   };
   useEffect(() => {
     if (!DEMO_SELECT || selected) return;
@@ -333,6 +326,11 @@ export default function App() {
         onOpenTour={() => (setTourOpen(true), setPluginsOpen(false), setStudio(null), setLivingOpen(false), setSettingsOpen(false), setForAppOpen(false), setProfileOpen(false))}
         setupPending={setupPending && !tourOpen && !builderOpen}
         onOpenSettings={() => (setUpdateCheckRequest(0), setSettingsOpen((o) => !o), setPluginsOpen(false), setGamesOpen(false), setForAppOpen(false))}
+        displayOpen={displayPanel !== null && !settingsOpen && !pluginsOpen && !livingOpen && !arranging && !calibrating && !builderOpen && !tourShown && !studio}
+        onOpenDisplay={tourShown || builderOpen || calibrating || arranging || studio ? undefined : () => {
+          if (displayPanel && !settingsOpen && !pluginsOpen && !livingOpen) setDisplayPanel(null);
+          else openDisplay();
+        }}
         onCheckUpdates={tourShown || builderOpen || calibrating || arranging || studio ? undefined : () => {
           setPluginsOpen(false);
           setGamesOpen(false);
@@ -394,19 +392,20 @@ export default function App() {
         <main className="workspace">
           <SettingsPanel
             live={live} view={view} section={settingsSection} updateCheckRequest={updateCheckRequest}
-            onSection={(section) => { setUpdateCheckRequest(0); setSettingsSection(section); }}
+            onSection={(section) => {
+              setUpdateCheckRequest(0);
+              if (section === "lights") openDisplay();
+              else setSettingsSection(section);
+            }}
             onClose={() => { setUpdateCheckRequest(0); setSettingsOpen(false); }}
-            onCalibrate={() => { setCalibrating(true); setSettingsOpen(false); }}
             onBrowsePlugins={() => { setPluginsOpen(true); setSettingsOpen(false); }}
             onPickPlugin={choosePlugin}
             onPhone={() => setPhoneOpen(true)}
             onUsePlugin={usePlugin}
-            onOpenEdge={() => setEdgeOpen(true)}
-            onOpenScenes={() => { setSaverOpen(false); setMusicOpen(false); setLivingOpen(true); }}
           />
         </main>
       ) : (
-      <main className={`workspace deck-workspace${arranging ? " is-arranging" : ""}${selected && !arranging && !calibrating ? " workspace-with-properties" : ""}`}>
+      <main className={`workspace deck-workspace${arranging ? " is-arranging" : ""}${!arranging && !calibrating ? displayPanel ? " workspace-with-display" : selected ? " workspace-with-properties" : "" : ""}`}>
         <section className="center">
           <div className="workbench-title">
             <h1>MasterHUB</h1>
@@ -418,7 +417,6 @@ export default function App() {
                 {t("stage.doneLayout")}
               </button>
             ) : <>
-            <button type="button" className="tool ghost" onClick={() => { setSettingsSection("lights"); setSettingsOpen(true); }}><Icon name="sun" />{t("settings.lighting")}</button>
             <DeckTools
               canArrange={live.deck.modules.length > 0}
               modulesOpen={modulesOpen}
@@ -474,7 +472,7 @@ export default function App() {
             saved={saved}
             onPlace={save}
             arranging={arranging}
-            onEdge={() => setEdgeOpen(true)}
+            onEdge={() => setDisplayPanel("edge")}
             showShelf={modulesOpen}
             showStrip={false}
             onDeselect={() => setSelected(null)}
@@ -502,7 +500,7 @@ export default function App() {
               canPaste={canPaste()}
               opensPage={opensPage(ctlMenu.c)}
               onCopy={() => copy(ctlMenu.c)}
-
+              onPaste={() => void paste(ctlMenu.c)}
               onPasteLook={() => pasteLook(ctlMenu.c)}
               onClear={() => clear(ctlMenu.c)}
               onOpenPage={() => openControl(ctlMenu.c)}
@@ -517,14 +515,19 @@ export default function App() {
             </div>
           )}
         </section>
-        {!arranging && !calibrating && selected && (
+        {!arranging && !calibrating && displayPanel ? (
+          <DeckDisplayPanel live={live} view={view} section={displayPanel} setSection={setDisplayPanel} onClose={() => setDisplayPanel(null)}
+            onCalibrate={() => { setDisplayPanel(null); setCalibrating(true); }}
+            onOpenScenes={() => setLivingOpen(true)}
+          />
+        ) : !arranging && !calibrating && selected && (
           <Inspector
             ref={inspector} selected={selected} view={view} onClose={() => setSelected(null)}
             onDropAction={(control, action, gesture) => dropAction(control, action, gesture, () => inspector.current?.flush())}
             onOpenStudio={setStudio}
           />
         )}
-        <div className="editor-sidebar" hidden={arranging || calibrating}>
+        <div className="editor-sidebar" hidden={arranging || calibrating || displayPanel !== null}>
           <ActionLibrary catalog={view.catalog} icons={view.icons} selectedKind={selected?.kind} focusPlugin={focusPlugin} disabled={arranging || calibrating} onOpenPlugins={openInstalledPlugins} />
         </div>
         {calibrating ? (
@@ -554,17 +557,10 @@ export default function App() {
           </div>
         </Sheet>
       )}
-      {!tourShown && !arranging && !calibrating && (saverOpen || musicOpen) && (
-        <Sheet label={t(saverOpen ? "saver.title" : "music.chip")} onClose={() => (setSaverOpen(false), setMusicOpen(false))}>
-          {saverOpen ? <SaverPanel view={view} onClose={() => setSaverOpen(false)} /> : <MusicPanel onClose={() => setMusicOpen(false)} />}
-        </Sheet>
-      )}
       {/* panels open over the window, so a touch on a control still shows its editor (docs/FLOWS.md, difference 4) */}
-      {!tourShown && !arranging && !calibrating && (forAppOpen || gamesOpen || profileOpen || edgeOpen) && (
-        <Sheet onClose={() => (setForAppOpen(false), setGamesOpen(false), setProfileOpen(false), setEdgeOpen(false))}>
-          {edgeOpen ? (
-            <EdgePanel view={view} onClose={() => setEdgeOpen(false)} onAll={() => (setEdgeOpen(false), setSettingsSection("lights"), setSettingsOpen(true))} />
-          ) : forAppOpen ? (
+      {!tourShown && !arranging && !calibrating && (forAppOpen || gamesOpen || profileOpen) && (
+        <Sheet onClose={() => (setForAppOpen(false), setGamesOpen(false), setProfileOpen(false))}>
+          {forAppOpen ? (
             <ForAppPanel view={view} kinds={kinds} onClose={() => setForAppOpen(false)} onMade={() => (setForAppOpen(false), setSelected(null))} />
           ) : gamesOpen ? (
             <GamesPanel view={view} onClose={() => setGamesOpen(false)} />

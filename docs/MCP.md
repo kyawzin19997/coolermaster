@@ -1,16 +1,16 @@
 # Building profiles with an AI assistant (MCP)
 
-HubDeck includes an MCP server so the user's own AI assistant (Claude Desktop, Claude Code or any
+MasterDeck includes an MCP server so the user's own AI assistant (Claude Desktop, Claude Code or any
 client of the [Model Context Protocol](https://modelcontextprotocol.io)) can design and build
-profiles: functions per control, layout, hotkeys, pictures, animations, lights and pages. HubDeck
-needs no AI key and sends nothing anywhere; the assistant talks only to HubDeck on the same
+profiles: functions per control, layout, hotkeys, pictures, animations, lights and pages. MasterDeck
+needs no AI key and sends nothing anywhere; the assistant talks only to MasterDeck on the same
 computer.
 
 ## How it works
 
 ```
 assistant (Claude Desktop / Code)  --stdio, JSON-RPC 2.0-->  hubdeck --mcp
-hubdeck --mcp  --HTTP 127.0.0.1, bearer token-->  the running HubDeck (local API, engine/api.rs)
+hubdeck --mcp  --HTTP 127.0.0.1, bearer token-->  the running MasterDeck (local API, engine/api.rs)
 ```
 
 - `hubdeck --mcp` is the same program started with one argument; it serves MCP on stdin/stdout
@@ -19,9 +19,9 @@ hubdeck --mcp  --HTTP 127.0.0.1, bearer token-->  the running HubDeck (local API
 - Each tool call becomes a request to the running app's local HTTP API (`<data>/api-token`,
   `<data>/api-http-port`, data = `%APPDATA%\dev.hubdeck.app` on Windows,
   `~/Library/Application Support/dev.hubdeck.app` on macOS). The token and port are read on every
-  call, so a restarted HubDeck is found again.
-- When HubDeck is not running, tools answer with an error that says so (the assistant tells the
-  user to start it). An older HubDeck without these routes is reported as too old.
+  call, so a restarted MasterDeck is found again.
+- When MasterDeck is not running, tools answer with an error that says so (the assistant tells the
+  user to start it). An older MasterDeck without these routes is reported as too old.
 - Protocol versions: `2025-11-25` (newest), `2025-06-18`, `2025-03-26`, `2024-11-05`; the server
   answers with the client's version when it knows it, else the newest. Capabilities: tools and one
   resource (`hubdeck://design-guide`).
@@ -30,21 +30,21 @@ hubdeck --mcp  --HTTP 127.0.0.1, bearer token-->  the running HubDeck (local API
 
 Settings > Connections > **AI assistant (MCP)**:
 
-- **Connect Claude Desktop**: adds `mcpServers.hubdeck = {"command": "<path to hubdeck.exe>",
+- **Connect Claude Desktop**: adds `mcpServers.masterdeck = {"command": "<path to hubdeck.exe>",
   "args": ["--mcp"]}` to `%APPDATA%\Claude\claude_desktop_config.json`
   (`~/Library/Application Support/Claude/claude_desktop_config.json` on macOS). Other servers and
   settings stay; the old file is kept as `claude_desktop_config.json.hubdeck-backup`; a file that
   is not valid JSON is never overwritten. Restart Claude Desktop afterwards.
 - **Connect Claude Code**: when the `claude` command line is found (PATH, `~/.local/bin`,
-  `~/.claude/local`, npm), runs `claude mcp remove --scope user hubdeck` and
-  `claude mcp add --scope user hubdeck -- "<path to hubdeck.exe>" --mcp`. Without it the button
+  `~/.claude/local`, npm), runs `claude mcp remove --scope user masterdeck` and
+  `claude mcp add --scope user masterdeck -- "<path to hubdeck.exe>" --mcp`. Without it the button
   copies that command.
 - **Copy JSON for other apps**: the `mcpServers` snippet for any MCP client.
 
 By hand, for Claude Code:
 
 ```
-claude mcp add --scope user hubdeck -- "C:\Program Files\HubDeck\hubdeck.exe" --mcp
+claude mcp add --scope user masterdeck -- "C:\Program Files\MasterDeck\hubdeck.exe" --mcp
 ```
 
 ## Tools
@@ -100,7 +100,7 @@ A second, small server for using the deck during work, switched on per project (
 the assistant some context, so it is not global): in the project's folder run
 
 ```
-claude mcp add --scope project hubdeck-deck -- "<path to hubdeck.exe>" --mcp-deck
+claude mcp add --scope project masterdeck-deck -- "<path to hubdeck.exe>" --mcp-deck
 ```
 
 (Settings > Connections > "Deck tools for a project" copies it.)

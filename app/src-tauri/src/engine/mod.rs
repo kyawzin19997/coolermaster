@@ -178,7 +178,7 @@ pub enum Msg {
     CanvasPress(usize, bool),
     /// A key's call over the network came back (it runs beside the deck): the key's place, and
     /// what to show on the deck or why it failed.
-    CallDone(String, Result<Option<String>, String>),
+    CallDone(Box<ActionOrigin>, Result<Option<String>, String>),
     /// The app in front (exe file name) and its window title.
     Foreground {
         exe: String,
@@ -234,6 +234,28 @@ pub enum Msg {
     /// The session was locked or unlocked (Windows: Win+L, the lock screen after resume).
     #[cfg_attr(not(windows), allow(dead_code))]
     Locked(bool),
+}
+
+/// A failure belongs to the binding that ran, not to the physical slot.
+pub struct ActionOrigin {
+    profile: String,
+    control: String,
+    action: String,
+    params: serde_json::Value,
+}
+
+impl ActionOrigin {
+    fn place(&self) -> String {
+        format!("{}|{}", self.profile, self.control.split(':').next().unwrap_or(&self.control))
+    }
+
+    fn is_key(&self) -> bool {
+        self.control.rsplit('/').next().is_some_and(|id| id.starts_with("keys."))
+    }
+
+    fn matches(&self, profile: &Profile) -> bool {
+        profile.id == self.profile && profile.controls.get(&self.control).is_some_and(|b| b.action == self.action && b.params == self.params)
+    }
 }
 
 /// The looks plugins give the active profile's controls now (see `publish_looks`).
@@ -1987,8 +2009,8 @@ struct Worker {
     canvas_page: Option<(String, Option<String>)>,
     /// The key panel's pixels as the deck has them now, per module: what changed goes out alone.
     sent_panels: HashMap<String, Vec<u8>>,
-    /// Keys whose last press failed, by `profile|control id` without the gesture, and why.
-    failed_keys: HashMap<String, String>,
+    /// Keys whose last press failed, with the binding that produced the failure.
+    failed_keys: HashMap<String, ActionOrigin>,
 }
 
 impl Worker {
@@ -2076,7 +2098,11 @@ impl Worker {
                         self.update_leds();
                         self.dial_dirty = true;
                     }
-                    Msg::CallDone(place, result) => {
+                    Msg::CallDone(origin, result) => {
+                        if origin.is_key() && !self.lock().store.profiles.get(&origin.profile).is_some_and(|p| origin.matches(p)) {
+                            continue;
+                        }
+                        let place = origin.place();
                         let was_failed = self.failed_keys.contains_key(&place);
                         match result {
                             Ok(caption) => {
@@ -2087,8 +2113,8 @@ impl Worker {
                             }
                             Err(message) => {
                                 log::warn!("{place}: {message}");
-                                if place.rsplit(['/', '|']).next().is_some_and(|c| c.starts_with("keys.")) {
-                                    self.failed_keys.insert(place.clone(), message);
+                                if origin.is_key() {
+                                    self.failed_keys.insert(place.clone(), *origin);
                                 }
                             }
                         }
@@ -2115,6 +2141,10 @@ impl Worker {
                         }
                     }
                     Msg::ProfilesChanged => {
+                        let shared = self.shared.clone();
+                        let state = shared.lock().unwrap_or_else(|e| e.into_inner());
+                        self.failed_keys.retain(|_, origin| state.store.profiles.get(&origin.profile).is_some_and(|p| origin.matches(p)));
+                        drop(state);
                         self.want_integrations();
                         self.redraw_keys();
                         self.update_leds();
@@ -2543,42 +2573,37 @@ impl Worker {
         self.executor.mapped = mapped;
         // a key's red corner: set when its press fails, gone when one works (the gesture's suffix
         // is not part of the key's place)
-        let active = self.lock().active.clone().unwrap_or_default();
-        let key_place = format!("{active}|{}", id.split(':').next().unwrap_or(id));
+        let active = self.lock().active_profile().map(|p| p.id.clone()).unwrap_or_default();
+        let origin = ActionOrigin { profile: active, control: id.into(), action: binding.action.clone(), params: binding.params.clone() };
         // a call over the network (an HTTP key, an app's state key) runs beside the deck: a server
         // that did not answer held every picture until it gave up, up to 5 s (owner, 2026-10-28:
         // "jak naciskam przycisk kosza … zawiesza mi na chwilę deck"; Windows tries a refused
         // local port for about 2 s)
         let state_call = binding.action == states::ACTION && !actions::param_str(&binding.params, "url").trim().is_empty();
         if matches!(event, InputEvent::Press(true)) && (binding.action == actions::HTTP || state_call) {
-            let (params, tx, place) = (binding.params.clone(), self.app.state::<Engine>().sender(), key_place);
+            let tx = self.app.state::<Engine>().sender();
             std::thread::spawn(move || {
+                let params = &origin.params;
                 let result = if state_call {
-                    states::press(&params)
+                    states::press(params)
                 } else {
-                    let p = &params;
+                    let p = params;
                     exec::http_request(actions::param_str(p, "method"), actions::param_str(p, "url"), actions::param_str(p, "body"), actions::param_str(p, "headers")).map(|(code, text)| {
                         let short: String = text.trim().chars().take(40).collect();
                         Some(if short.is_empty() { format!("{code}") } else { format!("{code} {short}") })
                     })
                 };
-                let _ = tx.send(Msg::CallDone(place, result));
+                let _ = tx.send(Msg::CallDone(Box::new(origin), result));
             });
             return;
         }
         let result = self.executor.run(binding, event);
-        let was_failed = self.failed_keys.contains_key(&key_place);
-        match &result {
-            Ok(_) => {
-                self.failed_keys.remove(&key_place);
+        if origin.is_key() && matches!(event, InputEvent::Press(true)) {
+            let place = origin.place();
+            let changed = if result.is_ok() { self.failed_keys.remove(&place).is_some() } else { self.failed_keys.insert(place, origin).is_none() };
+            if changed {
+                self.redraw_keys();
             }
-            Err(message) if key_place.rsplit(['/', '|']).next().is_some_and(|c| c.starts_with("keys.")) => {
-                self.failed_keys.insert(key_place.clone(), message.clone());
-            }
-            Err(_) => {}
-        }
-        if was_failed != self.failed_keys.contains_key(&key_place) {
-            self.redraw_keys();
         }
         match result {
             Ok(out) => {
@@ -3013,7 +3038,7 @@ impl Worker {
             }
             for (i, look) in looks.iter_mut().enumerate() {
                 let place = format!("{}|{}", profile.as_ref().map_or("", |p| p.id.as_str()), control_id(page.as_deref(), &format!("keys.{}", first + i)));
-                look.failed = self.failed_keys.contains_key(&place);
+                look.failed = self.failed_keys.get(&place).is_some_and(|origin| profile.as_ref().is_some_and(|p| origin.matches(p)));
             }
             // the tour points at a key: it turns white (the label and icon stay readable)
             if let Some(look) = self.lit_highlight().and_then(|c| c.strip_prefix("keys.")?.parse::<usize>().ok()?.checked_sub(first)).and_then(|i| looks.get_mut(i)) {
@@ -4998,6 +5023,23 @@ impl Worker {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn an_action_failure_only_belongs_to_its_original_gesture_and_parameters() {
+        let mut profile = super::Profile::new("Failure test");
+        let binding: super::Binding = serde_json::from_value(serde_json::json!({
+            "action": "core.launch", "params": {"target": "test-program"}
+        }))
+        .unwrap();
+        profile.controls.insert("keys.0:hold".into(), binding.clone());
+        profile.controls.insert("keys.0".into(), binding.clone());
+        let origin = super::ActionOrigin { profile: profile.id.clone(), control: "keys.0:hold".into(), action: binding.action, params: binding.params };
+        assert!(origin.matches(&profile));
+        profile.controls.get_mut("keys.0:hold").unwrap().params["target"] = "other-program".into();
+        assert!(!origin.matches(&profile));
+        profile.controls.remove("keys.0:hold");
+        assert!(!origin.matches(&profile));
+    }
+
     use super::*;
 
     #[test]

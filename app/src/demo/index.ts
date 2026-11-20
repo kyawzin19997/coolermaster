@@ -360,8 +360,8 @@ const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
     exe: "C:\\Program Files\\MasterDeck\\hubdeck.exe",
     desktop: false,
     codeCli: true,
-    codeCommand: 'claude mcp add --scope user hubdeck -- "C:\\Program Files\\MasterDeck\\hubdeck.exe" --mcp',
-    snippet: '{ "mcpServers": { "hubdeck": { "command": "C:\\\\Program Files\\\\MasterDeck\\\\hubdeck.exe", "args": ["--mcp"] } } }',
+    codeCommand: 'claude mcp add --scope user masterdeck -- "C:\\Program Files\\MasterDeck\\hubdeck.exe" --mcp',
+    snippet: '{ "mcpServers": { "masterdeck": { "command": "C:\\\\Program Files\\\\MasterDeck\\\\hubdeck.exe", "args": ["--mcp"] } } }',
   }),
   profile_adapt: () => [{ label: "Volume", from: "dial", to: ["knobs.0"] }],
   // a sample pack only when asked for (`&icons=pack:neon-shapes`), so other screenshots show no fake pack

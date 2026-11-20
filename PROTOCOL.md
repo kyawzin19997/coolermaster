@@ -37,7 +37,7 @@ Each module is a separate USB HID device (the base contains a Prolific USB hub `
 | M0 | LED effects | `02 2C target FF mode 0` after a color `02 2D`, speed `02 30 50` | yes on knobs (2026-10-11, watched on the deck, violet, speed 50): 2 breathing = smooth fade in and out; 3 strobe = hard on/off; 4 "spring" = fast blinking; 5 cycling = colors jump in order; 6 random = colors jump; 7 wave = smooth color change; 8 "water" = shimmer, every other LED of the ring lit in turn (so a knob ring has several LEDs, addressed only as one); 9 rainbow = smooth color change. The base edge did not change in that test because it was sent index `FF` (see the next row). Base edge, index 0, step by step with the owner (2026-10-11): static red, breathing, wave (whole strip changes color smoothly) all work; 8 "water" runs a pattern along the strip (every second or third LED, with a visible direction) and changes colors meanwhile, so the edge has many LEDs, addressed only as one; index `FF` is ignored by the base |
 | M0 | LED addressing limits | the official M0 SDK (`Adjust_LED_Color_CM_M0`) accepts target 0 = base with index 0 only (`FF` rejected), 1 = faders 0-4 or `FF`, 2 = knobs 0-2 or `FF`; the SDK has no other LED command (color, mode, brightness, speed only), so single LEDs inside a knob ring are not addressable through any known command | read from the SDK, 2026-10-11 |
 | Faders | event | input tag `0x2A`, `02 05 v1..v5` | yes (441 events in the demo); on macOS too (344 events, 2026-10-15, firmware 01.00.05.00; a fader reports its place once when attached, and the 5 report up to ~120 times a second together while moved) |
-| Rollers | event | input tag `0x2A`, `01 02 r1 r2` (0 up, 1 down, ff none) | yes on Windows (39 events in the demo) and on macOS after SET_IDLE (2026-10-15). **The rollers (firmware 01.00.03.01) send no input report at all until the host sends the HID class request SET_IDLE** (`21 0A 0000 0000 0000`, duration 0, interface 0). Windows' HID driver sends it to every HID device; macOS does not, so on the Mac the rollers were silent (reseating did not help; GET_IDLE reads 0 before and after). Sent from `prototype/tools/hid_idle.py --set`, both rollers turned at once (owner's deck, 2026-10-15 16:56); HubDeck now sends it to every M0 module on macOS at connect. Knobs (01.00.05.00) report without it. Their HID descriptor equals the knobs' (Consumer page 0x0C, input report 1 of 63 B, output 2, features 3, 2D-31, 36). The squeal of session 9 was not heard on 2026-10-15 |
+| Rollers | event | input tag `0x2A`, `01 02 r1 r2` (0 up, 1 down, ff none) | yes on Windows (39 events in the demo) and on macOS after SET_IDLE (2026-10-15). **The rollers (firmware 01.00.03.01) send no input report at all until the host sends the HID class request SET_IDLE** (`21 0A 0000 0000 0000`, duration 0, interface 0). Windows' HID driver sends it to every HID device; macOS does not, so on the Mac the rollers were silent (reseating did not help; GET_IDLE reads 0 before and after). Sent from `prototype/tools/hid_idle.py --set`, both rollers turned at once (owner's deck, 2026-10-15 16:56); MasterDeck now sends it to every M0 module on macOS at connect. Knobs (01.00.05.00) report without it. Their HID descriptor equals the knobs' (Consumer page 0x0C, input report 1 of 63 B, output 2, features 3, 2D-31, 36). The squeal of session 9 was not heard on 2026-10-15 |
 | Knobs | rotation / press | input tag `0x2A`, `00 03 ...` / `03 03 ...` | yes (335 rotations, 26 presses in the layout A test) |
 | Keys | software mode | feature `03 3A 01` | yes, 2026-10-09 19:0x (before that the module was in a bad state, see below) |
 | Keys | info | get feature `0x3B` → `14 03 05 0f e0 01 10 01 01 48 48` = 3 rows, 5 columns, 15 keys, 480×272, key 72×72 | yes (our decoding) |
@@ -58,7 +58,7 @@ Key positions in the panel image (measured 2026-10-09 with a grid of labeled coo
 | What | Report | Verified here |
 |---|---|---|
 | software mode | feature `03 49 01` (`00` = hardware) | yes |
-| brightness | feature `03 44 0..100`; read `0x4C` | yes: set 20 and 100, read back the same (2026-10-10, `examples/backlight.rs`). **0 is unsafe on macOS**: the set timed out (I/O Timeout) and the dial answered nothing after it, not even after a re-enumeration; only a reseat helps (2026-10-14). The keys module did the same at a later lock (its first 0 went through). HubDeck sends no brightness 0 to any module: screens off are black images |
+| brightness | feature `03 44 0..100`; read `0x4C` | yes: set 20 and 100, read back the same (2026-10-10, `examples/backlight.rs`). **0 is unsafe on macOS**: the set timed out (I/O Timeout) and the dial answered nothing after it, not even after a re-enumeration; only a reseat helps (2026-10-14). The keys module did the same at a later lock (its first 0 went through). MasterDeck sends no brightness 0 to any module: screens off are black images |
 | screen color | feature `03 46 R G B` | no |
 | image | output `02 45` + JPEG 240×240 in chunks (header as for the keys) | yes |
 | firmware / serial / info | get feature `0x48` / `0x4A` / `0x4B` (`14 00 00 00 f0 00 f0 00 01 f0 f0` = 240×240) | yes |
@@ -120,27 +120,27 @@ get one color for all their LEDs with index `FF` (`02 2D <group> FF r g b 0`); n
 deck (the knobs flashed at 20:17-20:27 with one report per LED; index `FF` took effects on 2026-10-11).
 The faders module fell off USB twice while being worked with, once while its LEDs changed ~50
 times a second; whether a high LED rate can do it is not known. The second drop (20:09, its music
-switch off) also came while HubDeck sent it a new rainbow color every 20 ms (the music's step), so
+switch off) also came while MasterDeck sent it a new rainbow color every 20 ms (the music's step), so
 both drops had a high LED rate. At 10 colors a second (2026-10-19, 21:06 to 22:58, music playing
 part of it) it stayed connected. Index `FF` with one color for the whole module is what goes out
-for HubDeck's rainbow on knobs and faders now (`GET /api/leds`: 10 colors a second); the owner,
+for MasterDeck's rainbow on knobs and faders now (`GET /api/leds`: 10 colors a second); the owner,
 looking at the deck that evening: "Te podsiweltnei dobrze dziala" (not a per-module check). Likely,
-not proven: the faders' firmware takes about 25 LED reports a second, not 50; HubDeck stays under 30.
+not proven: the faders' firmware takes about 25 LED reports a second, not 50; MasterDeck stays under 30.
 
 ### Two modules of the same kind (2026-11-01)
 
 - The base takes the 15-key module in more than one slot (the owner tried it: his keys came back in
-  6-2-4, then 6-2-3). A user with two keys modules and two bases saw HubDeck give both the same pictures
+  6-2-4, then 6-2-3). A user with two keys modules and two bases saw MasterDeck give both the same pictures
   and actions (issue #7, 2026-10-20): each module is its own HID device with its own serial, and every
   module of a kind got the same reports.
-- HubDeck 0.2.1 gives a second knobs, faders or rollers module its own control numbers, remembered by
+- MasterDeck 0.2.1 gives a second knobs, faders or rollers module its own control numbers, remembered by
   serial (`deck.rs` `assign_groups`); keys and the dial still mirror. Not tried on hardware with two
   modules of one kind (one of each here); whether the base's USB carries two keys panels at full rate
   is unknown (the PC sends ~2.1 MB/s to one).
 
 ### Every M0 read on the owner's deck (2026-11-02, Settings > Diagnostics, `GET /api/modules/<id>/check`)
 
-Read while HubDeck ran, through its own handle; each answered in 45-48 ms (keys 31 ms), nothing wedged
+Read while MasterDeck ran, through its own handle; each answered in 45-48 ms (keys 31 ms), nothing wedged
 (keys, faders, rollers, base kept working). Payloads after `[id, len]`:
 
 | Read | Base (02.00.04.00) | Faders (01.00.05.00) | Rollers (01.00.03.01) | Reading |
@@ -161,7 +161,7 @@ That user's faders (0.2.2's report, 2026-11-02; part of fader 1's light red from
 too, ignoring every colour while the rest of that light follows): `0x2E`/`0x2D`/`0x2F` byte for byte the
 same as the owner's (the 4 leading bytes too), so the firmware is the same; `0x32` `00 00 00 00 00`
 (the owner's 100 each); `0x34` `09` x5 like the owner's; `0x36` `a0 9b 85 be e4 00 00 00 b4 e4 e1 f3 e4
-00 00 00`: the two halves differ, where every module of the owner's has two equal halves. HubDeck never
+00 00 00`: the two halves differ, where every module of the owner's has two equal halves. MasterDeck never
 sends the brightness command (`02 2E`) and every colour and mode it sends has save = 0, so the saved
 brightness 0 and the changed config came from elsewhere (the official app or the firmware itself).
 
@@ -175,7 +175,7 @@ Removing a module from the base causes an HID read error (`read error`). `protot
 
 A module with a loose contact on the base leaves USB for about 0.5 s on a press (Windows plays
 its unplug sound) even with no host software running: seen on the keys module 2026-10-15 (5 drops
-in a minute of presses, both sides of the module, HubDeck quit); taking it off the base and
+in a minute of presses, both sides of the module, MasterDeck quit); taking it off the base and
 putting it back cured it. `prototype/tools/usbwatch.py` lists the modules every 0.1 s by
 enumeration (opens nothing) and prints each GONE/BACK.
 
@@ -247,7 +247,7 @@ Consequences:
 - **Sending**: hidapi writes a 320-byte report and waits for it; overlapped writes in flight on a
   handle of their own take a q98 panel faster and with less CPU (`examples/pipeline.rs`, 40 KB:
   one by one 33.6 ms at 12:34; later, with the PC busy, 48.9-109.6 ms and 4.2-6.2 ms of CPU a
-  picture against eight in flight 23.6-28.2 ms and 2.2-2.5 ms). HubDeck writes pictures with eight
+  picture against eight in flight 23.6-28.2 ms and 2.2-2.5 ms). MasterDeck writes pictures with eight
   in flight on Windows (`mh-device` `overlapped.rs`; `HUBDECK_PIPELINE=0` turns it off). At q98 the bytes decide: a
   snowy panel (~80 KB) took 76 ms one report at a time (10.9 a second).
 - **Sending on macOS** (2026-10-30, `examples/pipeline_mac.rs`, MacBook M2 Pro, the deck through
@@ -263,7 +263,7 @@ Consequences:
 - **The same pace on Windows** (2026-10-31, his PC, eight reports in flight, the installed app's log):
   Lantern Hollow at 99 KB a picture took 46.5 ms to send (21.5 a second), at its lighter moments 27.6 ms
   (24.6 a second, the engine's limit): ~2.1 MB/s, as on the Mac. Past it the picture's size sets the rate.
-  HubDeck opens keys and dial shared with eight in flight (`mh-device` `pictures.rs`;
+  MasterDeck opens keys and dial shared with eight in flight (`mh-device` `pictures.rs`;
   `HUBDECK_PIPELINE=0` turns it off).
 - **No known way**: single LEDs inside a knob ring or along the base edge (the hardware has many,
   its "water" mode lights them in turn, but no SDK function addresses one). Probing unknown

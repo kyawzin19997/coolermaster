@@ -16,7 +16,8 @@ use serde_json::{Value, json};
 pub const PROTOCOL_VERSIONS: [&str; 4] = ["2025-11-25", "2025-06-18", "2025-03-26", "2024-11-05"];
 
 /// Name of the server in the clients' configuration.
-pub const SERVER_NAME: &str = "hubdeck";
+pub const SERVER_NAME: &str = "masterdeck";
+const LEGACY_SERVER_NAME: &str = "hubdeck";
 
 /// Rules for good profiles; served as a resource and by the `design_guide` tool.
 pub const DESIGN_GUIDE: &str = include_str!("../../../../docs/PROFILE-DESIGN.md");
@@ -927,13 +928,20 @@ pub fn with_server(mut config: Value, exe: &str) -> Value {
     if !servers.is_object() {
         *servers = json!({});
     }
+    if is_masterdeck_server(&servers[LEGACY_SERVER_NAME]) {
+        servers.as_object_mut().expect("server object").remove(LEGACY_SERVER_NAME);
+    }
     servers[SERVER_NAME] = server_entry(exe);
     config
 }
 
 /// Whether a Claude Desktop configuration starts MasterDeck.
 pub fn has_server(config: &Value) -> bool {
-    config["mcpServers"][SERVER_NAME]["args"].as_array().is_some_and(|a| a.iter().any(|x| x == "--mcp"))
+    [SERVER_NAME, LEGACY_SERVER_NAME].iter().any(|name| is_masterdeck_server(&config["mcpServers"][*name]))
+}
+
+fn is_masterdeck_server(entry: &Value) -> bool {
+    entry["args"].as_array().is_some_and(|args| args.iter().any(|arg| arg == "--mcp"))
 }
 
 /// Add MasterDeck to the Claude Desktop configuration at `path`; the old file is kept as
@@ -1312,7 +1320,7 @@ mod tests {
         let r = rpc(&f, "initialize", json!({"protocolVersion": "2025-06-18", "capabilities": {}, "clientInfo": {"name": "t", "version": "1"}}));
         assert_eq!(r["id"], 7);
         assert_eq!(r["result"]["protocolVersion"], "2025-06-18");
-        assert_eq!(r["result"]["serverInfo"]["name"], "hubdeck");
+        assert_eq!(r["result"]["serverInfo"]["name"], "masterdeck");
         assert!(r["result"]["capabilities"]["tools"].is_object());
         let newest = rpc(&f, "initialize", json!({"protocolVersion": "1999-01-01"}));
         assert_eq!(newest["result"]["protocolVersion"], PROTOCOL_VERSIONS[0]);
@@ -1440,14 +1448,15 @@ mod tests {
         // no file yet: created, no backup
         assert_eq!(connect_desktop_at(&path, "C:\\MasterDeck\\hubdeck.exe").unwrap(), None);
         let made: Value = serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
-        assert_eq!(made["mcpServers"]["hubdeck"], json!({"command": "C:\\MasterDeck\\hubdeck.exe", "args": ["--mcp"]}));
+        assert_eq!(made["mcpServers"]["masterdeck"], json!({"command": "C:\\MasterDeck\\hubdeck.exe", "args": ["--mcp"]}));
         // an existing file: other servers and settings stay, the old text is kept
         std::fs::write(&path, r#"{"mcpServers": {"files": {"command": "npx", "args": ["fs"]}, "hubdeck": {"command": "old.exe", "args": ["--mcp"]}}, "theme": "dark"}"#).unwrap();
         let backup = connect_desktop_at(&path, "D:\\new\\hubdeck.exe").unwrap().unwrap();
         let next: Value = serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
         assert_eq!(next["mcpServers"]["files"]["command"], "npx");
         assert_eq!(next["theme"], "dark");
-        assert_eq!(next["mcpServers"]["hubdeck"]["command"], "D:\\new\\hubdeck.exe");
+        assert_eq!(next["mcpServers"]["masterdeck"]["command"], "D:\\new\\hubdeck.exe");
+        assert!(next["mcpServers"]["hubdeck"].is_null());
         assert!(has_server(&next));
         assert!(std::fs::read_to_string(backup).unwrap().contains("old.exe"));
         // broken JSON is never overwritten
@@ -1456,6 +1465,6 @@ mod tests {
         assert_eq!(std::fs::read_to_string(&path).unwrap(), "{ broken");
         std::fs::remove_dir_all(&dir).ok();
         assert!(snippet("C:\\a b\\hubdeck.exe").contains("\"--mcp\""));
-        assert_eq!(code_command("C:\\a b\\h.exe"), "claude mcp add --scope user hubdeck -- \"C:\\a b\\h.exe\" --mcp");
+        assert_eq!(code_command("C:\\a b\\h.exe"), "claude mcp add --scope user masterdeck -- \"C:\\a b\\h.exe\" --mcp");
     }
 }

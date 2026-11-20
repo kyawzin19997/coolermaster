@@ -1,42 +1,32 @@
-# Contributing to HubDeck
+# Contributing to MasterDeck
 
-Thanks for helping. Issues and pull requests are welcome.
+MasterDeck is a desktop controller for the Cooler Master MasterHUB. Contributions should make deck editing easier and preserve existing profiles, bindings, and device behavior.
 
-## Reporting a problem
+## Report a problem
 
-Please include:
+Include the MasterDeck version, operating system, and the action or hardware module involved. Describe the steps you took, what you expected, and what happened. For a layout issue, include the module type and slot shown under **Deck tools → Edit layout**. If you attach a diagnostic export from **Settings → Diagnostics**, review it before sharing. [Open a regular issue](https://github.com/kyawzin19997/coolermaster/issues/new) · [Report a vulnerability privately](SECURITY.md)
 
-- your system (Windows or macOS version) and the HubDeck version;
-- which modules are attached and where (a photo helps);
-- what you did, what you expected and what happened;
-- the diagnostics file: Settings > Help and about > Save diagnostics (or the tray menu); it has
-  versions, modules and the log, with web addresses, keys and paths removed.
+## Build and test
 
-If a key module or the dial stops showing pictures and the window says it is not responding, pull
-it off the base and put it back (on Windows the window also offers "Restart module"; on macOS
-HubDeck restarts it by itself after a few tries). Please tell us how it
-happened: it is a firmware problem we work around, and every report helps.
+Install Node.js and pnpm, Rust, and the platform prerequisites for Tauri. Run these commands from the repository root.
 
-## Sharing slot data
+```powershell
+pnpm --dir app install --frozen-lockfile
+pnpm --dir app build
+pnpm --dir app test
+cargo fmt --all --check
+cargo clippy --locked -p masterdeck --all-targets -- -D warnings
+cargo test --locked --workspace
+pnpm --dir app tauri dev
+```
 
-HubDeck knows where a module sits from the USB port it uses. Most positions come from a table that
-was checked on real hardware for some slots only. If "Arrange modules" shows a module in the wrong
-place or turned, arrange it by hand and open an issue with the module kind, the slot shown under it
-(e.g. `keys · 2-3`) and the position and rotation you set.
+For interface work without a MasterHUB, run `pnpm --dir app dev` and open `http://localhost:1460/?demo`. For hardware changes, include the modules and platform you tested.
 
-## Code
+## Submit a change
 
-- Rust: `cargo fmt`, `cargo clippy`, and `cargo test -p mh-protocol -p mh-device -p hubdeck` must
-  pass. HID I/O runs only on its own threads, never on the UI thread or the async runtime.
-- TypeScript: `app/node_modules/.bin/tsc --noEmit -p app` and `pnpm test` (in `app/`) must pass.
-- Every user-facing text goes through `app/src/i18n.ts` (English first; other languages fall back
-  to English).
-- Never add code that sends firmware update, serial number, factory data, factory reset or flash
-  save commands. Never read a feature report from the keys or the dial while they are in hardware
-  mode: it wedges their firmware until the module is reseated (see `PROTOCOL.md`).
-- Do not commit Cooler Master software, firmware, SDK files, images or fonts.
+- Keep the pull request focused. Explain what users will notice and how you verified it. Include a screenshot for visible interface changes.
+- Put interface strings in `app/src/i18n.ts`. Check keyboard navigation and both themes when editing a shared component.
+- Keep HID I/O on device threads. Follow the protocol’s command restrictions and hardware-mode rules. [Device protocol](PROTOCOL.md)
+- Keep local profiles, credentials, diagnostics, and assets without redistribution permission out of the checkout.
 
-## Plugins
-
-Plugins live outside this repository; see [docs/PLUGINS.md](docs/PLUGINS.md). A plugin that many
-people would use can become a built-in action later.
+Changes to the project code use the existing MIT or Apache 2.0 terms. [License and credits](LICENSE.md)

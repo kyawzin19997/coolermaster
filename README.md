@@ -1,40 +1,35 @@
 # MasterDeck
 
-Desktop control software for the Cooler Master MasterHUB. MasterDeck supports LCD keys, the dial, knobs, faders, rollers, and the base lighting. Profiles and device settings are stored locally.
+MasterDeck is a desktop editor for the Cooler Master MasterHUB. Build a workspace around the keys, dial, knobs, faders, and rollers you have. Assign actions, set up profiles for different apps, and see your changes on the deck preview as you work.
 
-[Download for Windows](https://github.com/kyawzin19997/coolermaster/releases/latest/download/MasterDeck-windows-x64-setup.exe) · [Download for macOS](https://github.com/kyawzin19997/coolermaster/releases/download/v1.2.0/MasterDeck-macOS-Universal.dmg) · [Releases and checksums](https://github.com/kyawzin19997/coolermaster/releases)
+[**Download for Windows (.exe)**](https://github.com/kyawzin19997/coolermaster/releases/latest/download/MasterDeck-windows-x64-setup.exe) · [Download for macOS (.dmg)](https://github.com/kyawzin19997/coolermaster/releases/download/v1.2.0/MasterDeck-macOS-Universal.dmg) · [All releases](https://github.com/kyawzin19997/coolermaster/releases)
 
-## Install
+![MasterDeck desktop app showing the MasterHUB preview, Key Settings, and the Actions list](docs/images/masterdeck-workspace.png)
 
-On Windows, run the x64 setup and open MasterDeck from Start. Setup includes an offline WebView2 installer and offers a desktop shortcut. On macOS, open the universal DMG and drag MasterDeck into Applications. The Mac app uses an ad hoc signature and may require approval in **System Settings → Privacy & Security**. On macOS, allow Accessibility if you use hotkeys or typing.
+## Install and connect
 
-Quit the official MasterHUB app before connecting the deck. Only one application can drive the hardware at a time.
+- **Windows 10 or 11, x64.** Run the setup file and open MasterDeck from Start. Setup includes the offline WebView2 runtime and can create a desktop shortcut. Use **Updates** in the toolbar to check for a newer Windows release.
+- **macOS 12 or newer.** Open the universal DMG and drag MasterDeck into Applications. macOS may ask for first-launch approval in **System Settings → Privacy & Security**. Allow Accessibility if you use actions that type or send shortcuts.
 
-## Use the deck editor
+Quit the official MasterHUB app before connecting the hardware. One application controls the deck at a time.
 
-- Drag an action from **Actions** directly onto a key to assign **Press**. Select a key to drop an action on **Hold** or **Double press** and edit the selected trigger's settings.
-- Select a key to open **Key settings** beside the deck. Use **Appearance** to change the key’s face. Profiles, pages, and local import/export are available from the profile controls.
-- Open **Appearance → Full editor** for a live preview, colors, and icons. Expand the sections for positioning, effects, batch styling, and export.
-- Open **Plugins → Install plugin** to review a `.streamDeckPlugin` file or a compatible `.zip`. Enable it after installation to add its actions. Installed plugins can be disabled, removed, or updated from a new local file.
-- Open **Plugins → Upload from Phone** to receive a profile, plugin, image, or configuration file. Scan the QR code and match the pairing code before approving the phone. Use the same trusted Wi-Fi for direct offline uploads. [Phone uploads and HTTPS relay setup](docs/phone-uploads.md)
-- Select **Updates** in the toolbar to check for the latest Windows release. MasterDeck installs an update when you choose **Install and restart**.
-- Open **Lighting** for base brightness, profile edge color, music sync, and scenes. Advanced effects, presets, screen brightness, and the screensaver remain available there.
-- Configure OBS, Spotify, Twitch, Streamlabs, Home Assistant, and other integrations under **Settings → Connections**. Local diagnostic export is in **Settings → Diagnostics**.
+## Set up your deck
 
-## Work on the source
+1. Open **Profiles** to choose a layout or create your own. Click **+** by the page tabs to add a page.
+2. Drag an action onto a key. To assign a second gesture, select the key and drag onto **Hold** or **Double press** in **Key Settings**. Open **Appearance** to change the key’s face.
+3. To reuse a key, right-click and choose **Copy key**, then **Paste key** on the destination. You can also use Ctrl+C and Ctrl+V on Windows, or Cmd+C and Cmd+V on macOS.
+4. Open **Lights and screens** in the toolbar for adjustments next to the preview. Open **Settings → Connections** to configure integrations such as OBS Studio, Spotify, Twitch, Streamlabs, and Home Assistant.
 
-The React/Vite interface lives in `app/src`, the Tauri/Rust desktop app in `app/src-tauri`, and the MasterHUB protocol and transport in `crates`. Install Node.js, pnpm, Rust, and the Tauri prerequisites for your system.
+## Use a profile on another deck
 
-```powershell
-pnpm --dir app install --frozen-lockfile
-pnpm --dir app test
-pnpm --dir app build
-cargo test --locked --workspace
-pnpm --dir app tauri dev
-```
+Open **Profile Settings → Use on another deck → Export**, or export straight from a profile’s three-dot menu. Copy the `.masterdeck` file to the other computer. There, open **Profiles → Import** and pick the file. The package carries actions, pages, and included key pictures. Review plugin requirements, linked apps, credentials, and file paths on the destination. [Profile transfer guide](docs/profile-transfer.md)
 
-For a browser-only simulator, run `pnpm --dir app dev` and open `http://localhost:1460/?demo`. The simulator uses fixture data and does not access hardware. [Windows release guide](docs/windows-release.md) · [GitHub beginner guide](docs/github-for-beginners.md) · [Architecture](ARCHITECTURE.md)
+## Plugins and phone uploads
 
-## Attribution
+Open **Plugins → Install Plugin** to review a compatible plugin package before installing it. Enable it from the installed list to make its actions available. **Upload from Phone** pairs a phone browser using a QR code and desktop approval. You can send profiles, plugins, and images over your local Wi-Fi. [Phone upload guide](docs/phone-uploads.md)
 
-MasterDeck is based on HubDeck by Przemysław Tarkowski. See [NOTICE](NOTICE.md), [MIT](LICENSE-MIT), and [Apache 2.0](LICENSE-APACHE). MasterDeck is independent of Cooler Master. Cooler Master and MasterHUB are used to identify compatible hardware.
+## Work on MasterDeck
+
+The desktop app uses Tauri and Rust, with a React interface. The [contributing guide](CONTRIBUTING.md) covers setup and tests. See the [architecture](ARCHITECTURE.md), [GitHub beginner guide](docs/github-for-beginners.md), and [Windows release guide](docs/windows-release.md) for development and releases.
+
+MasterDeck is independent of Cooler Master and builds on HubDeck by Przemysław Tarkowski. The code is available under the [MIT License](LICENSE-MIT) or [Apache License 2.0](LICENSE-APACHE). [License and credits](LICENSE.md) · [Security](SECURITY.md) · [Privacy](PRIVACY.md)

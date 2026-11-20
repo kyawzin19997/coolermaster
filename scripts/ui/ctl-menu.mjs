@@ -13,13 +13,11 @@ import { screenClean } from "./screen.mjs";
 
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1")), "..", "..");
 const exe = process.argv[2] ?? path.join(root, "target", "test-build", "release", "hubdeck.exe");
-const dir = path.join(os.tmpdir(), "hubdeck-ctl-menu");
+const dir = fs.mkdtempSync(path.join(os.tmpdir(), "masterdeck-ctl-menu-"));
 const real = path.join(process.env.APPDATA, "dev.hubdeck.app");
 const PORT = 9480;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-fs.rmSync(dir, { recursive: true, force: true });
-fs.mkdirSync(dir, { recursive: true });
 for (const item of ["profiles", "images", "settings.json", "placements.json"]) {
   if (fs.existsSync(path.join(real, item))) fs.cpSync(path.join(real, item), path.join(dir, item), { recursive: true });
 }
@@ -79,7 +77,7 @@ try {
     await win.mouse.click(x, y, { button: "right" });
     await sleep(300);
   };
-  const item = (name) => menu.getByRole("menuitem", { name: new RegExp(name) });
+  const item = (name) => menu.getByRole("menuitem", { name: new RegExp(name === "Paste" ? "^Paste key" : name) });
 
   // a set key: Copy, Paste (nothing copied yet: greyed), Clear, with their shortcuts
   await rightClick(0);

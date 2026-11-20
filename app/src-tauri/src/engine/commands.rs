@@ -369,7 +369,9 @@ pub fn look_templates_set(engine: State<'_, Engine>, templates: Vec<super::profi
 /// Set (or with `None`, clear) what one control does in a profile.
 #[tauri::command]
 pub fn binding_set(engine: State<'_, Engine>, profile: String, control: String, binding: Option<Binding>) -> Res<()> {
-    if let Some(b) = &binding {
+    if let Some(b) = &binding
+        && !b.action.is_empty()
+    {
         actions::find(&b.action).ok_or_else(|| format!("unknown action {}", b.action))?;
     }
     {
@@ -390,7 +392,7 @@ pub fn binding_set(engine: State<'_, Engine>, profile: String, control: String, 
 /// window may not have heard of yet, is kept (8bitcanvascode, Discussions #3, 2026-10-19).
 #[tauri::command]
 pub fn bindings_set(engine: State<'_, Engine>, profile: String, bindings: std::collections::BTreeMap<String, Option<Binding>>) -> Res<()> {
-    for b in bindings.values().flatten() {
+    for b in bindings.values().flatten().filter(|b| !b.action.is_empty()) {
         actions::find(&b.action).ok_or_else(|| format!("unknown action {}", b.action))?;
     }
     {

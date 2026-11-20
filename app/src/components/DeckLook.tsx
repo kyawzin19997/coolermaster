@@ -1,3 +1,4 @@
+import { readPreference, writePreference } from "../preferences";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api, baseKind, presetLights, presetThumb, PRESETS_HIDDEN, SAVER_FROM_LOOK, themeTitle, controlId, FX_GROUPS, FX_PENDING, FX_RETIRED, GPU_KINDS, fxName, layersOf, SKINS, THEMES, useKeysFrame, type DeckEffects, type EngineView, type FrameCost, type FxKind, type FxLayer, type MyLook, type Profile, type Skin } from "../engine";
 import { t, useLanguage, type Key } from "../i18n";
@@ -200,7 +201,7 @@ export function DeckLook({ view, keysModule, keysCount = 15, keysTurn = 0, onClo
   const [iconsOn, setIconsOn] = useState(true);
   const [dev, setDev] = useState(() => {
     try {
-      return localStorage.getItem("hubdeck.lookCost") === "1";
+      return readPreference("lookCost") === "1";
     } catch {
       return false;
     }
@@ -702,7 +703,7 @@ export function DeckLook({ view, keysModule, keysCount = 15, keysTurn = 0, onClo
             </div>
             {MIXER && (
               <label className="dl-devsw">
-                <input type="checkbox" checked={dev} onChange={(e) => (setDev(e.target.checked), localStorage.setItem("hubdeck.lookCost", e.target.checked ? "1" : "0"))} />
+                <input type="checkbox" checked={dev} onChange={(e) => (setDev(e.target.checked), writePreference("lookCost", e.target.checked ? "1" : "0"))} />
                 {t("look.cost")}
               </label>
             )}

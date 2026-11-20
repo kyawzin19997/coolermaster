@@ -1,3 +1,4 @@
+import { readPreference, writePreference } from "./preferences";
 import { useSyncExternalStore } from "react";
 import { demoParam } from "./demo/params";
 
@@ -7,7 +8,7 @@ import { demoParam } from "./demo/params";
  */
 export type Theme = "system" | "dark" | "light";
 
-const KEY = "hubdeck.theme";
+const KEY = "theme";
 const listeners = new Set<() => void>();
 
 function load(): Theme {
@@ -15,7 +16,7 @@ function load(): Theme {
   const demo = demoParam("theme");
   if (demo === "dark" || demo === "light" || demo === "system") return demo;
   try {
-    const v = localStorage.getItem(KEY);
+    const v = readPreference(KEY);
     if (v === "dark" || v === "light" || v === "system") return v;
   } catch {
     // storage unavailable: the default
@@ -35,7 +36,7 @@ apply();
 export function setTheme(next: Theme) {
   theme = next;
   try {
-    localStorage.setItem(KEY, next);
+    writePreference(KEY, next);
   } catch {
     // not kept, still applied
   }

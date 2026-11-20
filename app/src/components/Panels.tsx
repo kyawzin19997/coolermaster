@@ -1,4 +1,6 @@
+import { readPreference, writePreference } from "../preferences";
 import { Fragment, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { askInWindow, confirmed, open, save, told } from "../confirm";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
@@ -70,15 +72,15 @@ export type LeftTab = "profiles" | "assistant";
 /** Suggestions whose dot was seen (per viewer, a convenience: lost storage only brings a dot back). */
 function nudgeSeen(subject: string): boolean {
   try {
-    return (JSON.parse(localStorage.getItem("hubdeck.nudgeSeen") ?? "[]") as string[]).includes(subject);
+    return (JSON.parse(readPreference("nudgeSeen") ?? "[]") as string[]).includes(subject);
   } catch {
     return false;
   }
 }
 function markNudgeSeen(subject: string) {
   try {
-    const seen = JSON.parse(localStorage.getItem("hubdeck.nudgeSeen") ?? "[]") as string[];
-    localStorage.setItem("hubdeck.nudgeSeen", JSON.stringify([...seen.filter((s) => s !== subject), subject].slice(-50)));
+    const seen = JSON.parse(readPreference("nudgeSeen") ?? "[]") as string[];
+    writePreference("nudgeSeen", JSON.stringify([...seen.filter((s) => s !== subject), subject].slice(-50)));
   } catch {
     // not remembered: the dot may come back once
   }
@@ -325,6 +327,28 @@ async function editProfile(id: string, change: (p: Profile) => Profile) {
   await api.saveProfile(change(p));
 }
 
+async function exportProfileFile(profile: Pick<Profile, "id" | "name">, json = false) {
+  const name = profile.name.replace(/[<>:"/\\|?*\u0000-\u001f]/g, "-").replace(/[ .]+$/, "") || "MasterDeck profile";
+  const extension = json ? "json" : "masterdeck";
+  const path = await save({
+    defaultPath: `${name}.${extension}`,
+    filters: [{ name: t(json ? "profile.fileTypeJson" : "profile.fileTypePackage"), extensions: [extension] }],
+  });
+  if (!path) return null;
+  const target = path.toLowerCase().endsWith(`.${extension}`) ? path : `${path}.${extension}`;
+  await api.exportProfile(profile.id, target);
+  return target;
+}
+
+async function importProfileFile() {
+  const path = await open({ multiple: false, filters: [{ name: t("profile.fileType"), extensions: ["masterdeck", "hubdeck", "json", "mhz"] }] });
+  if (typeof path !== "string") return null;
+  const profile = await api.importProfile(path);
+  if (!(await keepImported(profile))) return null;
+  await api.activate(profile.id);
+  return profile;
+}
+
 function deleteProfile(p: ProfileSummary) {
   void confirmed(t("profile.confirmDelete", { name: p.name })).then((yes) => yes && api.deleteProfile(p.id).catch((e) => told(t("error.deleteProfile"), localizeError(String(e)))));
 }
@@ -346,15 +370,29 @@ function useWindowFocus() {
 }
 
 /** Right-click menu of a profile tab: rename, duplicate, show in or hide from the bar, delete. */
-function ProfileMenu({ profile, x, y, count, onSetHome, onClose }: { profile: ProfileSummary; x: number; y: number; count: number; onSetHome?: () => void; onClose: () => void }) {
+function ProfileMenu({ profile, x, y, count, onSetHome, onClose }: { profile: ProfileSummary; x: number; y: number; count: number; onSetHome?: () => Promise<unknown>; onClose: () => void }) {
   useLanguage();
   const ref = useRef<HTMLDivElement>(null);
   const [name, setName] = useState<string | null>(null);
   useDismiss(true, ref, onClose);
-  const left = Math.min(x, window.innerWidth - 240);
-  const top = Math.max(6, Math.min(y + 6, window.innerHeight - 240));
-  return (
-    <div className="popover ctx-menu" role="menu" ref={ref} style={{ position: "fixed", left, top }}>
+  useLayoutEffect(() => {
+    const menu = ref.current;
+    if (!menu) return;
+    const position = () => {
+      const { width, height } = menu.getBoundingClientRect();
+      menu.style.left = `${Math.max(8, Math.min(x, window.innerWidth - width - 8))}px`;
+      menu.style.top = `${Math.max(8, Math.min(y + 6, window.innerHeight - height - 8))}px`;
+    };
+    position();
+    window.addEventListener("resize", position);
+    return () => window.removeEventListener("resize", position);
+  }, [x, y, name === null]);
+  const run = (action: () => Promise<unknown>) => {
+    onClose();
+    void action().catch((err) => told(t("topbar.profileSettings"), localizeError(String(err))));
+  };
+  return createPortal(
+    <div className="popover ctx-menu profile-context-menu" role="menu" ref={ref} aria-label={t("profiles.options", { name: profile.name })}>
       <div className="pop-label">{profile.name}</div>
       {name === null ? (
         <div className="menu-list">
@@ -362,17 +400,21 @@ function ProfileMenu({ profile, x, y, count, onSetHome, onClose }: { profile: Pr
             <Icon name="pencil" />
             <span className="menu-text">{t("profiles.rename")}</span>
           </button>
-          <button role="menuitem" className="menu-row compact" onClick={() => (api.createProfile(t("profile.copyName", { name: profile.name }), profile.id), onClose())}>
+          <button role="menuitem" className="menu-row compact" onClick={() => run(() => api.createProfile(t("profile.copyName", { name: profile.name }), profile.id))}>
             <Icon name="copy" />
             <span className="menu-text">{t("profile.duplicate")}</span>
           </button>
+          <button role="menuitem" className="menu-row compact" onClick={() => run(() => exportProfileFile(profile))}>
+            <Icon name="download" />
+            <span className="menu-text">{t("profile.export")}</span>
+          </button>
           {onSetHome && (
-            <button role="menuitem" className="menu-row compact" title={t("profiles.setHome")} onClick={() => (onSetHome(), onClose())}>
+            <button role="menuitem" className="menu-row compact" title={t("profiles.setHome")} onClick={() => run(onSetHome)}>
               <Icon name="home" />
               <span className="menu-text">{t("profiles.makeHome")}</span>
             </button>
           )}
-          <button role="menuitem" className="menu-row compact" onClick={() => (editProfile(profile.id, (p) => ({ ...p, inBar: !inBar(profile) })), onClose())}>
+          <button role="menuitem" className="menu-row compact" onClick={() => run(() => editProfile(profile.id, (p) => ({ ...p, inBar: !inBar(profile) })))}>
             <Icon name={inBar(profile) ? "eye-off" : "eye"} />
             <span className="menu-text">{inBar(profile) ? t("profiles.hide") : t("profiles.show")}</span>
           </button>
@@ -397,18 +439,19 @@ function ProfileMenu({ profile, x, y, count, onSetHome, onClose }: { profile: Pr
           </button>
         </form>
       )}
-    </div>
+    </div>,
+    document.body,
   );
 }
 
 /** A control's right-click menu in the drawing, as Stream Deck's ("Right-click keys to copy,
  * delete or move them"; owner's 1a, 2026-10-20): what the shortcuts do, with the shortcuts shown. */
-export function ControlMenu({ title, x, y, isSet, canPaste, opensPage, onCopy, onPasteLook, onClear, onOpenPage, onClose }: { title: string; x: number; y: number; isSet: boolean; canPaste: boolean; opensPage: boolean; onCopy: () => void; onPasteLook: () => void; onClear: () => void; onOpenPage: () => void; onClose: () => void }) {
+export function ControlMenu({ title, x, y, isSet, canPaste, opensPage, onCopy, onPaste, onPasteLook, onClear, onOpenPage, onClose }: { title: string; x: number; y: number; isSet: boolean; canPaste: boolean; opensPage: boolean; onCopy: () => void; onPaste: () => void; onPasteLook: () => void; onClear: () => void; onOpenPage: () => void; onClose: () => void }) {
   useLanguage();
   const ref = useRef<HTMLDivElement>(null);
   useDismiss(true, ref, onClose);
   const left = Math.min(x, window.innerWidth - 240);
-  const top = Math.min(y + 6, window.innerHeight - 200);
+  const top = Math.max(6, Math.min(y + 6, window.innerHeight - 230));
   const mod = /Mac/i.test(navigator.platform || navigator.userAgent) ? "⌘" : "Ctrl+";
   const row = (icon: string, text: string, keys: string | null, on: () => void, enabled: boolean, danger = false) => (
     <button role="menuitem" className={`menu-row compact${danger ? " danger" : ""}`} disabled={!enabled} onClick={() => (onClose(), on())}>
@@ -423,6 +466,7 @@ export function ControlMenu({ title, x, y, isSet, canPaste, opensPage, onCopy, o
       <div className="menu-list">
         {opensPage && row("folder-open", t("ctl.openPage"), null, onOpenPage, true)}
         {row("copy", t("ctl.copy"), `${mod}C`, onCopy, isSet)}
+        {row("clipboard-paste", t("ctl.paste"), `${mod}V`, onPaste, canPaste)}
         {row("palette", t("ctl.pasteLook"), mod === "⌘" ? "⇧⌘V" : "Ctrl+Shift+V", onPasteLook, canPaste && isSet)}
         {row("trash", t("ctl.clear"), "Delete", onClear, isSet, true)}
       </div>
@@ -458,6 +502,9 @@ function ProfilesList({ view, onOpenProfile, onNewProfile }: { view: EngineView;
           <Icon name="search" />
           <input className="input" placeholder={t("profiles.searchShort")} aria-label={t("profiles.search")} value={query} onChange={(e) => setQuery(e.target.value)} />
         </div>
+        <button type="button" className="tool" onClick={() => void importProfileFile().catch((err) => told(t("profile.import"), localizeError(String(err))))}>
+          <Icon name="upload" />{t("profile.import")}
+        </button>
       </div>
       <div className="lib-groups lib-profiles">
         {groups.map((g, gi) => (
@@ -566,7 +613,7 @@ function ProfilesList({ view, onOpenProfile, onNewProfile }: { view: EngineView;
           x={menu.x}
           y={menu.y}
           count={state.profiles.length}
-          onSetHome={state.fallback !== menuProfile.id ? () => { void api.settings({ fallback: menuProfile.id }); } : undefined}
+          onSetHome={state.fallback !== menuProfile.id ? () => api.settings({ fallback: menuProfile.id }) : undefined}
           onClose={() => setMenu(null)}
         />
       )}
@@ -932,6 +979,8 @@ export function TopBar({
   onOpenProfile,
   onOpenProfileLibrary,
   onOpenSettings,
+  onOpenDisplay,
+  displayOpen,
   onCheckUpdates,
   onOpenPlugins,
   onOpenGames,
@@ -952,6 +1001,8 @@ export function TopBar({
   onOpenProfile: () => void;
   onOpenProfileLibrary: () => void;
   onOpenSettings: () => void;
+  onOpenDisplay?: () => void;
+  displayOpen: boolean;
   onCheckUpdates?: () => void;
   onOpenPlugins: () => void;
   onOpenGames: () => void;
@@ -985,6 +1036,12 @@ export function TopBar({
       {GAMES_ENABLED && (
         <button className="tool ghost" onClick={onOpenGames}>
           {t("topbar.games")}
+        </button>
+      )}
+      {onOpenDisplay && (
+        <button type="button" className={`tool ghost topbar-display${displayOpen ? " is-active" : ""}`} aria-pressed={displayOpen} aria-label={t("settings.lightsScreens")} title={t("settings.lightsScreens")} onClick={onOpenDisplay}>
+          <Icon name="sun" />
+          <span className="tb-label">{t("settings.lightsScreens")}</span>
         </button>
       )}
       <button className="tool ghost" onClick={onOpenPlugins} title={t("topbar.plugins")}>
@@ -1176,7 +1233,7 @@ function MusicTuning({ l, setL, save }: { l: LightSettings; setL: (l: LightSetti
 }
 
 /** The style the lights had before they followed the music, to go back to when the music is switched off. */
-const BEFORE_MUSIC = "hubdeck.lightsBeforeMusic";
+const BEFORE_MUSIC = "lightsBeforeMusic";
 
 /** Lights to the music, from its chip under the deck (owner's "3 a", 2026-10-30): on or off for every
  * profile, which lights join, and how they follow it. */
@@ -1196,7 +1253,7 @@ export function MusicPanel({ onClose }: { onClose: () => void }) {
   const toggle = (want: boolean) => {
     if (want) {
       try {
-        localStorage.setItem(BEFORE_MUSIC, l.style);
+        writePreference(BEFORE_MUSIC, l.style);
       } catch {
         // a page without storage goes back to the rainbow
       }
@@ -1204,7 +1261,7 @@ export function MusicPanel({ onClose }: { onClose: () => void }) {
     } else {
       let before = "rainbow";
       try {
-        before = localStorage.getItem(BEFORE_MUSIC) || "rainbow";
+        before = readPreference(BEFORE_MUSIC) || "rainbow";
       } catch {
         // as above
       }
@@ -1656,14 +1713,14 @@ const FRAME_BUDGET_MS = 1000 / 24;
 export function FrameCostView({ cost }: { cost: FrameCost | null }) {
   const [open, setOpen] = useState(() => {
     try {
-      return localStorage.getItem("hubdeck.frameCost") === "1";
+      return readPreference("frameCost") === "1";
     } catch {
       return false;
     }
   });
   useEffect(() => {
     try {
-      localStorage.setItem("hubdeck.frameCost", open ? "1" : "0");
+      writePreference("frameCost", open ? "1" : "0");
     } catch {
       /* private window: the state is not kept */
     }
@@ -1888,11 +1945,14 @@ export function ProfilePanel({ view, onClose }: { view: EngineView; onClose: () 
   const profile = view.profile;
   const state = view.state;
   const [draft, setDraft] = useState<Profile | null>(profile);
+  const writes = useRef(Promise.resolve());
   const [apps, setApps] = useState("");
   const known = useApps(view.state?.foreground);
   const [issues, setIssues] = useState<{ control: string; message: string }[]>([]);
   useEffect(() => {
-    if (profile?.id) api.checkProfile(profile.id).then(setIssues, () => setIssues([]));
+    let current = true;
+    if (profile?.id) api.checkProfile(profile.id).then((next) => { if (current) setIssues(next); }, () => { if (current) setIssues([]); });
+    return () => { current = false; };
   }, [profile?.id, profile]);
   const [message, setMessage] = useState<string | null>(null);
   useEffect(() => {
@@ -1900,10 +1960,19 @@ export function ProfilePanel({ view, onClose }: { view: EngineView; onClose: () 
     setApps(profile?.apps.join(", ") ?? "");
   }, [profile?.id]);
   if (!profile || !draft || !state) return null;
-  const commit = (next: Profile) => {
-    setDraft(next);
-    api.saveProfile(next).catch((e) => setMessage(String(e)));
+  const commit = (patch: Partial<Pick<Profile, "name" | "apps" | "panel">>) => {
+    setDraft((current) => current && { ...current, ...patch });
+    writes.current = writes.current.then(async () => {
+      const current = await api.profile(profile.id);
+      await api.saveProfile({ ...current, ...patch });
+    }).catch((e) => { setMessage(localizeError(String(e))); });
   };
+  const exportFile = async (json = false) => {
+    await writes.current;
+    const path = await exportProfileFile({ id: profile.id, name: draft.name }, json);
+    if (path) setMessage(t("profile.savedTo", { path }));
+  };
+  const showError = (err: unknown) => setMessage(localizeError(String(err)));
   const isFallback = state.fallback === profile.id;
   return (
     <aside className="inspector sectioned side-panel">
@@ -1913,7 +1982,11 @@ export function ProfilePanel({ view, onClose }: { view: EngineView; onClose: () 
           <label htmlFor="profile-name" className="label">
             {t("profile.name")}
           </label>
-          <input id="profile-name" className="input" value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} onBlur={() => draft.name.trim() && commit(draft)} />
+          <input id="profile-name" className="input" value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} onBlur={() => {
+            const name = draft.name.trim() || profile.name;
+            if (name !== profile.name) commit({ name });
+            else setDraft({ ...draft, name });
+          }} onKeyDown={(event) => { if (event.key === "Enter") event.currentTarget.blur(); }} />
         </div>
         <AppLinks
           apps={known}
@@ -1921,7 +1994,7 @@ export function ProfilePanel({ view, onClose }: { view: EngineView; onClose: () 
           foreground={state.foreground}
           onChange={(next) => {
             setApps(next.join(", "));
-            commit({ ...draft, apps: next });
+            commit({ apps: next });
           }}
         />
         <details className="field">
@@ -1932,7 +2005,10 @@ export function ProfilePanel({ view, onClose }: { view: EngineView; onClose: () 
             placeholder="obs64.exe, chrome.exe: YouTube"
             value={apps}
             onChange={(e) => setApps(e.target.value)}
-            onBlur={() => commit({ ...draft, apps: apps.split(",").map((a) => a.trim()).filter(Boolean) })}
+            onBlur={() => {
+              const next = apps.split(",").map((app) => app.trim()).filter(Boolean);
+              if (next.join(", ") !== draft.apps.join(", ")) commit({ apps: next });
+            }}
           />
           <p className="help">{t("profile.appsHelp")}</p>
         </details>
@@ -1941,10 +2017,20 @@ export function ProfilePanel({ view, onClose }: { view: EngineView; onClose: () 
         <h3 className="sec-title">{t("profile.switching")}</h3>
         {/* only what belongs to this profile; the switches for every profile are in Settings > Profiles */}
         <label className="check">
-          <input type="checkbox" checked={isFallback} disabled={isFallback} onChange={() => api.settings({ fallback: profile.id })} />
+          <input type="checkbox" checked={isFallback} disabled={isFallback} onChange={() => api.settings({ fallback: profile.id }).catch(showError)} />
           {t("profile.fallback")}
         </label>
         <p className="help">{t("profile.switchingWhere")}</p>
+      </section>
+      <section className="sec">
+        <h3 className="sec-title">{t("profile.transfer")}</h3>
+        <p className="help">{t("profile.transferHelp")}</p>
+        <div className="btn-grid">
+          <button className="tool" onClick={() => void exportFile().catch(showError)}><Icon name="download" />{t("profile.export")}</button>
+          <button className="tool" onClick={() => void importProfileFile().then((p) => {
+            if (p) setMessage(movedNote(p.moved, p.pages) || t("profile.imported", { name: p.name }));
+          }, showError)}><Icon name="upload" />{t("profile.import")}</button>
+        </div>
       </section>
       <details className="sec profile-details">
         <summary>{t("profile.panel")}</summary>
@@ -1955,11 +2041,11 @@ export function ProfilePanel({ view, onClose }: { view: EngineView; onClose: () 
           value={draft.panel?.kind ?? "keys"}
           onChange={async (e) => {
             const kind = e.target.value;
-            if (kind === "keys") return commit({ ...draft, panel: undefined });
-            if (kind === "clock") return commit({ ...draft, panel: { kind: "clock" } });
-            if (kind === "graph") return commit({ ...draft, panel: { kind: "graph", metric: "cpu" } });
+            if (kind === "keys") return commit({ panel: undefined });
+            if (kind === "clock") return commit({ panel: { kind: "clock" } });
+            if (kind === "graph") return commit({ panel: { kind: "graph", metric: "cpu" } });
             const image = await pickImage().catch((err) => (setMessage(String(err)), null));
-            if (image) commit({ ...draft, panel: { kind: "picture", image } });
+            if (image) commit({ panel: { kind: "picture", image } });
           }}
         >
           <option value="keys">{t("profile.panelKeys")}</option>
@@ -1968,7 +2054,7 @@ export function ProfilePanel({ view, onClose }: { view: EngineView; onClose: () 
           <option value="graph">{t("profile.panelGraph")}</option>
         </select>
         {draft.panel?.kind === "graph" && (
-          <select className="input" aria-label={t("profile.panelGraph")} value={draft.panel.metric} onChange={(e) => commit({ ...draft, panel: { kind: "graph", metric: e.target.value as Metric } })}>
+          <select className="input" aria-label={t("profile.panelGraph")} value={draft.panel.metric} onChange={(e) => commit({ panel: { kind: "graph", metric: e.target.value as Metric } })}>
             {METRICS.map((m) => (
               <option key={m} value={m}>
                 {t(`metric.${m}`)}
@@ -1977,7 +2063,7 @@ export function ProfilePanel({ view, onClose }: { view: EngineView; onClose: () 
           </select>
         )}
         {draft.panel?.kind === "picture" && (
-          <button className="tool align-start" onClick={() => pickImage().then((image) => image && commit({ ...draft, panel: { kind: "picture", image } }), (err) => setMessage(String(err)))}>
+          <button className="tool align-start" onClick={() => pickImage().then((image) => image && commit({ panel: { kind: "picture", image } }), showError)}>
             <Icon name="image" />
             {t("look.changePicture")}
           </button>
@@ -1999,43 +2085,16 @@ export function ProfilePanel({ view, onClose }: { view: EngineView; onClose: () 
       <details className="sec profile-details">
         <summary>{t("profile.manage")}</summary>
         <div className="btn-grid">
-          <button className="tool" title={t("suggest.fillHelp")} onClick={() => api.profileFill(profile.id, view.state?.page ?? null)}>
+          <button className="tool" title={t("suggest.fillHelp")} onClick={() => api.profileFill(profile.id, view.state?.page ?? null).catch(showError)}>
             <Icon name="sparkles" />
             {t("suggest.fill")}
           </button>
-          <button className="tool" onClick={() => api.createProfile(t("profile.copyName", { name: profile.name }), profile.id).then((p) => api.activate(p.id))}>
+          <button className="tool" onClick={() => writes.current.then(() => api.createProfile(t("profile.copyName", { name: draft.name }), profile.id)).then((p) => api.activate(p.id)).catch(showError)}>
             <Icon name="copy" />
             {t("profile.duplicate")}
           </button>
-          <button
-            className="tool"
-            onClick={async () => {
-              const path = await save({
-                defaultPath: `${profile.name}.masterdeck`,
-                filters: [
-                  { name: t("profile.fileTypePackage"), extensions: ["masterdeck"] },
-                  { name: t("profile.fileTypeJson"), extensions: ["json"] },
-                ],
-              });
-              if (path) api.exportProfile(profile.id, path).then(() => setMessage(t("profile.savedTo", { path })), (e) => setMessage(String(e)));
-            }}
-          >
-            <Icon name="download" />
-            {t("profile.export")}
-          </button>
-          <button
-            className="tool"
-            onClick={async () => {
-              const path = await open({ multiple: false, filters: [{ name: t("profile.fileType"), extensions: ["masterdeck", "hubdeck", "json", "mhz"] }] });
-              if (typeof path === "string")
-                api.importProfile(path).then(
-                  async (p) => (await keepImported(p)) && (setMessage(movedNote(p.moved, p.pages) || null), api.activate(p.id)),
-                  (e) => setMessage(String(e)),
-                );
-            }}
-          >
-            <Icon name="upload" />
-            {t("profile.import")}
+          <button className="tool" onClick={() => void exportFile(true).catch(showError)}>
+            <Icon name="download" />{t("profile.fileTypeJson")}
           </button>
           <button
             className="tool"
@@ -2072,11 +2131,10 @@ export function ProfilePanel({ view, onClose }: { view: EngineView; onClose: () 
 }
 
 /** Settings of the whole app: language, look, screens, profiles folder, backups, connections, updates, help, about. */
-export type SettingsSection = "general" | "lights" | "screens" | "text" | "connections" | "plugins" | "backups" | "updates" | "diagnostics";
+export type SettingsSection = "general" | "lights" | "text" | "connections" | "plugins" | "backups" | "updates" | "diagnostics";
 
 const SETTINGS_SECTIONS: { id: SettingsSection; icon: string; label: Key }[] = [
   { id: "general", icon: "settings", label: "settings.general" },
-  // lights and screens in one section (owner's pick 5a); "screens" still opens it
   { id: "lights", icon: "sun", label: "settings.lightsScreens" },
   // the font of the deck's text, like Stream Deck's Style tab (owner's pick 2a, 2026-10-18)
   { id: "text", icon: "type", label: "settings.text" },
@@ -2090,20 +2148,17 @@ const SETTINGS_SECTIONS: { id: SettingsSection; icon: string; label: Key }[] = [
 
 /** Settings as a page of its own over the whole window (owner, 2026-10-13: a panel in the right
  *  column covered the key editor): sections on the left, one section's content on the right. */
-export function SettingsPanel({ live, view, section, updateCheckRequest, onSection, onClose, onCalibrate, onBrowsePlugins, onPickPlugin, onPhone, onUsePlugin, onOpenEdge, onOpenScenes }: {
+export function SettingsPanel({ live, view, section, updateCheckRequest, onSection, onClose, onBrowsePlugins, onPickPlugin, onPhone, onUsePlugin }: {
   live: LiveState;
   view: EngineView;
   section: SettingsSection;
   updateCheckRequest: number;
   onSection: (section: SettingsSection) => void;
   onClose: () => void;
-  onCalibrate: () => void;
   onBrowsePlugins: () => void;
   onPickPlugin: (update?: { id: string; name: string }) => void;
   onPhone: () => void;
   onUsePlugin: (id: string) => void;
-  onOpenEdge: () => void;
-  onOpenScenes: () => void;
 }) {
   useLanguage();
   return (
@@ -2118,13 +2173,13 @@ export function SettingsPanel({ live, view, section, updateCheckRequest, onSecti
       <div className="settings-body">
         <nav className="settings-nav" aria-label={t("settings.title")}>
           {SETTINGS_SECTIONS.map((x) => (
-            <button key={x.id} className={`settings-nav-item${x.id === section || (x.id === "lights" && section === "screens") ? " is-active" : ""}`} aria-current={x.id === section ? "page" : undefined} onClick={() => onSection(x.id)}>
+            <button key={x.id} className={`settings-nav-item${x.id === section ? " is-active" : ""}`} aria-current={x.id === section ? "page" : undefined} onClick={() => onSection(x.id)}>
               <Icon name={x.icon} />
               {t(x.label)}
             </button>
           ))}
         </nav>
-        <div className={`settings-content sectioned${section === "lights" || section === "screens" ? " lighting-settings" : ""}`} key={section}>
+        <div className="settings-content sectioned" key={section}>
           {section === "general" && (
             <>
               <LanguageSettings />
@@ -2132,22 +2187,6 @@ export function SettingsPanel({ live, view, section, updateCheckRequest, onSecti
               <SwitchingSettings view={view} />
               <StartupSettings />
               <ProfilesFolder />
-            </>
-          )}
-          {(section === "lights" || section === "screens") && (
-            <>
-              <LightsSettings onOpenEdge={onOpenEdge} onOpenScenes={onOpenScenes} />
-              <ScreensSettings />
-              {live.deck.modules.some((m) => m.kind === "keys") && (
-                <section className="sec">
-                  <h3 className="sec-title">{t("settings.advanced")}</h3>
-                  <p className="help">{t("settings.calibrateHelp")}</p>
-                  <button className="tool align-start" onClick={onCalibrate}>
-                    <Icon name="crosshair" />
-                    {t("topbar.calibrate")}
-                  </button>
-                </section>
-              )}
             </>
           )}
           {section === "text" && <DeckTextSettings />}
@@ -2159,6 +2198,47 @@ export function SettingsPanel({ live, view, section, updateCheckRequest, onSecti
         </div>
       </div>
     </div>
+  );
+}
+
+export type DeckDisplaySection = "lights" | "screens" | "edge" | "music" | "saver";
+
+export function DeckDisplayPanel({ live, view, section, setSection, onClose, onCalibrate, onOpenScenes }: {
+  live: LiveState;
+  view: EngineView;
+  section: DeckDisplaySection;
+  setSection: (section: DeckDisplaySection) => void;
+  onClose: () => void;
+  onCalibrate: () => void;
+  onOpenScenes: () => void;
+}) {
+  const lighting = section === "lights" || section === "edge" || section === "music";
+  const lightDetail = () => setSection("lights");
+  return (
+    <aside className="deck-display-panel sectioned" aria-label={t("settings.lightsScreens")}>
+      <PanelHead title={t("settings.lightsScreens")} icon="sun" onClose={onClose} />
+      <nav className="seg display-tabs" aria-label={t("settings.lightsScreens")}>
+        <button type="button" className={`tab${lighting ? " is-active" : ""}`} aria-pressed={lighting} onClick={lightDetail}>{t("settings.lighting")}</button>
+        <button type="button" className={`tab${lighting ? "" : " is-active"}`} aria-pressed={!lighting} onClick={() => setSection("screens")}>{t("settings.screens")}</button>
+      </nav>
+      <div className="display-controls">
+        {section === "lights" && <LightsSettings onOpenEdge={() => setSection("edge")} onOpenScenes={onOpenScenes} onOpenMusic={() => setSection("music")} />}
+        {section === "edge" && <EdgePanel key={view.profile?.id} view={view} onClose={lightDetail} onAll={lightDetail} />}
+        {section === "music" && <MusicPanel onClose={lightDetail} />}
+        {section === "saver" && <SaverPanel view={view} onClose={() => setSection("screens")} />}
+        {section === "screens" && (
+          <>
+            <ScreensSettings />
+            <section className="sec btn-grid">
+              <button className="tool" onClick={() => setSection("saver")}><Icon name="moon" />{t("screens.saver")}</button>
+              {live.deck.modules.some((m) => m.kind === "keys") && (
+                <button className="tool" title={t("settings.calibrateHelp")} onClick={onCalibrate}><Icon name="crosshair" />{t("topbar.calibrate")}</button>
+              )}
+            </section>
+          </>
+        )}
+      </div>
+    </aside>
   );
 }
 
@@ -2222,7 +2302,7 @@ function SwitchingSettings({ view }: { view: EngineView }) {
 }
 
 /** System, dark or light. */
-function LightsSettings({ onOpenEdge, onOpenScenes }: { onOpenEdge: () => void; onOpenScenes: () => void }) {
+function LightsSettings({ onOpenEdge, onOpenScenes, onOpenMusic }: { onOpenEdge: () => void; onOpenScenes: () => void; onOpenMusic: () => void }) {
   useLanguage();
   const [l, setL] = useState<LightSettings | null>(null);
   const [error, setError] = useState("");
@@ -2258,13 +2338,6 @@ function LightsSettings({ onOpenEdge, onOpenScenes }: { onOpenEdge: () => void; 
   ];
   return (
     <section className="sec lighting-controls">
-      <h3 className="sec-title">{t("settings.lighting")}</h3>
-      <div className="lighting-destinations">
-        <button type="button" className="tool" onClick={onOpenScenes}><Icon name="image" />{t("lighting.scenes")}</button>
-        <button type="button" className="tool" onClick={onOpenEdge}><Icon name="sun" />{t("lighting.profileEdge")}</button>
-        <button type="button" className="tool" onClick={() => window.dispatchEvent(new CustomEvent("hubdeck:open-music"))}><Icon name="music" />{t("music.chip")}</button>
-        <button type="button" className="tool" onClick={() => window.dispatchEvent(new CustomEvent("hubdeck:open-saver"))}><Icon name="moon" />{t("screens.saver")}</button>
-      </div>
       <div className="lighting-row">
         <label htmlFor="lights-mode">{t("lights.style")}</label>
         <div className="row wrap">
@@ -2300,6 +2373,11 @@ function LightsSettings({ onOpenEdge, onOpenScenes }: { onOpenEdge: () => void; 
       />
       <output htmlFor="lights-brightness" className="mono">{l.brightness}%</output>
       </div>
+      </div>
+      <div className="lighting-destinations">
+        <button type="button" className="tool" onClick={onOpenScenes}><Icon name="image" />{t("lighting.scenes")}</button>
+        <button type="button" className="tool" onClick={onOpenEdge}><Icon name="sun" />{t("lighting.profileEdge")}</button>
+        <button type="button" className="tool" onClick={onOpenMusic}><Icon name="music" />{t("music.chip")}</button>
       </div>
       <details className="lighting-advanced">
         <summary>{t("lighting.reactions")}</summary>
@@ -2864,7 +2942,6 @@ function ScreensSettings() {
   };
   return (
     <section className="sec">
-      <h3 className="sec-title">{t("settings.screens")}</h3>
       <div className="field">
         <div className="row between">
           <label htmlFor="screen-brightness" className="label">

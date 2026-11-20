@@ -1,3 +1,4 @@
+import { readPreference, writePreference } from "./preferences";
 import { createElement, Fragment, useSyncExternalStore, type ReactNode } from "react";
 import type { ActionDef, ParamDef, PresetSummary } from "./engine";
 
@@ -94,17 +95,18 @@ const en = {
   "edit.nothingToUndo": "Nothing to undo",
   "edit.undone": "Undone",
   "edit.empty": "This control does nothing yet",
-  "edit.copied": "Appearance copied",
+  "edit.copied": "Key copied",
   "stage.addProfile": "Add",
-  "ctl.copy": "Copy appearance",
-  "ctl.paste": "Paste",
+  "ctl.copy": "Copy key",
+  "ctl.paste": "Paste key",
   "ctl.pasteLook": "Paste look",
   "edit.lookPasted": "Look pasted: colors, light and style",
   "edit.lookNeedsAction": "Set an action here first, then paste its look",
   "ctl.clear": "Clear",
   "ctl.openPage": "Open page",
-  "edit.pasted": "Pasted",
-  "edit.pastedPartly": "Pasted (some parts do not fit this control)",
+  "edit.pasted": "Key pasted",
+  "edit.pastedPartly": "Pasted the actions that fit this slot",
+  "edit.pasteUnavailable": "This slot or profile cannot use the copied actions",
   "edit.cleared": "Cleared (Ctrl+Z brings it back)",
   "edit.moved": "Moved (Ctrl+Z puts it back)",
   "edit.swapped": "Swapped (Ctrl+Z puts them back)",
@@ -321,6 +323,9 @@ const en = {
   "profile.panelHelp": "Keys still do their actions; only what they show changes. Animated GIFs move.",
   "profile.edge": "Base edge light in one color",
   "profile.duplicate": "Duplicate",
+  "profile.transfer": "Use on another deck",
+  "profile.transferHelp": "Export this profile, then import the .masterdeck file on the other computer. The package includes your actions, pages, and key pictures.",
+  "profile.imported": "Imported {name}",
   "profile.copyName": "{name} copy",
   "profile.export": "Export",
   "profile.import": "Import",
@@ -2093,10 +2098,10 @@ const pl: Partial<Record<Key, Text>> = {
   "edit.nothingToUndo": "Nie ma czego cofnąć",
   "edit.undone": "Cofnięto",
   "edit.empty": "Ten element jeszcze nic nie robi",
-  "edit.copied": "Skopiowano wygląd",
+  "edit.copied": "Skopiowano klawisz",
   "stage.addProfile": "Dodaj",
-  "ctl.copy": "Kopiuj wygląd",
-  "ctl.paste": "Wklej",
+  "ctl.copy": "Kopiuj klawisz",
+  "ctl.paste": "Wklej klawisz",
   "ctl.pasteLook": "Wklej wygląd",
   "edit.lookPasted": "Wklejono wygląd: kolory, światło i styl",
   "edit.lookNeedsAction": "Najpierw ustaw tu akcję, potem wklej wygląd",
@@ -4573,13 +4578,13 @@ const PRESETS_PL: Record<string, { name?: string; description?: string }> = {
 
 // ---- language choice ----
 
-const STORAGE_KEY = "hubdeck.language";
+const STORAGE_KEY = "language";
 
 /** The language picked last: "en", "pl" or a language file's code (its file is read by
  * `restoreLanguage`; until then, and when it is gone, the window is in English). */
 function loadLanguage(): Lang {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = readPreference(STORAGE_KEY);
     return stored && /^[a-z0-9_-]{1,32}$/.test(stored) ? stored : "en";
   } catch {
     return "en";
@@ -4623,7 +4628,7 @@ export function setLanguage(next: Lang, file?: LanguagePack) {
   }
   if (typeof document !== "undefined") document.documentElement.lang = lang;
   try {
-    localStorage.setItem(STORAGE_KEY, lang);
+    writePreference(STORAGE_KEY, lang);
   } catch {
     // not remembered; still applies to this session
   }

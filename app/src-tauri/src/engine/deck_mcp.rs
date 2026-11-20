@@ -2,7 +2,7 @@
 //! a short notice with the base edge lit, a status on the dial, a question with its answers on the
 //! keys (the user presses one), and the values the faders and knobs are set to. A separate server
 //! from the profile builder, meant to be switched on per project (each tool costs context):
-//! `claude mcp add --scope project hubdeck-deck -- <hubdeck> --mcp-deck`.
+//! `claude mcp add --scope project masterdeck-deck -- <executable> --mcp-deck`.
 
 use std::time::{Duration, Instant};
 
@@ -10,7 +10,7 @@ use serde_json::{Value, json};
 
 use super::mcp::Api;
 
-pub const SERVER_NAME: &str = "hubdeck-deck";
+pub const SERVER_NAME: &str = "masterdeck-deck";
 
 pub const INSTRUCTIONS: &str = "The user's desk controller (MasterDeck): a round dial screen, 15 keys with screens and a light strip on the base. Use notify for things the user should see when they look up (a long task finished, a test failed), show_status for what you are doing during a long task (clear it at the end), ask_physical to let the user answer a short question with one key press instead of typing, and read_controls to read faders and knobs the user set. Keep texts short: they show on small screens.";
 

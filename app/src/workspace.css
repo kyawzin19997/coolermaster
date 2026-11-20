@@ -86,6 +86,38 @@
 
 .workspace-with-properties > :is(.center, .builder-canvas) { grid-area: deck; }
 .workspace-with-properties > .control-inspector { grid-area: properties; }
+.deck-workspace.workspace-with-display {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(300px, 29vw, 390px);
+  grid-template-rows: minmax(0, 1fr);
+}
+
+.deck-display-panel {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg1);
+  border-left: 1px solid var(--ln2);
+}
+
+.display-tabs { align-self: stretch; margin: 10px 12px 0; }
+.display-tabs .tab { flex: 1; }
+.display-controls { flex: 1; min-height: 0; overflow: auto; }
+.display-controls > .side-panel { width: auto; max-height: none; border: 0; border-radius: 0; }
+.display-controls .lighting-destinations { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.display-controls .lighting-row { align-items: start; }
+.dk-screen-content { filter: var(--dk-screen-filter, none); }
+.topbar-display.is-active { color: var(--acc2); background: var(--bg2); }
+
+.profile-context-menu {
+  position: fixed;
+  z-index: 70;
+  max-height: calc(100dvh - 16px);
+  overflow: auto;
+}
+
+.lib-head > .search { flex: 1; min-width: 0; }
 .workspace-with-properties > :is(.editor-sidebar, .builder-main) {
   grid-area: actions;
   border-top: 1px solid var(--ln2);

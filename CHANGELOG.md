@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.1
+
+- Copy and paste a key’s Press, Hold, and Double Press actions and appearance. Paste Look remains available on its own.
+- Clear obsolete error badges when the action that caused them is removed or replaced.
+- Keep profile menus in the window and put profile import and export within easy reach.
+- Edit lights, screen brightness, and screensaver settings alongside the live deck preview.
+
 ## 1.2.0
 
 - The full key editor puts the label, colors, and live preview first, with expandable controls for icons, positioning, effects, batch styling, and export.

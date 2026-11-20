@@ -1,7 +1,6 @@
-# Third-party material in HubDeck
+# MasterDeck attribution and third-party notices
 
-HubDeck's own code is licensed under MIT OR Apache-2.0 (`LICENSE-MIT`, `LICENSE-APACHE`). It ships
-the following works by others, under their own licences:
+MasterDeck builds on HubDeck by Przemysław Tarkowski. The project code is available under the MIT License or Apache License 2.0. The following bundled assets have their own terms.
 
 | What | Where | Author | Licence |
 |---|---|---|---|
@@ -12,5 +11,4 @@ the following works by others, under their own licences:
 Credit line shown in the app (Settings > About): "Icons by game-icons.net contributors (Lorc,
 Delapouite and others), CC BY 3.0."
 
-HubDeck is an independent project, not affiliated with or endorsed by Cooler Master. Icon packs and
-profiles the user installs keep their own licences; none are bundled.
+MasterDeck is independent of Cooler Master. User-installed icon packs and profiles retain their own licenses.

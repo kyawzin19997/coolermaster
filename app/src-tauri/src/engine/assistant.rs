@@ -469,6 +469,7 @@ pub fn api_choices(app: &AppHandle, body: &Value) -> Result<Value, String> {
 pub fn not_for_a_deck(exe: &str) -> bool {
     let e = exe.to_lowercase();
     [
+        "masterdeck",
         "hubdeck",
         "explorer.exe",
         "searchhost",
@@ -1176,7 +1177,7 @@ pub async fn assistant_info(engine: tauri::State<'_, Engine>, language: String) 
                 "claude -p --input-format stream-json --output-format stream-json --verbose --include-partial-messages --tools {} --mcp-config mcp.json (hubdeck --mcp-assistant: drafts only) --strict-mcp-config --allowedTools mcp__{} --system-prompt <the instructions below> --setting-sources local --disable-slash-commands --settings {{\"autoMemoryEnabled\":false}} --model <yours or picked> --effort <yours or picked> [--resume <session>]{}",
                 if power { POWER_TOOLS } else { "\"\"" },
                 super::mcp::SERVER_NAME,
-                if power { " --permission-prompt-tool mcp__hubdeck__permission_prompt (each command and web fetch asked in the window)" } else { "" }
+                if power { " --permission-prompt-tool mcp__masterdeck__permission_prompt (each command and web fetch asked in the window)" } else { "" }
             ),
             ..AssistantInfo::default()
         };
@@ -1379,7 +1380,7 @@ mod tests {
         let (e, s) = (r.events, r.session);
         assert!(e.is_empty());
         assert_eq!(s.as_deref(), Some("abc"));
-        let e = read_line(r#"{"type":"assistant","message":{"content":[{"type":"text","text":"Hi"},{"type":"tool_use","name":"mcp__hubdeck__create_profile"}]}}"#).events;
+        let e = read_line(r#"{"type":"assistant","message":{"content":[{"type":"text","text":"Hi"},{"type":"tool_use","name":"mcp__masterdeck__create_profile"}]}}"#).events;
         assert_eq!(e, vec![AssistantEvent::Text { text: "Hi".into(), choices: vec![], ideas: vec![] }, AssistantEvent::Tool { name: "create_profile".into() }]);
         let e = read_line(r#"{"type":"result","is_error":true,"result":"limit"}"#).events;
         assert_eq!(e, vec![AssistantEvent::Error { message: "limit".into() }]);

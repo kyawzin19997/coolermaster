@@ -13,13 +13,11 @@ import { screenClean } from "./screen.mjs";
 
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1")), "..", "..");
 const exe = process.argv[2] ?? path.join(root, "target", "test-build", "release", "hubdeck.exe");
-const dir = path.join(os.tmpdir(), "hubdeck-copy-paste");
+const dir = fs.mkdtempSync(path.join(os.tmpdir(), "masterdeck-copy-paste-"));
 const real = path.join(process.env.APPDATA, "dev.hubdeck.app");
 const PORT = 9474;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-fs.rmSync(dir, { recursive: true, force: true });
-fs.mkdirSync(dir, { recursive: true });
 for (const item of ["profiles", "images", "settings.json", "placements.json"]) {
   if (fs.existsSync(path.join(real, item))) fs.cpSync(path.join(real, item), path.join(dir, item), { recursive: true });
 }
@@ -55,7 +53,13 @@ try {
   // two keys to copy from, four to paste on, each with a label the window shows
   const hot = (keys, label) => ({ action: "core.hotkey", params: { keys, mode: "normal" }, look: { label } });
   const page = (label) => ({ action: "core.nextPage", params: {}, look: { label } });
-  const set = { "keys.0": hot("Ctrl+Alt+F1", "SRCA"), "keys.1": hot("Ctrl+Alt+F2", "SRCB"), "keys.2": page("TGTW"), "keys.3": page("TGTX"), "keys.4": page("TGTY"), "keys.5": page("TGTZ") };
+  const set = {
+    "keys.0": hot("Ctrl+Alt+F1", "SRCA"),
+    "keys.0:hold": hot("Ctrl+Alt+F3", "Hold A"),
+    "keys.0:double": hot("Ctrl+Alt+F4", "Double A"),
+    "keys.1": hot("Ctrl+Alt+F2", "SRCB"),
+    "keys.2": page("TGTW"), "keys.3": page("TGTX"), "keys.4": page("TGTY"), "keys.5": page("TGTZ"),
+  };
   for (const [control, binding] of Object.entries(set)) await api(`profiles/${profile}/controls`, { control, binding });
   await api(`profiles/${profile}/activate`, {});
 
@@ -87,6 +91,7 @@ try {
   for (const k of ["keys.2", "keys.3", "keys.4"]) check(`fast paste kept on ${k}`, c[k]?.params?.keys === "Ctrl+Alt+F1", `${c[k]?.action} ${c[k]?.params?.keys ?? ""}`);
   check("the three pastes landed within 1 s", took < 1000, `${took} ms`);
   check("the source key is untouched", c["keys.0"]?.params?.keys === "Ctrl+Alt+F1");
+  check("hold and double press are copied", c["keys.2:hold"]?.params?.keys === "Ctrl+Alt+F3" && c["keys.2:double"]?.params?.keys === "Ctrl+Alt+F4");
 
   // a click on B and Ctrl+C at once copies B, not A selected before
   await key("SRCB").click();

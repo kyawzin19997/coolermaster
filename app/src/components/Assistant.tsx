@@ -1,3 +1,4 @@
+import { readPreference, writePreference } from "../preferences";
 // The deck assistant (owner's pick 4C: a third tab of the left column, so the live deck and the
 // key editor stay): a scan the user sees before anything is sent, an interview with answer
 // buttons, then drafts to try on the deck, keep or throw away.
@@ -57,12 +58,12 @@ const talk = {
   withoutApps: false,
 };
 
-const CONSENT = "hubdeck.assistantConsent";
+const CONSENT = "assistantConsent";
 
 /** The answer kept with "Don't ask again" (null: ask). */
 function keptConsent(): "apps" | "noApps" | null {
   try {
-    const v = localStorage.getItem(CONSENT);
+    const v = readPreference(CONSENT);
     return v === "apps" || v === "noApps" ? v : null;
   } catch {
     return null;
@@ -71,7 +72,7 @@ function keptConsent(): "apps" | "noApps" | null {
 
 function keepConsent(how: "apps" | "noApps") {
   try {
-    localStorage.setItem(CONSENT, how);
+    writePreference(CONSENT, how);
   } catch {
     // blocked storage: it asks again next time
   }

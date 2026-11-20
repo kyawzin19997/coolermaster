@@ -131,12 +131,23 @@ for (const [label, viewport] of [['wide', { width: 1440, height: 900 }], ['half'
     return (await visible(page, '.settings-page')) && !(await visible(page, '.dk-ctl'));
   });
   await step(page, `${label}: Settings sections switch`, async () => {
-    for (const s of ['Lights and screens', 'Connections', 'Plugins', 'Backups', 'Updates', 'Diagnostics', 'General']) {
+    for (const s of ['Connections', 'Plugins', 'Backups', 'Updates', 'Diagnostics', 'General']) {
       await page.locator('.settings-nav-item', { hasText: s }).click();
       await page.waitForTimeout(120);
       if (!(await page.locator('.settings-nav-item.is-active', { hasText: s }).isVisible())) return `section ${s} not active`;
     }
     return true;
+  });
+  await step(page, `${label}: Lights and Screens remain beside the deck`, async () => {
+    await page.locator('.settings-nav-item', { hasText: 'Lights and screens' }).click();
+    const display = page.getByRole('complementary', { name: 'Lights and screens', exact: true });
+    await display.locator('#lights-brightness').waitFor();
+    const deck = await page.locator('.deck-area').boundingBox();
+    const panel = await display.boundingBox();
+    await display.getByRole('button', { name: 'Screens', exact: true }).click();
+    await display.locator('#screen-brightness').waitFor();
+    await page.getByRole('button', { name: /^Settings$/ }).first().click();
+    return !!deck && !!panel && deck.x + deck.width <= panel.x + 1;
   });
   await step(page, `${label}: Back to the deck`, async () => {
     await page.getByRole('button', { name: /Back to the deck/ }).click();
