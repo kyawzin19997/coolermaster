@@ -257,6 +257,24 @@ for (const [label, viewport] of [['wide', { width: 1440, height: 900 }], ['half'
     await closeProfiles();
     return true;
   });
+  await step(page, `${label}: profile import explains the file types before opening the picker`, async () => {
+    await profileTab('Profiles');
+    const guide = page.getByRole('dialog', { name: 'Import a profile', exact: true });
+    const choose = profiles.getByRole('button', { name: 'Import', exact: true });
+    const pickerCalls = () => page.evaluate(() => window.__demoCalls.filter(command => command === 'plugin:dialog|open').length);
+    const before = await pickerCalls();
+    await choose.click();
+    await guide.getByText('Have an exported profile file', { exact: false }).waitFor();
+    const types = await guide.getByRole('listitem').allTextContents();
+    if (types.map(line => line.split(' — ')[0]).join(',') !== '.masterdeck,.hubdeck,.json,.mhz') return 'the guide did not list all supported formats';
+    await guide.getByRole('button', { name: 'Cancel', exact: true }).click();
+    if (await pickerCalls() !== before || await guide.isVisible()) return 'cancelling should leave the picker closed';
+    await choose.click();
+    await guide.getByRole('button', { name: 'Choose profile file', exact: true }).click();
+    await page.waitForFunction(count => window.__demoCalls.filter(command => command === 'plugin:dialog|open').length === count, before + 1);
+    await closeProfiles();
+    return await layoutStays();
+  });
   await step(page, `${label}: another control's click keeps the editor`, async () => {
     const ctl = page.locator('.dk-ctl');
     await ctl.nth(Math.min(5, (await ctl.count()) - 1)).click();

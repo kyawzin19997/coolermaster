@@ -341,8 +341,23 @@ async function exportProfileFile(profile: Pick<Profile, "id" | "name">, json = f
   return target;
 }
 
+const PROFILE_IMPORT_TYPES = [
+  ["masterdeck", "profile.importPackage"],
+  ["hubdeck", "profile.importLegacy"],
+  ["json", "profile.importSettings"],
+  ["mhz", "profile.importOfficial"],
+] as const;
+
 async function importProfileFile() {
-  const path = await open({ multiple: false, filters: [{ name: t("profile.fileType"), extensions: ["masterdeck", "hubdeck", "json", "mhz"] }] });
+  const choose = await askInWindow({
+    title: t("profile.importGuide"),
+    body: `${t("profile.importBefore")}\n\n${t("profile.importAfter")}`,
+    details: PROFILE_IMPORT_TYPES.map(([ext, label]) => `.${ext} — ${t(label)}`),
+    role: "dialog",
+    ok: t("profile.importChoose"),
+  });
+  if (!choose) return null;
+  const path = await open({ multiple: false, filters: [{ name: t("profile.fileType"), extensions: PROFILE_IMPORT_TYPES.map(([ext]) => ext) }] });
   if (typeof path !== "string") return null;
   const profile = await api.importProfile(path);
   if (!(await keepImported(profile))) return null;

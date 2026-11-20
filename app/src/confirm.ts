@@ -13,6 +13,7 @@ import { t } from "./i18n";
 export interface Question {
   title: string;
   body?: string;
+  role?: "dialog";
   /** What it touches, one line each (the keys that use a plugin). */
   details?: string[];
   ok: string;

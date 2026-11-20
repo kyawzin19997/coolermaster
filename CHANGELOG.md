@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.4
+
+- Plugins, Settings, and Updates open as separate pages. Returning to the deck restores the selected key and Actions search.
+- Profiles → Import explains the four supported file formats, where to get an export, and what to check after moving a profile.
+
 ## 1.3.3
 
 - The deck and Actions panel stay in place as you edit keys, open Settings, or navigate deck tools.

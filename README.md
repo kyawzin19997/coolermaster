@@ -35,7 +35,7 @@ In OBS Studio Mode, select a scene key and choose **Preview** to cue a scene or 
 
 ## Use a profile on another deck
 
-Open **Profile Settings → Use on another deck → Export**, or export straight from a profile’s three-dot menu. Copy the `.masterdeck` file to the other computer. There, open **Profiles → Import** and pick the file. The package carries actions, pages, and included key pictures. Review plugin requirements, linked apps, credentials, and file paths on the destination. [Profile transfer guide](docs/profile-transfer.md)
+Open **Profile Settings → Use on another deck → Export**, or export straight from a profile’s three-dot menu. Copy the `.masterdeck` file to the other computer. There, open **Profiles → Import** to see what each supported format contains, then select **Choose profile file**. The `.masterdeck` package carries actions, pages, and included key pictures. Review plugin requirements, linked apps, credentials, and file paths on the destination. [Profile transfer guide](docs/profile-transfer.md)
 
 ## Plugins and phone uploads
 

@@ -139,7 +139,10 @@ try {
   // Import sits in the profile's own settings: the active tab of the top bar opens them
   await page.locator("button.tab.is-active").first().click();
   await sleep(500);
-  await question(page, "Import that runs things", () => page.getByRole("button", { name: /^Import/ }).first().click(), ["This profile runs things on your computer", "backup-photos.ps1"], { answer: "Remove it", changes: ["profile_delete"] });
+  await question(page, "Import that runs things", async () => {
+    await page.getByRole("button", { name: "Import", exact: true }).first().click();
+    await page.getByRole("dialog", { name: "Import a profile" }).getByRole("button", { name: "Choose profile file" }).click();
+  }, ["This profile runs things on your computer", "backup-photos.ps1"], { answer: "Remove it", changes: ["profile_delete"] });
   await page.close();
 } finally {
   await browser.close();

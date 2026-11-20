@@ -22,7 +22,7 @@ export function ConfirmHost() {
   if (!q) return null;
   return (
     <div className="sheet-backdrop confirm-backdrop" onMouseDown={(e) => e.target === e.currentTarget && q.answer(false)}>
-      <div className="confirm" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title" aria-describedby={q.body ? "confirm-body" : undefined}>
+      <div className="confirm" role={q.role ?? "alertdialog"} aria-modal="true" aria-labelledby="confirm-title" aria-describedby={q.body ? "confirm-body" : undefined}>
         <h2 id="confirm-title">{q.title}</h2>
         {q.body && <p id="confirm-body">{q.body}</p>}
         {q.details && q.details.length > 0 && (
