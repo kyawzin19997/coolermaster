@@ -2,7 +2,7 @@
 <!--
   The background of the window the macOS .dmg opens (owner's pick B, 2026-10-13): drag to
   Applications, then the three steps of the first open of an app Apple has not notarised.
-  Finder draws the real HubDeck and Applications icons (128 px, centred at the positions in
+  Finder draws the real MasterDeck and Applications icons (128 px, centred at the positions in
   tauri.conf.json > bundle.macOS.dmg) and their labels. Light like macOS's own installers (owner's
   pick, round 2: "opcja nr 3"). Finder's two labels are black in the light look and white in the
   dark one, so grey plates sit under them that both read on (black 5.6:1, white 3.7:1; label centre
@@ -13,7 +13,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>HubDeck installer background</title>
+<title>MasterDeck installer background</title>
 <style>
 @font-face { font-family: Plex; font-weight: 400; src: url("../../node_modules/@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-400-normal.woff2"); }
 @font-face { font-family: Plex; font-weight: 600; src: url("../../node_modules/@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-600-normal.woff2"); }
@@ -51,12 +51,12 @@ h1 { margin: 0; font-size: 13px; font-weight: 600; }
   <span>Drag to Applications</span>
 </div>
 <div class="steps">
-  <h1>First open: macOS asks once. Do this:</h1>
+  <h1>Open MasterDeck for the first time</h1>
   <div class="grid">
     <div class="card">
       <div class="pic"><div class="dlg">
         <svg width="22" height="22" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#8a8a92"/><path d="M12 7 v6 M12 16.5 v.5" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg>
-        <b>“HubDeck.app” Not Opened</b>
+        <b>“MasterDeck.app” Not Opened</b>
         <span class="btn blue">Move to Trash</span>
         <span class="btn ring">Done</span>
       </div></div>
@@ -67,7 +67,7 @@ h1 { margin: 0; font-size: 13px; font-weight: 600; }
         <div class="side"><i></i><i></i><em>Privacy &amp; Security</em><i></i><i></i></div>
         <div class="main">
           <b style="font-size:7px">Security</b>
-          <span style="font-size:6px;line-height:1.35;color:#555560">“HubDeck.app” was blocked to protect your Mac.</span>
+          <span style="font-size:6px;line-height:1.35;color:#555560">“MasterDeck.app” was blocked to protect your Mac.</span>
           <span class="btn ring" style="align-self:flex-end;width:auto;height:16px;padding:0 8px;font-size:7px;margin-top:4px">Open Anyway</span>
         </div>
       </div></div>
@@ -75,8 +75,8 @@ h1 { margin: 0; font-size: 13px; font-weight: 600; }
     </div>
     <div class="card">
       <div class="pic"><div class="dlg">
-        <svg width="22" height="22" viewBox="0 0 96 96"><rect x="4" y="4" width="88" height="88" rx="22" fill="#6d5df5"/><circle cx="38" cy="48" r="20" fill="none" stroke="#fff" stroke-width="6"/><rect x="66" y="24" width="14" height="12" rx="3" fill="#fff"/><rect x="66" y="42" width="14" height="12" rx="3" fill="#fff"/></svg>
-        <b>Open “HubDeck.app”?</b>
+        <img src="../icons/masterdeck.svg" width="22" height="22" alt="">
+        <b>Open “MasterDeck.app”?</b>
         <span class="btn blue ring">Open</span>
         <span class="btn">Cancel</span>
       </div></div>

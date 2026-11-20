@@ -393,7 +393,7 @@ pub fn live_looks() -> serde_json::Value {
 pub struct PluginLook {
     pub title: Option<String>,
     pub image: Option<String>,
-    /// State index. Stream Deck `setState` uses the action's `States` (0, 1, 2, ...). Hubdeck's own
+    /// State index. Stream Deck `setState` uses the action's `States` (0, 1, 2, ...). MasterDeck's own
     /// on/off is 0 or 1, and 1 is the "on" look.
     pub state: Option<u8>,
     /// What a Stream Deck plugin shows for an encoder (`setFeedback`): value 0..1, big text, title.
@@ -3458,7 +3458,7 @@ impl Worker {
             }
             "setImage" => look.image = m["image"].as_str().filter(|i| images::safe_data_uri(i)).map(str::to_string),
             "setState" => {
-                // a number is a state index; true/false is Hubdeck's own on/off, stored as 1 and 0
+                // a number is a state index; true/false is MasterDeck's own on/off, stored as 1 and 0
                 look.state = m["state"].as_u64().map(|n| u8::try_from(n).unwrap_or(u8::MAX)).or_else(|| m["state"].as_bool().map(u8::from));
             }
             "showFeedback" => {

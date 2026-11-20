@@ -1,4 +1,4 @@
-// macOS hardware readings and monitor brightness for HubDeck (owner, 2026-10-13: "rób wszystko
+// macOS hardware readings and monitor brightness for MasterDeck (owner, 2026-10-13: "rób wszystko
 // teraz"). Apple gives no public API for these, so this uses the same system interfaces the well
 // known open-source tools use (Stats / macmon for sensors, MonitorControl for brightness), each one
 // looked up at run time: a Mac without one gets "not available" instead of a crash or a link error.
@@ -236,7 +236,7 @@ static int ddc_get(AVService av) {
     return -1;
 }
 
-/// How many monitors HubDeck can set: the built-in screen first, then external ones.
+/// How many monitors MasterDeck can set: the built-in screen first, then external ones.
 int mh_monitors(void) {
     AVService avs[8];
     int ext = external_services(avs, 8);

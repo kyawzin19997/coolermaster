@@ -139,7 +139,7 @@ const PL: &[(&str, &str)] = &[
     ("Highlight", "Wyróżnij"),
     ("History", "Historia"),
     ("Home", "Dom"),
-    ("House look", "Styl HubDecka"),
+    ("House look", "Styl MasterDecka"),
     ("In front", "Na wierzchu"),
     ("Inside", "Wewnątrz"),
     ("Inspect", "Zbadaj"),

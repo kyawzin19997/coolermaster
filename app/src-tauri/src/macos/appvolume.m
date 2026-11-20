@@ -1,5 +1,5 @@
 // Per-app volume on macOS (owner, 2026-10-13: "rób wszystko teraz"). macOS has no API to set one
-// app's volume; since macOS 14.2 an app's sound can be tapped (Core Audio process taps): HubDeck
+// app's volume; since macOS 14.2 an app's sound can be tapped (Core Audio process taps): MasterDeck
 // taps the app with "muted when tapped", so the app is no longer heard directly, and plays the
 // tapped sound to the speakers itself at the volume asked for (an aggregate device of the default
 // output and the tap, as SoundSource and open-source tools do). Back at full volume the tap goes
@@ -105,26 +105,26 @@ static MHTap *create(NSArray<NSNumber *> *processes, BOOL others, float gain, in
         *error = 4;
         return nil;
     }
-    // the class by name: a direct reference would stop HubDeck from starting on macOS 12 and 13
+    // the class by name: a direct reference would stop MasterDeck from starting on macOS 12 and 13
     Class tapClass = NSClassFromString(@"CATapDescription");
     if (!tapClass) {
         *error = 2;
         return nil;
     }
     CATapDescription *d = others ? [[tapClass alloc] initStereoGlobalTapButExcludeProcesses:processes] : [[tapClass alloc] initStereoMixdownOfProcesses:processes];
-    d.name = @"HubDeck app volume";
+    d.name = @"MasterDeck app volume";
     d.privateTap = YES;
     d.muteBehavior = CATapMutedWhenTapped;
     MHTap *t = [MHTap new];
     t.processes = processes;
     atomic_store(&t->gain, gain);
     if (AudioHardwareCreateProcessTap(d, &t->tap) != noErr || !t->tap) {
-        // most often: System Audio Recording not allowed for HubDeck
+        // most often: System Audio Recording not allowed for MasterDeck
         *error = 3;
         return nil;
     }
     NSDictionary *agg = @{
-        @kAudioAggregateDeviceNameKey : @"HubDeck app volume",
+        @kAudioAggregateDeviceNameKey : @"MasterDeck app volume",
         @kAudioAggregateDeviceUIDKey : [NSUUID UUID].UUIDString,
         @kAudioAggregateDeviceMainSubDeviceKey : output,
         @kAudioAggregateDeviceIsPrivateKey : @YES,
@@ -201,7 +201,7 @@ static int appvol_set(const char *key, const char *needles, int others, float ga
     return 2;
 }
 
-/// The volume HubDeck plays `key` at (1 when it does not tap it).
+/// The volume MasterDeck plays `key` at (1 when it does not tap it).
 static float appvol_get(const char *key) {
     @synchronized(taps()) {
         MHTap *t = taps()[[NSString stringWithUTF8String:key]];
@@ -209,7 +209,7 @@ static float appvol_get(const char *key) {
     }
 }
 
-/// Every app back to playing straight (HubDeck quits).
+/// Every app back to playing straight (MasterDeck quits).
 static void appvol_reset(void) {
     if (@available(macOS 14.2, *)) {
         @synchronized(taps()) {
@@ -221,7 +221,7 @@ static void appvol_reset(void) {
 
 // Called from Rust threads that have no autorelease pool: each call drains its own, or the
 // autoreleased strings, arrays and app objects of every turn of a knob would stay until the
-// thread ends (2026-10-14: the same gap grew HubDeck to gigabytes in the icon reader).
+// thread ends (2026-10-14: the same gap grew MasterDeck to gigabytes in the icon reader).
 int mh_appvol_set(const char *key, const char *needles, int others, float gain) {
     @autoreleasepool {
         return appvol_set(key, needles, others, gain);

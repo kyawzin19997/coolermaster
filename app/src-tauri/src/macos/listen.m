@@ -55,11 +55,11 @@ static int start(double *rate, int *channels) API_AVAILABLE(macos(14.2)) {
     stop();
     NSString *output = default_output();
     if (!output) return 4;
-    // the class by name: a direct reference would stop HubDeck from starting on macOS 12 and 13
+    // the class by name: a direct reference would stop MasterDeck from starting on macOS 12 and 13
     Class tapClass = NSClassFromString(@"CATapDescription");
     if (!tapClass) return 2;
     CATapDescription *d = [[tapClass alloc] initStereoGlobalTapButExcludeProcesses:@[]];
-    d.name = @"HubDeck lights to the music";
+    d.name = @"MasterDeck lights to the music";
     d.privateTap = YES;
     d.muteBehavior = CATapUnmuted;
     if (AudioHardwareCreateProcessTap(d, &tap_id) != noErr || !tap_id) {
@@ -74,7 +74,7 @@ static int start(double *rate, int *channels) API_AVAILABLE(macos(14.2)) {
         return 7;
     }
     NSDictionary *agg = @{
-        @kAudioAggregateDeviceNameKey : @"HubDeck lights to the music",
+        @kAudioAggregateDeviceNameKey : @"MasterDeck lights to the music",
         @kAudioAggregateDeviceUIDKey : [NSUUID UUID].UUIDString,
         @kAudioAggregateDeviceMainSubDeviceKey : output,
         @kAudioAggregateDeviceIsPrivateKey : @YES,

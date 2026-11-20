@@ -584,7 +584,7 @@ pub fn personal_tour(app: &AppHandle, polish: bool) -> Result<String, String> {
     super::demo::set_language(if polish { "pl" } else { "en" });
     let mut p = super::demo::discover();
     p.id = uuid::Uuid::new_v4().to_string();
-    p.name = if polish { "Twoja wycieczka po HubDecku".into() } else { "Your MasterDeck tour".into() };
+    p.name = if polish { "Twoja wycieczka po MasterDecku".into() } else { "Your MasterDeck tour".into() };
     let launch = |target: &str, label: &str, image: Option<String>| -> super::profile::Binding {
         let short: String = label.chars().take(12).collect();
         serde_json::from_value(json!({"action": "core.launch", "params": {"target": target}, "look": {"label": short, "image": image}})).unwrap_or_else(|_| super::profile::Binding {

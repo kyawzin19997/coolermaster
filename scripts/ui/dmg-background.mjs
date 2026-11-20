@@ -4,7 +4,7 @@
 //
 //   node scripts/ui/dmg-background.mjs
 import { chromium } from 'playwright-core';
-import { execFileSync } from 'node:child_process';
+import { crc32 } from 'node:zlib';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -33,7 +33,21 @@ const browser = await chromium.launch({ executablePath: findChromium(), headless
 const page = await browser.newPage({ viewport: { width: 720, height: 610 }, deviceScaleFactor: 2 });
 await page.goto(pathToFileURL(path.join(dir, 'background.html')).href);
 await page.evaluate(() => document.fonts.ready);
-await page.screenshot({ path: out });
+const png = await page.screenshot();
 await browser.close();
-execFileSync('sips', ['-s', 'dpiWidth', '144', '-s', 'dpiHeight', '144', out], { stdio: 'ignore' });
+// Record pixels per meter immediately after IHDR so Finder displays the Retina asset at 720×610.
+const physicalSize = Buffer.alloc(21);
+physicalSize.writeUInt32BE(9);
+physicalSize.write('pHYs', 4);
+physicalSize.writeUInt32BE(5669, 8);
+physicalSize.writeUInt32BE(5669, 12);
+physicalSize[16] = 1;
+physicalSize.writeUInt32BE(crc32(physicalSize.subarray(4, 17)), 17);
+const chunks = [png.subarray(0, 33), physicalSize];
+for (let offset = 33; offset < png.length;) {
+  const next = offset + 12 + png.readUInt32BE(offset);
+  if (png.toString('ascii', offset + 4, offset + 8) !== 'pHYs') chunks.push(png.subarray(offset, next));
+  offset = next;
+}
+fs.writeFileSync(out, Buffer.concat(chunks));
 console.log(`wrote ${out}`);
