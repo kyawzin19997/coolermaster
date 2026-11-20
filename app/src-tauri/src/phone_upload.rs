@@ -122,7 +122,7 @@ fn lan_ip() -> Option<Ipv4Addr> {
     });
     route.or_else(|| {
         let networks = sysinfo::Networks::new_with_refreshed_list();
-        networks.iter().flat_map(|(_, data)| data.ip_networks()).find_map(|net| match net.addr {
+        networks.values().flat_map(|data| data.ip_networks()).find_map(|net| match net.addr {
             IpAddr::V4(ip) if ip.is_private() => Some(ip),
             _ => None,
         })

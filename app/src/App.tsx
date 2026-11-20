@@ -27,7 +27,6 @@ import { useEditing } from "./editing";
 import { BUILT_IN_LANGUAGES, setLanguage, storedLanguageFile, t, useLanguage, type Key } from "./i18n";
 import { demoParam } from "./demo/params";
 import { askInWindow, open, told } from "./confirm";
-import { invoke } from "@tauri-apps/api/core";
 
 const Builder = lazy(() => import("./components/Builder").then(({ Builder }) => ({ default: Builder })));
 const DeckLook = lazy(() => import("./components/DeckLook").then(({ DeckLook }) => ({ default: DeckLook })));
