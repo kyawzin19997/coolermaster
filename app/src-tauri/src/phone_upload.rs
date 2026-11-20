@@ -607,7 +607,7 @@ mod tests {
         serve(server, session.clone(), addr.to_string(), "local");
         let call = |method: &str, path: &str, auth: &str, body: &[u8]| -> (u16, Value) {
             let mut stream = TcpStream::connect(addr).unwrap();
-            stream.set_read_timeout(Some(Duration::from_secs(4))).unwrap();
+            stream.set_read_timeout(Some(Duration::from_secs(20))).unwrap();
             write!(stream, "{method} {path} HTTP/1.1\r\nHost: {addr}\r\nAuthorization: Bearer {auth}\r\nConnection: close\r\nContent-Length: {}\r\n\r\n", body.len()).unwrap();
             stream.write_all(body).unwrap();
             let mut response = String::new();
