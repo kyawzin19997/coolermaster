@@ -2,7 +2,7 @@
 
 MasterDeck is a desktop editor for the Cooler Master MasterHUB. Build a workspace around the keys, dial, knobs, faders, and rollers you have. Assign actions, set up profiles for different apps, and see your changes on the deck preview as you work.
 
-[**Download for Windows (.exe)**](https://github.com/kyawzin19997/coolermaster/releases/latest/download/MasterDeck-windows-x64-setup.exe) · [Download for macOS (.dmg)](https://github.com/kyawzin19997/coolermaster/releases/download/v1.2.4/MasterDeck-macOS-Universal.dmg) · [All releases](https://github.com/kyawzin19997/coolermaster/releases)
+[**Download for Windows (.exe)**](https://github.com/kyawzin19997/coolermaster/releases/latest/download/MasterDeck-windows-x64-setup.exe) · [Download for macOS (.dmg)](https://github.com/kyawzin19997/coolermaster/releases/download/v1.3.3/MasterDeck-macOS-Universal.dmg) · [All releases](https://github.com/kyawzin19997/coolermaster/releases)
 
 ![MasterDeck desktop app showing the MasterHUB preview, Key Settings, and the Actions list](docs/images/masterdeck-workspace.png)
 
@@ -17,7 +17,7 @@ Quit the official MasterHUB app before connecting the hardware. One application 
 
 1. Open **Deck tools → Getting Started** for guided lessons beside the live deck. **Your Deck, Your Modules** explains what each kind of control can do and opens the layout editor.
 2. Open **Profiles** to choose a starter layout or create your own. Click **+** by the page tabs to add a page. Drag **Switch profile** from the Actions panel to a key to jump between profiles.
-3. Drag an action onto a key. To assign another gesture, select the key and drag onto **Hold** or **Double press** in **Key Settings**. Open **Appearance** to change the key’s face.
+3. Drag an action onto a key. Dropping a different action replaces the key’s icon and keeps its colors and styling. To assign another gesture, select the key and drag onto **Hold** or **Double press** in **Key Settings**. Open **Appearance** to change the key’s face.
 4. To reuse a key, right-click and choose **Copy key**, then **Paste key** on the destination. You can also use Ctrl+C and Ctrl+V on Windows, or Cmd+C and Cmd+V on macOS.
 5. Open **Deck tools → Lights and screens** beside the deck preview. Use **Settings → Connections** for OBS Studio, Spotify, Twitch, Streamlabs, and Home Assistant.
 
