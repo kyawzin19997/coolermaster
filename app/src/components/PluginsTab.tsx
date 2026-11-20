@@ -3,7 +3,7 @@ import { api, markPluginNew, type CatalogPlugin, type PluginInfo } from "../engi
 import { listen } from "@tauri-apps/api/event";
 import { localizeError, t, useLanguage, type Key } from "../i18n";
 import { Icon } from "./Icon";
-import { askUninstall } from "./Panels";
+import { AppPageHeader, askUninstall } from "./Panels";
 
 /** The system this window runs on, as the catalog names systems. */
 const HERE = typeof navigator !== "undefined" && /Mac/i.test(navigator.platform || navigator.userAgent) ? "macOS" : "Windows";
@@ -79,17 +79,12 @@ export function PluginsTab({ onClose, onManage, onPickFile, onPhone, onUse }: { 
   const toggleSource = (s: string) => setSources((now) => (now.has(s) ? new Set([...now].filter((x) => x !== s)) : new Set([...now, s])));
   return (
     <div className="settings-page plugins-tab">
-      <header className="settings-head">
-        <button className="tool ghost" onClick={onClose}>
-          <Icon name="chevron-left" />
-          {t("settings.back")}
-        </button>
-        <h2>{t("plugins.catalog")}</h2>
+      <AppPageHeader title={t("plugins.catalog")} onClose={onClose}>
         <span className="grow" />
         <button type="button" className="tool" onClick={onPhone}>{t("phone.title")}</button>
         <button type="button" className="tool" onClick={onManage}>{t("plugins.installedTitle")}</button>
         <button type="button" className="tool primary" onClick={onPickFile}><Icon name="upload" />{t("plugins.installFile")}</button>
-      </header>
+      </AppPageHeader>
       <div className="settings-body">
         <aside className="settings-nav plugins-filters" aria-label={t("pluginsTab.filters")}>
           <fieldset>

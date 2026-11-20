@@ -3423,7 +3423,7 @@ button.chip.is-active {
   padding: 12px 18px;
   border-bottom: 1px solid var(--ln);
 }
-.settings-head h2 {
+.settings-head :is(h1, h2) {
   margin: 0;
   font-size: 19px;
   font-weight: 600;

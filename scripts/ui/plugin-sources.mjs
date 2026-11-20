@@ -2,7 +2,7 @@
 // zainstalowanie pluginow z elgato"). On a test copy of its own (virtual modules, never the focus):
 //   1. started with a plugin file as a double click starts it: the window asks, Install installs it;
 //   2. a file encrypted for Elgato's app says so and offers no Install;
-//   3. Settings > Plugins lists the Stream Deck app's readable plugins (when it is installed), the
+//   3. Plugins lists the Stream Deck app's readable plugins (when it is installed), the
 //      encrypted ones as one line (owner's 5a, 2026-10-18), and "Use in MasterDeck" copies one;
 //   4. the Plugins tab (owner's pick A, 2026-10-18): Elgato Marketplace, OpenAction and GitHub with
 //      counts, nothing only Elgato's app installs, the filters and the sort do what they say, a
@@ -117,13 +117,12 @@ try {
     // installed on this PC, a readable one, and its tutorial)
     const sd = await invoke("sd_stream_deck");
     console.log("     Stream Deck app's plugins:", sd.map((p) => `${p.id}${p.problem ? ` [${p.problem}]` : ""}`).join("; ") || "none");
-    await page.getByRole("button", { name: /^Settings$/ }).first().click();
-    await page.locator(".settings-nav-item", { hasText: "Plugins" }).click();
+    await page.locator(".topbar").getByRole("button", { name: "Plugins", exact: true }).click();
     await sleep(800);
     if (sd.length) {
       const section = page.locator("section.sec", { hasText: "Plugins from the Stream Deck app" });
       await section.waitFor({ timeout: 5000 }).catch(() => {});
-      check("Settings > Plugins lists the Stream Deck app's plugins", (await section.count()) === 1);
+      check("Plugins lists the Stream Deck app's plugins", (await section.count()) === 1);
       const enc = sd.filter((p) => p.problem?.includes("encrypted"));
       const sectionText = (await section.textContent()) ?? "";
       if (enc.length) check("encrypted ones are one line, not cards", enc.every((p) => !sectionText.includes(p.id) && !sectionText.includes(p.name)) && /more from the Stream Deck app: Elgato encrypted/.test(sectionText), sectionText.slice(-160));

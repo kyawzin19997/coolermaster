@@ -57,7 +57,7 @@ const inField = (e: KeyboardEvent) => {
  * control's bindings (press, hold and double press), Delete to clear it, Ctrl+Z to undo the last
  * change to the profile.
  */
-export function useEditing(view: EngineView, selected: ControlRef | null, notify: (text: string) => void, flush: () => Promise<void> | undefined) {
+export function useEditing(view: EngineView, selected: ControlRef | null, notify: (text: string) => void, flush: () => Promise<void> | undefined, shortcutsEnabled: boolean) {
   const clipboard = useRef<CopiedControl | null>(null);
   const copying = useRef<Promise<void> | undefined>(undefined);
   const history = useRef<Profile[]>([]);
@@ -95,8 +95,8 @@ export function useEditing(view: EngineView, selected: ControlRef | null, notify
   // the key handler reads what is selected and shown at the moment of the key press: a handler
   // made at an earlier render copied the key selected before, or pasted over a change the window
   // had not heard of yet (8bitcanvascode, Discussions #3, 2026-10-19)
-  const now = useRef({ view, selected, page, notify, flush });
-  now.current = { view, selected, page, notify, flush };
+  const now = useRef({ view, selected, page, notify, flush, shortcutsEnabled });
+  now.current = { view, selected, page, notify, flush, shortcutsEnabled };
 
   const gestureIds = (c: ControlRef, page: string | null) => Object.fromEntries(GESTURES.map((g) => [g, controlId(c.kind, c.index, page, g)])) as Record<Gesture, string>;
 
@@ -197,8 +197,8 @@ export function useEditing(view: EngineView, selected: ControlRef | null, notify
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      const { view, selected, notify } = now.current;
-      if (inField(e) || !view.profile) return;
+      const { view, selected, notify, shortcutsEnabled } = now.current;
+      if (!shortcutsEnabled || inField(e) || !view.profile) return;
       const mod = e.ctrlKey || e.metaKey;
       const key = e.key.toLowerCase();
       if (mod && key === "z") {

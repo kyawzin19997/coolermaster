@@ -16,7 +16,10 @@ import { DeckView } from "./components/DeckView";
 import { Inspector, type InspectorHandle } from "./components/Inspector";
 import { ActionLibrary } from "./components/ActionChooser";
 import type { DeckDisplaySection, SettingsSection } from "./components/Panels";
-import { ArrangePanel, Notifications, ControlMenu, BaseTurnPicker, DeckDisplayPanel, DeckTools, ForAppPanel, GamesPanel, LeftPanel, PageBar, PluginFileSheet, ProfilePanel, SettingsPanel, Sheet, TopBar, keepImported } from "./components/Panels";
+import {
+  AppPageHeader, ArrangePanel, BaseTurnPicker, ControlMenu, DeckDisplayPanel, DeckTools, ForAppPanel, GamesPanel,
+  LeftPanel, Notifications, PageBar, PluginFileSheet, PluginsPage, ProfilePanel, SettingsPage, Sheet, TopBar, UpdatesPage, keepImported,
+} from "./components/Panels";
 import { PhoneUpload } from "./components/PhoneUpload";
 import { listen } from "@tauri-apps/api/event";
 import { askAssistant } from "./components/Assistant";
@@ -36,11 +39,12 @@ const KeyStudio = lazy(() => import("./components/KeyStudio").then(({ KeyStudio 
 const PluginsTab = lazy(() => import("./components/PluginsTab").then(({ PluginsTab }) => ({ default: PluginsTab })));
 const Tour = lazy(() => import("./components/Tour").then(({ Tour }) => ({ default: Tour })));
 
-// `?demo&panel=profile|settings|plugins|calibrate` opens a side panel at start (screenshots)
+// `?demo&panel=profile|settings|plugins|catalog|updates|calibrate` opens a view at start (screenshots)
 const DEMO_PANEL = demoParam("panel");
 // `&select=keys.6` (or `dial`, `knobs.1`...) selects that control at start
 const DEMO_SELECT = demoParam("select");
 type PluginFile = { path: string; update?: { id: string; name: string } };
+type AppPage = "settings" | "plugins" | "catalog" | "updates";
 
 export default function App() {
   const { lang } = useLanguage();
@@ -84,12 +88,13 @@ export default function App() {
   const [profileOpen, setProfileOpen] = useState(DEMO_PANEL === "profile");
   const [calibrating, setCalibrating] = useState(DEMO_PANEL === "calibrate");
   const [gamesOpen, setGamesOpen] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(DEMO_PANEL === "settings" || DEMO_PANEL === "plugins");
+  const [appPage, setAppPage] = useState<AppPage | null>(
+    DEMO_PANEL === "settings" || DEMO_PANEL === "plugins" || DEMO_PANEL === "catalog" || DEMO_PANEL === "updates" ? DEMO_PANEL : null,
+  );
   // the full key editor, on one key (owner's "2 a", 2026-10-25)
   const [studio, setStudio] = useState<string | null>(null);
-  const [settingsSection, setSettingsSection] = useState<SettingsSection>(DEMO_PANEL === "plugins" ? "plugins" : "general");
+  const [settingsSection, setSettingsSection] = useState<SettingsSection>("general");
   const [updateCheckRequest, setUpdateCheckRequest] = useState(0);
-  const [pluginsOpen, setPluginsOpen] = useState(DEMO_PANEL === "catalog");
   // "Use it" in the Plugins tab: the deck, with the library open at that plugin's actions
   const [focusPlugin, setFocusPlugin] = useState<{ id: string; at: number } | null>(null);
 
@@ -107,7 +112,7 @@ export default function App() {
     window.clearTimeout(toastTimer.current);
     toastTimer.current = window.setTimeout(() => setToast(null), ms);
   }, []);
-  const { dropAction, moveKey, openControl, copy, paste, pasteLook, clear, isSet, canPaste, opensPage } = useEditing(view, selected, notify, () => inspector.current?.flush());
+  const { dropAction, moveKey, openControl, copy, paste, pasteLook, clear, isSet, canPaste, opensPage } = useEditing(view, selected, notify, () => inspector.current?.flush(), appPage === null);
   // a ready-made profile tried and left without Add (Back, or another profile picked) is thrown away
   const tried = useRef<string | null>(null);
   useEffect(() => {
@@ -152,8 +157,7 @@ export default function App() {
       if (await keepImported(imported)) {
         await api.activate(imported.id);
         closePhone();
-        setSettingsOpen(false);
-        setPluginsOpen(false);
+        setAppPage(null);
       }
     } else if (kind === "icons") {
       const pack = await iconPacks.install(path);
@@ -168,18 +172,8 @@ export default function App() {
       void told(t("plugins.pickFailed"));
     }
   };
-  const openInstalledPlugins = () => {
-    setPluginsOpen(false);
-    setGamesOpen(false);
-    setForAppOpen(false);
-    setLivingOpen(false);
-    setProfileOpen(false);
-    setStudio(null);
-    openSettings("plugins");
-  };
   const usePlugin = (id: string) => {
-    setPluginsOpen(false);
-    setSettingsOpen(false);
+    setAppPage(null);
     setStudio(null);
     setSelected(null);
     setFocusPlugin({ id, at: Date.now() });
@@ -245,7 +239,6 @@ export default function App() {
   const setupPending = !!view.state && !view.state.onboarded;
 
   const closeTools = () => {
-    setSettingsOpen(false);
     setDisplayPanel(null);
     setGuide(null);
   };
@@ -253,15 +246,20 @@ export default function App() {
     closeTools();
     setDisplayPanel(section);
   };
-  const openSettings = (section?: SettingsSection) => {
-    closeTools();
+  const closeAppPage = () => setAppPage(null);
+  const openAppPage = (page: AppPage) => {
+    setAppPage(page);
     setProfileOpen(false);
     setForAppOpen(false);
     setGamesOpen(false);
-    setPluginsOpen(false);
-    setUpdateCheckRequest(0);
+    setStudio(null);
+    setLivingOpen(false);
+    setCtlMenu(null);
+  };
+  const openInstalledPlugins = () => openAppPage("plugins");
+  const openSettings = (section?: SettingsSection) => {
     if (section) setSettingsSection(section);
-    setSettingsOpen(true);
+    openAppPage("settings");
   };
   const openGuide = (kind: GuideKind) => {
     closeTools();
@@ -331,20 +329,20 @@ export default function App() {
         newRequest={newRequest}
         live={live}
         view={view}
-        onOpenProfile={() => (setProfileOpen((o) => !o), setSettingsOpen(false))}
+        onOpenProfile={() => (setProfileOpen((o) => !o), closeAppPage())}
 
-        onOpenForApp={() => (setForAppOpen(true), setSettingsOpen(false), setProfileOpen(false))}
+        onOpenForApp={() => (setForAppOpen(true), closeAppPage(), setProfileOpen(false))}
         onOpenProfileLibrary={() => setProfileLibrary("profiles")}
         onOpenAssistant={() => setProfileLibrary("assistant")}
-        onOpenTour={() => openGuide("start")}
+        onOpenTour={() => (closeAppPage(), openGuide("start"))}
         setupPending={setupPending && !guide && !tourOpen && !builderOpen}
-        onOpenSettings={() => settingsOpen ? closeTools() : openSettings()}
-        onCheckUpdates={tourShown || builderOpen || calibrating || arranging || studio ? undefined : () => {
-          openSettings("updates");
+        onOpenSettings={() => appPage === "settings" ? closeAppPage() : openSettings()}
+        onCheckUpdates={!appPage && (tourShown || builderOpen || calibrating || arranging || studio) ? undefined : () => {
+          openAppPage("updates");
           setUpdateCheckRequest((n) => n + 1);
         }}
-        onOpenPlugins={() => settingsOpen && settingsSection === "plugins" ? setSettingsOpen(false) : openInstalledPlugins()}
-        onOpenGames={() => (setGamesOpen((o) => !o), setSettingsOpen(false))}
+        onOpenPlugins={() => appPage === "plugins" || appPage === "catalog" ? closeAppPage() : openInstalledPlugins()}
+        onOpenGames={() => (setGamesOpen((o) => !o), closeAppPage())}
       />
       <Notifications
         live={live}
@@ -375,7 +373,7 @@ export default function App() {
           )}
         {toast && <Notice key={toast} onDismiss={() => setToast(null)}><span className="grow">{toast}</span></Notice>}
       </Notifications>
-      <main className={`workspace deck-workspace stable-workspace${arranging ? " is-arranging" : ""}`}>
+      <main className={`workspace deck-workspace stable-workspace${arranging ? " is-arranging" : ""}`} hidden={appPage !== null}>
         <section className="center">
           <div className="workbench-title">
             <h1>MasterHUB</h1>
@@ -450,12 +448,12 @@ export default function App() {
         </section>
 
         <section className="workspace-details" aria-label={t("workshop.editKey")}>
-          {!arranging && !calibrating && (settingsOpen || displayPanel || guide) && (
+          {!arranging && !calibrating && (displayPanel || guide) && (
             <div className="workspace-details-nav">
               <button type="button" className="tool ghost small" onClick={closeTools}><Icon name="chevron-left" />{t("workshop.editKey")}</button>
             </div>
           )}
-          <div className="workspace-key-pane" hidden={!!(arranging || calibrating || settingsOpen || displayPanel || guide)}>
+          <div className="workspace-key-pane" hidden={!!(arranging || calibrating || displayPanel || guide)}>
             {selected ? (
               <Inspector ref={inspector} selected={selected} view={view} onClose={() => setSelected(null)}
                 onDropAction={(control, action, gesture) => dropAction(control, action, gesture, () => inspector.current?.flush())}
@@ -470,13 +468,7 @@ export default function App() {
           </div>
           {calibrating ? <CalibrationPanel onClose={() => setCalibrating(false)} /> :
            arranging ? <ArrangePanel onDone={toggleArrange} live={live} saved={saved} onPlace={save} /> :
-           settingsOpen ? (
-            <SettingsPanel live={live} view={view} section={settingsSection} updateCheckRequest={updateCheckRequest}
-              onSection={(section) => { setUpdateCheckRequest(0); setSettingsSection(section); }}
-              onClose={closeTools} onBrowsePlugins={() => { setPluginsOpen(true); setSettingsOpen(false); }}
-              onPickPlugin={choosePlugin} onPhone={() => setPhoneOpen(true)} onUsePlugin={usePlugin}
-            />
-          ) : displayPanel ? (
+           displayPanel ? (
             <DeckDisplayPanel live={live} view={view} section={displayPanel} setSection={setDisplayPanel} onClose={closeTools}
               onCalibrate={() => { setDisplayPanel(null); setCalibrating(true); }} onOpenScenes={() => setLivingOpen(true)}
             />
@@ -498,6 +490,23 @@ export default function App() {
           <ActionLibrary catalog={view.catalog} icons={view.icons} selectedKind={selected?.kind} focusPlugin={focusPlugin} disabled={arranging || calibrating} onOpenPlugins={openInstalledPlugins} />
         </div>
       </main>
+      {appPage && (
+        <main className="workspace app-page" aria-labelledby="app-page-title">
+          {appPage === "settings" && <SettingsPage live={live} view={view} section={settingsSection} onSection={setSettingsSection} onClose={closeAppPage} />}
+          {appPage === "plugins" && <PluginsPage onClose={closeAppPage} onBrowse={() => setAppPage("catalog")} onPickFile={choosePlugin} onPhone={() => setPhoneOpen(true)} onUse={usePlugin} />}
+          {appPage === "catalog" && (
+            <Suspense fallback={
+              <div className="settings-page">
+                <AppPageHeader title={t("plugins.catalog")} onClose={closeAppPage} />
+                <div className="settings-content workspace-loading" role="status">{t("app.loadingPanel")}</div>
+              </div>
+            }>
+              <PluginsTab onClose={closeAppPage} onManage={openInstalledPlugins} onPickFile={choosePlugin} onPhone={() => setPhoneOpen(true)} onUse={usePlugin} />
+            </Suspense>
+          )}
+          {appPage === "updates" && <UpdatesPage checkRequest={updateCheckRequest} onClose={closeAppPage} />}
+        </main>
+      )}
       <Suspense fallback={null}>
         {tourShown && (
           <Sheet wide label={t("workshop.personalize")} onClose={() => setTourOpen(false)}>
@@ -510,9 +519,6 @@ export default function App() {
         )}
         {builderOpen && <Sheet wide label={t("builder.title")} onClose={() => setBuilderOpen(false)}>
           <Builder live={live} view={view} saved={saved} onPlace={save} onClose={() => setBuilderOpen(false)} />
-        </Sheet>}
-        {pluginsOpen && <Sheet wide label={t("topbar.plugins")} onClose={() => setPluginsOpen(false)}>
-          <PluginsTab onClose={() => setPluginsOpen(false)} onManage={openInstalledPlugins} onPickFile={choosePlugin} onPhone={() => setPhoneOpen(true)} onUse={usePlugin} />
         </Sheet>}
         {studio && <Sheet wide label={t("workshop.editKey")} onClose={() => setStudio(null)}>
           <KeyStudio key={`${view.profile?.id}/${studio}`} view={view} control={studio} onClose={() => setStudio(null)} />
@@ -540,7 +546,7 @@ export default function App() {
               onBuild={() => (setProfileLibrary(null), setBuilderOpen(true))}
               onTour={() => (setProfileLibrary(null), setTourOpen(true))}
               onNewProfile={() => (setProfileLibrary(null), setNewRequest((n) => n + 1))}
-              onOpenProfile={() => (setProfileLibrary(null), setProfileOpen(true), setSettingsOpen(false), setForAppOpen(false))}
+              onOpenProfile={() => (setProfileLibrary(null), setProfileOpen(true), closeAppPage(), setForAppOpen(false))}
             />
           </div>
         </Sheet>

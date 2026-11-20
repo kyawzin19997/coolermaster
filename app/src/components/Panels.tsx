@@ -2196,59 +2196,56 @@ export function ProfilePanel({ view, onClose }: { view: EngineView; onClose: () 
   );
 }
 
-/** Settings of the whole app: language, look, screens, profiles folder, backups, connections, updates, help, about. */
-export type SettingsSection = "general" | "text" | "connections" | "plugins" | "backups" | "updates" | "diagnostics";
+export type SettingsSection = "general" | "text" | "connections" | "backups" | "diagnostics";
 
 const SETTINGS_GROUPS: { label: Key; sections: [SettingsSection, Key][] }[] = [
-  { label: "workshop.settings.app", sections: [["general", "settings.general"], ["text", "settings.text"], ["updates", "updates.title"]] },
-  { label: "workshop.settings.connections", sections: [["connections", "settings.connections"], ["plugins", "topbar.plugins"]] },
+  { label: "workshop.settings.app", sections: [["general", "settings.general"], ["text", "settings.text"]] },
+  { label: "workshop.settings.connections", sections: [["connections", "settings.connections"]] },
   { label: "workshop.settings.maintenance", sections: [["backups", "settings.backups"], ["diagnostics", "diag.title"]] },
 ];
 
-export function SettingsPanel({ live, view, section, updateCheckRequest, onSection, onClose, onBrowsePlugins, onPickPlugin, onPhone, onUsePlugin }: {
+export function AppPageHeader({ title, onClose, children }: { title: string; onClose: () => void; children?: React.ReactNode }) {
+  return (
+    <header className="settings-head">
+      <button type="button" className="tool ghost" onClick={onClose}>
+        <Icon name="chevron-left" />{t("settings.back")}
+      </button>
+      <h1 id="app-page-title">{title}</h1>
+      {children}
+    </header>
+  );
+}
+
+export function SettingsPage({ live, view, section, onSection, onClose }: {
   live: LiveState;
   view: EngineView;
   section: SettingsSection;
-  updateCheckRequest: number;
   onSection: (section: SettingsSection) => void;
   onClose: () => void;
-  onBrowsePlugins: () => void;
-  onPickPlugin: (update?: { id: string; name: string }) => void;
-  onPhone: () => void;
-  onUsePlugin: (id: string) => void;
 }) {
   useLanguage();
   return (
-    <div className="settings-page">
-      <header className="settings-head workspace-pane-head">
-        <h2>{t("settings.title")}</h2>
-        <button type="button" className="icon-btn" onClick={onClose} aria-label={t("settings.back")}><Icon name="x" /></button>
-      </header>
-      <div className="settings-section-picker">
-        <label className="field">
-          <span className="sr-only">{t("workshop.settings.section")}</span>
-          <select className="input" value={section} onChange={(event) => onSection(event.target.value as SettingsSection)}>
-            {SETTINGS_GROUPS.map((group) => <optgroup key={group.label} label={t(group.label)}>
-              {group.sections.map(([id, label]) => <option key={id} value={id}>{t(label)}</option>)}
-            </optgroup>)}
-          </select>
-        </label>
-      </div>
-      <div className="settings-content sectioned" key={section}>
-        {section === "general" && (
-          <>
-            <Appearance />
-            <LanguageSettings />
-            <StartupSettings />
-            <SwitchingSettings view={view} />
-          </>
-        )}
-        {section === "text" && <DeckTextSettings />}
-        {section === "connections" && <Connections />}
-        {section === "plugins" && <PluginsList onBrowse={onBrowsePlugins} onPickFile={onPickPlugin} onPhone={onPhone} onUse={onUsePlugin} />}
-        {section === "backups" && <><Backups /><ProfilesFolder /></>}
-        {section === "updates" && <UpdatesSettings checkRequest={updateCheckRequest} />}
-        {section === "diagnostics" && <DiagnosticsSettings live={live} />}
+    <div className="settings-page app-settings-page">
+      <AppPageHeader title={t("settings.title")} onClose={onClose} />
+      <div className="settings-body">
+        <nav className="settings-nav" aria-label={t("workshop.settings.section")}>
+          {SETTINGS_GROUPS.map((group) => (
+            <div className="settings-nav-group" key={group.label} role="group" aria-label={t(group.label)}>
+              {group.sections.map(([id, label]) => (
+                <button key={id} type="button" className={`settings-nav-item${id === section ? " is-active" : ""}`} aria-current={id === section ? "page" : undefined} onClick={() => onSection(id)}>
+                  {t(label)}
+                </button>
+              ))}
+            </div>
+          ))}
+        </nav>
+        <div className="settings-content sectioned" key={section}>
+          {section === "general" && <><Appearance /><LanguageSettings /><StartupSettings /><SwitchingSettings view={view} /></>}
+          {section === "text" && <DeckTextSettings />}
+          {section === "connections" && <Connections />}
+          {section === "backups" && <><Backups /><ProfilesFolder /></>}
+          {section === "diagnostics" && <DiagnosticsSettings live={live} />}
+        </div>
       </div>
     </div>
   );
@@ -2590,6 +2587,15 @@ function UpdateCard({ info }: { info: UpdateInfo }) {
 }
 
 /** Look for a new version at start or now; install only on request. */
+export function UpdatesPage({ checkRequest, onClose }: { checkRequest: number; onClose: () => void }) {
+  return (
+    <div className="settings-page updates-page">
+      <AppPageHeader title={t("updates.title")} onClose={onClose} />
+      <div className="settings-content sectioned"><UpdatesSettings checkRequest={checkRequest} /></div>
+    </div>
+  );
+}
+
 function UpdatesSettings({ checkRequest }: { checkRequest: number }) {
   useLanguage();
   const version = useAppVersion();
@@ -2616,14 +2622,12 @@ function UpdatesSettings({ checkRequest }: { checkRequest: number }) {
   if (!enabled)
     return (
       <section className="sec">
-        <h3 className="sec-title">{t("updates.title")}</h3>
         {version && <p className="help">MasterDeck {version}</p>}
         <p className="help">{t("updates.notSetUp")}</p>
       </section>
     );
   return (
     <section className="sec">
-      <h3 className="sec-title">{t("updates.title")}</h3>
       {version && <p className="help">MasterDeck {version}</p>}
       <label className="check">
         <input
@@ -3839,13 +3843,24 @@ function WheelChoices() {
   );
 }
 
-/** Installed plugins, foreground operations, and local sources. */
-function PluginsList({ onBrowse, onPickFile, onPhone, onUse }: {
+type PluginActions = {
   onBrowse: () => void;
   onPickFile: (update?: { id: string; name: string }) => void;
   onPhone: () => void;
   onUse: (id: string) => void;
-}) {
+};
+
+export function PluginsPage({ onClose, ...actions }: PluginActions & { onClose: () => void }) {
+  return (
+    <div className="settings-page plugins-page">
+      <AppPageHeader title={t("topbar.plugins")} onClose={onClose} />
+      <div className="settings-content sectioned"><PluginsList {...actions} /></div>
+    </div>
+  );
+}
+
+/** Installed plugins, foreground operations, and local sources. */
+function PluginsList({ onBrowse, onPickFile, onPhone, onUse }: PluginActions) {
   useLanguage();
   const [plugins, setPlugins] = useState<PluginInfo[] | null>(null);
   const [error, setError] = useState<string | null>(null);

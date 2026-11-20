@@ -83,11 +83,18 @@ for (const [label, viewport] of [['wide', { width: 1440, height: 900 }], ['half'
   await page.waitForSelector('.workspace-guide .workspace-pane-head', { timeout: 15000 });
   const deckStage = page.locator('.stable-workspace .dk-stage');
   const actionPane = page.locator('.stable-workspace .action-sidebar');
-  const settingsPicker = page.getByRole('combobox', { name: 'Settings section', exact: true });
+  const deckWorkspace = page.locator('main.stable-workspace');
+  const settingsPage = page.getByRole('main', { name: 'Settings', exact: true });
+  const settingsSection = name => settingsPage.getByRole('navigation').getByRole('button', { name, exact: true });
   const deckBox = await deckStage.boundingBox();
   const actionBox = await actionPane.boundingBox();
+  const workspaceBox = await deckWorkspace.boundingBox();
   const layoutStays = async () => JSON.stringify(await deckStage.boundingBox()) === JSON.stringify(deckBox) &&
     JSON.stringify(await actionPane.boundingBox()) === JSON.stringify(actionBox);
+  const hasOwnPage = async view => {
+    const box = await view.boundingBox();
+    return !!box && box.x === workspaceBox.x && box.width === workspaceBox.width && !await deckWorkspace.isVisible();
+  };
   const deckMenu = async (label) => {
     await page.getByRole('button', { name: 'Deck tools', exact: true }).click();
     await page.getByRole('menuitem', { name: label, exact: true }).click();
@@ -182,20 +189,20 @@ for (const [label, viewport] of [['wide', { width: 1440, height: 900 }], ['half'
     await page.waitForTimeout(300);
     return visible(page, '.control-inspector .trigger-slot');
   });
-  await step(page, `${label}: Settings opens beside the same deck and Actions`, async () => {
+  await step(page, `${label}: Settings opens as a separate page`, async () => {
     await page.getByRole('button', { name: /^Settings$/ }).first().click();
-    await page.waitForTimeout(300);
-    return (await visible(page, '.settings-page')) && await layoutStays();
+    return await hasOwnPage(settingsPage);
   });
-  await step(page, `${label}: Settings sections switch`, async () => {
-    for (const section of ['connections', 'plugins', 'backups', 'updates', 'diagnostics', 'general']) {
-      await settingsPicker.selectOption(section);
-      if (await settingsPicker.inputValue() !== section || !await layoutStays()) return `section ${section} moved the deck or did not open`;
+  await step(page, `${label}: Settings has its own section navigation`, async () => {
+    for (const section of ['Connections', 'Text on the deck', 'Backups', 'Diagnostics', 'General']) {
+      const item = settingsSection(section);
+      await item.click();
+      if (await item.getAttribute('aria-current') !== 'page') return `section ${section} did not open`;
     }
-    return true;
+    return await settingsSection('Plugins').count() === 0 && await settingsSection('Updates').count() === 0;
   });
   await step(page, `${label}: OBS defaults to automatic local connection`, async () => {
-    await settingsPicker.selectOption('connections');
+    await settingsSection('Connections').click();
     const obs = page.locator('.svc', { has: page.locator('summary .svc-name', { hasText: /^OBS Studio$/ }) });
     await obs.locator(':scope > summary').click();
     const auto = await obs.getByText('Automatic on this computer', { exact: true }).isVisible();
@@ -206,8 +213,7 @@ for (const [label, viewport] of [['wide', { width: 1440, height: 900 }], ['half'
   });
   await step(page, `${label}: Back to the deck`, async () => {
     await page.getByRole('button', { name: /Back to the deck/ }).click();
-    await page.waitForTimeout(300);
-    return (await visible(page, '.dk-ctl')) && !(await visible(page, '.settings-page'));
+    return await layoutStays() && !await settingsPage.isVisible();
   });
   await step(page, `${label}: Lights and screens open beside the deck from Deck tools`, async () => {
     await page.getByRole('button', { name: 'Deck tools', exact: true }).click();
@@ -287,17 +293,39 @@ for (const [label, viewport] of [['wide', { width: 1440, height: 900 }], ['half'
     return await search.inputValue() === 'multimedia';
   });
   await step(page, `${label}: Settings while a key is picked, then back to the same editor`, async () => {
+    const key = await deckStage.locator('.dk-ctl[aria-pressed="true"]').getAttribute('data-index');
+    const search = await actionPane.locator('#library-search').inputValue();
+    const action = deckWorkspace.locator('#action-name');
+    const originalAction = await action.getAttribute('data-action');
     await page.getByRole('button', { name: /^Settings$/ }).first().click();
-    await page.waitForTimeout(200);
+    await page.keyboard.press('Delete');
     await page.getByRole('button', { name: /Back to the deck/ }).click();
-    await page.waitForTimeout(250);
-    return visible(page, '.control-inspector .trigger-slot');
+    return await visible(page, '.control-inspector .trigger-slot') &&
+      await deckStage.locator('.dk-ctl[aria-pressed="true"]').getAttribute('data-index') === key &&
+      await action.getAttribute('data-action') === originalAction &&
+      await actionPane.locator('#library-search').inputValue() === search && await layoutStays();
+  });
+  await step(page, `${label}: Plugins and the catalog open independently of Settings`, async () => {
+    await page.locator('.topbar').getByRole('button', { name: 'Plugins', exact: true }).click();
+    const plugins = page.getByRole('main', { name: 'Plugins', exact: true });
+    if (!await hasOwnPage(plugins)) return 'Plugins did not open as a separate page';
+    await plugins.getByRole('button', { name: 'Install plugin', exact: true }).waitFor();
+    await plugins.getByRole('button', { name: 'Upload from Phone', exact: true }).waitFor();
+    await plugins.getByRole('button', { name: 'Browse plugins', exact: true }).click();
+    const catalog = page.getByRole('main', { name: 'Plugin catalog', exact: true });
+    await catalog.getByRole('searchbox', { name: 'Search plugins' }).waitFor();
+    if (!await hasOwnPage(catalog)) return 'The catalog did not open as a separate page';
+    await catalog.getByRole('button', { name: 'Installed plugins', exact: true }).click();
+    await plugins.getByRole('button', { name: 'Back to the deck', exact: true }).click();
+    return await layoutStays() && await visible(page, '.control-inspector .trigger-slot');
   });
   await step(page, `${label}: the toolbar checks for updates and offers installation`, async () => {
     await page.locator('.topbar-update').click();
-    await page.locator('.update-card').getByRole('button', { name: 'Install and restart', exact: true }).waitFor();
-    await page.getByRole('button', { name: /Back to the deck/ }).click();
-    return visible(page, '.stable-workspace .workspace-key-pane > .control-inspector');
+    const updates = page.getByRole('main', { name: 'Updates', exact: true });
+    await updates.getByRole('button', { name: 'Install and restart', exact: true }).waitFor();
+    if (!await hasOwnPage(updates)) return 'Updates did not open as a separate page';
+    await updates.getByRole('button', { name: 'Back to the deck', exact: true }).click();
+    return await layoutStays() && await visible(page, '.stable-workspace .workspace-key-pane > .control-inspector');
   });
   await step(page, `${label}: Deck Builder opens from Deck tools, a card can be picked, Back returns`, async () => {
     await page.getByRole('button', { name: 'Deck tools', exact: true }).click();

@@ -32,7 +32,7 @@ Status: **picked by the owner** (2026-10-16: "Zrób tak jak zalecasz" on the moc
 | T9 | Ask the assistant to build or change a deck | sometimes | Get started > AI assistant |
 | T10 | Move modules on the base | rarely | Edit layout |
 | T11 | Something is wrong (a module silent, a crash) | rarely | a banner, Settings > Help |
-| T12 | Keep and move settings, update | rarely | Settings > Backups, Updates |
+| T12 | Keep and move settings, update | rarely | Settings > Backups, Updates in the toolbar |
 
 ## The ideal path of each task
 

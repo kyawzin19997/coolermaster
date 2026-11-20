@@ -850,6 +850,11 @@
   grid-template-rows: minmax(0, 1fr);
   grid-template-areas: "deck details actions";
 }
+.stable-workspace[hidden] { display: none; }
+.app-page .settings-head { flex-wrap: wrap; column-gap: 14px; row-gap: 6px; }
+.settings-nav-group + .settings-nav-group { margin-top: 5px; padding-top: 7px; border-top: 1px solid var(--ln2); }
+.settings-nav-group .settings-nav-item { width: 100%; }
+.plugins-page .settings-content > .plugin-manager { max-width: 920px; }
 .stable-workspace > .center { grid-area: deck; min-width: 0; }
 .workspace-details {
   grid-area: details;
@@ -916,8 +921,6 @@
   padding: 8px 12px;
   border-top: 1px solid var(--ln2);
 }
-.settings-section-picker { flex: none; padding: 10px 12px; border-bottom: 1px solid var(--ln2); }
-.settings-content > .sec { padding-inline: 12px; }
 .settings-content { min-height: 0; }
 .sheet.sheet-wide { width: min(1260px, 100%); height: min(86vh, 870px); }
 .sheet-wide > * { min-width: 0; flex: 1; }

@@ -2,7 +2,7 @@
 // installed; the installed program is started as a test copy (scripts/automation.ps1's mode: its
 // window off-screen, never the focus, its own data, virtual modules; a tray app's hidden window
 // has no page to drive until it is opened), and the same commands the Install button of
-// Settings > Updates runs (`update_check`, `update_install`) download, verify and install the
+// Update commands (`update_check`, `update_install`) download, verify and install the
 // newest release over it. Then the real app starts as installed, out of this session's process
 // tree (a session that ends takes its children: docs/KNOWLEDGE.md), and must be the newest with
 // every module of the deck back. The click on the button itself is not part of this.

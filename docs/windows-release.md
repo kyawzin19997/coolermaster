@@ -67,7 +67,7 @@ The direct link becomes available after the first successful release. Each relea
 
 Repeat the same commands with an increasing version. Use `1.0.1` for a patch or `1.1.0` for new features. The workflow only publishes stable `vMAJOR.MINOR.PATCH` tags. Keep published tags and their assets immutable so existing links and updates continue to work.
 
-Select **Updates** in the toolbar to check immediately, or go to **Settings → Updates → Check for updates**. MasterDeck can check in the background with **Check for updates at start** enabled. The update goes ahead only when the user chooses **Install and restart**. Failed checks or downloads leave the running app in place. To exercise the full update path on a clean Windows machine, install the older EXE, open **Settings → Updates**, and choose **Install and restart**. To test offline behavior, disconnect first and use **Check for updates**.
+Select **Updates** in the toolbar to open the Updates page and check immediately. MasterDeck can check in the background with **Check for updates at start** enabled. The update goes ahead only when the user chooses **Install and restart**. Failed checks or downloads leave the running app in place. To exercise the full update path on a clean Windows machine, install the older EXE, open **Updates**, and choose **Install and restart**. To test offline behavior, disconnect first and use **Check for updates**.
 
 ## Windows code signing
 

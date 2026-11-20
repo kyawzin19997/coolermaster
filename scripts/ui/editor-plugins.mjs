@@ -85,7 +85,7 @@ try {
   await page.goto(`${url}?demo&plugin=invalid`);
   await page.locator(".topbar").getByRole("button", { name: "Plugins", exact: true }).click();
   await page.getByRole("button", { name: "Install plugin", exact: true }).click();
-  await review.getByRole("alert").getByText(/no \.sdPlugin folder/).waitFor();
+  await page.locator(".notification-stack").getByRole("alert").filter({ hasText: /no \.sdPlugin folder/ }).waitFor();
   assert.equal(await review.getByRole("button", { name: "Install", exact: true }).count(), 0);
   console.log("Invalid archives display an error and cannot be installed.");
 } finally {

@@ -1,4 +1,4 @@
-// Uninstalling a plugin from Settings > Plugins, as a user does (issue #8, sotomskir, 2026-10-23:
+// Uninstalling from the Plugins page, as a user does (issue #8, sotomskir, 2026-10-23:
 // "I installed some plugin that I don't need anymore, and I can't find a way to uninstall it").
 // A test copy of its own (the owner's profiles, virtual modules, no deck, never the focus) with a
 // small plugin on a key: Uninstall answered Cancel keeps it, answered Uninstall stops it, takes it
@@ -79,11 +79,10 @@ try {
   await sleep(2500);
   check("the plugin runs before", beats() > running, `${beats()} beats`);
 
-  await win.getByRole("button", { name: /^Settings$/ }).first().click();
-  await win.locator(".settings-nav-item", { hasText: "Plugins" }).click();
+  await win.locator(".topbar").getByRole("button", { name: "Plugins", exact: true }).click();
   await sleep(800);
-  const card = () => win.locator("li.card", { hasText: "Test uninstall" });
-  check("Settings > Plugins lists it", (await card().count()) === 1);
+  const card = () => win.locator(".installed-plugin", { hasText: "Test uninstall" });
+  check("Plugins lists it", (await card().count()) === 1);
   const button = card().getByRole("button", { name: "Uninstall" });
   check("its card has Uninstall", (await button.count()) === 1);
   if (shots) {
@@ -100,7 +99,7 @@ try {
     if (shots) await question.screenshot({ path: path.join(shots, "plugin-uninstall-question.png") });
     await win.keyboard.press("Escape");
     await sleep(500);
-    check("Escape closes the question, the settings stay open", (await question.count()) === 0 && (await card().count()) === 1);
+    check("Escape closes the question and keeps Plugins open", (await question.count()) === 0 && (await card().count()) === 1);
     await button.click();
     await sleep(800);
     await question.getByRole("button", { name: "Cancel" }).click();
