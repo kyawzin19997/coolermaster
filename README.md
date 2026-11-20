@@ -18,7 +18,11 @@ Quit the official MasterHUB app before connecting the hardware. One application 
 1. Open **Profiles** to choose a layout or create your own. Click **+** by the page tabs to add a page.
 2. Drag an action onto a key. To assign a second gesture, select the key and drag onto **Hold** or **Double press** in **Key Settings**. Open **Appearance** to change the key’s face.
 3. To reuse a key, right-click and choose **Copy key**, then **Paste key** on the destination. You can also use Ctrl+C and Ctrl+V on Windows, or Cmd+C and Cmd+V on macOS.
-4. Open **Lights and screens** in the toolbar for adjustments next to the preview. Open **Settings → Connections** to configure integrations such as OBS Studio, Spotify, Twitch, Streamlabs, and Home Assistant.
+4. Open **Deck tools → Lights and screens** for adjustments next to the deck preview. Open **Settings → Connections** to configure integrations such as OBS Studio, Spotify, Twitch, Streamlabs, and Home Assistant.
+
+## Set a screensaver
+
+Open **Deck tools → Screensaver**. Pick a built-in scene, use a deck look, or choose **Add screensaver** to import a GIF, WebP, PNG, or JPEG up to 15 MB. Set the idle delay and click **Preview** to see it across the keys. **Advanced settings** lets you apply a different screensaver to each profile and choose what the dial and lights do while it runs. MasterDeck keeps imported media on this computer. When moving a profile to another computer, add the image there and select it again.
 
 ## Use a profile on another deck
 

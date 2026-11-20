@@ -5,9 +5,8 @@ import { askInWindow, confirmed, open, save, told } from "../confirm";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import type { ControlRef, LiveState, ModuleKind } from "../deck";
-import { api, withUpright, type FrameCost, FX_OPTIONS, FX_TINT, fxName, GPU_KINDS, type FxKind, type FxLayer, SKIN_MOTION, type Skin, type Look, GAMES_ENABLED, pageReachable, setPreviewSalt, type AppInfo, type AppsState, type CrashReport, type LightSettings, LED_EFFECTS, METRICS, type EngineView, type GameSummary, type Imported, type Metric, type Moved, type PluginInfo, type LocalPlugin, type InstalledItem, type PresetSummary, type Profile, type ProfileSummary, type Screens, triedPresets, SAVER_SCENES, saverOf, knownScreens, SAVER_FROM_LOOK, saverPreset, PRESETS_HIDDEN, presetThumb, THEMES, themeTitle, layersOf } from "../engine";
+import { api, withUpright, type FrameCost, FX_OPTIONS, FX_TINT, fxName, GPU_KINDS, type FxKind, type FxLayer, SKIN_MOTION, type Skin, type Look, GAMES_ENABLED, pageReachable, setPreviewSalt, type AppInfo, type AppsState, type CrashReport, type LightSettings, LED_EFFECTS, METRICS, type EngineView, type GameSummary, type Imported, type Metric, type Moved, type PluginInfo, type LocalPlugin, type InstalledItem, type PresetSummary, type Profile, type ProfileSummary, type Screens, triedPresets, SAVER_SCENES, saverOf, knownScreens, screensChanged, saverEnd, useSaverShown, type CustomSaver, SAVER_FROM_LOOK, saverPreset, PRESETS_HIDDEN, THEMES, themeTitle, layersOf } from "../engine";
 import { Icon } from "./Icon";
-import { NoneThumb, Thumb } from "./Thumb";
 import { AssistantPanel, refreshNudge, useNudge, useSetUp } from "./Assistant";
 import { InstalledPicker, pickImage } from "./Inspector";
 import { ModuleThumb } from "./DeckView";
@@ -979,8 +978,6 @@ export function TopBar({
   onOpenProfile,
   onOpenProfileLibrary,
   onOpenSettings,
-  onOpenDisplay,
-  displayOpen,
   onCheckUpdates,
   onOpenPlugins,
   onOpenGames,
@@ -1001,8 +998,6 @@ export function TopBar({
   onOpenProfile: () => void;
   onOpenProfileLibrary: () => void;
   onOpenSettings: () => void;
-  onOpenDisplay?: () => void;
-  displayOpen: boolean;
   onCheckUpdates?: () => void;
   onOpenPlugins: () => void;
   onOpenGames: () => void;
@@ -1038,12 +1033,6 @@ export function TopBar({
           {t("topbar.games")}
         </button>
       )}
-      {onOpenDisplay && (
-        <button type="button" className={`tool ghost topbar-display${displayOpen ? " is-active" : ""}`} aria-pressed={displayOpen} aria-label={t("settings.lightsScreens")} title={t("settings.lightsScreens")} onClick={onOpenDisplay}>
-          <Icon name="sun" />
-          <span className="tb-label">{t("settings.lightsScreens")}</span>
-        </button>
-      )}
       <button className="tool ghost" onClick={onOpenPlugins} title={t("topbar.plugins")}>
         <Icon name="plug" />
         <span className="tb-label">{t("topbar.plugins")}</span>
@@ -1067,12 +1056,14 @@ export function TopBar({
   );
 }
 
-export function DeckTools({ canArrange, modulesOpen, onModules, onArrange, onBuild }: {
+export function DeckTools({ canArrange, modulesOpen, onModules, onArrange, onBuild, onDisplay, onSaver }: {
   canArrange: boolean;
   modulesOpen: boolean;
   onModules: () => void;
   onArrange: () => void;
   onBuild: () => void;
+  onDisplay: () => void;
+  onSaver: () => void;
 }) {
   useLanguage();
   const [open, setOpen] = useState(false);
@@ -1080,6 +1071,8 @@ export function DeckTools({ canArrange, modulesOpen, onModules, onArrange, onBui
   const close = useCallback(() => setOpen(false), []);
   useDismiss(open, ref, close);
   const actions = [
+    { label: t("settings.lightsScreens"), icon: "sun", run: onDisplay },
+    { label: t("saver.title"), icon: "moon", run: onSaver },
     { label: t("stage.editLayout"), icon: "layout-grid", run: onArrange, disabled: !canArrange },
     { label: t("builder.title"), icon: "pencil", run: onBuild },
     { label: t(modulesOpen ? "stage.hideModules" : "stage.showModules"), icon: "layers", run: onModules },
@@ -1766,177 +1759,186 @@ export function FrameCostView({ cost }: { cost: FrameCost | null }) {
   );
 }
 
-/** The screensaver's panel (owner, 2026-10-26: "oddzielny panel do ustawienia wygaszacza dla danego
- * profilu … z ustawieniem czasu"; his "1a": one shared saver and delay, a profile may have its own),
- * in the inspector's place. */
-/** Presets that make no screensaver: the spectrum follows what plays, and nothing plays while you are away. */
+
 const SAVER_NOT_PRESETS = ["music-spectrum", "music-spectrum-up"];
 
-export function SaverPanel({ view, onClose }: { view: EngineView; onClose: () => void }) {
+function SaverPanel({ view }: { view: EngineView }) {
   useLanguage();
   const profile = view.profile;
-  const [draft, setDraft] = useState<Profile | null>(profile);
+  const [draft, setDraft] = useState(profile);
   const [shared, setShared] = useState<Screens | null>(knownScreens);
-  const [message, setMessage] = useState<string | null>(null);
+  const [custom, setCustom] = useState<CustomSaver[]>([]);
+  const [busy, setBusy] = useState<"saving" | "importing" | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [confirmRemove, setConfirmRemove] = useState(false);
+  const previewing = !!useSaverShown()?.preview;
+
   useEffect(() => setDraft(profile), [profile]);
   useEffect(() => {
-    api.screens().then(setShared, (e) => setMessage(String(e)));
+    let active = true;
+    Promise.all([api.screens(), api.saversList()]).then(([screens, library]) => {
+      if (active) {
+        setShared(screens);
+        setCustom(library);
+      }
+    }, (error) => { if (active) setError(String(error)); });
+    return () => { active = false; };
   }, []);
-  if (!profile || !draft) return null;
-  // the panel's place stays taken while the settings are read, so the deck does not jump
-  if (!shared) return <aside className="inspector sectioned living-panel"><PanelHead title={t("saver.title")} crumb={draft.name} icon="moon" onClose={onClose} /></aside>;
-  const now = saverOf(draft, shared);
-  const commitProfile = (next: Profile) => {
-    setDraft(next);
-    api.saveProfile(next).catch((e) => setMessage(String(e)));
+
+  const run = async (task: () => Promise<unknown>, action: "saving" | "importing" = "saving") => {
+    setBusy(action);
+    setError(null);
+    try {
+      await task();
+    } catch (error) {
+      setError(String(error));
+    } finally {
+      setBusy(null);
+    }
   };
-  const commitShared = (next: Screens) => {
-    setShared(next);
-    api.setScreens(next).catch((e) => setMessage(String(e)));
+  const refreshShared = async () => {
+    const updated = await api.screens();
+    setShared(updated);
+    screensChanged(updated);
   };
-  // a preset's layers go with it: the engine does not know the presets
-  const layersFor = (effect: string) => {
-    const id = saverPreset(effect);
-    return id ? THEMES.find((th) => th.id === id)?.layers : undefined;
-  };
-  const nowLayers = now.own ? draft.saver?.layers : shared.saverLayers;
-  // a pick goes to the profile's own screensaver, or to the one all profiles share
-  const pick = (effect: string, afterMinutes = now.afterMinutes) => {
-    const layers = effect === now.effect ? nowLayers : layersFor(effect);
-    if (now.own) commitProfile({ ...draft, saver: { effect, afterMinutes, layers } });
-    else commitShared({ ...shared, saver: effect, saverAfterMinutes: afterMinutes, saverLayers: layers });
-  };
-  const own = (on: boolean) => commitProfile({ ...draft, saver: on ? { effect: now.effect, afterMinutes: now.afterMinutes, layers: nowLayers } : undefined });
-  const name = (id: string) => (id === SAVER_FROM_LOOK ? t("saver.fromLook") : saverPreset(id) ? themeTitle(saverPreset(id)!) : t(`saver.scene.${id}` as Key));
-  // the profile's own look from Deck look, as its thumbnail
-  const lookTheme = draft.effects?.theme ?? null;
-  // a moving thumbnail as the deck shows it, as the presets have (owner, 2026-10-30: "czy screensavery
-  // tez nie powinny miec podgladu?"); scripts/ui/look-loops.mjs makes them as `saver-<id>`
-  const tile = (id: string, swatch?: string) => (
-    <button
-      key={id || "none"}
-      role="radio"
-      aria-checked={now.effect === id}
-      className={`dl-tile${now.effect === id ? " is-sel" : ""}${id ? "" : " dl-none"}`}
-      onClick={() => {
-        pick(id);
-        // a click shows it at once, on the deck and in the window (owner, 2026-10-27)
-        if (id) api.saverTry(id, layersFor(id)).catch((e) => setMessage(String(e)));
-      }}
-    >
-      {!id ? (
-        <NoneThumb label={t("screens.saverOff")} />
-      ) : id === SAVER_FROM_LOOK ? (
-        lookTheme ? <Thumb id={presetThumb(lookTheme)} moving={now.effect === id} /> : <span className="dl-thumb" />
-      ) : saverPreset(id) ? (
-        <Thumb id={presetThumb(saverPreset(id)!)} moving={now.effect === id} />
-      ) : (
-        <Thumb id={`saver-${id}`} moving={now.effect === id} />
-      )}
-      <span className="dl-row">
-        <span className="dl-name">{id ? name(id) : t("screens.saverOff")}</span>
-        {swatch && <i className="saver-swatch" style={{ background: swatch, color: swatch }} />}
-      </span>
-    </button>
+
+  if (!draft || !shared) return (
+    <section className="sec" aria-label={t("saver.title")}>
+      {error ? <p className="help warn" role="alert">{error}</p> : <p className="help" role="status">{t("app.loadingPanel")}</p>}
+    </section>
   );
+
+  const now = saverOf(draft, shared);
+  const item = custom.find((entry) => entry.id === now.effect);
+  const effect = now.effect.startsWith("custom:") && !item ? "" : now.effect;
+  const layersFor = (choice: string) => {
+    if (choice === now.effect) return now.own ? draft.saver?.layers : shared.saverLayers;
+    return THEMES.find((theme) => theme.id === saverPreset(choice))?.layers;
+  };
+  const save = async (choice: string, afterMinutes = now.afterMinutes, own = now.own) => {
+    const assignment = { effect: choice, afterMinutes, layers: layersFor(choice) };
+    await api.saverConfigure(own ? draft.id : null, assignment);
+    if (own) setDraft(await api.profile(draft.id));
+    else await refreshShared();
+  };
+  const commitDisplays = (patch: Partial<Screens>) => run(async () => {
+    await api.setScreens({ ...await api.screens(), ...patch });
+    await refreshShared();
+  });
+  const scenes = SAVER_SCENES.filter((scene) => !scene.hidden || scene.id === effect);
+  const presets = THEMES.filter((theme) => effect === "preset:" + theme.id || (
+    !PRESETS_HIDDEN.has(theme.id) && !SAVER_NOT_PRESETS.includes(theme.id) && layersOf({ layers: theme.layers }).length > 0
+  ));
+  const fromLook = effect === SAVER_FROM_LOOK || layersOf(draft.effects).length > 0;
+  const extraPreset = effect !== SAVER_FROM_LOOK && !presets.some((theme) => "preset:" + theme.id === effect) ? saverPreset(effect) : undefined;
+  const choices = (options: number[], stored: number) => [...new Set([...options, stored])].sort((a, b) => a - b);
+  const startImport = () => run(async () => {
+    const path = await open({ multiple: false, filters: [{ name: t("saver.fileType"), extensions: ["gif", "webp", "png", "jpg", "jpeg"] }] });
+    if (typeof path !== "string") return;
+    const media = await api.saverImport(path);
+    setCustom((items) => [...items, media]);
+    setConfirmRemove(false);
+    await save(media.id);
+  }, "importing");
+
   return (
-    <aside className="inspector sectioned living-panel">
-      <PanelHead title={t("saver.title")} crumb={draft.name} icon="moon" onClose={onClose} />
+    <div className="saver-settings">
       <section className="sec">
-        <div className="field">
-          <span className="label">{t("saver.forProfile")}</span>
-          <div className="seg full" role="radiogroup" aria-label={t("saver.forProfile")}>
-            <button role="radio" aria-checked={!now.own} className={`tab${!now.own ? " is-active" : ""}`} onClick={() => own(false)}>
-              {t("saver.shared")}
-            </button>
-            <button role="radio" aria-checked={now.own} className={`tab${now.own ? " is-active" : ""}`} onClick={() => own(true)}>
-              {t("saver.own")}
-            </button>
-          </div>
-          <p className="help">{now.own ? t("saver.ownHelp") : t("saver.sharedHelp")}</p>
-        </div>
-        <div className="field">
-          <label htmlFor="saver-after" className="label">
-            {t("screens.saverAfter")}
-          </label>
-          <select id="saver-after" className="input" value={now.afterMinutes} onChange={(e) => pick(now.effect, Number(e.target.value))}>
-            {[1, 2, 5, 10, 15, 30, 60].map((m) => (
-              <option key={m} value={m}>
-                {t("screens.minutes", { count: m })}
-              </option>
-            ))}
-          </select>
-        </div>
-        {/* one list: the split into scenes and simple ones was the engine's, not the user's (owner,
-            2026-10-27: "czemu tam jest podział") */}
-        <div className="field fx-group">
+        <label className="field">
           <span className="label">{t("screens.saver")}</span>
-          <div className="dl-tiles saver-tiles" role="radiogroup" aria-label={t("screens.saver")}>
-            {/* "off" first (owner, 2026-10-30) */}
-            {tile("")}
-            {SAVER_SCENES.filter((sc) => !sc.hidden).map((sc) => tile(sc.id, sc.color || undefined))}
+          <select className="input" value={effect} disabled={!!busy} onChange={(event) => {
+            setConfirmRemove(false);
+            const choice = event.currentTarget.value;
+            void run(() => save(choice));
+          }}>
+            <option value="">{t("screens.saverOff")}</option>
+            <optgroup label={t("saver.scenes")}>
+              {scenes.map((scene) => <option key={scene.id} value={scene.id}>{t(("saver.scene." + scene.id) as Key)}</option>)}
+            </optgroup>
+            {custom.length > 0 && <optgroup label={t("saver.custom")}>
+              {custom.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+            </optgroup>}
+            <optgroup label={t("saver.presets")}>
+              {fromLook && <option value={SAVER_FROM_LOOK}>{t("saver.fromLook")}</option>}
+              {presets.map((theme) => <option key={theme.id} value={"preset:" + theme.id}>{themeTitle(theme.id)}</option>)}
+              {extraPreset && <option value={effect}>{themeTitle(extraPreset)}</option>}
+            </optgroup>
+          </select>
+        </label>
+        <label className="field">
+          <span className="label">{t("screens.saverAfter")}</span>
+          <select className="input" value={now.afterMinutes} disabled={!!busy || !effect} onChange={(event) => {
+            const minutes = Number(event.currentTarget.value);
+            void run(() => save(effect, minutes));
+          }}>
+            {choices([1, 2, 5, 10, 15, 30, 60], now.afterMinutes).map((minutes) =>
+              <option key={minutes} value={minutes}>{t("screens.minutes", { count: minutes })}</option>)}
+          </select>
+        </label>
+        {effect && shared.blankAfterMinutes > 0 && shared.blankAfterMinutes <= now.afterMinutes &&
+          <p className="help warn">{t("saver.blankWarning")}</p>}
+        <div className="saver-buttons">
+          <button type="button" className="tool" disabled={!!busy} onClick={() => void startImport()}>
+            <Icon name="plus" />{t("saver.add")}
+          </button>
+          <button type="button" className="tool" disabled={!!busy || !effect} onClick={() =>
+            void run(() => previewing ? saverEnd() : api.saverTry(effect, layersFor(effect)))}>
+            <Icon name={previewing ? "x" : "play"} />{t(previewing ? "saver.stopPreview" : "saver.preview")}
+          </button>
+        </div>
+        {busy === "importing" && <p className="help" role="status">{t("saver.importing")}</p>}
+        {previewing && <p className="help" role="status">{t("saver.tryHelp")}</p>}
+        <p className="help">{t("saver.files")}</p>
+        {item && (confirmRemove ? <div className="field">
+          <p className="help">{t("saver.removeConfirm", { name: item.name })}</p>
+          <div className="saver-buttons">
+            <button type="button" className="tool" disabled={!!busy} onClick={() => setConfirmRemove(false)}>{t("confirm.cancel")}</button>
+            <button type="button" className="tool" disabled={!!busy} onClick={() => void run(async () => {
+              await api.saverRemove(item.id);
+              setCustom((items) => items.filter((entry) => entry.id !== item.id));
+              setConfirmRemove(false);
+              await refreshShared();
+            })}>{t("saver.remove")}</button>
           </div>
-        </div>
-        {/* the presets too, without their answer to presses (owner, 2026-10-30: "presety dorzucamy jako
-            screensavery tez (no ale bez efektu nacisniecia bo nacisnietcie wybudza, tak?)") */}
-        <div className="field fx-group">
-          <span className="label">{t("saver.presets")}</span>
-          <div className="dl-tiles saver-tiles" role="radiogroup" aria-label={t("saver.presets")}>
-            {/* only when the profile has a look; Spectrum stands still when nothing plays, as it does while
-                you are away (owner's "3. ok", 2026-10-30) */}
-            {layersOf(draft.effects).length > 0 && tile(SAVER_FROM_LOOK)}
-            {THEMES.filter((th) => !PRESETS_HIDDEN.has(th.id) && !SAVER_NOT_PRESETS.includes(th.id) && layersOf({ layers: th.layers }).length).map((th) => tile(`preset:${th.id}`))}
-          </div>
-          <p className="help">{t("saver.gpuHelp")}</p>
-        </div>
-        <button className="tool align-start" disabled={!now.effect} onClick={() => api.saverTry(now.effect).catch((e) => setMessage(String(e)))}>
-          <Icon name="play" />
-          {t("saver.try")}
-        </button>
-        <p className="help">{now.effect ? t("saver.tryHelp") : t("saver.help")}</p>
+        </div> : <button type="button" className="link-btn align-start" disabled={!!busy} onClick={() => setConfirmRemove(true)}>{t("saver.remove")}</button>)}
+        {error && <p className="help warn" role="alert">{error}</p>}
       </section>
-      <section className="sec">
-        <h3 className="sec-title">{t("saver.allProfiles")}</h3>
-        <div className="field">
-          <label htmlFor="saver-dial" className="label">
-            {t("saver.dial")}
-          </label>
-          <select id="saver-dial" className="input" value={shared.saverDial ?? "clock"} onChange={(e) => commitShared({ ...shared, saverDial: e.target.value as Screens["saverDial"] })}>
-            {(["clock", "same", "off"] as const).map((d) => (
-              <option key={d} value={d}>
-                {t(`saver.dial.${d}` as Key)}
-              </option>
-            ))}
+      <details className="sec saver-advanced">
+        <summary>{t("saver.advanced")}</summary>
+        <label className="field">
+          <span className="label">{t("saver.forProfile")}</span>
+          <select className="input" value={now.own ? "own" : "shared"} disabled={!!busy} onChange={(event) => {
+            if (event.currentTarget.value === "own") void run(() => save(effect, now.afterMinutes, true));
+            else void run(async () => {
+              await api.saverConfigure(draft.id, undefined);
+              setDraft(await api.profile(draft.id));
+            });
+          }}>
+            <option value="shared">{t("saver.shared")}</option>
+            <option value="own">{t("saver.own")}</option>
           </select>
-        </div>
-        <div className="field">
-          <label htmlFor="saver-lights" className="label">
-            {t("saver.lights")}
-          </label>
-          <select id="saver-lights" className="input" value={shared.saverLights ?? "scene"} onChange={(e) => commitShared({ ...shared, saverLights: e.target.value as Screens["saverLights"] })}>
-            {(["scene", "same", "off"] as const).map((d) => (
-              <option key={d} value={d}>
-                {t(`saver.lights.${d}` as Key)}
-              </option>
-            ))}
+        </label>
+        <label className="field">
+          <span className="label">{t("saver.dial")}</span>
+          <select className="input" value={shared.saverDial ?? "clock"} disabled={!!busy} onChange={(event) => void commitDisplays({ saverDial: event.currentTarget.value as Screens["saverDial"] })}>
+            {(["clock", "same", "off"] as const).map((value) => <option key={value} value={value}>{t(("saver.dial." + value) as Key)}</option>)}
           </select>
-        </div>
-        <div className="field">
-          <label htmlFor="saver-blank" className="label">
-            {t("screens.after")}
-          </label>
-          <select id="saver-blank" className="input" value={shared.blankAfterMinutes} onChange={(e) => commitShared({ ...shared, blankAfterMinutes: Number(e.target.value) })}>
-            {[0, 5, 10, 15, 30, 60].map((m) => (
-              <option key={m} value={m}>
-                {m === 0 ? t("screens.never") : t("screens.minutes", { count: m })}
-              </option>
-            ))}
+        </label>
+        <label className="field">
+          <span className="label">{t("saver.lights")}</span>
+          <select className="input" value={shared.saverLights ?? "scene"} disabled={!!busy} onChange={(event) => void commitDisplays({ saverLights: event.currentTarget.value as Screens["saverLights"] })}>
+            {(["scene", "same", "off"] as const).map((value) => <option key={value} value={value}>{t(("saver.lights." + value) as Key)}</option>)}
           </select>
-        </div>
-        <p className="help">{t("saver.help")}</p>
-        {message && <p className="help warn">{message}</p>}
-      </section>
-    </aside>
+        </label>
+        <label className="field">
+          <span className="label">{t("screens.after")}</span>
+          <select className="input" value={shared.blankAfterMinutes} disabled={!!busy} onChange={(event) => void commitDisplays({ blankAfterMinutes: Number(event.currentTarget.value) })}>
+            {choices([0, 5, 10, 15, 30, 60], shared.blankAfterMinutes).map((minutes) =>
+              <option key={minutes} value={minutes}>{minutes ? t("screens.minutes", { count: minutes }) : t("screens.never")}</option>)}
+          </select>
+        </label>
+      </details>
+    </div>
   );
 }
 
@@ -2131,11 +2133,10 @@ export function ProfilePanel({ view, onClose }: { view: EngineView; onClose: () 
 }
 
 /** Settings of the whole app: language, look, screens, profiles folder, backups, connections, updates, help, about. */
-export type SettingsSection = "general" | "lights" | "text" | "connections" | "plugins" | "backups" | "updates" | "diagnostics";
+export type SettingsSection = "general" | "text" | "connections" | "plugins" | "backups" | "updates" | "diagnostics";
 
 const SETTINGS_SECTIONS: { id: SettingsSection; icon: string; label: Key }[] = [
   { id: "general", icon: "settings", label: "settings.general" },
-  { id: "lights", icon: "sun", label: "settings.lightsScreens" },
   // the font of the deck's text, like Stream Deck's Style tab (owner's pick 2a, 2026-10-18)
   { id: "text", icon: "type", label: "settings.text" },
   { id: "connections", icon: "link", label: "settings.connections" },
@@ -2219,13 +2220,14 @@ export function DeckDisplayPanel({ live, view, section, setSection, onClose, onC
       <PanelHead title={t("settings.lightsScreens")} icon="sun" onClose={onClose} />
       <nav className="seg display-tabs" aria-label={t("settings.lightsScreens")}>
         <button type="button" className={`tab${lighting ? " is-active" : ""}`} aria-pressed={lighting} onClick={lightDetail}>{t("settings.lighting")}</button>
-        <button type="button" className={`tab${lighting ? "" : " is-active"}`} aria-pressed={!lighting} onClick={() => setSection("screens")}>{t("settings.screens")}</button>
+        <button type="button" className={`tab${section === "screens" ? " is-active" : ""}`} aria-pressed={section === "screens"} onClick={() => setSection("screens")}>{t("settings.screens")}</button>
+        <button type="button" className={`tab${section === "saver" ? " is-active" : ""}`} aria-pressed={section === "saver"} onClick={() => setSection("saver")}>{t("saver.title")}</button>
       </nav>
       <div className="display-controls">
         {section === "lights" && <LightsSettings onOpenEdge={() => setSection("edge")} onOpenScenes={onOpenScenes} onOpenMusic={() => setSection("music")} />}
         {section === "edge" && <EdgePanel key={view.profile?.id} view={view} onClose={lightDetail} onAll={lightDetail} />}
         {section === "music" && <MusicPanel onClose={lightDetail} />}
-        {section === "saver" && <SaverPanel view={view} onClose={() => setSection("screens")} />}
+        {section === "saver" && <SaverPanel key={view.profile?.id} view={view} />}
         {section === "screens" && (
           <>
             <ScreensSettings />

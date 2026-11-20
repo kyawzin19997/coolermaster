@@ -138,21 +138,34 @@ for (const [label, viewport] of [['wide', { width: 1440, height: 900 }], ['half'
     }
     return true;
   });
-  await step(page, `${label}: Lights and Screens remain beside the deck`, async () => {
-    await page.locator('.settings-nav-item', { hasText: 'Lights and screens' }).click();
+  await step(page, `${label}: Back to the deck`, async () => {
+    await page.getByRole('button', { name: /Back to the deck/ }).click();
+    await page.waitForTimeout(300);
+    return (await visible(page, '.dk-ctl')) && !(await visible(page, '.settings-page'));
+  });
+  await step(page, `${label}: Lights and screens open beside the deck from Deck tools`, async () => {
+    await page.getByRole('button', { name: 'Deck tools', exact: true }).click();
+    await page.getByRole('menuitem', { name: 'Lights and screens', exact: true }).click();
     const display = page.getByRole('complementary', { name: 'Lights and screens', exact: true });
     await display.locator('#lights-brightness').waitFor();
     const deck = await page.locator('.deck-area').boundingBox();
     const panel = await display.boundingBox();
     await display.getByRole('button', { name: 'Screens', exact: true }).click();
     await display.locator('#screen-brightness').waitFor();
-    await page.getByRole('button', { name: /^Settings$/ }).first().click();
     return !!deck && !!panel && deck.x + deck.width <= panel.x + 1;
   });
-  await step(page, `${label}: Back to the deck`, async () => {
-    await page.getByRole('button', { name: /Back to the deck/ }).click();
-    await page.waitForTimeout(300);
-    return (await visible(page, '.dk-ctl')) && !(await visible(page, '.settings-page'));
+  await step(page, `${label}: Screensavers can be selected from Deck tools`, async () => {
+    await page.getByRole('button', { name: 'Deck tools', exact: true }).click();
+    await page.getByRole('menuitem', { name: 'Screensaver', exact: true }).click();
+    const display = page.getByRole('complementary', { name: 'Lights and screens', exact: true });
+    const picker = display.getByRole('combobox', { name: 'Screensaver', exact: true });
+    await picker.selectOption('aurora');
+    await display.getByRole('button', { name: 'Preview', exact: true }).waitFor();
+    const selected = await picker.inputValue();
+    await display.getByText('Advanced settings', { exact: true }).click();
+    const scope = display.getByRole('combobox', { name: 'Apply to', exact: true });
+    await scope.selectOption('own');
+    return selected === 'aurora' && await display.getByRole('button', { name: 'Add screensaver' }).isVisible();
   });
   await step(page, `${label}: the profile dialog switches between Profiles and Get started`, async () => {
     for (const tab of ['Profiles', 'Get started']) {

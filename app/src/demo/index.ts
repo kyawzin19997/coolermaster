@@ -7,7 +7,7 @@
 import { emit } from "@tauri-apps/api/event";
 import { mockIPC, mockWindows } from "@tauri-apps/api/mocks";
 import type { DeckSnapshot } from "../deck";
-import type { Binding, EngineState, LightSettings, PluginInfo, Profile } from "../engine";
+import type { Binding, EngineState, LightSettings, PluginInfo, Profile, Screens } from "../engine";
 import { actionIconPath } from "../actionIcons";
 import { version } from "../../package.json";
 import fixture from "./fixture.json";
@@ -26,6 +26,7 @@ const UPDATE = {
 // `&tests=off` leaves out the fixture's "Test: …" profiles (the README's screenshots, 2026-10-31)
 const withTests = new URLSearchParams(location.search).get("tests") !== "off";
 const profiles = new Map<string, Profile>((fixture.profiles as unknown as Profile[]).filter((p) => withTests || !p.name.startsWith("Test:")).map((p) => [p.id, p]));
+let screens: Screens = { brightness: 100, blankAfterMinutes: 0, blankWhenLocked: true };
 
 // the tour in the browser demo: the parts of a deck for the demo's kit (screenshots, flows)
 const tour = { draft: "demo-everyday", focus: "games", kit: "dialKnobs", mac: false, call: "discord", music: "Spotify", games: 12, rollers: true, stops: [] as { id: string; keep: boolean; look: number; looks: number; controls: string[]; tryControl: string | null; tasks?: string[]; faces?: string[] }[] };
@@ -233,7 +234,19 @@ const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
     return buttons ? (window.confirm(String(message)) ? ok : "Cancel") : (window.alert(String(message)), ok);
   },
   deck_fonts: () => ["Arial", "Meiryo", "Segoe UI", "Yu Gothic"],
-  screens_get: () => ({ brightness: 100, blankAfterMinutes: 0, blankWhenLocked: true }),
+  screens_get: () => screens,
+  screens_set: ({ screens: next }) => { screens = next as Screens; },
+  savers_list: () => [],
+  saver_configure: ({ profile, saver }) => {
+    const choice = saver as Profile["saver"];
+    if (typeof profile === "string") {
+      const p = profiles.get(profile);
+      if (p) profiles.set(profile, { ...p, saver: choice ?? undefined });
+    } else if (choice) {
+      screens = { ...screens, saver: choice.effect, saverAfterMinutes: choice.afterMinutes, saverLayers: choice.layers };
+    }
+    changed();
+  },
   integrations_get: () => ({ obsUrl: "ws://127.0.0.1:4455", obsPasswordSet: true, haUrl: "http://homeassistant.local:8123", haTokenSet: true, streamlabsUrl: "ws://127.0.0.1:59650", streamlabsTokenSet: false }),
   plugins_list: () => [...demoPlugins.values()],
   plugin_stop: ({ id }) => setPluginEnabled(id, false),

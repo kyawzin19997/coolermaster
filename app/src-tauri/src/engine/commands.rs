@@ -505,7 +505,7 @@ pub fn screens_set(engine: State<'_, Engine>, screens: Screens) -> Res<()> {
         s.store.settings.screen_brightness = screens.brightness.clamp(5, 100);
         s.store.settings.blank_after_minutes = screens.blank_after_minutes.min(240);
         s.store.settings.blank_when_locked = screens.blank_when_locked;
-        s.store.settings.saver = Some(screens.saver.clone()).filter(|e| super::saver::known(e)).unwrap_or_default();
+        s.store.settings.saver = Some(screens.saver.clone()).filter(|e| s.knows_saver(e)).unwrap_or_default();
         s.store.settings.saver_layers = screens.saver_layers.clone().filter(|_| super::saver::preset(&s.store.settings.saver).is_some());
         if !screens.saver_dial.is_empty() {
             s.store.settings.saver_dial = Some(screens.saver_dial.clone()).filter(|d| d != "clock" && ["same", "off"].contains(&d.as_str()));

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.2
+
+- Screensavers play independently of the active key layout, with a dedicated frame schedule for the deck and its preview.
+- Add GIF, WebP, PNG, and JPEG screensavers from local files. Preview them on the deck and choose a shared or per-profile idle delay.
+- Open Lights and screens or Screensaver directly from Deck tools, with the deck visible alongside the controls.
+
 ## 1.2.1
 
 - Copy and paste a key’s Press, Hold, and Double Press actions and appearance. Paste Look remains available on its own.

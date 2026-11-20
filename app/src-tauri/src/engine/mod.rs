@@ -64,7 +64,7 @@ pub mod profile;
 pub mod recorder;
 pub mod render;
 pub mod rules;
-mod saver;
+pub(crate) mod saver;
 pub mod sdcatalog;
 pub mod sdlocal;
 pub mod sdplugins;
@@ -172,6 +172,9 @@ pub enum Msg {
     /// The user clicked the deck in the window, or End: the screensaver ends as at a touch of the
     /// deck (owner's pick 1a, 2026-10-18).
     WindowTouched,
+    PreviewSaver(String, Option<Vec<profile::Layer>>),
+    /// Recheck the saver immediately after selecting, previewing or removing it.
+    SaverChanged,
     /// A profile or the active one changed: redraw everything.
     ProfilesChanged,
     /// The living deck reacts as if key `0..15` were pressed (an app's event, a walk, a film).
@@ -346,16 +349,10 @@ pub fn looks_save(engine: tauri::State<'_, Engine>, looks: serde_json::Value) ->
 /// touch ends it, as any screensaver.
 #[tauri::command]
 pub fn saver_try(engine: tauri::State<'_, Engine>, effect: String, layers: Option<Vec<profile::Layer>>) -> Result<(), String> {
-    if !saver::known(&effect) {
-        return Err(format!("no screensaver {effect}"));
+    if effect.is_empty() || !engine.lock().knows_saver(&effect) {
+        return Err("This screensaver is unavailable.".into());
     }
-    {
-        let mut s = engine.lock();
-        s.saver_preview_layers = layers.filter(|_| saver::preset(&effect).is_some());
-        s.saver_preview = Some((effect, Instant::now() + Duration::from_secs(20)));
-    }
-    let _ = engine.sender().send(Msg::ProfilesChanged);
-    Ok(())
+    engine.sender().send(Msg::PreviewSaver(effect, layers)).map_err(|_| "The deck is unavailable.".into())
 }
 
 /// The key panel's last picture, the same way (keys with live values showed only their icon).
@@ -606,6 +603,10 @@ pub struct DeckStatus {
 }
 
 impl Shared {
+    fn knows_saver(&self, id: &str) -> bool {
+        saver::known(id) || self.store.settings.custom_savers.iter().any(|saver| saver.id == id)
+    }
+
     fn active_profile(&self) -> Option<&Profile> {
         self.active.as_ref().and_then(|id| self.store.profiles.get(id))
     }
@@ -623,7 +624,8 @@ impl Shared {
         }
         let previewing = self.saver_preview.as_ref().is_some_and(|(e, until)| e == effect && *until > Instant::now());
         let own = self.active_profile().and_then(|p| p.saver.as_ref()).filter(|o| o.effect == effect).and_then(|o| o.layers.clone());
-        let layers = if previewing { self.saver_preview_layers.clone() } else { own.or_else(|| self.store.settings.saver_layers.clone()) }?;
+        let shared = || (self.store.settings.saver == effect).then(|| self.store.settings.saver_layers.clone()).flatten();
+        let layers = if previewing { self.saver_preview_layers.clone() } else { None }.or(own).or_else(shared)?;
         Some(saver::still(&profile::Effects { layers, ..profile::Effects::default() })).filter(|e| e.active())
     }
 
@@ -831,6 +833,7 @@ impl Engine {
             saver_next: 0,
             saver_dial_shown: String::new(),
             saver_running: String::new(),
+            saver_playback: None,
             keys_waiting: false,
             keys_moved: Instant::now(),
             perf: Perf::new(),
@@ -1969,6 +1972,7 @@ struct Worker {
     saver_dial_shown: String,
     /// The screensaver running now (its effect), to notice another one taking its place.
     saver_running: String,
+    saver_playback: Option<saver::Playback>,
     /// A moving key panel has a frame not drawn yet (USB was busy or it came too soon).
     keys_waiting: bool,
     keys_moved: Instant,
@@ -2045,7 +2049,7 @@ impl Worker {
             let tick = if self.arcade.is_some() { Duration::from_millis(25) } else { Duration::from_millis(40) };
             // wake for the next frame of an animation on screen, not up to a whole tick later
             let now = Instant::now();
-            let wait = self.frames.values().map(|(_, ends)| ends.saturating_duration_since(now)).min().map_or(tick, |d| d.clamp(Duration::from_millis(10), tick));
+            let wait = if self.saver_on { tick } else { self.frames.values().map(|(_, ends)| ends.saturating_duration_since(now)).min().map_or(tick, |d| d.clamp(Duration::from_millis(10), tick)) };
             // a key frame that waits (the last one still going out, or too soon): wake when it may
             // go, not at the next tick; on the 40 ms grid a 36 ms send and the 50 ms gap meant a
             // frame every 80 ms, 12.5-14.5 a second (owner's pick, 2026-10-16: GIFs want 15)
@@ -2053,7 +2057,7 @@ impl Worker {
             let wait = if self.music_running { wait.min(MUSIC_STEP) } else { wait };
             // a frame that waits, or the living deck moving: wake when the next may go (on the
             // 40 ms tick a 41.7 ms pace ran at 17.5 a second, 2026-10-26)
-            let pacing = self.keys_waiting || self.canvas.as_ref().is_some_and(|c| c.busy());
+            let pacing = !self.saver_on && (self.keys_waiting || self.canvas.as_ref().is_some_and(|c| c.busy()));
             let wait = if pacing {
                 let gap = (self.keys_moved + self.keys_every()).saturating_duration_since(now);
                 let poll = if pictures_waiting(Screen::Keys) { Duration::from_millis(4) } else { gap };
@@ -2061,6 +2065,10 @@ impl Worker {
             } else {
                 wait
             };
+            let wait = self.saver_playback.as_ref().and_then(|saver| saver.next).map_or(wait, |at| {
+                let minimum = if pictures_waiting(Screen::Keys) { 5 } else { 2 };
+                wait.min(at.saturating_duration_since(now).max(Duration::from_millis(minimum)))
+            });
             // Mochi's next frame on time, not at the next tick
             let wait = self.pet_next.map_or(wait, |at| wait.min(at.saturating_duration_since(now).max(Duration::from_millis(2))));
             // a dial picture held back by DIAL_FRAME goes when it may, not at the next wake
@@ -2133,10 +2141,27 @@ impl Worker {
                     }
                     Msg::WindowTouched => {
                         self.last_deck_input = Instant::now();
-                        if self.saver_on {
-                            self.lock().saver_preview = None;
-                            self.saver_on = false;
-                            log::info!("screensaver off (the window)");
+                        self.end_saver();
+                    }
+                    Msg::PreviewSaver(effect, layers) => {
+                        self.last_deck_input = Instant::now();
+                        {
+                            let mut shared = self.lock();
+                            shared.saver_preview_layers = layers.filter(|_| saver::preset(&effect).is_some());
+                            shared.saver_preview = Some((effect, self.last_deck_input + Duration::from_secs(20)));
+                        }
+                        self.saver_playback = None;
+                        self.sent.clear();
+                        self.check_blank();
+                        if self.saver_on && self.saver_playback.is_none() {
+                            self.redraw_keys();
+                        }
+                    }
+                    Msg::SaverChanged => {
+                        self.saver_playback = None;
+                        self.sent.clear();
+                        self.check_blank();
+                        if self.saver_on && self.saver_playback.is_none() {
                             self.redraw_keys();
                         }
                     }
@@ -2299,9 +2324,7 @@ impl Worker {
                 return;
             }
             // the first touch only ends the screensaver (a preview too)
-            self.lock().saver_preview = None;
-            self.saver_on = false;
-            self.redraw_keys();
+            self.end_saver();
             return;
         }
         if self.lock().calibration.is_some() {
@@ -2671,7 +2694,7 @@ impl Worker {
                     self.toggle_pet_dial(id.split(':').next().unwrap_or(id));
                 }
                 if let Some(effect) = out.saver {
-                    let effect = if saver::known(&effect) {
+                    let effect = if self.lock().knows_saver(&effect) {
                         effect
                     } else {
                         let all: Vec<&str> = saver::SCENES.iter().map(|(id, _)| *id).filter(|id| !saver::HIDDEN.contains(id)).collect();
@@ -2679,7 +2702,9 @@ impl Worker {
                         self.saver_next += 1;
                         next.to_string()
                     };
-                    self.lock().saver_preview = Some((effect, Instant::now() + Duration::from_secs(12)));
+                    let mut shared = self.lock();
+                    shared.saver_preview_layers = None;
+                    shared.saver_preview = Some((effect, Instant::now() + Duration::from_secs(12)));
                 }
                 if let Some(cmd) = out.weather {
                     let control = id.split(':').next().unwrap_or(id).to_string();
@@ -2908,6 +2933,11 @@ impl Worker {
     }
 
     fn redraw_keys(&mut self) {
+        if self.saver_on && !self.blanked && self.arcade.is_none() {
+            self.draw_saver(Instant::now());
+            return;
+        }
+        self.saver_playback = None;
         self.publish_looks();
         self.publish_saver();
         let snapshot = self.deck.snapshot();
@@ -3046,13 +3076,9 @@ impl Worker {
             }
             // a game plays on the first keys module; a second one keeps its keys
             let game_screen = self.arcade.as_ref().filter(|_| first == 0).map(|a| a.screen(Instant::now()));
-            // the screensaver: the living deck's layers of its scene on black keys
-            let saver_effect = if self.saver_on && game_screen.is_none() { Some(self.saver_pick().0) } else { None };
-            let saver_scene = saver_effect.as_deref().and_then(|e| self.lock().saver_effects(e));
             let game_panel = game_screen.as_ref().and_then(|g| g.panel.clone());
             let looks = match game_screen {
                 Some(g) => g.keys,
-                None if saver_scene.is_some() => vec![Look { bg: Some("#000000".into()), ..Look::default() }; 15],
                 None => looks,
             };
             // screens off: black keys (the backlight is never set to 0, see apply_screens)
@@ -3060,7 +3086,7 @@ impl Worker {
             let game_panel = game_panel.filter(|_| !self.blanked);
             // a plugin's panel picture wins over the profile's
             let plugin_panel = self.plugin_panel.clone().filter(|_| self.arcade.is_none()).map(|image| profile::PanelContent::Picture { image });
-            let panel_content = if saver_scene.is_some() { None } else { plugin_panel.or_else(|| profile.as_ref().filter(|_| self.arcade.is_none()).and_then(|p| p.panel.clone())) };
+            let panel_content = plugin_panel.or_else(|| profile.as_ref().filter(|_| self.arcade.is_none()).and_then(|p| p.panel.clone()));
             let panel_content = panel_content.filter(|_| !self.blanked).map(|c| match c {
                 profile::PanelContent::Picture { image } => {
                     let mut look = Look { image: Some(image), ..Look::default() };
@@ -3107,7 +3133,7 @@ impl Worker {
                     // with the living deck's effects every key is drawn in its layers, so the
                     // canvas goes between its background and its content
                     let trial = profile.as_ref().and_then(|p| self.lock().shown_effects(p).cloned());
-                    let fx = saver_scene.as_ref().or(trial.as_ref()).filter(|e| e.active() && !self.blanked && game_panel.is_none());
+                    let fx = trial.as_ref().filter(|e| e.active() && !self.blanked && game_panel.is_none());
                     // a second keys module: plain keys, the main module's scene left as it is
                     let scene = main_keys && fx.is_some();
                     if let Some(fx) = fx.filter(|_| main_keys) {
@@ -3246,6 +3272,61 @@ impl Worker {
                 }
                 Err(e) => log::warn!("draw keys: {e}"),
             }
+        }
+    }
+
+    fn draw_saver(&mut self, now: Instant) {
+        self.publish_saver();
+        let snapshot = self.deck.snapshot();
+        let Some(first) = snapshot.modules.iter().filter(|m| m.kind == "keys").map(|m| m.first).min() else {
+            if let Some(playback) = &mut self.saver_playback {
+                playback.next = None;
+            }
+            return;
+        };
+        let (geometry, profile, page, effects) = {
+            let s = self.lock();
+            let effects = self.saver_playback.is_none().then(|| s.saver_effects(&self.saver_running)).flatten();
+            (s.store.settings.panel, s.active.clone(), s.page.clone(), effects)
+        };
+        if self.saver_playback.is_none() {
+            self.saver_playback = Some(saver::Playback::new(self.saver_running.clone(), &self.data_dir, effects));
+        }
+        let layouts = self.app.state::<Placements>().all();
+        let mirror = mirror_only() || (!crate::tray::main_hidden() && self.app.get_webview_window("main").is_some_and(|w| w.is_visible().unwrap_or(false)));
+        for m in snapshot.modules.iter().filter(|m| m.kind == "keys") {
+            let module = self.deck.module(&m.id);
+            if module.is_none() && !mirror_only() {
+                continue;
+            }
+            let sender = module.as_ref().map(|_| picture_sender(Screen::Keys, usize::from(m.first) / 15));
+            if sender.is_some_and(PictureSender::waiting) {
+                continue;
+            }
+            let main = m.first == first;
+            let drawing = Instant::now();
+            let rotation = self.content_rotation(m.kind, m.slot.as_deref(), snapshot.turn, &layouts);
+            let (jpeg, signature) = if main {
+                let playback = self.saver_playback.as_mut().expect("screensaver playback");
+                let jpeg = playback.picture(now, rotation, &geometry);
+                (jpeg, format!("saver:{}:{rotation}:{}:{profile:?}:{page:?}", playback.effect, playback.sequence))
+            } else {
+                (saver::black_jpeg(), "screensaver-secondary".into())
+            };
+            if self.sent.get(&m.id) == Some(&signature) {
+                continue;
+            }
+            if let (Some(module), Some(sender)) = (module, sender) {
+                sender.send(m.id.clone(), module.clone(), report::panel_image(&jpeg, module.output_len));
+            }
+            self.sent_panels.remove(&m.id);
+            self.sent.insert(m.id.clone(), signature);
+            if main && mirror {
+                self.keys_mirror_slow = false;
+                self.mirror_keys(profile.as_deref(), page.as_deref(), &m.id, &jpeg, &geometry);
+            }
+            self.perf.panel += 1;
+            self.perf.panel_time += drawing.elapsed();
         }
     }
 
@@ -3869,47 +3950,54 @@ impl Worker {
         publish_state(&self.app, state);
     }
 
-    /// Turn screens and LEDs off or on as the lock screen and idle time ask.
-    fn check_blank(&mut self) {
-        let settings = self.lock().store.settings.clone();
-        let deck_idle = self.last_deck_input.elapsed();
-        let idle = idle::system_idle().map_or(deck_idle, |sys| sys.min(deck_idle));
-        let blank = self.arcade.is_none() && idle::should_blank(self.locked, settings.blank_when_locked, idle, settings.blank_after_minutes);
-        // the screensaver: after its idle minutes, unless the screens are off or a game runs
-        let preview = self.lock().saver_preview.as_ref().is_some_and(|(_, until)| *until > Instant::now());
-        let (effect, minutes) = self.saver_pick();
-        let saver = !blank && self.arcade.is_none() && (preview || (!effect.is_empty() && self.lock().trying.is_none() && deck_idle >= Duration::from_secs(u64::from(minutes.max(1)) * 60)));
-        // another screensaver while one runs (a preview, his profile's own): the dial and the lights
-        // take its colour, the keys its scene
-        if saver && self.saver_on && effect != self.saver_running {
-            log::info!("screensaver now ({effect})");
-            self.saver_running = effect.clone();
+    fn end_saver(&mut self) {
+        let had_preview = self.lock().saver_preview.take().is_some();
+        if self.saver_on || had_preview {
+            self.saver_on = false;
+            self.saver_running.clear();
             self.redraw_keys();
-            self.dial_dirty = true;
             self.leds_sent.clear();
             self.update_leds();
+            self.dial_dirty = true;
         }
-        if saver != self.saver_on {
+    }
+
+    /// Turn screens and LEDs off or on as the lock screen and idle time ask.
+    fn check_blank(&mut self) {
+        let (blank_when_locked, blank_after, preview, can_idle, calibrating) = {
+            let s = self.lock();
+            (
+                s.store.settings.blank_when_locked,
+                s.store.settings.blank_after_minutes,
+                s.saver_preview.as_ref().is_some_and(|(_, until)| *until > Instant::now()),
+                s.trying.is_none(),
+                s.calibration.is_some(),
+            )
+        };
+        let deck_idle = self.last_deck_input.elapsed();
+        let idle = idle::system_idle().map_or(deck_idle, |sys| sys.min(deck_idle));
+        let blank = self.arcade.is_none() && idle::should_blank(self.locked, blank_when_locked, idle, blank_after);
+        let (effect, minutes) = self.saver_pick();
+        let saver = !blank && !calibrating && self.arcade.is_none() && (preview || (!effect.is_empty() && can_idle && deck_idle >= Duration::from_secs(u64::from(minutes.max(1)) * 60)));
+        let changed_saver = saver != self.saver_on || (saver && effect != self.saver_running);
+        let changed_blank = blank != self.blanked;
+        self.blanked = blank;
+        if changed_saver {
             self.saver_on = saver;
-            self.saver_running = if saver { effect.clone() } else { String::new() };
+            self.saver_running = if saver { effect } else { String::new() };
+            self.saver_playback = None;
+            self.sent.clear();
             if saver {
-                log::info!("screensaver on ({effect})");
+                log::info!("screensaver on ({})", self.saver_running);
             } else {
                 log::info!("screensaver off");
             }
-            self.redraw_keys();
-            // the dial and the lights take its look, and give it back
-            self.dial_dirty = true;
-            self.leds_sent.clear();
-            self.update_leds();
         }
-        if blank != self.blanked {
-            self.blanked = blank;
-            log::info!("screens {}", if blank { "off" } else { "on" });
-            self.leds_sent.clear();
-            self.update_leds();
+        if changed_saver || changed_blank {
             self.redraw_keys();
             self.dial_dirty = true;
+            self.leds_sent.clear();
+            self.update_leds();
         }
         self.apply_screens();
     }
@@ -3995,6 +4083,18 @@ impl Worker {
             self.dial_dirty = true;
         }
         let running_timer = self.timers.values().any(|t| t.running()) || self.pomodoros.values().any(|p| p.timer.running());
+        if self.saver_on && !self.blanked && self.arcade.is_none() {
+            if self.saver_playback.as_ref().is_some_and(|playback| playback.due(now)) && !pictures_waiting(Screen::Keys) {
+                self.draw_saver(now);
+            }
+            let dial = self.saver_dial().0;
+            if dial == "clock" && self.saver_dial_shown != clock_now() {
+                self.dial_dirty = true;
+            }
+            if !running_timer && dial != "same" {
+                return;
+            }
+        }
         let (profile, page) = {
             let s = self.lock();
             // nothing that moves (pictures, clocks, timers): no copy of the profile every tick
@@ -4056,16 +4156,6 @@ impl Worker {
         // nothing is drawn)
         if profile.panel.is_none() && self.lock().shown_effects(&profile).is_some_and(|e| e.active()) && self.canvas.as_ref().is_none_or(|c| c.busy()) {
             keys_due = true;
-        }
-        // the screensaver's scene moves as the living deck does, the dial's clock with the minute
-        if self.saver_on && self.arcade.is_none() {
-            let effect = self.saver_pick().0;
-            if self.lock().saver_effects(&effect).is_some() && self.canvas.as_ref().is_none_or(|c| c.busy()) {
-                keys_due = true;
-            }
-            if self.saver_dial().0 == "clock" && self.saver_dial_shown != clock_now() {
-                self.dial_dirty = true;
-            }
         }
         // moving keys: at most KEYS_MOVING_EVERY apart (the living deck's CANVAS_EVERY), the next
         // drawn while the last goes out but never while another waits (2026-10-14: 31.8 drawn a
@@ -4737,9 +4827,9 @@ impl Worker {
             return (saver::current(effect), s.store.settings.saver_after_minutes);
         }
         // a saved one that was taken out runs as the scene that replaced it
-        let shared = (Some(saver::current(&s.store.settings.saver)).filter(|e| saver::known(e)).unwrap_or_default(), s.store.settings.saver_after_minutes);
+        let shared = (Some(saver::current(&s.store.settings.saver)).filter(|e| s.knows_saver(e)).unwrap_or_default(), s.store.settings.saver_after_minutes);
         match s.active_profile().and_then(|p| p.saver.as_ref()) {
-            Some(own) => (Some(saver::current(&own.effect)).filter(|e| saver::known(e)).unwrap_or_default(), own.after_minutes.unwrap_or(shared.1)),
+            Some(own) => (Some(saver::current(&own.effect)).filter(|e| s.knows_saver(e)).unwrap_or_default(), own.after_minutes.unwrap_or(shared.1)),
             None => shared,
         }
     }
@@ -4747,9 +4837,9 @@ impl Worker {
     /// What the dial and the lights do while the screensaver runs (`clock`/`same`/`off`,
     /// `scene`/`same`/`off`), and its colour for them.
     fn saver_dial(&self) -> (String, String, String) {
-        let effect = self.saver_pick().0;
+        let effect = &self.saver_running;
         let s = self.lock();
-        let color = saver::color(&effect).map_or_else(|| s.store.settings.lights.color.clone(), str::to_string);
+        let color = saver::color(effect).map_or_else(|| s.store.settings.lights.color.clone(), str::to_string);
         (s.store.settings.saver_dial.clone().unwrap_or_else(|| "clock".into()), s.store.settings.saver_lights.clone().unwrap_or_else(|| "scene".into()), color)
     }
 
@@ -4759,7 +4849,7 @@ impl Worker {
         // (owner's pick 1a, 2026-10-18; 2026-10-27: "Jak klikam screensavet to chciałym mieć podląd
         // screensavera też w apce")
         let shown = (self.saver_on && !self.blanked).then(|| {
-            let effect = self.saver_pick().0;
+            let effect = self.saver_running.clone();
             let preview = self.lock().saver_preview.as_ref().is_some_and(|(_, until)| *until > Instant::now());
             (effect, self.lock().store.settings.lights.color.clone(), preview)
         });

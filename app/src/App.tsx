@@ -54,15 +54,18 @@ export default function App() {
   }, [lang]);
   const live = useDeck();
   const view = useEngine();
-  const saverOn = !!useSaverShown();
+  const shownSaver = useSaverShown();
+  const saverOn = !!shownSaver;
   // using the window is using MasterDeck: it ends a screensaver and keeps the next one from starting
   // (owner, 2026-10-30: the deck's screensaver ran on while he worked in the window, and Deck look
   // then showed it instead of the preset he tried); a touch is sent at most every 20 s while none runs
-  const saverOnRef = useRef(saverOn);
-  saverOnRef.current = saverOn;
+  const saverOnRef = useRef(shownSaver);
+  saverOnRef.current = shownSaver;
   useEffect(() => {
     let last = 0;
-    const touch = () => {
+    const touch = (event: Event) => {
+      const target = event.target;
+      if (saverOnRef.current?.preview && target instanceof Element && target.closest(".saver-settings")) return;
       const now = Date.now();
       if (saverOnRef.current || now - last > 20_000) {
         last = now;
@@ -127,14 +130,14 @@ export default function App() {
 
     setForAppOpen(false);
   };
-  const openDisplay = () => {
+  const openDisplay = (section: DeckDisplaySection) => {
     setSettingsOpen(false);
     setPluginsOpen(false);
     setLivingOpen(false);
     setProfileOpen(false);
     setForAppOpen(false);
     setGamesOpen(false);
-    setDisplayPanel("lights");
+    setDisplayPanel(section);
   };
   useEffect(() => {
     if (!DEMO_SELECT || selected) return;
@@ -326,11 +329,6 @@ export default function App() {
         onOpenTour={() => (setTourOpen(true), setPluginsOpen(false), setStudio(null), setLivingOpen(false), setSettingsOpen(false), setForAppOpen(false), setProfileOpen(false))}
         setupPending={setupPending && !tourOpen && !builderOpen}
         onOpenSettings={() => (setUpdateCheckRequest(0), setSettingsOpen((o) => !o), setPluginsOpen(false), setGamesOpen(false), setForAppOpen(false))}
-        displayOpen={displayPanel !== null && !settingsOpen && !pluginsOpen && !livingOpen && !arranging && !calibrating && !builderOpen && !tourShown && !studio}
-        onOpenDisplay={tourShown || builderOpen || calibrating || arranging || studio ? undefined : () => {
-          if (displayPanel && !settingsOpen && !pluginsOpen && !livingOpen) setDisplayPanel(null);
-          else openDisplay();
-        }}
         onCheckUpdates={tourShown || builderOpen || calibrating || arranging || studio ? undefined : () => {
           setPluginsOpen(false);
           setGamesOpen(false);
@@ -394,8 +392,7 @@ export default function App() {
             live={live} view={view} section={settingsSection} updateCheckRequest={updateCheckRequest}
             onSection={(section) => {
               setUpdateCheckRequest(0);
-              if (section === "lights") openDisplay();
-              else setSettingsSection(section);
+              setSettingsSection(section);
             }}
             onClose={() => { setUpdateCheckRequest(0); setSettingsOpen(false); }}
             onBrowsePlugins={() => { setPluginsOpen(true); setSettingsOpen(false); }}
@@ -423,6 +420,8 @@ export default function App() {
               onModules={() => setModulesOpen((open) => !open)}
               onArrange={toggleArrange}
               onBuild={() => setBuilderOpen(true)}
+              onDisplay={() => openDisplay("lights")}
+              onSaver={() => openDisplay("saver")}
             /></>}
           </div>
           {(view.state?.trying || saverOn) && <div className="stage-bar">

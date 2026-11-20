@@ -108,7 +108,8 @@
 .display-controls .lighting-destinations { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .display-controls .lighting-row { align-items: start; }
 .dk-screen-content { filter: var(--dk-screen-filter, none); }
-.topbar-display.is-active { color: var(--acc2); background: var(--bg2); }
+.saver-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+.saver-advanced summary { cursor: pointer; color: var(--fg1); font-size: 13px; font-weight: 600; }
 
 .profile-context-menu {
   position: fixed;

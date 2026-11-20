@@ -145,6 +145,12 @@ export interface Moved {
 /** An imported profile; `runs`: commands, web requests and scripts in it (asked before it is used). */
 export type Imported = Profile & { moved: Moved[]; runs?: string[] };
 
+export interface CustomSaver {
+  id: string;
+  name: string;
+  animated: boolean;
+}
+
 export interface Profile {
   /** The style new keys of this profile start in (a template's look), set in the full key editor. */
   keyStyle?: Look;
@@ -1378,6 +1384,10 @@ export const api = {
   livingGpu: () => invoke<boolean>("living_gpu"),
   livingTrials: () => invoke<[string, string][]>("living_trials"),
   saverTry: (effect: string, layers?: FxLayer[]) => invoke("saver_try", { effect, layers: layers ?? null }),
+  saversList: () => invoke<CustomSaver[]>("savers_list"),
+  saverImport: (path: string) => invoke<CustomSaver>("saver_import", { path }),
+  saverRemove: (id: string) => invoke("saver_remove", { id }),
+  saverConfigure: (profile: string | null, saver: Profile["saver"]) => invoke("saver_configure", { profile, saver: saver ?? null }),
   /** Try a look on the deck without saving it (the Deck look view); null goes back. */
   effectsTry: (effects: DeckEffects | null, bare = false) => invoke("effects_try", { effects, bare }),
   effectsPress: (key: number) => invoke("effects_press", { key }),

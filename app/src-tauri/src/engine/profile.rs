@@ -694,6 +694,8 @@ pub struct Settings {
     /// A preset's layers when `saver` is one (`saver::preset`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub saver_layers: Option<Vec<Layer>>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub custom_savers: Vec<super::saver::CustomSaver>,
     /// What the dial shows while the screensaver runs: `clock` (None), `same` or `off`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub saver_dial: Option<String>,
@@ -855,6 +857,7 @@ impl Default for Settings {
             saver: String::new(),
             saver_after_minutes: saver_minutes(),
             saver_layers: None,
+            custom_savers: Vec::new(),
             saver_dial: None,
             saver_lights: None,
             blank_when_locked: true,
