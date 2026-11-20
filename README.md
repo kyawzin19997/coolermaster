@@ -2,7 +2,7 @@
 
 Desktop control software for the Cooler Master MasterHUB. MasterDeck supports LCD keys, the dial, knobs, faders, rollers, and the base lighting. Profiles and device settings are stored locally.
 
-[Download for Windows](https://github.com/kyawzin19997/coolermaster/releases/latest/download/MasterDeck-windows-x64-setup.exe) · [Download for macOS](https://github.com/kyawzin19997/coolermaster/releases/download/v1.1.0/MasterDeck-macOS-Universal.dmg) · [Releases and checksums](https://github.com/kyawzin19997/coolermaster/releases)
+[Download for Windows](https://github.com/kyawzin19997/coolermaster/releases/latest/download/MasterDeck-windows-x64-setup.exe) · [Download for macOS](https://github.com/kyawzin19997/coolermaster/releases/download/v1.2.0/MasterDeck-macOS-Universal.dmg) · [Releases and checksums](https://github.com/kyawzin19997/coolermaster/releases)
 
 ## Install
 
