@@ -5,7 +5,8 @@
 //! changes (recording, current scene, mutes, visible sources) so keys show the truth.
 
 use std::collections::HashMap;
-use std::net::TcpStream;
+use std::net::{Ipv4Addr, SocketAddr, TcpStream};
+use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 use std::time::{Duration, Instant};
 
@@ -16,7 +17,9 @@ use sha2::{Digest, Sha256};
 use tungstenite::stream::MaybeTlsStream;
 use tungstenite::{Message, WebSocket};
 
-use super::Msg;
+use tauri::Manager as _;
+
+use super::{Msg, obs_local};
 
 pub const DEFAULT_URL: &str = "ws://127.0.0.1:4455";
 const RETRY: Duration = Duration::from_secs(5);
@@ -127,13 +130,68 @@ enum Cmd {
     Request(Request),
     /// The active profile uses OBS (connect and stay connected) or not.
     Want(bool),
-    Settings {
-        url: String,
-        password: Option<String>,
-    },
+    Settings(Connection),
+    Reconnect,
 }
 
 static WORKER: OnceLock<Sender<Cmd>> = OnceLock::new();
+static ROOTS: OnceLock<Vec<PathBuf>> = OnceLock::new();
+
+#[derive(Clone, Copy, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ConnectionStatus {
+    Waiting,
+    SetupRequired,
+    Unavailable,
+    Connected,
+}
+
+static STATUS: std::sync::Mutex<ConnectionStatus> = std::sync::Mutex::new(ConnectionStatus::Waiting);
+
+pub fn status() -> ConnectionStatus {
+    *STATUS.lock().unwrap_or_else(|e| e.into_inner())
+}
+
+fn set_status(status: ConnectionStatus) {
+    *STATUS.lock().unwrap_or_else(|e| e.into_inner()) = status;
+}
+
+pub enum Connection {
+    Automatic { fallback_password: Option<String> },
+    Manual { url: String, password: Option<String> },
+}
+
+pub fn automatic(settings: &super::profile::Settings) -> bool {
+    settings.obs_automatic.unwrap_or(settings.obs_url.is_none())
+}
+
+pub fn settings(settings: &super::profile::Settings) -> Connection {
+    if automatic(settings) {
+        let fallback_password = if settings.obs_automatic.is_none() { super::secrets::get("obs") } else { None };
+        Connection::Automatic { fallback_password }
+    } else {
+        Connection::Manual { url: settings.obs_url.clone().unwrap_or_else(|| DEFAULT_URL.into()), password: super::secrets::get("obs") }
+    }
+}
+
+pub fn local_roots(app: &tauri::AppHandle, data_dir: &Path) -> Vec<PathBuf> {
+    if crate::automation::get().is_some() {
+        return vec![data_dir.join("obs-studio")];
+    }
+    let mut roots: Vec<_> = app.path().config_dir().ok().into_iter().map(|dir| dir.join("obs-studio")).collect();
+    if cfg!(target_os = "linux")
+        && let Ok(home) = app.path().home_dir()
+    {
+        roots.push(home.join(".var/app/com.obsproject.Studio/config/obs-studio"));
+    }
+    roots
+}
+
+pub fn enable_local() -> Result<(), String> {
+    obs_local::enable(ROOTS.get().ok_or("The OBS connection is still starting.")?)?;
+    reconnect();
+    Ok(())
+}
 
 /// What OBS named (read when connecting), by kind: `scene`, `input`, `transition`, `collection`,
 /// `profile`, `filter:<source>`; for the window's lists and the import check.
@@ -185,11 +243,11 @@ fn remember(kind: &str, data: &Value, source: Option<&str>) {
     }
 }
 
-/// Start the worker; `url` and `password` come from the settings and the credential store.
-pub fn start(engine: Sender<Msg>, url: String, password: Option<String>) {
+pub fn start(engine: Sender<Msg>, connection: Connection, roots: Vec<PathBuf>) {
     let (tx, rx) = unbounded();
     if WORKER.set(tx).is_ok() {
-        std::thread::Builder::new().name("obs".into()).spawn(move || Worker::new(engine, url, password).run(rx)).expect("spawn obs thread");
+        let _ = ROOTS.set(roots);
+        std::thread::Builder::new().name("obs".into()).spawn(move || Worker::new(engine, connection).run(rx)).expect("spawn obs thread");
     }
 }
 
@@ -207,8 +265,12 @@ pub fn want(yes: bool) {
     send(Cmd::Want(yes));
 }
 
-pub fn configure(url: String, password: Option<String>) {
-    send(Cmd::Settings { url, password });
+pub fn configure(connection: Connection) {
+    send(Cmd::Settings(connection));
+}
+
+pub fn reconnect() {
+    send(Cmd::Reconnect);
 }
 
 /// The `authentication` string of obs-websocket 5:
@@ -277,9 +339,9 @@ type Socket = WebSocket<MaybeTlsStream<TcpStream>>;
 
 struct Worker {
     engine: Sender<Msg>,
-    url: String,
-    password: Option<String>,
+    connection: Connection,
     wanted: bool,
+    requested: bool,
     socket: Option<Socket>,
     last_try: Option<Instant>,
     next_id: u64,
@@ -294,12 +356,12 @@ struct Worker {
 }
 
 impl Worker {
-    fn new(engine: Sender<Msg>, url: String, password: Option<String>) -> Self {
+    fn new(engine: Sender<Msg>, connection: Connection) -> Self {
         Self {
             engine,
-            url,
-            password,
+            connection,
             wanted: false,
+            requested: false,
             socket: None,
             last_try: None,
             next_id: 0,
@@ -316,7 +378,7 @@ impl Worker {
             CONNECTED.store(self.socket.is_some(), std::sync::atomic::Ordering::Relaxed);
             // while nothing uses OBS, sleep until a command comes; connected, wake often to read
             // events; wanted but not reachable, try again every few seconds
-            if self.socket.is_none() && !self.wanted && self.queued.is_empty() {
+            if self.socket.is_none() && !self.should_connect() {
                 match rx.recv() {
                     Ok(cmd) => self.command(cmd),
                     Err(_) => return,
@@ -331,13 +393,20 @@ impl Worker {
             for cmd in rx.try_iter().collect::<Vec<_>>() {
                 self.command(cmd);
             }
-            if self.socket.is_none() && (self.wanted || !self.queued.is_empty()) && self.last_try.is_none_or(|t| t.elapsed() >= RETRY) {
+            if self.socket.is_none() && self.should_connect() && self.last_try.is_none_or(|t| t.elapsed() >= RETRY) {
                 self.connect();
             }
             if self.socket.is_some() {
                 self.read();
+                if self.socket.is_none() {
+                    set_status(ConnectionStatus::Waiting);
+                }
             }
         }
+    }
+
+    fn should_connect(&self) -> bool {
+        matches!(self.connection, Connection::Automatic { .. }) || self.wanted || self.requested || !self.queued.is_empty()
     }
 
     fn command(&mut self, cmd: Cmd) {
@@ -351,10 +420,15 @@ impl Worker {
                 }
             }
             Cmd::Want(yes) => self.wanted = yes,
-            Cmd::Settings { url, password } => {
-                self.url = url;
-                self.password = password;
+            Cmd::Settings(connection) => {
+                self.connection = connection;
                 self.socket = None;
+                self.requested = true;
+                self.last_try = None;
+                set_status(ConnectionStatus::Waiting);
+            }
+            Cmd::Reconnect => {
+                self.requested = true;
                 self.last_try = None;
             }
         }
@@ -370,10 +444,33 @@ impl Worker {
 
     fn connect(&mut self) {
         self.last_try = Some(Instant::now());
-        match self.handshake() {
+        let result = match &self.connection {
+            Connection::Automatic { fallback_password } => match obs_local::discover(ROOTS.get().map(Vec::as_slice).unwrap_or_default()) {
+                Ok(Some(local)) if !local.enabled => {
+                    set_status(ConnectionStatus::SetupRequired);
+                    if !std::mem::take(&mut self.queued).is_empty() {
+                        self.error("Set up the local OBS connection in MasterDeck → Settings → Connections.".into());
+                    }
+                    return;
+                }
+                Ok(Some(local)) => Self::handshake(&format!("ws://127.0.0.1:{}", local.port), local.password.as_deref(), Some(local.port)),
+                Ok(None) => Self::handshake(DEFAULT_URL, fallback_password.as_deref(), Some(4455)),
+                Err(_) => Err("Could not read the local OBS configuration.".into()),
+            },
+            Connection::Manual { url, password } => Self::handshake(url, password.as_deref(), None),
+        };
+        match result {
             Ok(socket) => {
-                log::info!("OBS connected at {}", self.url);
+                log::info!("OBS connected");
                 self.socket = Some(socket);
+                self.pending.clear();
+                self.volume_db.clear();
+                self.items.clear();
+                self.live_scene = None;
+                if let Ok(mut known) = KNOWN.lock() {
+                    known.clear();
+                }
+                set_status(ConnectionStatus::Connected);
                 // the state keys show right after connecting
                 self.call("GetSceneList", json!({}), Then::Quiet);
                 for kind in
@@ -388,17 +485,26 @@ impl Worker {
                 }
             }
             Err(e) => {
+                set_status(ConnectionStatus::Unavailable);
                 if !self.queued.is_empty() {
                     self.queued.clear();
-                    self.error(format!("cannot reach OBS at {} ({e}). Is OBS running with its WebSocket server on (Tools > WebSocket Server Settings)?", self.url));
+                    self.error("Could not connect to OBS. Open OBS Studio and check its connection status in MasterDeck.".into());
                 }
                 log::debug!("OBS: {e}");
             }
         }
     }
 
-    fn handshake(&self) -> Result<Socket, String> {
-        let (mut socket, _) = tungstenite::connect(self.url.as_str()).map_err(|e| e.to_string())?;
+    fn handshake(url: &str, password: Option<&str>, local_port: Option<u16>) -> Result<Socket, String> {
+        let (mut socket, _) = if let Some(port) = local_port {
+            let address = SocketAddr::from((Ipv4Addr::LOCALHOST, port));
+            let tcp = TcpStream::connect_timeout(&address, Duration::from_millis(650)).map_err(|e| e.to_string())?;
+            tcp.set_read_timeout(Some(Duration::from_secs(3))).map_err(|e| e.to_string())?;
+            tcp.set_write_timeout(Some(Duration::from_secs(3))).map_err(|e| e.to_string())?;
+            tungstenite::client(url, MaybeTlsStream::Plain(tcp)).map_err(|e| e.to_string())?
+        } else {
+            tungstenite::connect(url).map_err(|e| e.to_string())?
+        };
         if let MaybeTlsStream::Plain(s) = socket.get_mut() {
             let _ = s.set_read_timeout(Some(Duration::from_secs(3)));
         }
@@ -408,7 +514,7 @@ impl Worker {
         }
         let mut identify = json!({"rpcVersion": 1, "eventSubscriptions": EVENTS});
         if let Some(auth) = hello["d"].get("authentication") {
-            let password = self.password.as_deref().ok_or("OBS asks for a password; set it in the profile panel under OBS")?;
+            let password = password.ok_or("OBS requires authentication, and the password is unavailable.")?;
             identify["authentication"] = json!(auth_string(password, auth["salt"].as_str().unwrap_or(""), auth["challenge"].as_str().unwrap_or("")));
         }
         socket.send(Message::text(json!({"op": 1, "d": identify}).to_string())).map_err(|e| e.to_string())?;

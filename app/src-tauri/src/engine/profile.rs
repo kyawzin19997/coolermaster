@@ -669,9 +669,12 @@ pub struct Settings {
     /// The first-run welcome was dismissed.
     #[serde(default)]
     pub onboarded: bool,
-    /// obs-websocket address; None = `ws://127.0.0.1:4455`. The password is in the credential store.
+    /// Address for a manually configured OBS connection. Its password lives in the credential store.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub obs_url: Option<String>,
+    /// Absent on older installations, where an explicit address implies manual mode.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub obs_automatic: Option<bool>,
     /// Streamlabs Desktop remote-control address; None = `ws://127.0.0.1:59650/api/websocket`.
     /// The API token is in the credential store.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -850,6 +853,7 @@ impl Default for Settings {
             autostart_offered: false,
             onboarded: false,
             obs_url: None,
+            obs_automatic: None,
             ha_url: None,
             streamlabs_url: None,
             screen_brightness: 100,

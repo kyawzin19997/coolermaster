@@ -424,6 +424,8 @@ pub fn run() {
             engine::commands::onboarding_done,
             engine::commands::integrations_get,
             engine::commands::integrations_set,
+            engine::commands::obs_connection_status,
+            engine::commands::obs_enable_local,
             engine::commands::homeassistant_set,
             engine::commands::streamlabs_set,
             engine::sdcatalog::sd_catalog,

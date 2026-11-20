@@ -56,6 +56,7 @@ pub mod monitor;
 pub mod names;
 pub mod nudge;
 pub mod obs;
+mod obs_local;
 mod pet;
 pub mod plugins;
 pub(crate) mod presets;
@@ -867,7 +868,7 @@ impl Engine {
         let monitor_tx = media_tx.clone();
         {
             let s = engine.shared.lock().unwrap_or_else(|e| e.into_inner());
-            obs::start(media_tx.clone(), s.store.settings.obs_url.clone().unwrap_or_else(|| obs::DEFAULT_URL.into()), secrets::get("obs"));
+            obs::start(media_tx.clone(), obs::settings(&s.store.settings), obs::local_roots(&engine.app, data_dir));
             homeassistant::start(media_tx.clone(), s.store.settings.ha_url.clone().unwrap_or_default(), secrets::get("homeassistant"));
             twitch::start(media_tx.clone());
             live::init(media_tx.clone());

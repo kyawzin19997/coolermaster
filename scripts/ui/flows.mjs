@@ -138,6 +138,16 @@ for (const [label, viewport] of [['wide', { width: 1440, height: 900 }], ['half'
     }
     return true;
   });
+  await step(page, `${label}: OBS defaults to automatic local connection`, async () => {
+    await page.locator('.settings-nav-item', { hasText: 'Connections' }).click();
+    const obs = page.locator('.svc', { has: page.locator('summary .svc-name', { hasText: /^OBS Studio$/ }) });
+    await obs.locator(':scope > summary').click();
+    const auto = await obs.getByText('Automatic on this computer', { exact: true }).isVisible();
+    const address = obs.getByLabel('OBS WebSocket address');
+    if (!auto || await address.isVisible()) return 'expected automatic mode and hidden manual fields';
+    await obs.getByText('Manual connection', { exact: true }).click();
+    return address.isVisible();
+  });
   await step(page, `${label}: Back to the deck`, async () => {
     await page.getByRole('button', { name: /Back to the deck/ }).click();
     await page.waitForTimeout(300);

@@ -424,9 +424,9 @@ export default function App() {
               onSaver={() => openDisplay("saver")}
             /></>}
           </div>
-          {(view.state?.trying || saverOn) && <div className="stage-bar">
+          {view.state?.trying && (
+            <div className="stage-bar">
             {/* a draft the assistant or the user put on the deck for a try: say so, and the way back */}
-            {view.state?.trying && (
               <span className="chip is-trying" role="status">
                 <Icon name="play" />
                 {view.state.comparing
@@ -446,18 +446,8 @@ export default function App() {
                   {t("assistant.back")}
                 </button>
               </span>
-            )}
-            {/* the deck shows its screensaver; the window shows the keys, says so, and can end it */}
-            {saverOn && (
-              <span className="chip" role="status">
-                <Icon name="sparkles" />
-                {t("stage.saverOn")}
-                <button className="link-btn" onClick={() => saverEnd()}>
-                  {t("stage.saverEnd")}
-                </button>
-              </span>
-            )}
-          </div>}
+            </div>
+          )}
           <div className="deck-area">
           <DeckView
             live={live}

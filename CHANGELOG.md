@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.3
+
+- MasterDeck automatically connects to local OBS Studio using OBS's configured port and authentication.
+- Set up a disabled OBS control service directly from MasterDeck with password protection. Manual connections remain available for remote and custom setups.
+- Previewing a screensaver preserves the deck's size and position. Stop the preview from its settings panel.
+
 ## 1.2.2
 
 - Screensavers play independently of the active key layout, with a dedicated frame schedule for the deck and its preview.

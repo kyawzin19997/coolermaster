@@ -24,6 +24,10 @@ Quit the official MasterHUB app before connecting the hardware. One application 
 
 Open **Deck tools → Screensaver**. Pick a built-in scene, use a deck look, or choose **Add screensaver** to import a GIF, WebP, PNG, or JPEG up to 15 MB. Set the idle delay and click **Preview** to see it across the keys. **Advanced settings** lets you apply a different screensaver to each profile and choose what the dial and lights do while it runs. MasterDeck keeps imported media on this computer. When moving a profile to another computer, add the image there and select it again.
 
+## Connect OBS Studio
+
+Open OBS Studio on the same computer. MasterDeck finds the local OBS connection and reconnects when OBS restarts. You can check the connection under **Settings → Connections → OBS Studio**. If MasterDeck shows **Setup needed**, close OBS Studio, choose **Enable connection** in MasterDeck, and reopen OBS. For OBS on another computer or a custom installation, expand **Manual connection**.
+
 ## Use a profile on another deck
 
 Open **Profile Settings → Use on another deck → Export**, or export straight from a profile’s three-dot menu. Copy the `.masterdeck` file to the other computer. There, open **Profiles → Import** and pick the file. The package carries actions, pages, and included key pictures. Review plugin requirements, linked apps, credentials, and file paths on the destination. [Profile transfer guide](docs/profile-transfer.md)

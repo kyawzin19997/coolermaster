@@ -2,7 +2,7 @@
 //! previews, export and import.
 
 use serde::Serialize;
-use tauri::State;
+use tauri::{AppHandle, Manager, State};
 
 use super::actions::{self, ActionDef};
 use super::profile::{Binding, Look, PROFILE_VERSION, Page, Profile};
@@ -769,6 +769,7 @@ pub async fn midi_ports() -> Vec<String> {
 pub struct Integrations {
     obs_url: String,
     obs_password_set: bool,
+    obs_automatic: bool,
     ha_url: String,
     ha_token_set: bool,
     streamlabs_url: String,
@@ -781,6 +782,7 @@ pub fn integrations_get(engine: State<'_, Engine>) -> Integrations {
     Integrations {
         obs_url: s.store.settings.obs_url.clone().unwrap_or_else(|| super::obs::DEFAULT_URL.into()),
         obs_password_set: super::secrets::get("obs").is_some(),
+        obs_automatic: super::obs::automatic(&s.store.settings),
         ha_url: s.store.settings.ha_url.clone().unwrap_or_default(),
         ha_token_set: super::secrets::get("homeassistant").is_some(),
         streamlabs_url: s.store.settings.streamlabs_url.clone().unwrap_or_else(|| super::streamlabs::DEFAULT_URL.into()),
@@ -907,21 +909,43 @@ pub fn homeassistant_set(engine: State<'_, Engine>, url: String, token: Option<S
 /// Change the OBS address and, if given, its password (empty = no password). The password goes to
 /// the system's credential store.
 #[tauri::command]
-pub fn integrations_set(engine: State<'_, Engine>, obs_url: String, obs_password: Option<String>) -> Res<()> {
+pub fn integrations_set(engine: State<'_, Engine>, obs_url: String, obs_password: Option<String>, automatic: Option<bool>) -> Res<()> {
     let url = obs_url.trim();
-    if !(url.starts_with("ws://") || url.starts_with("wss://")) {
+    let automatic = automatic.unwrap_or(false);
+    if !automatic && !(url.starts_with("ws://") || url.starts_with("wss://")) {
         return Err("the OBS address starts with ws://, e.g. ws://127.0.0.1:4455".into());
     }
-    if let Some(pw) = &obs_password {
+    if !automatic && let Some(pw) = &obs_password {
         super::secrets::set("obs", pw)?;
     }
-    {
+    let config = {
         let mut s = engine.lock();
-        s.store.settings.obs_url = (url != super::obs::DEFAULT_URL).then(|| url.to_string());
-        s.store.save_settings().map_err(io)?;
-    }
-    super::obs::configure(url.to_string(), super::secrets::get("obs"));
+        let previous = (s.store.settings.obs_automatic, s.store.settings.obs_url.clone());
+        s.store.settings.obs_automatic = Some(automatic);
+        if !automatic {
+            s.store.settings.obs_url = (url != super::obs::DEFAULT_URL).then(|| url.to_string());
+        }
+        if let Err(error) = s.store.save_settings() {
+            (s.store.settings.obs_automatic, s.store.settings.obs_url) = previous;
+            return Err(io(error));
+        }
+        super::obs::settings(&s.store.settings)
+    };
+    super::obs::configure(config);
     Ok(())
+}
+
+#[tauri::command]
+pub fn obs_connection_status() -> super::obs::ConnectionStatus {
+    super::obs::status()
+}
+
+#[tauri::command]
+pub async fn obs_enable_local(app: AppHandle) -> Res<()> {
+    if !super::obs::automatic(&app.state::<Engine>().lock().store.settings) {
+        return Err("Select automatic connection before setting up local OBS.".into());
+    }
+    tauri::async_runtime::spawn_blocking(super::obs::enable_local).await.map_err(io)?
 }
 
 /// The first-run welcome was dismissed.

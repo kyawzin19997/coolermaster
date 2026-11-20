@@ -1866,6 +1866,21 @@ button.chip.is-active {
 .svc summary:hover {
   background: var(--hov);
 }
+.obs-advanced > summary {
+  padding-inline: 0;
+  color: var(--tx2);
+  font-size: 12px;
+}
+.obs-advanced > summary::before {
+  content: "›";
+}
+.obs-advanced[open] > summary::before {
+  transform: rotate(90deg);
+}
+.obs-advanced[open] > .field,
+.obs-advanced[open] > .row {
+  margin-bottom: 10px;
+}
 .svc-ic {
   width: 26px;
   height: 26px;

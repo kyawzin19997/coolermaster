@@ -3240,74 +3240,107 @@ function YourApps() {
   );
 }
 
+
 function ObsConnection() {
   useLanguage();
   const [url, setUrl] = useState("");
+  const [automatic, setAutomatic] = useState(true);
   const [passwordSet, setPasswordSet] = useState(false);
   const [password, setPassword] = useState("");
-  const [message, setMessage] = useState<string | null>(null);
+  const [status, setStatus] = useState<Awaited<ReturnType<typeof api.obsStatus>>>("waiting");
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState<{ text: string; error?: boolean } | null>(null);
+
   useEffect(() => {
-    api.integrations().then((i) => {
-      setUrl(i.obsUrl);
-      setPasswordSet(i.obsPasswordSet);
-    }, () => {});
+    let active = true;
+    api.integrations().then((connection) => {
+      if (!active) return;
+      setUrl(connection.obsUrl);
+      setAutomatic(connection.obsAutomatic);
+      setPasswordSet(connection.obsPasswordSet);
+    }, (error) => { if (active) setMessage({ text: String(error), error: true }); });
+    const refresh = () => api.obsStatus().then((value) => { if (active) setStatus(value); }, () => {});
+    void refresh();
+    const timer = window.setInterval(refresh, 1500);
+    return () => { active = false; window.clearInterval(timer); };
   }, []);
+
+  const act = async (task: () => Promise<void>) => {
+    setMessage(null);
+    setBusy(true);
+    try {
+      await task();
+    } catch (error) {
+      setMessage({ text: String(error), error: true });
+    } finally {
+      setBusy(false);
+    }
+  };
+  const save = (mode: boolean, nextPassword: string | null) => act(async () => {
+    await api.setIntegrations(url, nextPassword, mode);
+    setAutomatic(mode);
+    if (!mode && nextPassword !== null) setPasswordSet(Boolean(nextPassword));
+    setPassword("");
+    setStatus("waiting");
+    setMessage({ text: t("connections.obsSaved") });
+  });
+  const enable = () => act(async () => {
+    const confirmed = await askInWindow({
+      title: t("connections.obsSetupTitle"),
+      body: t("connections.obsSetupBody"),
+      ok: t("connections.obsEnable"),
+    });
+    if (!confirmed) return;
+    await api.obsEnableLocal();
+    setStatus("waiting");
+    setMessage({ text: t("connections.obsEnabled") });
+  });
+  const label = status === "connected" ? t("connections.obsConnected")
+    : status === "setupRequired" && automatic ? t("connections.obsSetupRequired")
+    : automatic ? t("connections.obsWaiting") : t("connections.obsDisconnected");
+
   return (
-    <Service icon="video" hue="#f0506e" name="OBS Studio" state={[passwordSet, passwordSet ? t("connections.stateSet") : t("connections.stateNotSet")]} open={demoParam("svc") === "obs"}>
-      <div className="field">
-        <label htmlFor="obs-url" className="label">
-          {t("connections.obsUrl")}
-        </label>
-        <input id="obs-url" className="input mono" value={url} onChange={(e) => setUrl(e.target.value)} />
-      </div>
-      <div className="field">
-        <label htmlFor="obs-password" className="label">
-          {t("connections.obsPassword")}
-        </label>
-        <input
-          id="obs-password"
-          className="input"
-          type="password"
-          autoComplete="off"
-          placeholder={passwordSet ? t("connections.passwordKept") : t("connections.passwordNone")}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-      </div>
-      <div className="row wrap">
-        <button
-          className="tool"
-          onClick={() =>
-            api.setIntegrations(url, password ? password : null).then(
-              () => {
-                if (password) setPasswordSet(true);
-                setPassword("");
-                setMessage(t("connections.saved"));
-              },
-              (e) => setMessage(String(e)),
-            )
-          }
-        >
-          {t("connections.save")}
+    <Service icon="video" hue="#f0506e" name="OBS Studio" state={[status === "connected", label]} open={demoParam("svc") === "obs"}>
+      {automatic ? (
+        <div className="field">
+          <span className="label">{t("connections.obsAutomatic")}</span>
+          <p className="help">{t(status === "setupRequired" ? "connections.obsDisabledHelp" : "connections.obsAutoHelp")}</p>
+          {status === "setupRequired" && (
+            <button type="button" className="tool align-start" disabled={busy} onClick={() => void enable()}>
+              {t("connections.obsEnable")}
+            </button>
+          )}
+        </div>
+      ) : (
+        <button type="button" className="tool align-start" disabled={busy} onClick={() => void save(true, null)}>
+          {t("connections.obsUseAuto")}
         </button>
-        {passwordSet && (
-          <button
-            className="tool ghost"
-            onClick={() =>
-              api.setIntegrations(url, "").then(
-                () => {
-                  setPasswordSet(false);
-                  setMessage(t("connections.passwordRemoved"));
-                },
-                (e) => setMessage(String(e)),
-              )
-            }
-          >
-            {t("connections.removePassword")}
+      )}
+      <details className="obs-advanced" open={automatic ? undefined : true}>
+        <summary>{t("connections.obsManual")}</summary>
+        <div className="field">
+          <label htmlFor="obs-url" className="label">{t("connections.obsUrl")}</label>
+          <input id="obs-url" className="input mono" value={url} onChange={(e) => setUrl(e.target.value)} />
+        </div>
+        <div className="field">
+          <label htmlFor="obs-password" className="label">{t("connections.obsPassword")}</label>
+          <input id="obs-password" className="input" type="password" autoComplete="off"
+            placeholder={passwordSet ? t("connections.passwordKept") : t("connections.passwordNone")}
+            value={password} onChange={(e) => setPassword(e.target.value)} />
+        </div>
+        <div className="row wrap">
+          <button type="button" className="tool" disabled={busy} onClick={() => void save(false, password || null)}>
+            {t("connections.obsConnectManual")}
           </button>
-        )}
-      </div>
-      <p className="help">{message ?? t("connections.obsHelp")}</p>
+          {passwordSet && !automatic && (
+            <button type="button" className="tool ghost" disabled={busy} onClick={() => void save(false, "")}>
+              {t("connections.removePassword")}
+            </button>
+          )}
+        </div>
+        <p className="help">{t("connections.obsHelp")}</p>
+      </details>
+      {message && <p className={message.error ? "help warn" : "help"} role={message.error ? "alert" : "status"}>{message.text}</p>}
     </Service>
   );
 }

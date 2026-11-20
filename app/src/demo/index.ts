@@ -247,7 +247,8 @@ const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
     }
     changed();
   },
-  integrations_get: () => ({ obsUrl: "ws://127.0.0.1:4455", obsPasswordSet: true, haUrl: "http://homeassistant.local:8123", haTokenSet: true, streamlabsUrl: "ws://127.0.0.1:59650", streamlabsTokenSet: false }),
+  integrations_get: () => ({ obsUrl: "ws://127.0.0.1:4455", obsPasswordSet: true, obsAutomatic: true, haUrl: "http://homeassistant.local:8123", haTokenSet: true, streamlabsUrl: "ws://127.0.0.1:59650", streamlabsTokenSet: false }),
+  obs_connection_status: () => "waiting",
   plugins_list: () => [...demoPlugins.values()],
   plugin_stop: ({ id }) => setPluginEnabled(id, false),
   // `&runs=1`: Import picks a shared profile that runs a script, so it asks first (scripts/ui/questions.mjs)
