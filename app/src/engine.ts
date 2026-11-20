@@ -922,6 +922,7 @@ export interface AppInfo {
 }
 
 export interface EngineState {
+  obsStudioMode?: boolean;
   profiles: ProfileSummary[];
   active: string | null;
   /** The home profile at start. */

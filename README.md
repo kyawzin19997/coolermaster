@@ -15,10 +15,13 @@ Quit the official MasterHUB app before connecting the hardware. One application 
 
 ## Set up your deck
 
-1. Open **Profiles** to choose a layout or create your own. Click **+** by the page tabs to add a page.
-2. Drag an action onto a key. To assign a second gesture, select the key and drag onto **Hold** or **Double press** in **Key Settings**. Open **Appearance** to change the key’s face.
-3. To reuse a key, right-click and choose **Copy key**, then **Paste key** on the destination. You can also use Ctrl+C and Ctrl+V on Windows, or Cmd+C and Cmd+V on macOS.
-4. Open **Deck tools → Lights and screens** for adjustments next to the deck preview. Open **Settings → Connections** to configure integrations such as OBS Studio, Spotify, Twitch, Streamlabs, and Home Assistant.
+1. Open **Deck tools → Getting Started** for guided lessons beside the live deck. **Your Deck, Your Modules** explains what each kind of control can do and opens the layout editor.
+2. Open **Profiles** to choose a starter layout or create your own. Click **+** by the page tabs to add a page. Drag **Switch profile** from the Actions panel to a key to jump between profiles.
+3. Drag an action onto a key. To assign another gesture, select the key and drag onto **Hold** or **Double press** in **Key Settings**. Open **Appearance** to change the key’s face.
+4. To reuse a key, right-click and choose **Copy key**, then **Paste key** on the destination. You can also use Ctrl+C and Ctrl+V on Windows, or Cmd+C and Cmd+V on macOS.
+5. Open **Deck tools → Lights and screens** beside the deck preview. Use **Settings → Connections** for OBS Studio, Spotify, Twitch, Streamlabs, and Home Assistant.
+
+**Everyday desk** covers media, editing, mic mute, and a focus timer. **My deck · faders** adds app launchers, a Fun page, and a clock you can double press to switch profiles. **Discord & meetings** groups call shortcuts by app and puts system mic mute on the Music key’s Hold gesture. **OBS streaming** provides scene keys, recording and streaming controls, and Studio Mode and Transition keys. Existing saved profiles keep their assignments.
 
 ## Set a screensaver
 
@@ -27,6 +30,8 @@ Open **Deck tools → Screensaver**. Pick a built-in scene, use a deck look, or 
 ## Connect OBS Studio
 
 Open OBS Studio on the same computer. MasterDeck finds the local OBS connection and reconnects when OBS restarts. You can check the connection under **Settings → Connections → OBS Studio**. If MasterDeck shows **Setup needed**, close OBS Studio, choose **Enable connection** in MasterDeck, and reopen OBS. For OBS on another computer or a custom installation, expand **Manual connection**.
+
+In OBS Studio Mode, select a scene key and choose **Preview** to cue a scene or **Program** to switch the live output. The target appears on the deck preview. A key set to Preview requires Studio Mode, so it cannot accidentally switch the live output outside Studio Mode.
 
 ## Use a profile on another deck
 

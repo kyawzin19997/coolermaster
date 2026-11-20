@@ -22,6 +22,7 @@ const SEARCH_ALIASES: Record<string, string> = {
   "core.page": "folder page strona",
   "core.nextPage": "page folder strona",
   "core.previousPage": "page folder back strona wstecz",
+  "core.profile": "switch profile change layout next previous navigation przełącz profil",
 };
 
 type ActionSource = Pick<EngineView, "icons" | "catalog">;
@@ -83,7 +84,9 @@ export const ActionLibrary = memo(function ActionLibrary({
   const matching = actions.filter(({ action, search: text }) =>
     (!compatibleOnly || !selectedKind || actionFits(action, selectedKind)) && words.every((word) => text.includes(word)));
   const groups = new Map<string, ActionDef[]>();
+  const profileSwitch = words.length === 0 ? matching.find(({ action }) => action.id === "core.profile")?.action : undefined;
   for (const { action } of matching) {
+    if (action === profileSwitch) continue;
     const group = groups.get(action.group);
     if (group) group.push(action);
     else groups.set(action.group, [action]);
@@ -123,6 +126,7 @@ export const ActionLibrary = memo(function ActionLibrary({
           <p className={`help chooser-browse${hint ? " is-nudged" : ""}`} role="status">{t("library.dragHint")}</p>
         </div>
         <div className="chooser-results">
+          {profileSwitch && <div className="chooser-list quick-profile-action">{actionRow(profileSwitch)}</div>}
           {!matching.length && words.length > 0 && <p className="help">{t("chooser.noMatch", { query: query.trim() })}</p>}
           {words.length > 0 ? (
             <div className="chooser-list">{matching.map(({ action }) => actionRow(action))}</div>

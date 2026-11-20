@@ -435,10 +435,20 @@ pub fn presets_list() -> Vec<PresetSummary> {
 /// `kinds`: the module kinds the user has (attached and owned); None = the preset as it is.
 pub fn preset_add(engine: State<'_, Engine>, id: String, kinds: Option<Vec<String>>, draft: Option<bool>) -> Res<Profile> {
     let preset = super::presets::current_templates().into_iter().chain(super::presets::catalog()).find(|p| p.id == id).ok_or_else(|| format!("no preset {id}"))?;
-    let profile = match kinds {
-        Some(k) => super::presets::adapt(preset.make(), &k),
-        None => preset.make(),
-    };
+    let mut profile = preset.make();
+    if id == "masterdeck-obs"
+        && let Some((scenes, _)) = super::obs::known()
+    {
+        for (index, scene) in scenes.into_iter().take(5).enumerate() {
+            if let Some(binding) = profile.controls.get_mut(&format!("keys.{index}")) {
+                binding.params["scene"] = serde_json::json!(scene);
+                binding.look.label = Some(scene);
+            }
+        }
+    }
+    if let Some(kinds) = kinds {
+        profile = super::presets::adapt(profile, &kinds);
+    }
     {
         let mut s = engine.lock();
         s.store.save_profile(profile.clone()).map_err(io)?;

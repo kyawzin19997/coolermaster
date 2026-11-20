@@ -103,6 +103,7 @@ let beforeTour: string | null = null;
 let beforeBuilder: { active: string; page: string | null } | null = null;
 const builderDraft = "demo-builder-draft";
 let onboarded = new URLSearchParams(location.search).get("demo") !== "welcome" && demoParam("panel") !== "welcome";
+let obsStudioMode = false;
 
 // "Ready for your apps": profiles MasterDeck made for installed apps, switching in only once switched on
 const ready = new Map<string, boolean>();
@@ -123,6 +124,7 @@ const state = (): EngineState => ({
   page,
   onboarded,
   playing: false,
+  obsStudioMode,
 });
 
 /** A plain key picture for looks the fixture does not have (edited in the demo). */
@@ -179,7 +181,13 @@ const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
     else delete placements[key as string];
   },
   actions_list: () => ({ ...fixture.catalog, actions: [
-    ...fixture.catalog.actions,
+    ...fixture.catalog.actions.map((action) => {
+      if (action.id === "obs.scene" && !action.params.some((param) => param.key === "sceneTarget")) {
+        return { ...action, params: [...action.params, { key: "sceneTarget", label: "Send scene to", type: "select", default: "program", options: [["program", "Program"], ["preview", "Preview"]] }] };
+      }
+      if (action.id === "core.profile") return { ...action, params: action.params.map((param) => param.key === "which" ? { ...param, default: "next" } : param) };
+      return action;
+    }),
     ...(demoPlugins.get(localPlugin.id)?.connected ? [{ id: `${localPlugin.id}/switch`, name: "Studio switch", group: localPlugin.name, description: "Switch the studio output.", icon: "plug", inputs: ["press"], params: [] }] : []),
   ] }),
   icons_list: () => fixture.icons,
@@ -596,7 +604,10 @@ export function installDemo() {
   );
   if (banners.includes("update")) setTimeout(() => void emit("update://available", UPDATE), 500);
   // screenshot scripts stand in for the deck: `demoEmit("tour://gesture", "dial:turn")`
-  Object.assign(window, { demoEmit: (event: string, payload: unknown) => emit(event, payload) });
+  Object.assign(window, {
+    demoEmit: (event: string, payload: unknown) => emit(event, payload),
+    demoObsStudio: (active: boolean) => { obsStudioMode = active; changed(); },
+  });
   if (banners.includes("error")) {
     const fail = () => void emit("engine://error", { control: "keys.2", message: "OBS is not running (ws://127.0.0.1:4455)" });
     setTimeout(fail, 500);

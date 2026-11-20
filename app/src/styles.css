@@ -564,19 +564,7 @@ select.input option {
   background: var(--acc);
 }
 
-/* ---------- banners, popovers, toast ---------- */
-.banner {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 9px 16px;
-  background: var(--warnbg);
-  color: var(--warntx);
-  border-bottom: 1px solid var(--warnln);
-}
-.banner .i {
-  color: var(--warn);
-}
+/* ---------- popovers ---------- */
 .banner-inline {
   padding: 10px 12px;
   border-radius: calc(var(--r) + 2px);
@@ -635,23 +623,6 @@ select.input option {
   letter-spacing: 0.08em;
   color: var(--tx3);
   font-weight: 600;
-}
-.toast {
-  position: fixed;
-  bottom: 24px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 20;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  height: 36px;
-  padding: 0 14px;
-  border-radius: 10px;
-  background: var(--bg3);
-  color: var(--tx);
-  box-shadow: var(--popsh);
-  font-weight: 500;
 }
 
 /* ---------- three panes ---------- */
@@ -925,18 +896,6 @@ select.input option {
   flex-direction: column;
   background: var(--stagebg);
   position: relative;
-}
-.stage-bar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 14px 20px;
-  position: relative;
-  z-index: 1;
-}
-.stage-bar .label {
-  color: var(--tx3);
-  margin-right: 2px;
 }
 .chip {
   display: inline-flex;
@@ -2116,40 +2075,6 @@ button.chip.is-active {
   margin: 0 -10px;
 }
 
-/* banners under the top bar */
-.banner {
-  font-size: 12.5px;
-}
-.banner .tool {
-  flex: none;
-}
-.banner.is-info {
-  background: color-mix(in srgb, var(--acc) 10%, var(--bg1));
-  color: var(--tx);
-  border-bottom-color: var(--accln);
-}
-.banner.is-info .i {
-  color: var(--acc2);
-}
-.banner.is-warn {
-  background: color-mix(in srgb, var(--warn) 10%, var(--bg1));
-  color: var(--tx);
-  border-bottom-color: color-mix(in srgb, var(--warn) 35%, transparent);
-}
-.banner.is-warn .i {
-  color: var(--warn);
-}
-.banner.is-err {
-  background: color-mix(in srgb, var(--err) 10%, var(--bg1));
-  color: var(--errtx);
-  border-bottom-color: var(--errln);
-}
-.banner.is-err .i {
-  color: var(--err);
-}
-.banner.is-err b {
-  font-weight: 600;
-}
 .banner-note {
   opacity: 0.75;
 }
@@ -2184,19 +2109,6 @@ button.chip.is-active {
   box-shadow: inset 0 0 0 1px var(--accln);
 }
 .notes,
-.banner-notes {
-  white-space: pre-wrap;
-  font-size: 12px;
-  line-height: 1.5;
-  color: var(--tx2);
-  max-height: 180px;
-  overflow-y: auto;
-}
-.banner-notes {
-  padding: 10px 16px 12px 42px;
-  background: var(--bg1);
-  border-bottom: 1px solid var(--ln);
-}
 .about-head {
   display: flex;
   align-items: center;
@@ -2762,24 +2674,6 @@ button.chip.is-active {
 }
 
 /* many key pages or a narrow window: the pages scroll sideways instead of wrapping under "Edit layout" */
-.stage-bar {
-  min-width: 0;
-}
-.stage-bar .page-bar {
-  justify-content: flex-start;
-  flex-wrap: nowrap;
-  min-width: 0;
-  overflow-x: auto;
-  /* no bar: the tabs fade out at the edge and scroll with the wheel or a drag */
-  scrollbar-width: none;
-  mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
-}
-.stage-bar .page-bar > * {
-  flex: none;
-}
-.stage-bar > .chip {
-  flex: none;
-}
 /* each gesture tab as wide as its words: "Press" gives room to "Double press" */
 .gesture-tabs .tab {
   flex: 1 1 auto;

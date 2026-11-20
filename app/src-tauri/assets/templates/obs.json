@@ -150,30 +150,6 @@
         "command": "playPause"
       }
     },
-    "keys.13": {
-      "action": "core.launch",
-      "look": {
-        "bg": "#1b1a20",
-        "fg": "#e6e4ee",
-        "iconColor": "#79eca1",
-        "label": "Dashboard",
-        "icon": "globe"
-      },
-      "params": {}
-    },
-    "keys.14": {
-      "action": "core.monitor",
-      "look": {
-        "bg": "#1b1a20",
-        "fg": "#e6e4ee",
-        "iconColor": "#9f79ec",
-        "label": "CPU",
-        "icon": "monitor"
-      },
-      "params": {
-        "metric": "cpu"
-      }
-    },
     "keys.2": {
       "action": "obs.scene",
       "look": {
@@ -285,6 +261,79 @@
         "amount": 3,
         "axis": "vertical"
       }
+    },
+    "obs-tools/keys.0": {
+      "action": "core.launch",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#79eca1",
+        "label": "Dashboard",
+        "icon": "globe"
+      },
+      "params": {}
+    },
+    "obs-tools/keys.1": {
+      "action": "core.monitor",
+      "look": {
+        "bg": "#1b1a20",
+        "fg": "#e6e4ee",
+        "iconColor": "#9f79ec",
+        "label": "CPU",
+        "icon": "monitor"
+      },
+      "params": {
+        "metric": "cpu"
+      }
+    },
+    "keys.13": {
+      "action": "obs.studioMode",
+      "params": {},
+      "look": {
+        "label": "Studio Mode",
+        "icon": "layout-grid",
+        "bg": "#232b34",
+        "note": "Turns OBS Studio Mode on or off. Scene keys can then target Preview or Program."
+      }
+    },
+    "keys.14": {
+      "action": "obs.transition",
+      "params": {},
+      "look": {
+        "label": "Transition",
+        "icon": "arrow-right",
+        "bg": "#232b34",
+        "note": "Transitions the preview to Program in OBS Studio Mode."
+      }
+    },
+    "obs-tools/keys.12": {
+      "action": "core.profile",
+      "params": {
+        "which": "next"
+      },
+      "look": {
+        "label": "Next profile",
+        "icon": "layers",
+        "bg": "#232b34",
+        "note": "Switches to the next saved profile. Set Go to to choose a specific profile."
+      }
+    },
+    "obs-tools/keys.14": {
+      "action": "core.page",
+      "params": {
+        "page": ""
+      },
+      "look": {
+        "label": "Back",
+        "icon": "arrow-left",
+        "bg": "#232b34"
+      }
     }
-  }
+  },
+  "pages": [
+    {
+      "id": "obs-tools",
+      "name": "Tools"
+    }
+  ]
 }

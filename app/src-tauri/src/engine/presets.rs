@@ -31,14 +31,18 @@ pub fn everyday_desk() -> Profile {
         bind("core.hotkey", json!({"keys": format!("{cmd}+Z")}), "Undo", "undo-2", EDIT),
         bind("core.hotkey", json!({"keys": format!("{cmd}+F")}), "Find", "search", EDIT),
         bind("core.launch", json!({"target": "https://www.google.com"}), "Web", "globe", WEB),
-        bind("core.hotkey", json!({"keys": "F13"}), "F13", "zap", FN),
-        bind("core.hotkey", json!({"keys": "F14"}), "F14", "zap", FN),
-        bind("core.hotkey", json!({"keys": "F15"}), "F15", "zap", FN),
-        bind("core.hotkey", json!({"keys": "F16"}), "F16", "zap", FN),
-        bind("core.hotkey", json!({"keys": "F17"}), "F17", "zap", FN),
+        bind("core.mic", json!({}), "Mic mute", "mic", FN),
+        bind("core.timer", json!({"minutes": 25}), "Focus 25", "timer", FN),
+        bind("core.clock", json!({"show": "timeDate"}), "Clock", "clock", FN),
+        bind("core.saver", json!({"effect": "aurora"}), "Screensaver", "moon", FN),
+        bind("core.profile", json!({"which": "next"}), "Next profile", "layers", FN),
     ];
     for (i, b) in keys.into_iter().enumerate() {
         c.insert(format!("keys.{i}"), b);
+    }
+    for index in 10..15 {
+        let hotkey = format!("F{}", index + 3);
+        c.insert(format!("keys.{index}:hold"), bind("core.hotkey", json!({"keys": hotkey}), &hotkey, "zap", FN));
     }
     c.insert("dial".into(), bind("core.volume", json!({"target": "system", "step": 2}), "Volume", "volume-2", "#1f1d26"));
     c.insert("knobs.0".into(), bind("core.volume", json!({"target": "app", "app": "spotify.exe", "step": 3}), "Spotify", "music", "#1f1d26"));
@@ -1059,10 +1063,10 @@ macro_rules! current_template {
 
 pub fn current_templates() -> Vec<PresetInfo> {
     vec![
-        current_template!(current_my_deck, "my-deck", "My deck · faders", "A deck with fader levels, pages, a timer and media controls."),
-        current_template!(current_everyday, "everyday", "Everyday desk", "An everyday layout with media, shortcuts and OBS controls."),
-        current_template!(current_obs, "obs", "OBS streaming", "Scenes, audio sources, recording, replay and streaming."),
-        current_template!(current_meetings, "meetings", "Discord & meetings", "Meeting shortcuts, playback and app volumes."),
+        current_template!(current_my_deck, "my-deck", "My deck · faders", "App launchers, volume faders, a focus timer, and a Fun page. Double press the clock to switch profiles."),
+        current_template!(current_everyday, "everyday", "Everyday desk", "Playback, mic mute, editing, a focus timer, and profile switching. Hold the last five keys for F13–F17."),
+        current_template!(current_obs, "obs", "OBS streaming", "Five scene keys, recording, stream, replay, Studio Mode, and Transition. Use the Tools page for extras."),
+        current_template!(current_meetings, "meetings", "Discord & meetings", "Meeting shortcuts for Discord, Teams, Zoom, and Meet. Hold Music to mute the system microphone."),
         current_template!(current_steam, "steam", "Steam", "Steam controls, media keys, microphone and scrolling."),
         current_template!(current_telegram, "telegram", "Telegram", "Telegram shortcuts and desktop controls."),
         current_template!(current_codex, "codex", "Codex", "Codex shortcuts and desktop controls."),

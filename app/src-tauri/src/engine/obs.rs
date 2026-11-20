@@ -29,7 +29,10 @@ const EVENTS: u32 = 2 | 4 | 8 | 32 | 64 | 128 | 1024;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Request {
-    Scene(String),
+    Scene {
+        name: String,
+        preview: bool,
+    },
     ToggleRecord,
     ToggleStream,
     SaveReplay,
@@ -353,6 +356,7 @@ struct Worker {
     /// scene item id -> (scene, source), to follow visibility events.
     items: HashMap<(String, i64), String>,
     live_scene: Option<String>,
+    studio_mode: bool,
 }
 
 impl Worker {
@@ -370,11 +374,15 @@ impl Worker {
             volume_db: HashMap::new(),
             items: HashMap::new(),
             live_scene: None,
+            studio_mode: false,
         }
     }
 
     fn run(mut self, rx: Receiver<Cmd>) {
         loop {
+            if self.socket.is_none() {
+                self.set_studio_mode(false);
+            }
             CONNECTED.store(self.socket.is_some(), std::sync::atomic::Ordering::Relaxed);
             // while nothing uses OBS, sleep until a command comes; connected, wake often to read
             // events; wanted but not reachable, try again every few seconds
@@ -399,6 +407,7 @@ impl Worker {
             if self.socket.is_some() {
                 self.read();
                 if self.socket.is_none() {
+                    self.set_studio_mode(false);
                     set_status(ConnectionStatus::Waiting);
                 }
             }
@@ -423,6 +432,7 @@ impl Worker {
             Cmd::Settings(connection) => {
                 self.connection = connection;
                 self.socket = None;
+                self.set_studio_mode(false);
                 self.requested = true;
                 self.last_try = None;
                 set_status(ConnectionStatus::Waiting);
@@ -543,7 +553,13 @@ impl Worker {
 
     fn perform(&mut self, r: Request) {
         match r {
-            Request::Scene(scene) => self.call("SetCurrentProgramScene", json!({"sceneName": scene}), Then::Nothing),
+            Request::Scene { name, preview } => {
+                if preview && !self.studio_mode {
+                    self.error("Turn on Studio Mode in OBS to use a Preview scene key.".into());
+                } else {
+                    self.call(if preview { "SetCurrentPreviewScene" } else { "SetCurrentProgramScene" }, json!({"sceneName": name}), Then::Nothing);
+                }
+            }
             Request::ToggleRecord => self.call("ToggleRecord", json!({}), Then::Nothing),
             Request::ToggleStream => self.call("ToggleStream", json!({}), Then::Nothing),
             Request::SaveReplay => self.call("SaveReplayBuffer", json!({}), Then::Nothing),
@@ -587,9 +603,23 @@ impl Worker {
         self.call("SaveSourceScreenshot", json!({"sourceName": source, "imageFormat": "png", "imageFilePath": path}), Then::Nothing);
     }
 
-    fn apply(&self, updates: Vec<Update>) {
+    fn set_studio_mode(&mut self, on: bool) {
+        if self.studio_mode == on {
+            return;
+        }
+        self.studio_mode = on;
+        self.state("obs:studio".into(), on);
+        if on {
+            self.call("GetCurrentPreviewScene", json!({}), Then::Quiet);
+        } else {
+            self.preview_scene("");
+        }
+    }
+
+    fn apply(&mut self, updates: Vec<Update>) {
         for u in updates {
             match u {
+                Update::State(key, on) if key == "obs:studio" => self.set_studio_mode(on),
                 Update::State(key, on) => self.state(key, on),
                 Update::Value(key, value) => {
                     let _ = self.engine.send(Msg::IntegrationValue { key, value });
@@ -674,6 +704,7 @@ impl Worker {
                 self.call("GetSceneItemId", json!({"sceneName": scene.clone(), "sourceName": source.clone()}), Then::ItemFound { scene, source });
             }
             ("GetCurrentProgramScene", _) => self.scene(data["currentProgramSceneName"].as_str().unwrap_or("")),
+            ("GetCurrentPreviewScene", _) if self.studio_mode => self.preview_scene(data["currentPreviewSceneName"].as_str().unwrap_or("")),
             ("GetSceneList", _) => {
                 // the filters of every scene too (a filter sits on a scene or a source)
                 for name in names_in(kind, data, None).map(|(_, v)| v).unwrap_or_default() {
@@ -720,6 +751,10 @@ impl Worker {
         let _ = self.engine.send(Msg::IntegrationValue { key: "obs:scene".into(), value: name.to_string() });
     }
 
+    fn preview_scene(&self, name: &str) {
+        let _ = self.engine.send(Msg::IntegrationValue { key: "obs:previewScene".into(), value: name.to_string() });
+    }
+
     fn event(&mut self, kind: &str, data: &Value) {
         let updates = event_updates(kind, data);
         if !updates.is_empty() {
@@ -728,6 +763,7 @@ impl Worker {
         }
         match kind {
             "CurrentProgramSceneChanged" => self.scene(data["sceneName"].as_str().unwrap_or("")),
+            "CurrentPreviewSceneChanged" if self.studio_mode => self.preview_scene(data["sceneName"].as_str().unwrap_or("")),
             "InputVolumeChanged" => {
                 if let (Some(name), Some(db)) = (data["inputName"].as_str(), data["inputVolumeDb"].as_f64()) {
                     self.volume_db.insert(name.to_string(), db as f32);

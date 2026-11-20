@@ -597,7 +597,7 @@ impl Executor {
                 out.feedback = Some(Feedback { value: Some(value / 100.0), caption: "Brightness".into() });
             }
 
-            ("obs.scene", InputEvent::Press(true)) => obs::request(obs::Request::Scene(param_str(p, "scene").trim().to_string())),
+            ("obs.scene", InputEvent::Press(true)) => obs::request(obs::Request::Scene { name: required(p, "scene", "an OBS scene")?, preview: param_str(p, "sceneTarget") == "preview" }),
             ("obs.record", InputEvent::Press(true)) => obs::request(obs::Request::ToggleRecord),
             ("obs.stream", InputEvent::Press(true)) => obs::request(obs::Request::ToggleStream),
             ("obs.replay", InputEvent::Press(true)) => obs::request(obs::Request::SaveReplay),

@@ -1,3 +1,4 @@
+import { ToastMessage } from "./Notice";
 import { useEffect, useState } from "react";
 import { api, BACKGROUNDS, FLASHING_MOTIONS, SKIN_MOTION, SKINS, usePreview, type Look, type Skin } from "../engine";
 import { t, type Key } from "../i18n";
@@ -344,7 +345,7 @@ export function KeyDesigner({ look, onChange, others, onApplyTo, appIcon }: { lo
             onChange={(motion) => onChange({ ...look, motion })}
           />
           {look.motion && <p className="help">{t("designer.motionHelp")}</p>}
-          {look.motion && FLASHING_MOTIONS.includes(look.motion) && <p className="help warn">{t("designer.motionFlashes")}</p>}
+          {look.motion && FLASHING_MOTIONS.includes(look.motion) && <ToastMessage tone="warn" message={t("designer.motionFlashes")} />}
           <div className="row designer-ring">
             <label className="check">
               <input type="checkbox" checked={!!look.ring} onChange={(e) => onChange({ ...look, ring: e.target.checked ? "#f5c542" : undefined })} />

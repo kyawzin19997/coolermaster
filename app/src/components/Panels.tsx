@@ -1,3 +1,4 @@
+import { Notice, NOTICE_ROOT, ToastMessage } from "./Notice";
 import { readPreference, writePreference } from "../preferences";
 import { Fragment, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -17,7 +18,7 @@ import { setTheme, useTheme, type Theme } from "../theme";
 import { updates, useAppVersion, useUpdateAvailable, type UpdateInfo } from "../update";
 import { keysOfKind, MODULE_KINDS, ownedKey, type Placement } from "../layout";
 import { BUILT_IN_LANGUAGES, getLanguage, languageTemplate, localizeError, localizeGame, localizePreset, t, useLanguage, type Key } from "../i18n";
-import masterdeckIcon from "../../src-tauri/icons/masterdeck.svg";
+import masterdeckIcon from "../../src-tauri/icons/masterdeck-mark.svg";
 
 // macOS has no listening to the music yet (engine/beat.rs: Windows only)
 const IS_MAC = typeof navigator !== "undefined" && navigator.userAgent.includes("Mac");
@@ -1057,14 +1058,14 @@ export function TopBar({
   );
 }
 
-export function DeckTools({ canArrange, modulesOpen, onModules, onArrange, onBuild, onDisplay, onSaver }: {
+export function DeckTools({ canArrange, onArrange, onBuild, onDisplay, onSaver, onGuide, onModulesGuide }: {
   canArrange: boolean;
-  modulesOpen: boolean;
-  onModules: () => void;
   onArrange: () => void;
   onBuild: () => void;
   onDisplay: () => void;
   onSaver: () => void;
+  onGuide: () => void;
+  onModulesGuide: () => void;
 }) {
   useLanguage();
   const [open, setOpen] = useState(false);
@@ -1076,7 +1077,8 @@ export function DeckTools({ canArrange, modulesOpen, onModules, onArrange, onBui
     { label: t("saver.title"), icon: "moon", run: onSaver },
     { label: t("stage.editLayout"), icon: "layout-grid", run: onArrange, disabled: !canArrange },
     { label: t("builder.title"), icon: "pencil", run: onBuild },
-    { label: t(modulesOpen ? "stage.hideModules" : "stage.showModules"), icon: "layers", run: onModules },
+    { label: t("workshop.modules"), icon: "app-window", run: onModulesGuide },
+    { label: t("workshop.start"), icon: "compass", run: onGuide },
   ];
   return (
     <span className="pop-anchor deck-tools" ref={ref}>
@@ -1324,7 +1326,7 @@ export function EffectFields({ idPrefix, effect, speed, onChange }: { idPrefix: 
 
 /** Title row of a side panel: icon, small caption, title, close. */
 /** A panel over the window (For an app, Gallery, Games, a deck's settings): the editor on the right stays. Esc or a click outside closes it. */
-export function Sheet({ onClose, label, children }: { onClose: () => void; label?: string; children: React.ReactNode }) {
+export function Sheet({ onClose, label, wide, children }: { onClose: () => void; label?: string; wide?: boolean; children: React.ReactNode }) {
   const close = useRef(onClose);
   close.current = onClose;
   useEffect(() => {
@@ -1337,7 +1339,7 @@ export function Sheet({ onClose, label, children }: { onClose: () => void; label
   }, []);
   return (
     <div className="sheet-backdrop" onMouseDown={(e) => e.target === e.currentTarget && close.current()}>
-      <div className="sheet" role="dialog" aria-modal="true" aria-label={label}>
+      <div className={wide ? "sheet sheet-wide" : "sheet"} role="dialog" aria-modal="true" aria-label={label}>
         {children}
       </div>
     </div>
@@ -1859,7 +1861,7 @@ function SaverPanel({ view }: { view: EngineView }) {
 
   if (!draft || !shared) return (
     <section className="sec" aria-label={t("saver.title")}>
-      {error ? <p className="help warn" role="alert">{error}</p> : <p className="help" role="status">{t("app.loadingPanel")}</p>}
+      {error ? <ToastMessage message={error} /> : <p className="help" role="status">{t("app.loadingPanel")}</p>}
     </section>
   );
 
@@ -1932,7 +1934,7 @@ function SaverPanel({ view }: { view: EngineView }) {
           </select>
         </label>
         {effect && shared.blankAfterMinutes > 0 && shared.blankAfterMinutes <= afterMinutes &&
-          <p className="help warn">{t("saver.blankWarning")}</p>}
+          <ToastMessage tone="warn" message={t("saver.blankWarning")} />}
         <div className="saver-buttons">
           <button type="button" className="tool" disabled={!!busy} onClick={() => void startImport()}>
             <Icon name="plus" />{t("saver.add")}
@@ -1963,7 +1965,7 @@ function SaverPanel({ view }: { view: EngineView }) {
             })}>{t("saver.remove")}</button>
           </div>
         </div> : <button type="button" className="link-btn align-start" disabled={!!busy} onClick={() => setConfirmRemove(true)}>{t("saver.remove")}</button>)}
-        {error && <p className="help warn" role="alert">{error}</p>}
+        {error && <ToastMessage message={error} />}
       </section>
       <details className="sec saver-advanced">
         <summary>{t("saver.advanced")}</summary>
@@ -2197,20 +2199,12 @@ export function ProfilePanel({ view, onClose }: { view: EngineView; onClose: () 
 /** Settings of the whole app: language, look, screens, profiles folder, backups, connections, updates, help, about. */
 export type SettingsSection = "general" | "text" | "connections" | "plugins" | "backups" | "updates" | "diagnostics";
 
-const SETTINGS_SECTIONS: { id: SettingsSection; icon: string; label: Key }[] = [
-  { id: "general", icon: "settings", label: "settings.general" },
-  // the font of the deck's text, like Stream Deck's Style tab (owner's pick 2a, 2026-10-18)
-  { id: "text", icon: "type", label: "settings.text" },
-  { id: "connections", icon: "link", label: "settings.connections" },
-  { id: "plugins", icon: "plug", label: "topbar.plugins" },
-  { id: "backups", icon: "archive", label: "settings.backups" },
-  { id: "updates", icon: "download", label: "updates.title" },
-  // check one module (owner, 2026-11-02, after a faders user's light stuck red)
-  { id: "diagnostics", icon: "gauge", label: "diag.title" },
+const SETTINGS_GROUPS: { label: Key; sections: [SettingsSection, Key][] }[] = [
+  { label: "workshop.settings.app", sections: [["general", "settings.general"], ["text", "settings.text"], ["updates", "updates.title"]] },
+  { label: "workshop.settings.connections", sections: [["connections", "settings.connections"], ["plugins", "topbar.plugins"]] },
+  { label: "workshop.settings.maintenance", sections: [["backups", "settings.backups"], ["diagnostics", "diag.title"]] },
 ];
 
-/** Settings as a page of its own over the whole window (owner, 2026-10-13: a panel in the right
- *  column covered the key editor): sections on the left, one section's content on the right. */
 export function SettingsPanel({ live, view, section, updateCheckRequest, onSection, onClose, onBrowsePlugins, onPickPlugin, onPhone, onUsePlugin }: {
   live: LiveState;
   view: EngineView;
@@ -2226,39 +2220,35 @@ export function SettingsPanel({ live, view, section, updateCheckRequest, onSecti
   useLanguage();
   return (
     <div className="settings-page">
-      <header className="settings-head">
-        <button className="tool ghost" onClick={onClose}>
-          <Icon name="chevron-left" />
-          {t("settings.back")}
-        </button>
+      <header className="settings-head workspace-pane-head">
         <h2>{t("settings.title")}</h2>
+        <button type="button" className="icon-btn" onClick={onClose} aria-label={t("settings.back")}><Icon name="x" /></button>
       </header>
-      <div className="settings-body">
-        <nav className="settings-nav" aria-label={t("settings.title")}>
-          {SETTINGS_SECTIONS.map((x) => (
-            <button key={x.id} className={`settings-nav-item${x.id === section ? " is-active" : ""}`} aria-current={x.id === section ? "page" : undefined} onClick={() => onSection(x.id)}>
-              <Icon name={x.icon} />
-              {t(x.label)}
-            </button>
-          ))}
-        </nav>
-        <div className="settings-content sectioned" key={section}>
-          {section === "general" && (
-            <>
-              <LanguageSettings />
-              <Appearance />
-              <SwitchingSettings view={view} />
-              <StartupSettings />
-              <ProfilesFolder />
-            </>
-          )}
-          {section === "text" && <DeckTextSettings />}
-          {section === "connections" && <Connections />}
-          {section === "plugins" && <PluginsList onBrowse={onBrowsePlugins} onPickFile={onPickPlugin} onPhone={onPhone} onUse={onUsePlugin} />}
-          {section === "backups" && <Backups />}
-          {section === "updates" && <UpdatesSettings checkRequest={updateCheckRequest} />}
-          {section === "diagnostics" && <DiagnosticsSettings live={live} />}
-        </div>
+      <div className="settings-section-picker">
+        <label className="field">
+          <span className="sr-only">{t("workshop.settings.section")}</span>
+          <select className="input" value={section} onChange={(event) => onSection(event.target.value as SettingsSection)}>
+            {SETTINGS_GROUPS.map((group) => <optgroup key={group.label} label={t(group.label)}>
+              {group.sections.map(([id, label]) => <option key={id} value={id}>{t(label)}</option>)}
+            </optgroup>)}
+          </select>
+        </label>
+      </div>
+      <div className="settings-content sectioned" key={section}>
+        {section === "general" && (
+          <>
+            <Appearance />
+            <LanguageSettings />
+            <StartupSettings />
+            <SwitchingSettings view={view} />
+          </>
+        )}
+        {section === "text" && <DeckTextSettings />}
+        {section === "connections" && <Connections />}
+        {section === "plugins" && <PluginsList onBrowse={onBrowsePlugins} onPickFile={onPickPlugin} onPhone={onPhone} onUse={onUsePlugin} />}
+        {section === "backups" && <><Backups /><ProfilesFolder /></>}
+        {section === "updates" && <UpdatesSettings checkRequest={updateCheckRequest} />}
+        {section === "diagnostics" && <DiagnosticsSettings live={live} />}
       </div>
     </div>
   );
@@ -2385,7 +2375,7 @@ function LightsSettings({ onOpenEdge, onOpenScenes, onOpenMusic }: { onOpenEdge:
     api.lights().then((value) => { if (active) setL(value); }, (e) => { if (active) setError(String(e)); });
     return () => { active = false; flush(); };
   }, [flush]);
-  if (!l) return error ? <p className="sec help" role="alert">{error}</p> : null;
+  if (!l) return error ? <ToastMessage message={error} /> : null;
   const save = (next: LightSettings, delay = 0) => {
     setL(next);
     pending.current = next;
@@ -2473,7 +2463,7 @@ function LightsSettings({ onOpenEdge, onOpenScenes, onOpenMusic }: { onOpenEdge:
         {t("lights.reactLevels")}
       </label>
       </details>
-      {error && <p className="help" role="alert">{error}</p>}
+      {error && <ToastMessage message={error} />}
     </section>
   );
 }
@@ -2529,18 +2519,15 @@ function LanguageSettings() {
         {/* a file picked before and gone now: the window is in English, the list says so */}
         {lang !== "en" && lang !== "pl" && !BUILT_IN_LANGUAGES[lang] && !files.some((f) => f.code === lang) && <option value={lang}>{lang}</option>}
       </select>
-      <p className="help">{t("language.filesHelp")}</p>
-      <div className="row wrap">
-        <button className="tool align-start" onClick={makeTemplate}>
-          <Icon name="file-plus" />
-          {t("language.makeFile")}
-        </button>
-        <button className="tool align-start" onClick={() => api.languagesOpenFolder().catch((e) => setMessage(String(e)))}>
-          <Icon name="folder-open" />
-          {t("language.openFolder")}
-        </button>
-      </div>
-      {message && <p className="help">{message}</p>}
+      <details className="more-opts">
+        <summary>{t("inspector.moreOptions")}</summary>
+        <p className="help">{t("language.filesHelp")}</p>
+        <div className="row wrap">
+          <button className="tool align-start" onClick={makeTemplate}><Icon name="file-plus" />{t("language.makeFile")}</button>
+          <button className="tool align-start" onClick={() => api.languagesOpenFolder().catch((e) => setMessage(String(e)))}><Icon name="folder-open" />{t("language.openFolder")}</button>
+        </div>
+        {message && <p className="help">{message}</p>}
+      </details>
     </section>
   );
 }
@@ -2676,7 +2663,7 @@ function UpdatesSettings({ checkRequest }: { checkRequest: number }) {
         )}
       </div>
       {result && typeof result === "object" && "version" in result && <UpdateCard info={result} />}
-      {result && typeof result === "object" && "error" in result && <p className="help" role="alert" title={result.error}>{t("updates.checkFailed")}</p>}
+      {result && typeof result === "object" && "error" in result && <ToastMessage message={t("updates.checkFailed") + " " + result.error} />}
       <p className="help">{enabled ? t("updates.help") : t("updates.notSetUp")}</p>
       <GoBack />
     </section>
@@ -2717,6 +2704,7 @@ function GoBack() {
 /** The shared profiles gallery (repo `hubdeck-profiles`) is not online yet: its entry stays hidden. */
 /** macOS: without Accessibility, shortcuts and typed text from the deck do nothing; say so and
  *  lead to the switch. Checked again every few seconds until it is on. */
+
 function AccessibilityBanner() {
   useLanguage();
   const [ok, setOk] = useState(true);
@@ -2733,13 +2721,13 @@ function AccessibilityBanner() {
   }, []);
   if (ok) return null;
   return (
-    <div className="banner is-info" role="status">
+    <Notice tone="info" severity="status">
       <Icon name="keyboard" />
       <span className="grow">{t("access.banner")}</span>
       <button className="tool small" onClick={() => api.accessibilityAsk().catch(() => {})}>
         {t("access.allow")}
       </button>
-    </div>
+    </Notice>
   );
 }
 
@@ -2755,7 +2743,7 @@ function CrashBanner() {
   const at = report.at.slice(11, 16);
   const details = [`MasterDeck ended without quitting at ${report.at}${report.restarted ? " (started again by its guard)" : ""}.`, report.panic ?? "", "", ...report.log].join("\n");
   return (
-    <div className="banner is-warn" role="status">
+    <Notice tone="warn" severity="status">
       <Icon name="alert" />
       <span className="grow">{t(report.restarted ? "crash.back" : "crash.stopped", { at })}</span>
       <button className="tool small" onClick={() => navigator.clipboard.writeText(details).then(() => setCopied(true), () => {})}>
@@ -2765,7 +2753,7 @@ function CrashBanner() {
       <button className="tool small" onClick={() => (api.crashSeen(), setReport(null))}>
         {t("crash.ok")}
       </button>
-    </div>
+    </Notice>
   );
 }
 
@@ -2781,13 +2769,13 @@ function RingingBanner({ view }: { view: EngineView }) {
         const page = r.page && view.profile?.id === r.profile ? (view.profile.pages?.find((p) => p.id === r.page)?.name ?? r.page) : r.page;
         const where = r.profile !== view.state?.active ? t("ringing.onProfile", { profile: r.profileName }) : page ? t("ringing.onPage", { page }) : "";
         return (
-          <div key={`${r.profile}/${r.control}`} className="banner is-warn" role="alert">
+          <Notice key={`${r.profile}/${r.control}`} tone="warn" severity="alert">
             <Icon name="timer" />
             <span className="grow">{t("ringing.text", { name, where })}</span>
             <button className="tool small primary" onClick={() => api.timerStop(r.profile, r.control).catch(() => {})}>
               {t("ringing.stop")}
             </button>
-          </div>
+          </Notice>
         );
       })}
     </>
@@ -2802,8 +2790,7 @@ function UpdateBanner() {
   const [error, setError] = useState<string | null>(null);
   if (!info) return null;
   return (
-    <>
-      <div className="banner is-info" role="status">
+    <Notice key={info.version} onDismiss={dismiss}>
         <Icon name="sparkles" />
         <span className="grow">
           {t("updates.available", { version: info.version })}
@@ -2826,12 +2813,8 @@ function UpdateBanner() {
           <Icon name="download" />
           {busy ? t("updates.installing") : t("updates.install")}
         </button>
-        <button className="icon-btn" aria-label={t("updates.later")} title={t("updates.later")} onClick={dismiss}>
-          <Icon name="x" />
-        </button>
-      </div>
-      {open && <div className="banner-notes">{info.notes}</div>}
-    </>
+      {open && <div className="notice-notes">{info.notes}</div>}
+    </Notice>
   );
 }
 
@@ -2843,7 +2826,7 @@ function Unresponsive({ kind }: { kind: string }) {
   const [state, setState] = useState<"idle" | "busy" | string>("idle");
   const name = ["base", "keys", "faders", "knobs", "rollers", "dial"].includes(kind) ? moduleName(kind as ModuleKind) : kind;
   return (
-    <div className="banner is-warn" role="alert">
+    <Notice tone="warn" severity="alert">
       <Icon name="alert" />
       <span className="grow">
         {t(IS_WINDOWS ? "banner.unresponsiveWin" : "banner.unresponsive", { name })}
@@ -2865,7 +2848,7 @@ function Unresponsive({ kind }: { kind: string }) {
           {state === "busy" ? t("banner.restarting") : t("banner.restart")}
         </button>
       )}
-    </div>
+    </Notice>
   );
 }
 
@@ -3402,7 +3385,7 @@ function ObsConnection() {
         </div>
         <p className="help">{t("connections.obsHelp")}</p>
       </details>
-      {message && <p className={message.error ? "help warn" : "help"} role={message.error ? "alert" : "status"}>{message.text}</p>}
+      {message && <ToastMessage tone={message.error ? "err" : "info"} message={message.text} />}
     </Service>
   );
 }
@@ -3908,7 +3891,7 @@ function PluginsList({ onBrowse, onPickFile, onPhone, onUse }: {
           <button type="button" className="tool" onClick={onBrowse}><Icon name="search" />{t("plugins.browse")}</button>
           <button type="button" className="tool ghost" onClick={() => api.openPluginsFolder().catch((e) => setError(localizeError(String(e))))}><Icon name="folder-open" />{t("plugins.openFolder")}</button>
         </div>
-        {error && <p className="help plugin-feedback" role="alert">{error}</p>}
+        {error && <ToastMessage message={error} />}
         {plugins === null && !error && <p className="help" role="status">{t("plugins.loadingInstalled")}</p>}
         {plugins?.length === 0 && <p className="plugin-manager-empty">{t("plugins.none")} <span>{t("plugins.noneManualHelp")}</span></p>}
         {!!plugins?.length && (
@@ -4106,8 +4089,8 @@ export function PluginFileSheet({ path, update, onClose, onManage, onUse }: {
             </div>
           )}
           {replacing && !installed && !problem && <p className="help">{t("plugins.replaces", { version: plugin?.installedVersion || t("plugins.unknownVersion") })}</p>}
-          {problem && <p className="help plugin-feedback" role="alert">{localizeError(problem)}</p>}
-          {error && <p className="help plugin-feedback" role="alert">{error}</p>}
+          {problem && <ToastMessage message={localizeError(problem)} />}
+          {error && <ToastMessage message={error} />}
           {!problem && plugin && (
             <p className="help" role={busy || installed ? "status" : undefined}>
               {t(busy === "installing" ? "plugins.installing" : busy === "enabling" ? "plugins.enabling" : enabled ? "plugins.readyActions" : installed ? "plugins.installedDisabled" : "plugins.reviewTrust")}
@@ -4166,19 +4149,19 @@ function OwnedKinds({ live, saved, onPlace }: { live: LiveState; saved: Record<s
   );
 }
 
-export function Banner({ live, view, onOpenProfiles, onOpenConnections }: { live: LiveState; view: EngineView; onOpenProfiles?: (ids: string[]) => void; onOpenConnections?: () => void }) {
+export function Notifications({ live, view, onOpenProfiles, onOpenConnections, children }: { live: LiveState; view: EngineView; onOpenProfiles?: (ids: string[]) => void; onOpenConnections?: () => void; children?: React.ReactNode }) {
   useLanguage();
   const made = (view.state?.autoMade ?? []).map((id) => view.state?.profiles.find((p) => p.id === id)?.name).filter(Boolean) as string[];
   const names = made.length > 4 ? `${made.slice(0, 4).join(", ")} +${made.length - 4}` : made.join(", ");
   return (
-    <>
+    <div className="notification-stack" id={NOTICE_ROOT} aria-label={t("workshop.notifications")}>
       <UpdateBanner />
       <RingingBanner view={view} />
       <CrashBanner />
       <AccessibilityBanner />
       {view.state?.interruptedTry && (
         // a restart in the middle of a try took the draft off the deck (owner, 2026-10-22)
-        <div className="banner is-info" role="status">
+        <Notice tone="info" severity="status">
           <Icon name="sparkles" />
           <span className="grow">{t("try.interrupted", { name: view.state.profiles.find((p) => p.id === view.state?.interruptedTry)?.name ?? "" })}</span>
           <button className="tool small" onClick={() => api.tryProfile(view.state?.interruptedTry ?? null)}>
@@ -4190,10 +4173,10 @@ export function Banner({ live, view, onOpenProfiles, onOpenConnections }: { live
           <button className="tool small" onClick={() => api.tryProfile(null)}>
             {t("try.dismiss")}
           </button>
-        </div>
+        </Notice>
       )}
       {made.length > 0 && (
-        <div className="banner is-info" role="status">
+        <Notice tone="info" severity="status">
           <Icon name="sparkles" />
           <span className="grow">{t(made.length === 1 ? "auto.bannerOne" : "auto.banner", { names })}</span>
           {onOpenProfiles && (
@@ -4204,10 +4187,10 @@ export function Banner({ live, view, onOpenProfiles, onOpenConnections }: { live
           <button className="tool small" onClick={() => api.autoSeen()}>
             {t("auto.ok")}
           </button>
-        </div>
+        </Notice>
       )}
       {(view.state?.appsJoined?.length ?? 0) > 0 && (
-        <div className="banner is-info" role="status">
+        <Notice tone="info" severity="status" key={(view.state?.appsJoined ?? []).join("|")}>
           <Icon name="link" />
           <span className="grow">{t("apps.joined", { names: view.state?.appsJoined?.join(", ") ?? "" })}</span>
           {onOpenConnections && (
@@ -4218,39 +4201,40 @@ export function Banner({ live, view, onOpenProfiles, onOpenConnections }: { live
           <button className="tool small" onClick={() => api.appsSeen()}>
             {t("auto.ok")}
           </button>
-        </div>
+        </Notice>
       )}
       {view.state?.playing && (
-        <div className="banner is-info" role="status">
+        <Notice tone="info" severity="status">
           <Icon name="play" />
           <span className="grow">{t("games.banner")}</span>
           <button className="tool small" onClick={() => api.playGames(false)}>
             {t("games.stop")}
           </button>
-        </div>
+        </Notice>
       )}
       {live.deck.paused && (
-        <div className="banner is-info" role="status">
+        <Notice tone="info" severity="status">
           <Icon name="pause" />
           <span className="grow">{t("banner.paused")}</span>
           <button className="tool small" onClick={() => api.pauseDeck(false)}>
             <Icon name="play" />
             {t("banner.resume")}
           </button>
-        </div>
+        </Notice>
       )}
       {live.deck.unresponsive.map((kind) => (
         <Unresponsive key={kind} kind={kind} />
       ))}
       {view.error && (
-        <div className="banner is-err" role="alert">
+        <Notice tone="err" severity="alert" key={view.error.control + "/" + view.error.message}>
           <Icon name="alert" />
           <span className="grow">
             <b>{controlLabel(view.error.control)}</b> {localizeError(view.error.message)}
           </span>
-        </div>
+        </Notice>
       )}
-    </>
+      {children}
+    </div>
   );
 }
 

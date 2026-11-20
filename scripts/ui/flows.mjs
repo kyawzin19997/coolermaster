@@ -77,32 +77,65 @@ for (const [label, viewport] of [['wide', { width: 1440, height: 900 }], ['half'
     await profiles.getByRole('tab', { name, exact: true }).click();
   };
   const closeProfiles = () => profiles.getByRole('button', { name: 'Close', exact: true }).click();
-  // Open the optional setup tour at its desk check.
+
   await page.goto(`${base}?demo=welcome`);
-  await page.waitForSelector('.tour-page, .deck-area', { timeout: 15000 });
-  await step(page, `${label}: the setup tour shows its desk check over the whole window`, async () => (await visible(page, '.tour-desk .dk-ctl')) && !(await visible(page, '.deck-area')));
-  await step(page, `${label}: Fix it opens Edit layout and Done comes back to the desk check`, async () => {
-    await page.locator('.tour-desk button', { hasText: /Fix it/ }).first().click();
-    await page.waitForTimeout(300);
-    if (!(await visible(page, '.deck-area'))) return 'the deck did not show for Edit layout';
+  await page.waitForSelector('.workspace-guide .workspace-pane-head', { timeout: 15000 });
+  const deckStage = page.locator('.stable-workspace .dk-stage');
+  const actionPane = page.locator('.stable-workspace .action-sidebar');
+  const settingsPicker = page.getByRole('combobox', { name: 'Settings section', exact: true });
+  const deckBox = await deckStage.boundingBox();
+  const actionBox = await actionPane.boundingBox();
+  const layoutStays = async () => JSON.stringify(await deckStage.boundingBox()) === JSON.stringify(deckBox) &&
+    JSON.stringify(await actionPane.boundingBox()) === JSON.stringify(actionBox);
+  const deckMenu = async (label) => {
+    await page.getByRole('button', { name: 'Deck tools', exact: true }).click();
+    await page.getByRole('menuitem', { name: label, exact: true }).click();
+  };
+  await step(page, `${label}: Getting Started keeps the deck and Actions in place`, async () => {
+    await page.locator('.workspace-guide').getByRole('button', { name: 'Next', exact: true }).click();
+    return await page.getByText('Search Actions on the right', { exact: false }).isVisible() && await layoutStays();
+  });
+  await step(page, `${label}: the module guide explains each control without moving the deck`, async () => {
+    await deckMenu('Your Deck, Your Modules');
+    await page.getByRole('combobox', { name: 'Module', exact: true }).selectOption('3');
+    return await page.getByText('Use faders for levels', { exact: false }).isVisible() && await layoutStays();
+  });
+  await step(page, `${label}: Edit layout returns to the module guide with Actions still visible`, async () => {
+    await page.locator('.workspace-guide').getByRole('button', { name: 'Edit layout', exact: true }).click();
+    if (!await actionPane.isVisible()) return 'Actions disappeared';
     await page.locator('.layout-tool').click();
-    await page.waitForTimeout(300);
-    return visible(page, '.tour-desk');
+    return await visible(page, '.workspace-guide') && await layoutStays();
   });
-  await step(page, `${label}: Yes goes to the tour's question, Exit leaves for the deck`, async () => {
-    await page.locator('.tour-desk button', { hasText: /Yes, make my deck/ }).click();
-    await page.waitForTimeout(300);
-    if (!(await visible(page, '.tour-tiles'))) return 'no question';
-    await page.locator('.tour-head button', { hasText: 'Exit' }).click();
-    await page.waitForTimeout(400);
-    return (await visible(page, '.dk-ctl')) && !(await visible(page, '.tour-page'));
+  await step(page, `${label}: the guide closes into the key editor`, async () => {
+    await page.locator('.workspace-guide').getByRole('button', { name: 'Close', exact: true }).click();
+    return !await visible(page, '.workspace-guide') && await layoutStays();
   });
-  await page.goto(`${base}?demo=welcome`);
-  await page.waitForSelector('.tour-page, .deck-area', { timeout: 15000 });
-  await step(page, `${label}: Skip leaves the first start for the deck`, async () => {
-    await page.locator('.tour-head button', { hasText: 'Skip' }).click();
-    await page.waitForTimeout(400);
-    return (await visible(page, '.dk-ctl')) && !(await visible(page, '.tour-page'));
+  await step(page, `${label}: notification appears at the bottom and closes without layout shift`, async () => {
+    await page.evaluate(() => window.demoEmit('engine://error', { control: 'OBS', message: 'Connection check message' }));
+    const notice = page.locator('.notification-stack .notice').filter({ hasText: 'Connection check message' });
+    await notice.waitFor();
+    const before = await layoutStays();
+    await notice.getByRole('button', { name: 'Dismiss notification' }).click();
+    return before && !await notice.isVisible() && await layoutStays();
+  });
+  await step(page, `${label}: Studio Mode exposes Preview and Program for an OBS scene`, async () => {
+    const scene = page.locator('.stable-workspace .dk-ctl[data-kind="keys"]').first();
+    await scene.click();
+    const target = page.getByRole('combobox', { name: 'Send scene to', exact: true });
+    if (await target.isVisible()) return 'Studio target was visible before OBS enabled Studio Mode';
+    await page.evaluate(() => window.demoObsStudio(true));
+    await target.waitFor();
+    if (await target.inputValue() !== 'program') return 'an existing scene key changed its default target';
+    await target.selectOption('preview');
+    await scene.getByText('Preview', { exact: true }).waitFor();
+    await page.evaluate(() => window.demoObsStudio(false));
+    return !(await target.isVisible()) && await layoutStays();
+  });
+  await step(page, `${label}: Switch profile is immediately available to drag`, async () => {
+    const row = actionPane.getByRole('button', { name: 'Switch profile', exact: true });
+    await row.dragTo(page.locator('.stable-workspace .dk-ctl[data-kind="keys"]').nth(12));
+    await page.locator('#action-name[data-action="core.profile"]').waitFor();
+    return await layoutStays();
   });
   await step(page, `${label}: repeat drops keep the same action library and search`, async () => {
     const library = page.locator('.action-sidebar');
@@ -125,21 +158,20 @@ for (const [label, viewport] of [['wide', { width: 1440, height: 900 }], ['half'
     await page.waitForTimeout(300);
     return visible(page, '.control-inspector .trigger-slot');
   });
-  await step(page, `${label}: Settings is a page of its own`, async () => {
+  await step(page, `${label}: Settings opens beside the same deck and Actions`, async () => {
     await page.getByRole('button', { name: /^Settings$/ }).first().click();
     await page.waitForTimeout(300);
-    return (await visible(page, '.settings-page')) && !(await visible(page, '.dk-ctl'));
+    return (await visible(page, '.settings-page')) && await layoutStays();
   });
   await step(page, `${label}: Settings sections switch`, async () => {
-    for (const s of ['Connections', 'Plugins', 'Backups', 'Updates', 'Diagnostics', 'General']) {
-      await page.locator('.settings-nav-item', { hasText: s }).click();
-      await page.waitForTimeout(120);
-      if (!(await page.locator('.settings-nav-item.is-active', { hasText: s }).isVisible())) return `section ${s} not active`;
+    for (const section of ['connections', 'plugins', 'backups', 'updates', 'diagnostics', 'general']) {
+      await settingsPicker.selectOption(section);
+      if (await settingsPicker.inputValue() !== section || !await layoutStays()) return `section ${section} moved the deck or did not open`;
     }
     return true;
   });
   await step(page, `${label}: OBS defaults to automatic local connection`, async () => {
-    await page.locator('.settings-nav-item', { hasText: 'Connections' }).click();
+    await settingsPicker.selectOption('connections');
     const obs = page.locator('.svc', { has: page.locator('summary .svc-name', { hasText: /^OBS Studio$/ }) });
     await obs.locator(':scope > summary').click();
     const auto = await obs.getByText('Automatic on this computer', { exact: true }).isVisible();
@@ -181,7 +213,9 @@ for (const [label, viewport] of [['wide', { width: 1440, height: 900 }], ['half'
     await display.getByText('Advanced settings', { exact: true }).click();
     const scope = display.getByRole('combobox', { name: 'Apply to', exact: true });
     await scope.selectOption('own');
-    return selected === 'aurora' && await display.getByRole('button', { name: 'Add screensaver' }).isVisible();
+    const ready = selected === 'aurora' && await display.getByRole('button', { name: 'Add screensaver' }).isVisible();
+    await display.getByRole('button', { name: 'Close' }).click();
+    return ready && await layoutStays();
   });
   await step(page, `${label}: the profile dialog switches between Profiles and Get started`, async () => {
     for (const tab of ['Profiles', 'Get started']) {
@@ -196,7 +230,7 @@ for (const [label, viewport] of [['wide', { width: 1440, height: 900 }], ['half'
   await step(page, `${label}: another control's click keeps the editor`, async () => {
     const ctl = page.locator('.dk-ctl');
     await ctl.nth(Math.min(5, (await ctl.count()) - 1)).click();
-    const panel = page.locator('.deck-workspace > .control-inspector');
+    const panel = page.locator('.stable-workspace .workspace-key-pane > .control-inspector');
     const deck = await page.locator('.deck-workspace > .center').boundingBox();
     const settings = await panel.boundingBox();
     const actions = await page.locator('.deck-workspace > .editor-sidebar').boundingBox();
@@ -239,7 +273,7 @@ for (const [label, viewport] of [['wide', { width: 1440, height: 900 }], ['half'
     await page.locator('.topbar-update').click();
     await page.locator('.update-card').getByRole('button', { name: 'Install and restart', exact: true }).waitFor();
     await page.getByRole('button', { name: /Back to the deck/ }).click();
-    return visible(page, '.deck-workspace > .control-inspector');
+    return visible(page, '.stable-workspace .workspace-key-pane > .control-inspector');
   });
   await step(page, `${label}: Deck Builder opens from Deck tools, a card can be picked, Back returns`, async () => {
     await page.getByRole('button', { name: 'Deck tools', exact: true }).click();
@@ -267,6 +301,7 @@ for (const [label, viewport] of [['wide', { width: 1440, height: 900 }], ['half'
     await page.waitForTimeout(200);
     await page.getByRole('button', { name: /Show me on my deck/ }).click();
     await page.waitForTimeout(400);
+    if (await visible(page, '.tour-desk')) await page.locator('.tour-desk').getByRole('button', { name: 'Yes, make my deck' }).click();
     if (!(await visible(page, '.tour-tiles'))) return 'no question';
     await page.getByRole('button', { name: 'Make my deck' }).click();
     await page.waitForTimeout(500);
@@ -292,6 +327,7 @@ for (const [label, viewport] of [['wide', { width: 1440, height: 900 }], ['half'
     await page.waitForTimeout(200);
     await page.getByRole('button', { name: /Show me on my deck/ }).click();
     await page.waitForTimeout(400);
+    if (await visible(page, '.tour-desk')) await page.locator('.tour-desk').getByRole('button', { name: 'Yes, make my deck' }).click();
     await page.getByRole('button', { name: 'Make my deck' }).click();
     await page.waitForTimeout(500);
     for (let i = 0; i < 8 && (await page.getByRole('button', { name: 'Next', exact: true }).isVisible()); i++) {
@@ -305,7 +341,7 @@ for (const [label, viewport] of [['wide', { width: 1440, height: 900 }], ['half'
     await tourToEnd();
     await page.getByRole('button', { name: /Use as my home profile/ }).click();
     await page.locator('.deck-area').waitFor();
-    return !(await visible(page, '.guide')) && (await visible(page, '.deck-area'));
+    return !(await visible(page, '.tour-page')) && (await visible(page, '.deck-area'));
   });
   await step(page, `${label}: the assistant card sends with Enter, a short consent asks once, then never again`, async () => {
     await page.evaluate(() => localStorage.removeItem('hubdeck.assistantConsent'));

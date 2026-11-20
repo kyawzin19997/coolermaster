@@ -111,7 +111,7 @@
         "angle": 135,
         "labelDx": 1,
         "labelDy": -2,
-        "label": "Multimedia",
+        "label": "Play / pause",
         "icon": "play"
       },
       "params": {
@@ -119,58 +119,60 @@
       }
     },
     "keys.10": {
-      "action": "core.hotkey",
+      "action": "core.mic",
+      "params": {},
       "look": {
-        "bg": "#2b2733",
-        "label": "F13",
-        "icon": "zap"
-      },
-      "params": {
-        "keys": "F13"
+        "label": "Mic mute",
+        "icon": "mic",
+        "bg": "#232b34",
+        "note": "Toggles the system microphone."
       }
     },
     "keys.11": {
-      "action": "core.hotkey",
-      "look": {
-        "bg": "#2b2733",
-        "label": "F14",
-        "icon": "zap"
-      },
+      "action": "core.timer",
       "params": {
-        "keys": "F14"
+        "minutes": 25
+      },
+      "look": {
+        "label": "Focus 25",
+        "icon": "timer",
+        "bg": "#232b34",
+        "note": "Press to start or pause the timer."
       }
     },
     "keys.12": {
-      "action": "core.hotkey",
-      "look": {
-        "bg": "#2b2733",
-        "label": "F15",
-        "icon": "zap"
-      },
+      "action": "core.clock",
       "params": {
-        "keys": "F15"
+        "show": "timeDate"
+      },
+      "look": {
+        "label": "Clock",
+        "icon": "clock",
+        "bg": "#232b34"
       }
     },
     "keys.13": {
-      "action": "core.hotkey",
-      "look": {
-        "bg": "#2b2733",
-        "label": "F16",
-        "icon": "zap"
-      },
+      "action": "core.saver",
       "params": {
-        "keys": "F16"
+        "effect": "aurora"
+      },
+      "look": {
+        "label": "Screensaver",
+        "icon": "moon",
+        "bg": "#232b34",
+        "note": "Shows the Aurora screensaver temporarily."
       }
     },
     "keys.14": {
-      "action": "core.hotkey",
-      "look": {
-        "bg": "#2b2733",
-        "label": "F17",
-        "icon": "zap"
-      },
+      "action": "core.profile",
       "params": {
-        "keys": "F17"
+        "which": "next"
+      },
+      "look": {
+        "label": "Next profile",
+        "icon": "layers",
+        "bg": "#232b34",
+        "note": "Switches to the next saved profile. Set Go to to choose a specific profile."
       }
     },
     "keys.1:double": {
@@ -194,33 +196,25 @@
       }
     },
     "keys.2": {
-      "action": "core.http",
-      "look": {
-        "bg": "#6a3fd8",
-        "bg2": "#e0457b",
-        "fg": "#ffffff",
-        "style": "gradient",
-        "gloss": "glass",
-        "angle": 135,
-        "label": "HTTP",
-        "icon": "send"
+      "action": "core.media",
+      "params": {
+        "command": "next"
       },
-      "params": {}
+      "look": {
+        "label": "Next track",
+        "icon": "skip-forward",
+        "bg": "#232b34"
+      }
     },
     "keys.3": {
       "action": "core.hotkey",
-      "look": {
-        "bg": "#6a3fd8",
-        "bg2": "#e0457b",
-        "fg": "#ffffff",
-        "style": "gradient",
-        "gloss": "glass",
-        "angle": 135,
-        "label": "Mute",
-        "icon": "volume-x"
-      },
       "params": {
         "keys": "VolumeMute"
+      },
+      "look": {
+        "label": "Mute sound",
+        "icon": "volume-x",
+        "bg": "#232b34"
       }
     },
     "keys.4": {
@@ -368,6 +362,91 @@
         "mode": "normal",
         "clockwise": "Up",
         "counterClockwise": "Down"
+      }
+    },
+    "keys.2:hold": {
+      "action": "core.http",
+      "look": {
+        "bg": "#6a3fd8",
+        "bg2": "#e0457b",
+        "fg": "#ffffff",
+        "style": "gradient",
+        "gloss": "glass",
+        "angle": 135,
+        "label": "HTTP",
+        "icon": "send"
+      },
+      "params": {}
+    },
+    "keys.3:hold": {
+      "action": "core.hotkey",
+      "look": {
+        "bg": "#6a3fd8",
+        "bg2": "#e0457b",
+        "fg": "#ffffff",
+        "style": "gradient",
+        "gloss": "glass",
+        "angle": 135,
+        "label": "Mute",
+        "icon": "volume-x"
+      },
+      "params": {
+        "keys": "VolumeMute"
+      }
+    },
+    "keys.10:hold": {
+      "action": "core.hotkey",
+      "look": {
+        "bg": "#2b2733",
+        "label": "F13",
+        "icon": "zap"
+      },
+      "params": {
+        "keys": "F13"
+      }
+    },
+    "keys.11:hold": {
+      "action": "core.hotkey",
+      "look": {
+        "bg": "#2b2733",
+        "label": "F14",
+        "icon": "zap"
+      },
+      "params": {
+        "keys": "F14"
+      }
+    },
+    "keys.12:hold": {
+      "action": "core.hotkey",
+      "look": {
+        "bg": "#2b2733",
+        "label": "F15",
+        "icon": "zap"
+      },
+      "params": {
+        "keys": "F15"
+      }
+    },
+    "keys.13:hold": {
+      "action": "core.hotkey",
+      "look": {
+        "bg": "#2b2733",
+        "label": "F16",
+        "icon": "zap"
+      },
+      "params": {
+        "keys": "F16"
+      }
+    },
+    "keys.14:hold": {
+      "action": "core.hotkey",
+      "look": {
+        "bg": "#2b2733",
+        "label": "F17",
+        "icon": "zap"
+      },
+      "params": {
+        "keys": "F17"
       }
     }
   },

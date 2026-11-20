@@ -377,9 +377,12 @@ pub fn catalog() -> Vec<ActionDef> {
             id: "obs.scene",
             name: "Scene",
             group: "OBS",
-            description: "Switches OBS to a scene. The key lights up while that scene is live.",
+            description: "Selects an OBS scene. In Studio Mode, choose whether the key cues Preview or switches Program.",
             inputs: vec![Press],
-            params: vec![ParamDef { help: Some("Exactly as named in OBS."), ..p("scene", "Scene", ParamKind::Named { what: "obs.scene".into() }, json!("")) }],
+            params: vec![
+                ParamDef { help: Some("Exactly as named in OBS."), ..p("scene", "Scene", ParamKind::Named { what: "obs.scene".into() }, json!("")) },
+                p("sceneTarget", "Send scene to", ParamKind::Select { options: options(&[("program", "Program"), ("preview", "Preview")]) }, json!("program")),
+            ],
             icon: "monitor",
         },
         ActionDef {
@@ -1013,7 +1016,7 @@ pub fn catalog() -> Vec<ActionDef> {
             description: "Changes the active profile: a chosen one, or the next / previous (profiles in name order). Turning a knob or the dial steps through them.",
             inputs: vec![Press, Turn],
             params: vec![
-                p("which", "Go to", ParamKind::Select { options: options(&[("named", "A chosen profile"), ("next", "The next profile"), ("previous", "The previous profile")]) }, json!("named")),
+                p("which", "Go to", ParamKind::Select { options: options(&[("named", "A chosen profile"), ("next", "The next profile"), ("previous", "The previous profile")]) }, json!("next")),
                 ParamDef { when: Some(("which", vec!["named"])), ..p("profile", "Profile", ParamKind::Profile, json!("")) },
             ],
             icon: "layers",

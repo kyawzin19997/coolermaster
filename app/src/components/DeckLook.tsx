@@ -1,3 +1,4 @@
+import { ToastMessage } from "./Notice";
 import { readPreference, writePreference } from "../preferences";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api, baseKind, presetLights, presetThumb, PRESETS_HIDDEN, SAVER_FROM_LOOK, themeTitle, controlId, FX_GROUPS, FX_PENDING, FX_RETIRED, GPU_KINDS, fxName, layersOf, SKINS, THEMES, useKeysFrame, type DeckEffects, type EngineView, type FrameCost, type FxKind, type FxLayer, type MyLook, type Profile, type Skin } from "../engine";
@@ -515,7 +516,7 @@ export function DeckLook({ view, keysModule, keysCount = 15, keysTurn = 0, onClo
               </button>
             </div>
           )}
-          {!gpu && <p className="help warn">{t("effects.noGpu")}</p>}
+          {!gpu && <ToastMessage tone="warn" message={t("effects.noGpu")} />}
           {tab === "presets" || !MIXER ? (
             <>
               {mine.length > 0 && (

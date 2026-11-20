@@ -1,3 +1,4 @@
+import { ToastMessage } from "./Notice";
 // Preview a working draft on the deck and choose an action for each control.
 import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -228,12 +229,12 @@ export function Builder({ live, view, saved, onPlace, onClose }: { live: LiveSta
         )}
         {editingKey ? (
           <div className="editor-sidebar">
-            {error && <p className="help builder-notice" role="alert">{error}</p>}
+            {error && <ToastMessage message={error} />}
             <ActionLibrary catalog={view.catalog} icons={view.icons} selectedKind="keys" focusPlugin={null} disabled={false} />
           </div>
         ) : (
         <aside className="builder-main" aria-label={t("chooser.browseTitle")}>
-          {error && <p className="help" role="alert">{error}</p>}
+          {error && <ToastMessage message={error} />}
           {step.kind ? (
             <>
               <div className="builder-title">

@@ -53,6 +53,7 @@ interface Props {
   profile?: Profile | null;
   /** Key page shown on the deck; null = the main page. */
   page?: string | null;
+  obsStudioMode?: boolean;
   /** An action was dropped from the library onto a control. */
   onDropAction?: (c: ControlRef, action: string) => void;
   /** A key dragged onto another key of its module: it moves there, a swap when that one is set. */
@@ -460,10 +461,14 @@ function Keys({ ctx }: { ctx: Ctx }) {
         // a second keys module shows Key 16-30 (owner, 2026-11-02)
         const n = (m.first ?? 0) + i;
         const cid = controlId("keys", n, page ?? null);
+        const binding = profile?.controls[cid];
+        const sceneTarget = ctx.obsStudioMode && binding?.action === "obs.scene" && !shown
+          ? t(binding.params.sceneTarget === "preview" ? "obs.targetPreview" : "obs.targetProgram")
+          : undefined;
         const look = ctx.liveLooks[cid] ?? profile?.controls[cid]?.look;
         const pressed = live.pressedKeys[controlKey(m.id, n)];
         return (
-          <Ctl key={i} ctx={ctx} index={n} kind="keys" label={nameOf("keys", n, look)} badge={[x + KW - 3, y + 3]} ring={(cls) => <rect className={cls} x={x - 4} y={y - 4} width={KW + 8} height={KH + 8} rx="13" />}>
+          <Ctl key={i} ctx={ctx} index={n} kind="keys" label={[nameOf("keys", n, look), sceneTarget].filter(Boolean).join(" · ")} badge={[x + KW - 3, y + 3]} ring={(cls) => <rect className={cls} x={x - 4} y={y - 4} width={KW + 8} height={KH + 8} rx="13" />}>
             <g transform={`translate(${x} ${y + (pressed ? 1.2 : 0)})`}>
               {/* a small glass cube: its shadow, then its dark sides showing below and to the right */}
               {!pressed && <rect x="0.5" y="3.5" width={KW + 2} height={KH + 2} rx="9" fill="#000" opacity=".55" filter={`url(#${id("soft")})`} />}
@@ -498,6 +503,10 @@ function Keys({ ctx }: { ctx: Ctx }) {
               <path d={`M7 1.1H${KW - 7}`} fill="none" stroke="#fff" strokeOpacity=".8" strokeWidth="1.1" strokeLinecap="round" />
               <path d={`M1.1 7V${KH * 0.45}`} fill="none" stroke="#fff" strokeOpacity=".35" strokeWidth=".8" strokeLinecap="round" />
               {pressed && <rect className="dk-pressed" width={KW} height={KH} rx="8" />}
+              {!arranging && sceneTarget && <g className="dk-scene-target" transform={`translate(${KW / 2} ${KH - 10}) rotate(${ctx.upright})`} pointerEvents="none">
+                <rect x={-(KW - 8) / 2} y="-6" width={KW - 8} height="12" rx="4" />
+                <text x="0" y="2.8" textAnchor="middle">{sceneTarget}</text>
+              </g>}
             </g>
           </Ctl>
         );

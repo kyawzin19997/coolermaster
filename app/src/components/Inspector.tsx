@@ -1,3 +1,4 @@
+import { ToastMessage } from "./Notice";
 import { useCallback, useEffect, useImperativeHandle, useRef, useState, type Ref } from "react";
 import { createPortal } from "react-dom";
 import { open } from "../confirm";
@@ -489,7 +490,7 @@ function ParamField({
   const id = `param-${def.key}`;
   // an empty app or game field opens its list at once: picking is the next step (variant A)
   const [picking, setPicking] = useState(value == null || value === "");
-  const str = value == null ? "" : String(value);
+  const str = value == null ? (def.key === "sceneTarget" ? "program" : "") : String(value);
   let field: React.ReactNode;
   switch (def.type) {
     case "text":
@@ -557,7 +558,7 @@ function ParamField({
         <select id={id} className="input" value={str} onChange={(e) => onChange(e.target.value)}>
           {def.options.map(([v, l]) => (
             <option key={v} value={v}>
-              {l}
+              {def.key === "sceneTarget" ? t(v === "preview" ? "obs.targetPreview" : "obs.targetProgram") : l}
             </option>
           ))}
         </select>
@@ -627,7 +628,7 @@ function ParamField({
   return (
     <div className="field">
       <label htmlFor={id} className="label">
-        {def.label}
+        {def.key === "sceneTarget" ? t("obs.targetLabel") : def.label}
       </label>
       {field}
       {def.help && <p className="help">{def.help}</p>}
@@ -1295,6 +1296,7 @@ export function Inspector({ ref, selected, view, onDropAction, onOpenStudio, onC
   const hasScreen = selected.kind === "keys" || selected.kind === "dial";
   // the inputs that apply here: the ones most people set, and the rest under "More options"
   const shownParams = (draft ? action?.params ?? [] : [])
+    .filter((p) => draft?.action !== "obs.scene" || p.key !== "sceneTarget" || view.state?.obsStudioMode)
     .filter((p) => !p.when || p.when[1].includes(String(draft?.params[p.when[0]] ?? "")))
     .filter((p) => !(TURN_PARAMS.has(p.key) && (selected.kind === "keys" || activeGesture !== "tap")));
   const isAdvanced = (p: ParamDef) => ADVANCED_PARAMS.has(p.key) || ADVANCED_PARAMS.has(`${draft?.action}:${p.key}`);
@@ -1387,12 +1389,12 @@ export function Inspector({ ref, selected, view, onDropAction, onOpenStudio, onC
           );
         })}
       </div>
-      {writeError && <p className="control-error" role="alert">{writeError}</p>}
+      {writeError && <ToastMessage message={writeError} />}
       <div className="control-editor-body">
         <div className="control-action-pane" ref={actionPane} hidden={showLook}>
           {draft && <div className="sec control-fields">
             {draft.look.note && <p className="help" role="note">{draft.look.note.startsWith("demo:") ? t(`demo.${draft.look.note.slice(5)}` as Key) : draft.look.note}</p>}
-            {draft.action && !action && view.catalog && <div className="banner-inline">{t("inspector.missing", { plugin: draft.action.split("/")[0] })}</div>}
+            {draft.action && !action && view.catalog && <ToastMessage tone="warn" message={t("inspector.missing", { plugin: draft.action.split("/")[0] })} />}
             {basic.map((p) => (
             <ParamField
               key={p.key}

@@ -485,6 +485,7 @@ pub struct EngineState {
     pub comparing: Option<(usize, usize)>,
     /// Timers that ran out (the window names them and can stop them).
     pub ringing: Vec<Ringing>,
+    pub obs_studio_mode: bool,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -514,6 +515,7 @@ pub enum CompareVariant {
 
 pub(crate) struct Shared {
     pub store: Store,
+    obs_studio_mode: bool,
     pub active: Option<String>,
     /// The profile the user picked by hand (or the home profile at start).
     pub home: Option<String>,
@@ -676,6 +678,7 @@ impl Shared {
             call_switch: self.store.settings.call_switch,
             auto_profiles: self.store.settings.auto_profiles,
             ringing: self.ringing.clone(),
+            obs_studio_mode: self.obs_studio_mode,
         }
     }
 }
@@ -764,6 +767,7 @@ impl Engine {
             tour_dry_run: false,
             highlight: None,
             ringing: Vec::new(),
+            obs_studio_mode: false,
         }));
         let (tx, rx) = unbounded();
         let engine = Self { data_dir: data_dir.to_path_buf(), tx: tx.clone(), shared: shared.clone(), app: app.clone() };
@@ -2200,6 +2204,13 @@ impl Worker {
                     Msg::Progress(p) => self.on_progress(p),
                     Msg::Metrics(sample) => self.on_metrics(sample),
                     Msg::IntegrationState { key, on } => {
+                        if key == "obs:studio" {
+                            let mut shared = self.lock();
+                            if shared.obs_studio_mode != on {
+                                shared.obs_studio_mode = on;
+                                publish_state(&self.app, shared.state());
+                            }
+                        }
                         if self.integration.insert(key, on) != Some(on) {
                             self.redraw_keys();
                             self.update_leds();
@@ -3896,7 +3907,11 @@ impl Worker {
             "obs.record" => Some(self.integration.get("obs:record").copied().unwrap_or(false)),
             "obs.stream" => Some(self.integration.get("obs:stream").copied().unwrap_or(false)),
             "obs.mute" => Some(self.integration.get(&format!("obs:mute:{}", text("input"))).copied().unwrap_or(false)),
-            "obs.scene" => Some(self.values.get("obs:scene").is_some_and(|live| *live == text("scene"))),
+            "obs.scene" => {
+                let preview = text("sceneTarget") == "preview";
+                let target = if preview { "obs:previewScene" } else { "obs:scene" };
+                Some((!preview || self.integration.get("obs:studio") == Some(&true)) && self.values.get(target).is_some_and(|live| *live == text("scene")))
+            }
             "obs.source" => self.integration.get(&format!("obs:source:{}/{}", text("scene"), text("source"))).copied(),
             "twitch.chatMode" => self.integration.get(&format!("twitch:mode:{}", text("mode"))).copied(),
             "twitch.shield" => self.integration.get("twitch:shield").copied(),

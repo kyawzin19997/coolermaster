@@ -1,3 +1,4 @@
+import { ToastMessage } from "./Notice";
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { save } from "../confirm";
@@ -110,7 +111,7 @@ export function PhoneUpload({ onClose, onImport }: {
               </li>)}
             </ul>
           )}
-          {error && <p className="plugin-feedback help" role="alert">{error}</p>}
+          {error && <ToastMessage message={error} />}
           <div className="row wrap phone-actions">
             {state && !state.expired && <button className="tool ghost" onClick={stop}>{t("phone.end")}</button>}
             {(!state || state.expired || state.pairSeconds === 0 && !active || state.phone?.status === "denied" || !state.local && !state.remote)

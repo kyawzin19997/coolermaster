@@ -220,7 +220,8 @@
         "fg": "#e6e4ee",
         "iconColor": "#79c6ec",
         "label": "Clock",
-        "icon": "clock"
+        "icon": "clock",
+        "note": "Double press this clock key to go to the next saved profile."
       },
       "params": {}
     },
@@ -414,6 +415,18 @@
       },
       "params": {
         "counterClockwise": "Ctrl+-"
+      }
+    },
+    "keys.10:double": {
+      "action": "core.profile",
+      "params": {
+        "which": "next"
+      },
+      "look": {
+        "label": "Next profile",
+        "icon": "layers",
+        "bg": "#232b34",
+        "note": "Switches to the next saved profile. Set Go to to choose a specific profile."
       }
     }
   },

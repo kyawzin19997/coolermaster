@@ -164,7 +164,8 @@
         "fg": "#e6e4ee",
         "iconColor": "#79b1ec",
         "label": "Music",
-        "icon": "music"
+        "icon": "music",
+        "note": "Hold to mute your system microphone. Double press to switch profiles."
       },
       "params": {
         "command": "playPause"
@@ -283,6 +284,27 @@
       },
       "params": {
         "keys": "Ctrl+Shift+K"
+      }
+    },
+    "keys.13:hold": {
+      "action": "core.mic",
+      "params": {},
+      "look": {
+        "label": "Mic mute",
+        "icon": "mic",
+        "bg": "#232b34"
+      }
+    },
+    "keys.13:double": {
+      "action": "core.profile",
+      "params": {
+        "which": "next"
+      },
+      "look": {
+        "label": "Next profile",
+        "icon": "layers",
+        "bg": "#232b34",
+        "note": "Switches to the next saved profile. Set Go to to choose a specific profile."
       }
     }
   }
