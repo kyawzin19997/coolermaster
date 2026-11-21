@@ -462,6 +462,54 @@ for (const [label, viewport] of [['wide', { width: 1440, height: 900 }], ['half'
     await page.waitForTimeout(250);
     return (await visible(page, '.dk-ctl')) && !(await visible(page, '.settings-page'));
   });
+  await step(page, `${label}: many pages stay within the deck header`, async () => {
+    const pages = page.getByRole('navigation', { name: 'Pages', exact: true });
+    const tools = page.getByRole('button', { name: 'Deck tools', exact: true });
+    const add = pages.getByRole('button', { name: 'New page', exact: true });
+    const rail = pages.locator('.page-tabs');
+    const active = rail.locator('[aria-current="page"]');
+    const header = page.locator('.workbench-title');
+    const original = JSON.stringify(await Promise.all([header.boundingBox(), add.boundingBox(), tools.boundingBox()]));
+    const controlsStay = async () => original === JSON.stringify(await Promise.all([header.boundingBox(), add.boundingBox(), tools.boundingBox()]));
+    for (let i = 0; i < 18; i++) {
+      const previous = await active.textContent();
+      await add.click();
+      await page.waitForFunction(name => {
+        const tab = document.querySelector('.page-tabs [aria-current="page"]');
+        return tab && tab.textContent !== name;
+      }, previous);
+    }
+    if (!await controlsStay() || !await layoutStays()) return 'adding pages shifted the header, deck, or controls';
+    if (!await rail.evaluate(el => el.scrollWidth > el.clientWidth)) return 'the tabs did not scroll within their rail';
+
+    const chooser = pages.getByRole('button', { name: 'All pages', exact: true });
+    const menu = page.getByRole('dialog', { name: 'All pages', exact: true });
+    await chooser.click();
+    await menu.getByRole('button', { name: 'Rename', exact: true }).click();
+    const name = `Production ${'LongPageName'.repeat(8)}`;
+    await pages.getByRole('textbox', { name: 'Page name', exact: true }).fill(name);
+    await pages.getByRole('textbox', { name: 'Page name', exact: true }).press('Enter');
+    await rail.getByRole('button', { name, exact: true }).waitFor();
+    await chooser.click();
+    const fits = await menu.evaluate(el => {
+      const list = el.querySelector('.page-menu-list');
+      const header = el.closest('.workbench-title').getBoundingClientRect();
+      const menu = el.getBoundingClientRect();
+      return list.scrollHeight > list.clientHeight && menu.left >= header.left && menu.right <= header.right;
+    });
+    if (!fits) return 'the page list was not bounded by its panel';
+    await menu.getByRole('button', { name: 'Main', exact: true }).click();
+    await rail.getByRole('button', { name: 'Main', exact: true }).and(active).waitFor();
+    await chooser.click();
+    await menu.getByRole('button', { name, exact: true }).click();
+    await rail.getByRole('button', { name, exact: true }).and(active).waitFor();
+    const revealed = await active.evaluate(el => {
+      const outer = el.parentElement.getBoundingClientRect();
+      const tab = el.getBoundingClientRect();
+      return tab.left >= outer.left - 1 && tab.right <= outer.right + 1;
+    });
+    return revealed && await controlsStay() && await layoutStays();
+  });
   await page.close();
 }
 

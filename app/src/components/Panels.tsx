@@ -2915,18 +2915,60 @@ export function BaseTurnPicker({ live }: { live: LiveState }) {
   );
 }
 
-/**
- * Arrange mode: share the modules the user placed by hand (slot, position, turn) on a GitHub issue
- * form, so slots not yet verified on hardware get right for everyone. Nothing else goes along.
- */
 export function PageBar({ view }: { view: EngineView }) {
   useLanguage();
   const profile = view.profile;
   const current = view.state?.page ?? null;
+  const [open, setOpen] = useState(false);
   const [naming, setNaming] = useState<{ id: string; name: string } | null>(null);
+  const nav = useRef<HTMLElement>(null);
+  const tabs = useRef<HTMLDivElement>(null);
+  const trigger = useRef<HTMLButtonElement>(null);
+  const pageList = useRef<HTMLDivElement>(null);
+  const close = useCallback(() => setOpen(false), []);
+  useDismiss(open, nav, close);
+
+  useLayoutEffect(() => {
+    const rail = tabs.current;
+    const active = rail?.querySelector('[aria-current="page"]');
+    if (!rail || !active) return;
+    const markEdges = () => {
+      rail.toggleAttribute("data-overflow-start", rail.scrollLeft > 1);
+      rail.toggleAttribute("data-overflow-end", rail.scrollWidth - rail.clientWidth - rail.scrollLeft > 1);
+    };
+    const reveal = () => {
+      if (!rail.clientWidth) return;
+      const bounds = rail.getBoundingClientRect();
+      const tab = active.getBoundingClientRect();
+      if (tab.left < bounds.left) rail.scrollLeft += tab.left - bounds.left;
+      else if (tab.right > bounds.right) rail.scrollLeft += tab.right - bounds.right;
+      markEdges();
+    };
+    reveal();
+    rail.addEventListener("scroll", markEdges, { passive: true });
+    const observer = new ResizeObserver(reveal);
+    observer.observe(rail);
+    observer.observe(active);
+    return () => {
+      observer.disconnect();
+      rail.removeEventListener("scroll", markEdges);
+    };
+  }, [profile?.id, current, naming?.id]);
+
+  useEffect(() => {
+    if (open) pageList.current?.querySelector<HTMLButtonElement>('[aria-current="page"]')?.focus();
+  }, [open]);
+
   if (!profile) return null;
   const pages = profile.pages ?? [];
   const currentPage = pages.find((p) => p.id === current);
+  const unreachable = !!currentPage && !pageReachable(profile, currentPage.id);
+  const items = [{ id: null, name: t("pages.main") }, ...pages];
+  const pick = (id: string | null) => {
+    if (open) trigger.current?.focus();
+    close();
+    void api.setPage(id).catch((e) => told(t("pages.title"), localizeError(String(e))));
+  };
   const submit = () => {
     if (!naming) return;
     const name = naming.name.trim();
@@ -2936,57 +2978,69 @@ export function PageBar({ view }: { view: EngineView }) {
     api.renamePage(profile.id, editing.id, name).catch((e) => told(t("pages.title"), String(e)));
   };
   return (
-    <nav
-      className="page-bar row wrap"
-      aria-label={t("pages.title")}
-      // the tabs may scroll sideways (narrow window): the mouse wheel moves them
-      onWheel={(e) => {
-        if (e.deltaY) e.currentTarget.scrollLeft += e.deltaY;
-      }}
-    >
+    <nav className="page-bar" aria-label={t("pages.title")} ref={nav}>
       <span className="label">{t("pages.keys")}</span>
-      <span className="seg">
-        <button className={`tab${current === null ? " is-active" : ""}`} onClick={() => api.setPage(null)}>
-          {t("pages.main")}
-        </button>
-        {pages.map((p) => (
-          <button key={p.id} className={`tab${current === p.id ? " is-active" : ""}`} onClick={() => api.setPage(p.id)}>
-            {p.name}
-          </button>
-        ))}
-      </span>
       {naming ? (
-        <form onSubmit={(e) => (e.preventDefault(), submit())}>
-          <input className="input tab-input" autoFocus placeholder={t("pages.name")} value={naming.name} onChange={(e) => setNaming({ ...naming, name: e.target.value })} onBlur={submit} onKeyDown={(event) => { if (event.key === "Escape") { event.preventDefault(); setNaming(null); } }} />
+        <form className="page-rename" onSubmit={(e) => (e.preventDefault(), submit())}>
+          <input className="input tab-input" autoFocus aria-label={t("pages.name")} value={naming.name} onChange={(e) => setNaming({ ...naming, name: e.target.value })} onBlur={submit} onKeyDown={(event) => { if (event.key === "Escape") { event.preventDefault(); setNaming(null); } }} />
         </form>
       ) : (
-        <button className="tab icon-only" aria-label={t("pages.new")} title={t("pages.newHelp")} onClick={() => void api.createPage(profile.id, "", t("pages.autoName", { n: "{n}" })).then((p) => api.setPage(p.id)).catch((e) => told(t("pages.title"), String(e)))}>
-          <Icon name="plus" />
+        <div className="seg page-tabs" ref={tabs} onWheel={(e) => {
+          if (!e.deltaX && e.currentTarget.scrollWidth > e.currentTarget.clientWidth) e.currentTarget.scrollLeft += e.deltaY;
+        }}>
+          {items.map(({ id, name }) => (
+            <button key={id ?? ""} type="button" className={`tab${current === id ? " is-active" : ""}`} aria-current={current === id ? "page" : undefined} title={name} onClick={() => pick(id)}>
+              <span>{name}</span>
+            </button>
+          ))}
+        </div>
+      )}
+      {pages.length > 0 && (
+        <button type="button" ref={trigger} className={`tab icon-only${open ? " is-active" : ""}`} aria-label={t("pages.choose")} aria-haspopup="dialog" aria-expanded={open} title={t(unreachable ? "pages.unreachable" : "pages.choose")} onClick={() => setOpen((value) => !value)}>
+          <Icon name={unreachable ? "alert" : "chevron-down"} className={unreachable ? "page-warning-icon" : undefined} />
         </button>
       )}
-      {currentPage && !naming && (
-        <>
-          {!pageReachable(profile, currentPage.id) && (
-            <span className="page-warn row">
-              <Icon name="alert" />
-              {t("pages.unreachable")}
-              <button className="tool small" title={t("pages.addWayHelp")} onClick={() => api.addWayToPage(profile.id, currentPage.id).catch((e) => told(t("error.addWay"), localizeError(String(e))))}>
-                {t("pages.addWay")}
+      <button type="button" className="tab icon-only" aria-label={t("pages.new")} title={t("pages.newHelp")} onClick={() => {
+        close();
+        void api.createPage(profile.id, "", t("pages.autoName", { n: "{n}" })).then((p) => api.setPage(p.id)).catch((e) => told(t("pages.title"), localizeError(String(e))));
+      }}>
+        <Icon name="plus" />
+      </button>
+      {open && (
+        <div className="popover page-menu" role="dialog" aria-label={t("pages.choose")} onKeyDown={(e) => {
+          if (e.key !== "Escape") return;
+          e.preventDefault();
+          close();
+          trigger.current?.focus();
+        }}>
+          <div className="menu-list page-menu-list" ref={pageList}>
+            {items.map(({ id, name }) => (
+              <button key={id ?? ""} type="button" className="menu-row compact" aria-current={current === id ? "page" : undefined} title={name} onClick={() => pick(id)}>
+                <span className="grow">{name}</span>
+                {current === id && <Icon name="check" />}
               </button>
-            </span>
+            ))}
+          </div>
+          {currentPage && (
+            <footer className="page-menu-footer">
+              {unreachable && (
+                <div className="page-warn">
+                  <span>{t("pages.unreachable")}</span>
+                  <button type="button" className="tool small" title={t("pages.addWayHelp")} onClick={() => api.addWayToPage(profile.id, currentPage.id).catch((e) => told(t("error.addWay"), localizeError(String(e))))}>
+                    {t("pages.addWay")}
+                  </button>
+                </div>
+              )}
+              <div className="row wrap">
+                <button type="button" className="tool ghost small" onClick={() => { close(); setNaming({ id: currentPage.id, name: currentPage.name }); }}>{t("pages.rename")}</button>
+                <button type="button" className="tool danger small" onClick={() => {
+                  close();
+                  void confirmed(t("pages.confirmDelete", { name: currentPage.name })).then((yes) => yes && api.deletePage(profile.id, currentPage.id).catch((e) => told(t("pages.title"), localizeError(String(e)))));
+                }}>{t("pages.delete")}</button>
+              </div>
+            </footer>
           )}
-          <button className="tool ghost small" onClick={() => setNaming({ id: currentPage.id, name: currentPage.name })}>
-            {t("pages.rename")}
-          </button>
-          <button
-            className="tool danger small"
-            onClick={() => {
-              void confirmed(t("pages.confirmDelete", { name: currentPage.name })).then((yes) => yes && api.deletePage(profile.id, currentPage.id).catch((e) => console.error(e)));
-            }}
-          >
-            {t("pages.delete")}
-          </button>
-        </>
+        </div>
       )}
     </nav>
   );

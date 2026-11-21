@@ -278,12 +278,62 @@
 .workbench-title .page-bar {
   flex: 1;
   min-width: 0;
-  justify-content: flex-start;
 }
 
 .workbench-title .page-bar + .spacer {
   display: none;
 }
+
+.page-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.page-bar > :is(.label, .icon-only) { flex: none; }
+.page-bar > .icon-only:first-of-type { margin-inline-start: auto; }
+.page-bar > .label { color: var(--tx3); margin-inline-end: 3px; }
+.page-tabs {
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+}
+.page-tabs[data-overflow-start], .page-tabs[data-overflow-end] {
+  --start-fade: 0px;
+  --end-fade: 0px;
+  --edge-mask: linear-gradient(to right, transparent, #000 var(--start-fade), #000 calc(100% - var(--end-fade)), transparent);
+  -webkit-mask-image: var(--edge-mask);
+  mask-image: var(--edge-mask);
+}
+.page-tabs[data-overflow-start] { --start-fade: 18px; }
+.page-tabs[data-overflow-end] { --end-fade: 18px; }
+.page-tabs > .tab {
+  flex: none;
+  max-inline-size: min(160px, 100%);
+  padding-inline: 9px;
+}
+.page-tabs > .tab > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.page-rename { min-width: 0; }
+.page-rename .tab-input { max-width: 100%; }
+.page-warning-icon { color: var(--warntx); }
+.page-menu.popover {
+  left: auto;
+  right: 0;
+  width: min(300px, 100%);
+  max-height: min(360px, 55vh);
+  overflow: hidden;
+}
+.page-menu-list { min-height: 0; overflow-y: auto; overscroll-behavior-y: contain; }
+.page-menu-list .grow { overflow-wrap: anywhere; }
+.page-menu-list [aria-current="page"] { background: var(--accbg); }
+.page-menu-footer { flex: none; padding: 6px 4px 0; border-top: 1px solid var(--ln2); }
+.page-warn { display: grid; justify-items: start; gap: 4px; padding: 4px 6px; color: var(--warntx); font-size: 12px; }
 
 .deck-tools {
   flex: none;

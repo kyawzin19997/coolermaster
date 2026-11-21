@@ -172,6 +172,7 @@ const TASKS = [
     name: 'A second page of keys and a key that opens it',
     run: async (page, t) => {
       await t.click(page.getByRole('button', { name: 'New page' }));
+      await t.click(page.getByRole('button', { name: 'All pages', exact: true }));
       await t.click(page.locator('.page-bar').getByRole('button', { name: 'Rename', exact: true }));
       await t.type(page.locator('.tab-input'), 'Games', true);
       await t.click(page.locator('.page-bar .tab', { hasText: 'Main' }));

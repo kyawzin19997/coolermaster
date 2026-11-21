@@ -1117,21 +1117,6 @@ button.chip.is-active {
   height: 30px;
 }
 
-/* multi-action steps, pages */
-.page-bar {
-  justify-content: center;
-}
-/* a page nothing on the deck opens (owner's pick 1a, 2026-10-16) */
-.page-warn {
-  gap: 6px;
-  align-items: center;
-  padding: 3px 4px 3px 10px;
-  border: 1px solid var(--warnln);
-  border-radius: 999px;
-  background: var(--warnbg);
-  color: var(--warntx);
-  font-size: 12.5px;
-}
 /* the living deck's choices as tiles (owner, 2026-10-26: "miejsce gdzie mogę te elementy włączać i przełączać") */
 .fx-grid {
   display: grid;
@@ -1255,11 +1240,6 @@ button.chip.is-active {
   border-radius: 8px;
   background: var(--warnbg);
   color: var(--warntx);
-}
-.page-warn > svg {
-  color: var(--warn);
-  width: 14px;
-  height: 14px;
 }
 .steps {
   display: flex;
@@ -1448,10 +1428,6 @@ button.chip.is-active {
   width: 22px;
   height: 22px;
 }
-.page-bar .label {
-  color: var(--tx3);
-}
-
 /* ---------- no deck, calibration ---------- */
 .deck-empty {
   text-align: center;

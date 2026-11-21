@@ -36,7 +36,9 @@ try {
   const tabs = () => page.locator("button.tab", { hasText: /^Walk$/ }).count();
   await page.getByRole("button", { name: "New page" }).click();
   const pageBar = page.getByRole("navigation", { name: "Pages", exact: true });
+  const pageMenu = pageBar.getByRole("button", { name: "All pages", exact: true });
   await pageBar.getByRole("button", { name: "Page 2", exact: true }).waitFor();
+  await pageMenu.click();
   await pageBar.getByRole("button", { name: "Rename", exact: true }).click();
   await pageBar.getByRole("textbox").fill("Walk");
   await page.keyboard.press("Enter");
@@ -45,6 +47,7 @@ try {
   const before = await tabs();
   // the question is MasterDeck's own, in the window (owner's pick 1b, 2026-10-23)
   const question = page.getByRole("alertdialog");
+  await pageMenu.click();
   await page.getByRole("button", { name: "Delete page" }).click();
   await page.waitForTimeout(500);
   const asked = (await question.innerText().catch(() => "")).replace(/\s+/g, " ");
@@ -52,6 +55,7 @@ try {
   await question.getByRole("button", { name: "Cancel" }).click().catch(() => {});
   await page.waitForTimeout(500);
   check("answered Cancel, the page stays", (await tabs()) === before && before > 0, `pages named Walk: ${before} -> ${await tabs()}`);
+  await pageMenu.click();
   await page.getByRole("button", { name: "Delete page" }).click();
   await page.waitForTimeout(500);
   await question.getByRole("button", { name: "Delete" }).click().catch(() => {});

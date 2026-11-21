@@ -73,14 +73,20 @@ async function question(page, name, trigger, expect, { answer = "Cancel", change
 try {
   // 1. Delete page
   let page = await open();
+  const pageMenu = page.getByRole("button", { name: "All pages", exact: true });
   await page.getByRole("button", { name: "New page" }).click();
+  await pageMenu.click();
   await page.locator(".page-bar").getByRole("button", { name: "Rename", exact: true }).click();
   await page.locator(".tab-input").fill("Walk");
   await page.keyboard.press("Enter");
   await page.locator("button.tab", { hasText: /^Walk$/ }).first().click();
   await sleep(400);
-  await question(page, "Delete page", () => page.getByRole("button", { name: "Delete page" }).click(), ['Delete the page "Walk"']);
-  await question(page, "Delete page (Escape)", () => page.getByRole("button", { name: "Delete page" }).click(), ['Delete the page "Walk"'], { answer: "Escape" });
+  const deletePage = async () => {
+    await pageMenu.click();
+    await page.getByRole("button", { name: "Delete page" }).click();
+  };
+  await question(page, "Delete page", deletePage, ['Delete the page "Walk"']);
+  await question(page, "Delete page (Escape)", deletePage, ['Delete the page "Walk"'], { answer: "Escape" });
   check("Delete page: the page is still there", (await page.locator("button.tab", { hasText: /^Walk$/ }).count()) > 0);
 
   // 2. Delete profile, from its row in the profile list
