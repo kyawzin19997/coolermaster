@@ -66,50 +66,27 @@ export function movedNote(moved: Moved[] | undefined, pages: Profile["pages"] = 
 
 export const Logo = () => <img className="logo" src={masterdeckIcon} alt="" />;
 
-export type LeftTab = "profiles" | "guide";
 type ShareProfile = (profile: Pick<ProfileSummary, "id" | "name">) => void;
 
-export function LeftPanel({ view, tab, onTab, onOpenProfile, onNewProfile, onGuide, onArrange, onTour, onShare }: {
+export function LeftPanel({ view, onOpenProfile, onNewProfile, onTour, onShare }: {
   view: EngineView;
-  tab: LeftTab;
-  onTab: (tab: LeftTab) => void;
   onOpenProfile: () => void;
   onNewProfile: () => void;
-  onGuide: () => void;
-  onArrange: () => void;
   onTour: () => void;
   onShare: ShareProfile;
 }) {
   useLanguage();
   return (
-    <aside data-guide="library" className="library" aria-label={tab === "profiles" ? t("profiles.title") : t("workshop.start")}>
-      <div className="lib-tabs seg full is-set-up" role="tablist">
-        <button role="tab" data-guide="profiles" aria-selected={tab === "profiles"} className={tab === "profiles" ? "tab is-active" : "tab"} onClick={() => onTab("profiles")}>
-          {t("profiles.title")}
-        </button>
-        <button role="tab" aria-selected={tab === "guide"} className={tab === "guide" ? "tab is-active" : "tab"} onClick={() => onTab("guide")}>{t("profiles.getStarted")}</button>
-      </div>
-      {tab === "profiles" ? (
-        <ProfilesList view={view} onOpenProfile={onOpenProfile} onNewProfile={onNewProfile} onShare={onShare} />
-      ) : (
-        <div className="profile-start-guide sectioned">
-          <section className="sec">
-            <h3 className="sec-title">{t("workshop.start")}</h3>
-            <p className="help">{t("workshop.lesson.actions.body")}</p>
-            <div className="row wrap">
-              <button type="button" className="tool primary" onClick={onGuide}>{t("workshop.start")}</button>
-              <button type="button" className="tool" onClick={onTour}>{t("workshop.personalize")}</button>
-            </div>
-          </section>
-          <section className="sec">
-            <h3 className="sec-title">{t("workshop.detachedTitle")}</h3>
-            <p className="help">{t("workshop.detachedShort")}</p>
-            <button type="button" className="tool align-start" onClick={onArrange}>{t("stage.editLayout")}</button>
-          </section>
-        </div>
-      )}
+    <aside className="library" aria-label={t("profiles.title")}>
+      <ProfilesList view={view} onOpenProfile={onOpenProfile} onNewProfile={onNewProfile} onShare={onShare} />
+      <div className="profile-personalize"><PersonalizeButton onClick={onTour} /></div>
     </aside>
   );
+}
+
+function PersonalizeButton({ onClick }: { onClick: () => void }) {
+  useLanguage();
+  return <button type="button" className="tool" onClick={onClick}><Icon name="layout-grid" />{t("workshop.personalize")}</button>;
 }
 
 /** Ready-made profiles; picking one shows it on the deck for a try, Add on the trying bar keeps it. */
@@ -801,7 +778,7 @@ function ProfileTabs({ view, onOpenProfile, onOpenForApp, kinds, newRequest }: {
         )}
         {naming === null ? (
           <span className="pop-anchor" ref={addRef}>
-            <button data-guide="newDeck" className={`tab new-deck${adding ? " is-active" : ""}`} aria-expanded={adding} title={t("topbar.newDeck")} onClick={() => (setAdding((a) => !a), setReadyOpen(false))}>
+            <button className={`tab new-deck${adding ? " is-active" : ""}`} aria-expanded={adding} title={t("topbar.newDeck")} onClick={() => (setAdding((a) => !a), setReadyOpen(false))}>
               <Icon name="plus" />
               <span className="tb-label">{t("topbar.newDeck")}</span>
             </button>
@@ -909,12 +886,9 @@ export function TopBar({
   onOpenForApp,
   kinds,
   newRequest,
-  onOpenTour,
-  setupPending,
 }: {
   kinds?: string[];
   newRequest?: number;
-  onOpenTour: () => void;
   onOpenForApp: () => void;
   live: LiveState;
   view: EngineView;
@@ -924,7 +898,6 @@ export function TopBar({
   onCheckUpdates?: () => void;
   onOpenPlugins: () => void;
   onOpenGames: () => void;
-  setupPending: boolean;
 }) {
   useLanguage();
   const count = live.deck.modules.filter((m) => m.kind !== "base").length;
@@ -950,7 +923,6 @@ export function TopBar({
         </label>
       )}
       <span className="sep" />
-      {setupPending && <button type="button" className="tool ghost" onClick={onOpenTour}>{t("stage.setup")}</button>}
       {GAMES_ENABLED && (
         <button className="tool ghost" onClick={onOpenGames}>
           {t("topbar.games")}
@@ -979,11 +951,10 @@ export function TopBar({
   );
 }
 
-export function DeckTools({ onArrange, onDisplay, onSaver, onGuide }: {
+export function DeckTools({ onArrange, onDisplay, onSaver }: {
   onArrange: () => void;
   onDisplay: () => void;
   onSaver: () => void;
-  onGuide: () => void;
 }) {
   useLanguage();
   const [open, setOpen] = useState(false);
@@ -994,11 +965,10 @@ export function DeckTools({ onArrange, onDisplay, onSaver, onGuide }: {
     { label: t("settings.lightsScreens"), icon: "sun", run: onDisplay },
     { label: t("saver.title"), icon: "moon", run: onSaver },
     { label: t("stage.editLayout"), icon: "layout-grid", run: onArrange },
-    { label: t("workshop.start"), icon: "compass", run: onGuide },
   ];
   return (
     <span className="pop-anchor deck-tools" ref={ref}>
-      <button type="button" className="tool deck-tools-trigger" data-guide="edge" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((value) => !value)}>
+      <button type="button" className="tool deck-tools-trigger" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((value) => !value)}>
         <Icon name="sliders-horizontal" />
         {t("stage.tools")}
         <Icon name="chevron-down" />
@@ -2142,12 +2112,13 @@ export function AppPageHeader({ title, onClose, children }: { title: string; onC
   );
 }
 
-export function SettingsPage({ live, view, section, onSection, onClose }: {
+export function SettingsPage({ live, view, section, onSection, onClose, onPersonalize }: {
   live: LiveState;
   view: EngineView;
   section: SettingsSection;
   onSection: (section: SettingsSection) => void;
   onClose: () => void;
+  onPersonalize: () => void;
 }) {
   useLanguage();
   return (
@@ -2166,7 +2137,7 @@ export function SettingsPage({ live, view, section, onSection, onClose }: {
           ))}
         </nav>
         <div className="settings-content sectioned" key={section}>
-          {section === "general" && <><Appearance /><LanguageSettings /><StartupSettings /><SwitchingSettings view={view} /></>}
+          {section === "general" && <><Appearance /><LanguageSettings /><StartupSettings /><SwitchingSettings view={view} /><section className="sec"><PersonalizeButton onClick={onPersonalize} /></section></>}
           {section === "text" && <DeckTextSettings />}
           {section === "connections" && <Connections />}
           {section === "backups" && <><Backups /><ProfilesFolder /></>}
@@ -3172,11 +3143,11 @@ function Backups() {
 }
 
 /** One connected service: a row with its state that opens to its fields. */
-function Service({ icon, hue, name, state, open, children }: { icon: string; hue: string; name: string; state: [ok: boolean, text: string]; open?: boolean; children: React.ReactNode }) {
+function Service({ icon, name, state, open, children }: { icon: string; name: string; state: [ok: boolean, text: string]; open?: boolean; children: React.ReactNode }) {
   return (
     <details className="svc" open={open}>
       <summary>
-        <span className="svc-ic" style={{ "--h": hue } as React.CSSProperties}>
+        <span className="svc-ic" aria-hidden="true">
           <Icon name={icon} />
         </span>
         <span className="grow svc-name">{name}</span>
@@ -3230,7 +3201,7 @@ function YourApps() {
     );
   };
   return (
-    <Service icon="app-window" hue="#3b82f6" name={t("apps.title")} state={[apps.length > 0, apps.length ? t("apps.count", { count: apps.length }) : t("connections.stateOff")]}>
+    <Service icon="app-window" name={t("apps.title")} state={[apps.length > 0, apps.length ? t("apps.count", { count: apps.length }) : t("connections.stateOff")]}>
       <p className="help">{t("apps.help")}</p>
       {apps.map((a) => {
         const list = items(a.id);
@@ -3324,7 +3295,7 @@ function ObsConnection() {
     : automatic ? t("connections.obsWaiting") : t("connections.obsDisconnected");
 
   return (
-    <Service icon="video" hue="#f0506e" name="OBS Studio" state={[status === "connected", label]} open={demoParam("svc") === "obs"}>
+    <Service icon="video" name="OBS Studio" state={[status === "connected", label]} open={demoParam("svc") === "obs"}>
       {automatic ? (
         <div className="field">
           <span className="label">{t("connections.obsAutomatic")}</span>
@@ -3455,7 +3426,7 @@ function SpotifyConnection() {
     </div>
   );
   return (
-    <Service icon="music" hue="#1ed760" name="Spotify" state={[connected, connected ? t("connections.stateConnected") : t("connections.stateOff")]}>
+    <Service icon="music" name="Spotify" state={[connected, connected ? t("connections.stateConnected") : t("connections.stateOff")]}>
       {connected ? (
         <>
           <div className="row wrap">
@@ -3493,7 +3464,7 @@ function TwitchConnection() {
   // a build without a Twitch app id cannot connect: not shown at all
   if (!available) return null;
   return (
-    <Service icon="twitch" hue="#a970ff" name={t("connections.twitch")} state={[connected, connected ? t("connections.stateConnected") : available ? t("connections.stateOff") : t("connections.stateUnavailable")]}>
+    <Service icon="twitch" name={t("connections.twitch")} state={[connected, connected ? t("connections.stateConnected") : available ? t("connections.stateOff") : t("connections.stateUnavailable")]}>
       <div className="row wrap">
         <button
           className="tool"
@@ -3543,7 +3514,7 @@ function StreamlabsConnection() {
       (e) => setMessage(String(e)),
     );
   return (
-    <Service icon="radio" hue="#80f5d2" name="Streamlabs Desktop" state={[tokenSet, tokenSet ? t("connections.stateSet") : t("connections.stateOff")]}>
+    <Service icon="radio" name="Streamlabs Desktop" state={[tokenSet, tokenSet ? t("connections.stateSet") : t("connections.stateOff")]}>
       <div className="field">
         <label htmlFor="sl-url" className="label">
           {t("connections.streamlabsUrl")}
@@ -3601,7 +3572,7 @@ function HomeAssistantConnection() {
       (e) => setMessage(String(e)),
     );
   return (
-    <Service icon="home" hue="#41bdf5" name="Home Assistant" state={[tokenSet && !!url, tokenSet && url ? t("connections.stateSet") : t("connections.stateOff")]}>
+    <Service icon="home" name="Home Assistant" state={[tokenSet && !!url, tokenSet && url ? t("connections.stateSet") : t("connections.stateOff")]}>
       <div className="field">
         <label htmlFor="ha-url" className="label">
           {t("connections.haUrl")}

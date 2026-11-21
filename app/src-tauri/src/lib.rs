@@ -423,7 +423,6 @@ pub fn run() {
             engine::tour::tour_start,
             engine::tour::tour_set,
             engine::tour::tour_sound,
-            engine::tour::tour_saver,
             engine::tour::tour_highlight,
             engine::tour::tour_finish,
             engine::tour::tour_exit,

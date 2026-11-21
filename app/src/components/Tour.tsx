@@ -2,10 +2,9 @@
 // about what the person does at the computer (MasterDeck suggests the answer), then the deck is made
 // at once and shown on the hardware, and the tour walks through it part by part (layout 2A: the
 // parts on the left, the part in the middle, the deck on the right). Each part is kept or left out
-// and has up to two looks; the finale shows MasterDeck's showpieces; the end keeps the deck or throws
-// it away. Nothing of the user's changes; Exit puts everything back.
+// and has up to two looks. The final screen lets the user keep or discard the draft profile.
 import { listen } from "@tauri-apps/api/event";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import type { ControlRef, LiveState } from "../deck";
 import { api, inWindow, type DialFace, type EngineView, type TourFocus, type TourStop, type TourSuggestion, type TourView } from "../engine";
@@ -60,7 +59,7 @@ export function Tour({
   onArrange?: () => void;
 }) {
   useLanguage();
-  const [phase, setPhase] = useState<"desk" | "focus" | "making" | "stops" | "finale" | "end">(deskCheck ? "desk" : "focus");
+  const [phase, setPhase] = useState<"desk" | "focus" | "making" | "stops" | "end">(deskCheck ? "desk" : "focus");
   const [suggestion, setSuggestion] = useState<TourSuggestion | null>(null);
   const [focus, setFocus] = useState<TourFocus>("mixed");
   const [tour, setTour] = useState<TourView | null>(null);
@@ -85,8 +84,7 @@ export function Tour({
     };
   }, []);
 
-  const main = useMemo(() => tour?.stops.filter((s) => !s.id.startsWith("super")) ?? [], [tour]);
-  const finale = useMemo(() => tour?.stops.filter((s) => s.id.startsWith("super")) ?? [], [tour]);
+  const main = tour?.stops ?? [];
   const stop = phase === "stops" ? main[Math.min(at, main.length - 1)] : null;
 
   // the volume part plays MasterDeck's own sound, so turning is heard even when nothing plays
@@ -154,7 +152,7 @@ export function Tour({
   const pointAt =
     stop?.id === "gestures"
       ? (nextTask?.split(":")[0] ?? null)
-      : (stop?.tryControl ?? (phase === "finale" && tour?.stops.some((s) => s.id === "superAnimations" && s.keep) ? "keys.9" : null));
+      : (stop?.tryControl ?? null);
   // the drawing marks the same control the deck blinks: for the gestures the one to do now, not
   // the first (owner, 2026-10-14: it said the System knob and marked the Mic key)
   const tryRef = refOf(live, pointAt);
@@ -195,8 +193,8 @@ export function Tour({
     done.current = true;
     api.tourFinish(keep, home).then(() => (onboarded(), then()), (e) => setError(String(e)));
   };
-  const next = () => (at + 1 < main.length ? setAt(at + 1) : setPhase("finale"));
-  const kept = tour ? tour.stops.filter((s) => s.keep && !s.id.startsWith("super")).length : 0;
+  const next = () => (at + 1 < main.length ? setAt(at + 1) : setPhase("end"));
+  const kept = main.filter((s) => s.keep).length;
 
   const header = (
     <header className="settings-head tour-head">
@@ -204,21 +202,18 @@ export function Tour({
         <Icon name="chevron-left" />
         {t("tour.exit")}
       </button>
-      {(phase === "stops" || phase === "finale") && tour ? (
-        <div className="tour-progress" role="progressbar" aria-label={t("tour.walkTitle")} aria-valuemin={0} aria-valuemax={main.length + 1} aria-valuenow={phase === "finale" ? main.length + 1 : at + 1}>
+      {phase === "stops" && tour ? (
+        <div className="tour-progress" role="progressbar" aria-label={t("tour.walkTitle")} aria-valuemin={0} aria-valuemax={main.length} aria-valuenow={at + 1}>
           {main.map((s, i) => {
             const share = s.id === "gestures" && (s.tasks ?? []).length ? gestureCount / (s.tasks ?? []).length : s.id === "dial" && onFace?.gestures.length ? faceCount / onFace.gestures.length : 0;
-            const full = tried[s.id] || phase === "finale";
+            const full = tried[s.id];
             return (
-              <span key={s.id} className={`tour-seg${full ? " is-done" : ""}${phase === "stops" && i === at ? " is-now" : ""}`}>
-                <i style={{ width: `${full ? 100 : phase === "stops" && i === at ? Math.max(12, share * 100) : 0}%` }} />
+              <span key={s.id} className={`tour-seg${full ? " is-done" : ""}${i === at ? " is-now" : ""}`}>
+                <i style={{ width: `${full ? 100 : i === at ? Math.max(12, share * 100) : 0}%` }} />
               </span>
             );
           })}
-          <span className={`tour-seg${phase === "finale" ? " is-now" : ""}`}>
-            <i style={{ width: phase === "finale" ? "50%" : "0%" }} />
-          </span>
-          <span className="tour-progress-n">{t("tour.stopOf", { n: phase === "finale" ? main.length + 1 : at + 1, count: main.length + 1 })}</span>
+          <span className="tour-progress-n">{t("tour.stopOf", { n: at + 1, count: main.length })}</span>
         </div>
       ) : (
         <h2>{phase === "focus" || phase === "making" ? t("tour.title") : t("tour.walkTitle")}</h2>
@@ -385,7 +380,7 @@ export function Tour({
               <p className="tour-now">
                 <b>{t("tour.nowLabel")}</b> {nowWords}
                 <br />
-                <b>{t("tour.nextLabel")}</b> {at + 1 < main.length ? t(`tour.${main[at + 1].id}.title` as Key) : t("tour.superTitle")}
+                <b>{t("tour.nextLabel")}</b> {at + 1 < main.length ? t(`tour.${main[at + 1].id}.title` as Key) : t("tour.endTitle")}
               </p>
               <label className="check tour-keep">
                 <input type="checkbox" checked={stop.keep} onChange={(e) => set(stop.id, e.target.checked, null)} />
@@ -412,50 +407,6 @@ export function Tour({
             </div>
 
             {error && <p className="help catalog-err">{error}</p>}
-          </main>
-          {deck}
-        </div>
-      </div>
-    );
-  }
-
-  if (phase === "finale" && tour) {
-    return (
-      <div className="tour-page">
-        {header}
-        <div className="tour-body">
-          <main className="tour-stop tour-finale">
-            <span className="tour-count">{t("tour.finale")}</span>
-            <h3>{t("tour.superTitle")}</h3>
-            <p className="tour-text">{t("tour.superBody")}</p>
-            <div className="tour-super">
-              {finale.map((s) => (
-                <div key={s.id} className="tour-super-item">
-                  <Icon name={s.id === "superAnimations" ? "sparkles" : s.id === "superSaver" ? "image" : "palette"} />
-                  <div className="grow">
-                    <b>{t(`tour.${s.id}.title` as Key)}</b>
-                    <span className="help">{t(`tour.${s.id}.body` as Key)}</span>
-                    {s.id === "superSaver" && (
-                      <button className="link-btn align-start" onClick={() => api.tourSaver("rain").catch(() => {})}>
-                        {t("tour.showSaver")}
-                      </button>
-                    )}
-                  </div>
-                  {/* the Fun page is always on the deck (owner, 2026-10-14): nothing to keep or drop */}
-                  {s.id !== "superAnimations" && (
-                    <Toggle on={s.keep} label={t("tour.keepPart", { part: t(`tour.${s.id}.title` as Key) })} onChange={(on) => set(s.id, on, null)} />
-                  )}
-                </div>
-              ))}
-            </div>
-            <div className="tour-nav">
-              <button className="tool ghost" onClick={() => (setPhase("stops"), setAt(main.length - 1))}>
-                {t("tour.back")}
-              </button>
-              <button className="tool primary" onClick={() => setPhase("end")}>
-                {t("tour.seeDeck")}
-              </button>
-            </div>
           </main>
           {deck}
         </div>

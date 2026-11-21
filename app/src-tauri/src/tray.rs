@@ -74,7 +74,8 @@ static PICK_PROFILE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBo
 
 pub fn open_profile_picker(app: &AppHandle) {
     use tauri::Emitter;
-    PICK_PROFILE.store(true, std::sync::atomic::Ordering::Release);
+    // Preserve the parity of presses even when the window is still loading.
+    PICK_PROFILE.fetch_xor(true, std::sync::atomic::Ordering::AcqRel);
     let handle = app.clone();
     let _ = app.run_on_main_thread(move || {
         if crate::automation::get().is_none() {

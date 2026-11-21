@@ -136,11 +136,11 @@ export const ActionLibrary = memo(function ActionLibrary({
                 return (
                   <section key={group} className="chooser-group" ref={group === focusGroup ? focusedGroup : undefined}>
                     <button type="button" className="chooser-group-head" aria-expanded={open} onClick={() => setExpanded((current) => open ? current.filter((item) => item !== group) : [...current, group])}>
-                      {image ? <ActionPicture key={image} src={image} /> : <ActionIcon action={items[0]} icons={icons} />}
+                      {image ? <ActionPicture key={image} src={image} /> : <Icon name="folder" className="chooser-category-icon" />}
                       <span className="nm">{group}</span>
-                      <Icon name={open ? "chevron-down" : "chevron-right"} />
+                      <Icon name={open ? "chevron-down" : "chevron-right"} className="chooser-disclosure" />
                     </button>
-                    {open && <div className="chooser-list">{items.map(actionRow)}</div>}
+                    {open && <div className="chooser-list chooser-group-actions">{items.map(actionRow)}</div>}
                   </section>
                 );
               })}

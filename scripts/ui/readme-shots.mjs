@@ -45,9 +45,8 @@ await page.locator('.dk-ctl[aria-label^="Key 4"]').first().click({ force: true }
 await page.waitForTimeout(800);
 await shot('hubdeck-main');
 
-// the tour, from Get started
+// Build a personalized profile
 await fresh();
-await page.locator('.lib-tabs [role="tab"]', { hasText: 'Get started' }).click();
 await page.waitForTimeout(500);
 await shot('hubdeck-start');
 // the tour itself: Show me on my deck, then its first question answered

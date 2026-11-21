@@ -74,14 +74,13 @@ for (const [label, viewport] of [['wide', { width: 1440, height: 900 }], ['half'
   page.on('pageerror', (e) => errors.push(String(e.message || e).split('\n')[0]));
   page.hubdeckErrors = errors;
   const profiles = page.getByRole('dialog', { name: 'Profiles', exact: true });
-  const profileTab = async (name) => {
+  const openProfiles = async () => {
     if (!(await profiles.isVisible())) await page.getByRole('button', { name: 'Profiles', exact: true }).click();
-    await profiles.getByRole('tab', { name, exact: true }).click();
   };
   const closeProfiles = () => profiles.getByRole('button', { name: 'Close', exact: true }).click();
 
   await page.goto(`${base}?demo=welcome`);
-  await page.waitForSelector('.workspace-guide .workspace-pane-head', { timeout: 15000 });
+  await page.waitForSelector('.action-sidebar .library-item', { timeout: 15000 });
   const deckStage = page.locator('.stable-workspace .dk-stage');
   const actionPane = page.locator('.stable-workspace .action-sidebar');
   const deckWorkspace = page.locator('main.stable-workspace');
@@ -100,27 +99,6 @@ for (const [label, viewport] of [['wide', { width: 1440, height: 900 }], ['half'
     await page.getByRole('button', { name: 'Deck tools', exact: true }).click();
     await page.getByRole('menuitem', { name: label, exact: true }).click();
   };
-  await step(page, `${label}: Getting Started keeps the deck and Actions in place`, async () => {
-    if (!await page.getByText('Drag an action from the panel on the right onto a key.', { exact: true }).isVisible()) return 'missing the first step';
-    await page.locator('.workspace-guide').getByRole('button', { name: 'Next', exact: true }).click();
-    return await page.getByText('Click a key to edit it.', { exact: false }).isVisible() && await layoutStays();
-  });
-  await step(page, `${label}: Deck tools offers layout editing without the separate module guide`, async () => {
-    await page.getByRole('button', { name: 'Deck tools', exact: true }).click();
-    const tools = page.getByRole('menu', { name: 'Deck tools', exact: true });
-    const compact = !(await tools.getByRole('menuitem', { name: 'Your Deck, Your Modules', exact: true }).count());
-    await tools.getByRole('menuitem', { name: 'Edit layout', exact: true }).click();
-    return compact && await layoutStays();
-  });
-  await step(page, `${label}: Edit layout stays beside the deck and Actions`, async () => {
-    if (!await actionPane.isVisible()) return 'Actions disappeared';
-    await page.locator('.layout-tool').click();
-    return await visible(page, '.workspace-guide') && await layoutStays();
-  });
-  await step(page, `${label}: the guide closes into the key editor`, async () => {
-    await page.locator('.workspace-guide').getByRole('button', { name: 'Close', exact: true }).click();
-    return !await visible(page, '.workspace-guide') && await layoutStays();
-  });
   await step(page, `${label}: notification appears at the bottom and closes without layout shift`, async () => {
     await page.evaluate(() => window.demoEmit('engine://error', { control: 'OBS', message: 'Connection check message' }));
     const notice = page.locator('.notification-stack .notice').filter({ hasText: 'Connection check message' });
@@ -200,7 +178,7 @@ for (const [label, viewport] of [['wide', { width: 1440, height: 900 }], ['half'
   });
   await step(page, `${label}: Settings opens as a separate page`, async () => {
     await page.getByRole('button', { name: /^Settings$/ }).first().click();
-    return await hasOwnPage(settingsPage);
+    return await hasOwnPage(settingsPage) && await settingsPage.getByRole('button', { name: 'Build a personalized profile', exact: true }).count() === 1 && !await settingsPage.getByText('Getting Started', { exact: true }).count();
   });
   await step(page, `${label}: Settings has its own section navigation`, async () => {
     for (const section of ['Connections', 'Text on the deck', 'Backups', 'Diagnostics', 'General']) {
@@ -259,21 +237,8 @@ for (const [label, viewport] of [['wide', { width: 1440, height: 900 }], ['half'
     await page.locator('.stable-workspace .dk-ctl[data-kind="keys"]').first().click();
     return ready && !await display.isVisible() && await page.getByRole('complementary', { name: 'Key settings', exact: true }).isVisible() && await layoutStays();
   });
-  await step(page, `${label}: Profiles and Get started use the same dialog size`, async () => {
-    await profileTab('Profiles');
-    const size = await profiles.boundingBox();
-    for (const tab of ['Profiles', 'Get started']) {
-      await profileTab(tab);
-      await page.waitForTimeout(200);
-      const sel = await page.locator('.lib-tabs [role="tab"][aria-selected="true"]').innerText();
-      if (!sel.includes(tab)) return `tab ${tab} not selected`;
-      if (JSON.stringify(await profiles.boundingBox()) !== JSON.stringify(size)) return 'the profile dialog resized';
-    }
-    await closeProfiles();
-    return true;
-  });
   await step(page, `${label}: profile import explains the file types before opening the picker`, async () => {
-    await profileTab('Profiles');
+    await openProfiles();
     const guide = page.getByRole('dialog', { name: 'Import a profile', exact: true });
     const choose = profiles.getByRole('button', { name: 'Import', exact: true });
     const pickerCalls = () => page.evaluate(() => window.__demoCalls.filter(command => command === 'plugin:dialog|open').length);
@@ -362,19 +327,19 @@ for (const [label, viewport] of [['wide', { width: 1440, height: 900 }], ['half'
     await updates.getByRole('button', { name: 'Back to the deck', exact: true }).click();
     return await layoutStays() && await visible(page, '.stable-workspace .workspace-key-pane > .control-inspector');
   });
-  await step(page, `${label}: Deck Builder and the assistant are absent`, async () => {
+  await step(page, `${label}: Profiles has one builder button and Deck tools omits the old setup menus`, async () => {
     await page.getByRole('button', { name: 'Deck tools', exact: true }).click();
     const tools = page.getByRole('menu', { name: 'Deck tools', exact: true });
-    if (await tools.getByRole('menuitem', { name: 'Deck Builder', exact: true }).count()) return 'old builder menu is visible';
+    if (await tools.getByRole('menuitem', { name: /Deck Builder|Getting Started|Your Deck, Your Modules/ }).count()) return 'old setup menu is visible';
     await page.keyboard.press('Escape');
-    await profileTab('Get started');
-    await profiles.getByRole('heading', { name: 'Set up an unattached module' }).waitFor();
-    const removed = await profiles.locator('#as-know').count() === 0;
+    await openProfiles();
+    const removed = await profiles.getByRole('button', { name: 'Build a personalized profile', exact: true }).count() === 1 &&
+      !await profiles.getByRole('tab').count() && !await profiles.locator('#as-know').count();
     await closeProfiles();
     return removed;
   });
-  await step(page, `${label}: the tour: one question, the parts with Keep, the finale, the end, Exit back to the deck`, async () => {
-    await profileTab('Get started');
+  await step(page, `${label}: profile setup goes straight from the last step to the finished profile`, async () => {
+    await openProfiles();
     await page.waitForTimeout(200);
     await profiles.getByRole('button', { name: 'Build a personalized profile', exact: true }).click();
     await page.waitForTimeout(400);
@@ -390,17 +355,16 @@ for (const [label, viewport] of [['wide', { width: 1440, height: 900 }], ['half'
       await page.getByRole('button', { name: 'Next', exact: true }).click();
       await page.waitForTimeout(200);
     }
-    if (!(await visible(page, '.tour-super'))) return 'no finale';
-    await page.getByRole('button', { name: 'See my deck' }).click();
+    if (await page.getByText('Super Mode', { exact: false }).count()) return 'Super Mode still present';
     await page.waitForTimeout(300);
     if (!(await visible(page, '.tour-end'))) return 'no end page';
     await page.getByRole('button', { name: /^Exit/ }).click();
     await page.waitForTimeout(300);
     return (await visible(page, '.deck-area')) && !(await visible(page, '.tour-page'));
   });
-  // the tour to its end page, from the Get started tab
+  // Finish building a personalized profile.
   const tourToEnd = async () => {
-    await profileTab('Get started');
+    await openProfiles();
     await page.waitForTimeout(200);
     await profiles.getByRole('button', { name: 'Build a personalized profile', exact: true }).click();
     await page.waitForTimeout(400);
@@ -411,7 +375,6 @@ for (const [label, viewport] of [['wide', { width: 1440, height: 900 }], ['half'
       await page.getByRole('button', { name: 'Next', exact: true }).click();
       await page.waitForTimeout(150);
     }
-    await page.getByRole('button', { name: 'See my deck' }).click();
     await page.waitForTimeout(300);
   };
   await step(page, `${label}: Use as my home profile returns to the editor`, async () => {
@@ -429,7 +392,7 @@ for (const [label, viewport] of [['wide', { width: 1440, height: 900 }], ['half'
     return removed && await layoutStays();
   });
   await step(page, `${label}: Ready for your apps lists its profiles, off, and a switch turns one on`, async () => {
-    await profileTab('Profiles');
+    await openProfiles();
     await page.waitForTimeout(300);
     if (!(await page.locator('.ready-apps .plist-head', { hasText: /Ready for your apps \(3\)/ }).isVisible())) return 'no group';
     // folded until opened (owner's pick A, 2026-10-22)
@@ -499,8 +462,7 @@ for (const [label, viewport] of [['wide', { width: 1440, height: 900 }], ['half'
     return revealed && await controlsStay() && await layoutStays();
   });
   await step(page, `${label}: Edit layout keeps its panel and unattached controls can be assigned`, async () => {
-    await profileTab('Get started');
-    await profiles.getByRole('button', { name: 'Edit layout', exact: true }).click();
+    await deckMenu('Edit layout');
     const layout = page.getByRole('complementary', { name: 'Edit layout', exact: true });
     await layout.getByText('Select a module to configure it before connecting it.', { exact: true }).waitFor();
     if (!await layoutStays()) return 'Edit layout moved the deck before any changes';

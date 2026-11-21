@@ -15,15 +15,15 @@ Quit the official MasterHUB app before connecting the hardware. One application 
 
 ## Set up your deck
 
-1. Open **Deck tools → Getting Started** for a short walkthrough beside the deck.
-2. Drag an action from the right panel onto a key. Click the key to open **Key Settings**, then drag onto **Hold** or **Double press** to add another action.
+1. Open **Profiles → Build a personalized profile** to set up a profile for what you do most. You can also start it from **Settings → General**.
+2. Expand a category in **Actions** and drag an indented action onto a key. Click the key to open **Key Settings**, then drag onto **Hold** or **Double press** to add another action.
 3. Open **Profiles** to start from a template or create a profile. Click **+** beside the page tabs to add a page. To delete one, select its tab and press **Delete**.
 4. Right-click a key to copy or paste it. Replacing an action also replaces its icon and keeps the key’s styling.
 
 <details>
-<summary>See Getting Started</summary>
+<summary>See the profile library</summary>
 
-![Getting Started shows the first step next to the deck and Actions panel](docs/images/masterdeck-getting-started.png)
+![The profile library shows saved profiles and the Build a personalized profile button](docs/images/masterdeck-profile-library.png)
 
 </details>
 
@@ -35,7 +35,7 @@ Select a key and open **Appearance → Full editor**. Under **Choose icon or ima
 
 ## Switch profiles from a key
 
-Drag **Profile Switcher** from Actions onto a key. Press the physical key to open the profile list. You can try it from the preview by right-clicking the assigned key and choosing **Profile Switcher**. Use **Switch profile** to jump directly to a specific profile or cycle through them.
+Drag **Profile Switcher** from Actions onto a key. Press the physical key to open the profile list, then press it again to close the list. You can try it from the preview by right-clicking the assigned key and choosing **Profile Switcher**. Use **Switch profile** to jump directly to a specific profile or cycle through them.
 
 ![Profile Switcher with a search field and selectable profiles](docs/images/masterdeck-profile-switcher.png)
 
@@ -66,6 +66,13 @@ Open **Deck tools → Screensaver**, then use **Next preview** to browse before 
 Open OBS Studio on the same computer. MasterDeck finds the local OBS connection and reconnects when OBS restarts. You can check the connection under **Settings → Connections → OBS Studio**. If MasterDeck shows **Setup needed**, close OBS Studio, choose **Enable connection** in MasterDeck, and reopen OBS. For OBS on another computer or a custom installation, expand **Manual connection**.
 
 In OBS Studio Mode, select a scene key and choose **Preview** to cue a scene or **Program** to switch the live output. The target appears on the deck preview. A key set to Preview requires Studio Mode, so it cannot accidentally switch the live output outside Studio Mode.
+
+<details>
+<summary>See Settings → Connections</summary>
+
+![Connections lists OBS Studio and other integrations with their status](docs/images/masterdeck-connections.png)
+
+</details>
 
 ## Use a profile on another deck
 

@@ -274,7 +274,6 @@ fn stop_ids(ctx: &Ctx) -> Vec<&'static str> {
     if ctx.has("dial") {
         ids.push("dial");
     }
-    ids.extend(["superAnimations", "superSaver", "superRainbow"]);
     ids
 }
 
@@ -282,7 +281,7 @@ fn stop_ids(ctx: &Ctx) -> Vec<&'static str> {
 fn build(ctx: &Ctx, choices: &Choices, id: &str) -> (Profile, Vec<Stop>) {
     // the screensaver starts off (owner, 2026-10-16: "zostawiłbym defaultowo bez wygaszacza"; it
     // stays one switch away here and in Settings > Lights and screens); every other part starts on
-    let keep = |stop: &str| choices.keep.get(stop).copied().unwrap_or(stop != "superSaver");
+    let keep = |stop: &str| choices.keep.get(stop).copied().unwrap_or(true);
     let look = |stop: &str| choices.look.get(stop).copied().unwrap_or(0);
     let mut controls = serde_json::Map::new();
     let mut stops = Vec::new();
@@ -486,12 +485,6 @@ fn build(ctx: &Ctx, choices: &Choices, id: &str) -> (Profile, Vec<Stop>) {
                 put(&mut stop, "keys.14", hotkey(ctx, "Win+L", "Ctrl+Cmd+Q", &ctx.tr("Lock", "Zablokuj"), "lock"));
                 stop.try_control = Some("keys.11".into());
             }
-            "superAnimations" => {
-                // always kept: the way to the Fun page
-                stop.keep = true;
-                stop.controls.push("keys.9".into());
-                stop.try_control = Some("keys.9".into());
-            }
             "gestures" => {
                 // the Mic key: a hold turns all sound off
                 put(&mut stop, "keys.5:hold", binding("core.volume", json!({"target": "system"}), &ctx.tr("Sound off", "Bez dźwięku"), "volume-x"));
@@ -533,7 +526,6 @@ fn build(ctx: &Ctx, choices: &Choices, id: &str) -> (Profile, Vec<Stop>) {
                 // the first look leaves the dial as the parts before made it (the music, or the volume)
                 stop.try_control = Some("dial".into());
             }
-            "superSaver" | "superRainbow" => {}
             _ => {}
         }
         stops.push(stop);
@@ -592,7 +584,6 @@ fn build(ctx: &Ctx, choices: &Choices, id: &str) -> (Profile, Vec<Stop>) {
         p.pages = vec![Page { id: "fun".into(), name: ctx.tr("Fun", "Zabawa") }];
     }
     // the rainbow edge, or one calm color
-    p.edge = if keep("superRainbow") { None } else { Some("#8B7CF6".into()) };
     super::profile_helpers::with_real_apps(&mut p);
     super::house::apply(&mut p);
     (p, stops)
@@ -700,14 +691,6 @@ pub fn tour_sound(app: AppHandle, on: bool) -> Result<(), String> {
     Ok(())
 }
 
-/// Show a screensaver on the deck for a few seconds (the finale).
-#[tauri::command]
-pub fn tour_saver(app: AppHandle, effect: String) -> Result<(), String> {
-    let effect = if super::saver::scene(&effect).is_some() { effect } else { "aurora".into() };
-    app.state::<Engine>().lock().saver_preview = Some((effect, Instant::now() + Duration::from_secs(8)));
-    Ok(())
-}
-
 /// How long a control blinks on the hardware when the tour points at it (or until it is touched).
 const HIGHLIGHT_FOR: Duration = Duration::from_secs(10);
 
@@ -723,10 +706,10 @@ pub fn tour_highlight(app: AppHandle, control: Option<String>) {
 /// microphone, the volume) comes back either way.
 #[tauri::command]
 pub fn tour_finish(app: AppHandle, keep: bool, home: bool) -> Result<Option<String>, String> {
-    let (draft, saver) = {
+    let draft = {
         let guard = TOUR.lock().unwrap_or_else(|e| e.into_inner());
         let t = guard.as_ref().ok_or("no tour runs")?;
-        (t.snapshot.draft.clone(), t.choices.keep.get("superSaver").copied().unwrap_or(false))
+        t.snapshot.draft.clone()
     };
     let engine = app.state::<Engine>();
     if keep {
@@ -734,13 +717,6 @@ pub fn tour_finish(app: AppHandle, keep: bool, home: bool) -> Result<Option<Stri
         super::presses::forget_profile(&draft);
         if home {
             engine.activate(&draft)?;
-        }
-        if saver {
-            let mut s = engine.lock();
-            if s.store.settings.saver.is_empty() {
-                s.store.settings.saver = "rain".into();
-                s.store.save_settings().map_err(|e| e.to_string())?;
-            }
         }
     }
     end(&app, keep)?;
@@ -858,7 +834,7 @@ mod tests {
     }
 
     #[test]
-    fn keys_only_still_gets_a_volume_and_the_finale_a_fun_page() {
+    fn keys_only_still_gets_volume_and_a_fun_page() {
         let (p, _) = build(&ctx(&["keys"], Focus::Mixed), &Choices::default(), "t4");
         assert!(p.controls.contains_key("keys.14"));
         assert!(p.controls.contains_key("fun/keys.14"));
@@ -867,21 +843,17 @@ mod tests {
     }
 
     #[test]
-    fn the_screensaver_starts_off_and_the_rest_on() {
+    fn tour_stops_use_only_profile_setup_parts() {
         let (_, stops) = build(&ctx(&["keys", "dial", "knobs"], Focus::Mixed), &Choices::default(), "t9");
-        assert!(stops.iter().find(|s| s.id == "superSaver").is_some_and(|s| !s.keep));
-        assert!(stops.iter().find(|s| s.id == "superRainbow").is_some_and(|s| s.keep));
+        assert_eq!(stops.iter().map(|s| s.id).collect::<Vec<_>>(), ["volume", "extras", "mute", "music", "apps", "gestures", "dial"]);
+        assert!(stops.iter().all(|s| s.keep));
     }
 
     #[test]
     fn the_fun_page_is_always_there_with_mochi_and_the_screensavers() {
-        // even when its part was not kept (owner, 2026-10-14)
-        let mut ch = Choices::default();
-        ch.keep.insert("superAnimations".into(), false);
-        let (p, stops) = build(&ctx(&["keys", "dial", "knobs"], Focus::Mixed), &ch, "t7");
+        let (p, _) = build(&ctx(&["keys", "dial", "knobs"], Focus::Mixed), &Choices::default(), "t7");
         assert_eq!(p.pages.len(), 1);
         assert_eq!(p.controls["keys.9"].action, "core.page");
-        assert!(stops.iter().find(|s| s.id == "superAnimations").is_some_and(|s| s.keep));
         assert_eq!(p.controls["fun/keys.10"].action, super::super::pet::ACTION);
         assert_eq!(super::super::actions::param_str(&p.controls["fun/keys.10"].params, "press"), "dial");
         assert_eq!(p.controls["fun/keys.11"].action, super::super::actions::SAVER);

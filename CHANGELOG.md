@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.4.1
+
+- Installed plugins keep their original artwork. Expand a category heading to see its indented, draggable actions.
+- Press a Profile Switcher key again to close the profile picker.
+- **Build a personalized profile** opens from Profiles or Settings. The builder goes straight from setup to the finished profile.
+- Settings uses simple line icons for connections, and MasterDeck has a new app and installer icon.
+
 ## 1.4.0
 
 - A smaller Full Editor puts image upload, icon placement, presets, and motion controls within reach. Advanced styles remain available.

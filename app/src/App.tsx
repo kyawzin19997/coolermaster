@@ -10,7 +10,6 @@ import "./styles.css";
 import "./workspace.css";
 import "./theme";
 import { useDeck, type ControlRef } from "./deck";
-import type { LeftTab } from "./components/Panels";
 import { api, controlId, saverEnd, triedPresets, useEngine, useSaverShown, type ProfileSummary } from "./engine";
 import { invoke } from "@tauri-apps/api/core";
 import { DeckView } from "./components/DeckView";
@@ -25,7 +24,6 @@ import { PhoneUpload } from "./components/PhoneUpload";
 import { ProfilePicker, ProfileShare } from "./components/ProfileShare";
 import { listen } from "@tauri-apps/api/event";
 import { Icon } from "./components/Icon";
-import { WorkspaceGuide } from "./components/WorkspaceGuide";
 import { CalibrationPanel } from "./components/Calibration";
 import { detachedKinds, placeModules, placementKey, usePlacements } from "./layout";
 import { clearIdentify, identifyModule } from "./identify";
@@ -99,12 +97,16 @@ export default function App() {
   const [focusPlugin, setFocusPlugin] = useState<{ id: string; at: number } | null>(null);
 
   const [newRequest, setNewRequest] = useState(0);
-  const [profileLibrary, setProfileLibrary] = useState<LeftTab | null>(null);
+  const [profileLibrary, setProfileLibrary] = useState(false);
   const [profilePicker, setProfilePicker] = useState(false);
   const [shareProfile, setShareProfile] = useState<Pick<ProfileSummary, "id" | "name"> | null>(null);
   useEffect(() => {
     let active = true;
-    const pending = () => invoke<boolean>("profile_picker_pending").then((show) => { if (active && show) setProfilePicker(true); }, () => {});
+    const pending = () => {
+      if (active) void invoke<boolean>("profile_picker_pending").then((toggle) => {
+        if (active && toggle) setProfilePicker((open) => !open);
+      }, () => {});
+    };
     const subscription = listen("engine://pick-profile", pending);
     void subscription.then(pending, () => {});
     return () => { active = false; void subscription.then((off) => off(), () => {}); };
@@ -146,7 +148,6 @@ export default function App() {
   const kinds = useMemo(() => [...new Set([...live.deck.modules.filter((m) => m.kind !== "base").map((m) => m.kind), ...detached])], [live.deck.modules, detached]);
 
   const [tourOpen, setTourOpen] = useState(DEMO_PANEL === "tour-advanced");
-  const [guide, setGuide] = useState(DEMO_PANEL === "tour" || DEMO_PANEL === "welcome" || demoParam("demo") === "welcome");
   // plugin files opened with MasterDeck (a double click, Open with) or dropped on the window: one at a
   // time, each asked about before it installs
   const [pluginFiles, setPluginFiles] = useState<PluginFile[]>(DEMO_PANEL === "pluginfile" ? [{ path: "AudioSwitcher.streamDeckPlugin" }] : []);
@@ -245,10 +246,7 @@ export default function App() {
   }, []);
   const setupPending = !!view.state && !view.state.onboarded;
 
-  const closeTools = () => {
-    setDisplayPanel(null);
-    setGuide(false);
-  };
+  const closeTools = () => setDisplayPanel(null);
   const openDisplay = (section: DeckDisplaySection) => {
     closeTools();
     setDisplayPanel(section);
@@ -268,13 +266,11 @@ export default function App() {
     if (section) setSettingsSection(section);
     openAppPage("settings");
   };
-  const openGuide = () => {
+  const openTour = () => {
+    closeAppPage();
     closeTools();
-    setGuide(true);
-  };
-  const dismissGuide = () => {
-    setGuide(false);
-    if (setupPending) api.onboardingDone().catch((error) => notify(String(error)));
+    setProfileLibrary(false);
+    setTourOpen(true);
   };
   const tourShown = tourOpen && !arranging;
   // leaving arrange mode confirms every module as it is shown, touched or not
@@ -319,7 +315,7 @@ export default function App() {
   // "Show" on the made-by-itself banner: the profile list was often open already, so the click
   // looked dead (owner, 2026-10-22); bring the first new profile into view and light it once
   const showProfiles = (ids: string[]) => {
-    setProfileLibrary("profiles");
+    setProfileLibrary(true);
     window.setTimeout(() => {
       const row = ids.map((id) => document.querySelector<HTMLElement>(`.prow[data-profile="${CSS.escape(id)}"]`)).find(Boolean);
       if (!row) return;
@@ -340,9 +336,7 @@ export default function App() {
         onOpenProfile={() => (setProfileOpen((o) => !o), closeAppPage())}
 
         onOpenForApp={() => (setForAppOpen(true), closeAppPage(), setProfileOpen(false))}
-        onOpenProfileLibrary={() => setProfileLibrary("profiles")}
-        onOpenTour={() => (closeAppPage(), openGuide())}
-        setupPending={setupPending && !guide && !tourOpen}
+        onOpenProfileLibrary={() => setProfileLibrary(true)}
         onOpenSettings={() => appPage === "settings" ? closeAppPage() : openSettings()}
         onCheckUpdates={!appPage && (tourShown || calibrating || arranging || studio) ? undefined : () => {
           openAppPage("updates");
@@ -394,7 +388,6 @@ export default function App() {
               onArrange={toggleArrange}
               onDisplay={() => openDisplay("lights")}
               onSaver={() => openDisplay("saver")}
-              onGuide={() => openGuide()}
             /></>}
           </div>
           <div className="deck-area">
@@ -446,7 +439,7 @@ export default function App() {
               onPasteLook={() => pasteLook(ctlMenu.c)}
               onClear={() => clear(ctlMenu.c)}
               onOpenPage={() => openControl(ctlMenu.c)}
-              onPickProfile={view.profile?.controls[controlId(ctlMenu.c.kind, ctlMenu.c.index, view.state?.page ?? null)]?.action === "core.profilePicker" ? () => setProfilePicker(true) : undefined}
+              onPickProfile={view.profile?.controls[controlId(ctlMenu.c.kind, ctlMenu.c.index, view.state?.page ?? null)]?.action === "core.profilePicker" ? () => setProfilePicker((open) => !open) : undefined}
               onClose={() => setCtlMenu(null)}
             />
           )}
@@ -454,12 +447,12 @@ export default function App() {
         </section>
 
         <section className="workspace-details" aria-label={t("workshop.editKey")}>
-          {!arranging && !calibrating && (displayPanel || guide) && (
+          {!arranging && !calibrating && displayPanel && (
             <div className="workspace-details-nav">
               <button type="button" className="tool ghost small" onClick={closeTools}><Icon name="chevron-left" />{t("workshop.editKey")}</button>
             </div>
           )}
-          <div className="workspace-key-pane" hidden={!!(arranging || calibrating || displayPanel || guide)}>
+          <div className="workspace-key-pane" hidden={!!(arranging || calibrating || displayPanel)}>
             {selected ? (
               <Inspector ref={inspector} selected={selected} view={view} onClose={() => setSelected(null)}
                 onDropAction={(control, action, gesture) => dropAction(control, action, gesture, () => inspector.current?.flush())}
@@ -478,15 +471,7 @@ export default function App() {
             <DeckDisplayPanel live={live} view={view} section={displayPanel} setSection={setDisplayPanel} onClose={closeTools}
               onCalibrate={() => { setDisplayPanel(null); setCalibrating(true); }} onOpenScenes={() => setLivingOpen(true)}
             />
-          ) : guide && (
-            <WorkspaceGuide onClose={dismissGuide}
-              onArrange={toggleArrange}
-              onProfiles={() => setProfileLibrary("profiles")}
-              onDisplay={() => openDisplay("lights")}
-              onOBS={() => openSettings("connections")}
-              onPlugins={openInstalledPlugins}
-            />
-          )}
+          ) : null}
         </section>
         <div className="editor-sidebar">
           <ActionLibrary catalog={view.catalog} icons={view.icons} selectedKind={selected?.kind} focusPlugin={focusPlugin} disabled={arranging || calibrating} onOpenPlugins={openInstalledPlugins} />
@@ -494,7 +479,7 @@ export default function App() {
       </main>
       {appPage && (
         <main className="workspace app-page" aria-labelledby="app-page-title">
-          {appPage === "settings" && <SettingsPage live={live} view={view} section={settingsSection} onSection={setSettingsSection} onClose={closeAppPage} />}
+          {appPage === "settings" && <SettingsPage live={live} view={view} section={settingsSection} onSection={setSettingsSection} onClose={closeAppPage} onPersonalize={openTour} />}
           {appPage === "plugins" && <PluginsPage onClose={closeAppPage} onBrowse={() => setAppPage("catalog")} onPickFile={choosePlugin} onPhone={() => setPhoneOpen(true)} onUse={usePlugin} />}
           {appPage === "catalog" && (
             <Suspense fallback={
@@ -530,21 +515,17 @@ export default function App() {
         </Sheet>}
       </Suspense>
       {profileLibrary && !tourShown && (
-        <Sheet className="profiles-dialog" label={t("profiles.title")} onClose={() => setProfileLibrary(null)}>
+        <Sheet className="profiles-dialog" label={t("profiles.title")} onClose={() => setProfileLibrary(false)}>
           <div className="profile-library-sheet">
             <div className="profile-library-header">
               <h2>{t("profiles.title")}</h2>
-              <button type="button" className="tool ghost icon-only" aria-label={t("profile.close")} onClick={() => setProfileLibrary(null)}><Icon name="x" /></button>
+              <button type="button" className="tool ghost icon-only" aria-label={t("profile.close")} onClick={() => setProfileLibrary(false)}><Icon name="x" /></button>
             </div>
             <LeftPanel
               view={view}
-              tab={profileLibrary}
-              onTab={setProfileLibrary}
-              onGuide={() => (setProfileLibrary(null), closeAppPage(), openGuide())}
-              onArrange={() => { setProfileLibrary(null); closeAppPage(); setArranging(true); }}
-              onTour={() => (setProfileLibrary(null), setTourOpen(true))}
-              onNewProfile={() => (setProfileLibrary(null), setNewRequest((n) => n + 1))}
-              onOpenProfile={() => (setProfileLibrary(null), setProfileOpen(true), closeAppPage(), setForAppOpen(false))}
+              onTour={openTour}
+              onNewProfile={() => (setProfileLibrary(false), setNewRequest((n) => n + 1))}
+              onOpenProfile={() => (setProfileLibrary(false), setProfileOpen(true), closeAppPage(), setForAppOpen(false))}
               onShare={setShareProfile}
             />
           </div>

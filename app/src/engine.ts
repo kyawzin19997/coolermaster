@@ -1417,7 +1417,6 @@ export const api = {
   /** Keep or leave out a part, or pick its look; the deck follows. */
   tourSet: (stop: string, keep: boolean | null, look: number | null) => invoke<TourView>("tour_set", { stop, keep, look }),
   tourSound: (on: boolean) => invoke("tour_sound", { on }),
-  tourSaver: (effect: string) => invoke("tour_saver", { effect }),
   /** Point at a control on the hardware (`keys.5`, `knobs.2`, `dial`); null stops it. */
   tourHighlight: (control: string | null) => invoke("tour_highlight", { control }),
   /** Keep the deck (and make it home) or throw it away; returns the profile id when kept. */

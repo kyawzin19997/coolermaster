@@ -45,9 +45,6 @@ function tourView(focus: string) {
     part("apps", 1, "keys.0"),
     { ...part("gestures", 1, "keys.5"), tasks: ["keys.5:hold", faders ? "keys.6:double" : "knobs.2:double", ...(faders ? [] : ["dial:hold"])] },
     ...(faders ? [] : [{ ...part("dial", 8, "dial"), faces: ["nowPlaying", "pet", "clock", "pomodoro", "weather", "timer", "cpu", "volume"] }]),
-    part("superAnimations", 1, "keys.9"),
-    part("superSaver", 1, null),
-    part("superRainbow", 1, null),
   ];
   return tour;
 }
@@ -149,7 +146,8 @@ function fallbackSvg(screen: string, look: Look) {
 const sortedJson = (v: unknown) => JSON.stringify(v, (_k, x) => (x && typeof x === "object" && !Array.isArray(x) ? Object.fromEntries(Object.entries(x).sort(([a], [b]) => (a < b ? -1 : 1))) : x));
 
 const changed = () => void emit("engine://state", state());
-const localPlugin = { id: "com.example.studiotools", name: "Studio Tools", author: "Local developer", actions: 1, digest: "demo-reviewed-file", icon: null };
+const studioArtwork = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#174474"/><path d="M8 12h16M8 20h16" stroke="#fff" stroke-width="2"/><circle cx="12" cy="12" r="4" fill="#20dcca"/><circle cx="20" cy="20" r="4" fill="#ffbe55"/></svg>')}`;
+const localPlugin = { id: "com.example.studiotools", name: "Studio Tools", author: "Local developer", actions: 1, digest: "demo-reviewed-file", icon: studioArtwork };
 const demoPlugins = new Map<string, PluginInfo>([
   ["com.example.weather", { id: "com.example.weather", name: "Weather", version: "1.2.0", actions: 3, status: "running", connected: true, restarts: 0, permissions: ["network"], cpu: 0.4, memoryMb: 18, held: false, source: "marketplace" }],
   ["com.example.meters", { id: "com.example.meters", name: "Hardware meters", version: "2.0.3", actions: 6, status: "running", connected: true, restarts: 0, permissions: ["processes"], cpu: 34.5, memoryMb: 212, held: false, source: "existing" }],
@@ -187,7 +185,7 @@ const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
     if (placement) placements[key as string] = placement as (typeof placements)[string];
     else delete placements[key as string];
   },
-  actions_list: () => ({ ...fixture.catalog, actions: [
+  actions_list: () => ({ ...fixture.catalog, groupIcons: { [localPlugin.name]: localPlugin.icon }, actions: [
     { id: "core.profilePicker", name: "Profile Switcher", group: "MasterDeck", description: "Opens the profile list.", icon: "layers", inputs: ["press"], params: [] },
     ...fixture.catalog.actions.filter((action) => !action.id.startsWith("claude.")).map((action) => {
       if (action.id === "obs.scene" && !action.params.some((param) => param.key === "sceneTarget")) {
@@ -196,7 +194,7 @@ const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
       if (action.id === "core.profile") return { ...action, params: action.params.map((param) => param.key === "which" ? { ...param, default: "next" } : param) };
       return action;
     }),
-    ...(demoPlugins.get(localPlugin.id)?.connected ? [{ id: `${localPlugin.id}/switch`, name: "Studio switch", group: localPlugin.name, description: "Switch the studio output.", icon: "plug", inputs: ["press"], params: [] }] : []),
+    ...(demoPlugins.get(localPlugin.id)?.connected ? [{ id: `${localPlugin.id}/switch`, name: "Studio switch", group: localPlugin.name, description: "Switch the studio output.", icon: localPlugin.icon, inputs: ["press"], params: [] }] : []),
   ] }),
   icons_list: () => fixture.icons,
   // the real catalog, test presets included
@@ -448,7 +446,6 @@ const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
     return tour;
   },
   tour_sound: () => null,
-  tour_saver: () => null,
   tour_highlight: () => null,
   // key pages: made, renamed and shown like the engine does
   page_create: ({ profile, name, autoLabel }) => {

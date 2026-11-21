@@ -77,7 +77,23 @@ try {
   await row.getByRole("button", { name: "Enable", exact: true }).click();
   await row.getByRole("button", { name: "Show actions", exact: true }).click();
   const library = page.getByRole("complementary", { name: "Action Library" });
-  await library.getByRole("button", { name: "Studio switch", exact: true }).waitFor();
+  const group = library.getByRole("button", { name: "Studio Tools", exact: true });
+  const action = library.getByRole("button", { name: "Studio switch", exact: true });
+  await action.waitFor();
+  assert.equal(await group.getAttribute("aria-expanded"), "true");
+  assert.equal(await group.getAttribute("draggable"), null);
+  assert.equal(await action.getAttribute("draggable"), "true");
+  assert.ok((await action.boundingBox()).x > (await group.boundingBox()).x);
+  for (const row of [group, action]) {
+    const image = row.locator("img");
+    await image.waitFor();
+    assert.ok(await image.evaluate((icon) => {
+      for (let node = icon; node; node = node.parentElement) {
+        if (getComputedStyle(node).filter !== "none") return false;
+      }
+      return icon.naturalWidth > 0;
+    }));
+  }
   await page.locator(".topbar").getByRole("button", { name: "Plugins", exact: true }).click();
   await row.getByRole("button", { name: "Disable", exact: true }).click();
   await row.getByRole("button", { name: "Enable", exact: true }).waitFor();

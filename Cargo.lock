@@ -3296,7 +3296,7 @@ dependencies = [
 
 [[package]]
 name = "masterdeck"
-version = "1.4.0"
+version = "1.4.1"
 dependencies = [
  "active-win-pos-rs",
  "base64 0.22.1",
@@ -3394,7 +3394,7 @@ dependencies = [
 
 [[package]]
 name = "mh-device"
-version = "1.4.0"
+version = "1.4.1"
 dependencies = [
  "cc",
  "core-foundation-sys",
@@ -3411,7 +3411,7 @@ dependencies = [
 
 [[package]]
 name = "mh-protocol"
-version = "1.4.0"
+version = "1.4.1"
 dependencies = [
  "thiserror 2.0.21",
 ]

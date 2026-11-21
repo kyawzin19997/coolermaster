@@ -641,23 +641,7 @@ select.input option {
   flex-direction: column;
   min-height: 0;
 }
-.lib-tabs {
-  margin: 14px 14px 0;
-}
 /* three tabs in the narrow column: each as wide as its word, never cut (session 5) */
-.lib-tabs.seg.full .tab {
-  flex: 1 1 auto;
-  min-width: 0;
-  padding: 0 8px;
-  gap: 5px;
-  white-space: nowrap;
-}
-.lib-tabs .tab .n {
-  color: var(--tx3);
-  font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 500;
-}
 .lib-profiles {
   padding: 0 14px 14px;
 }
@@ -1776,33 +1760,32 @@ button.chip.is-active {
 .svc-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  border-block: 1px solid var(--ln2);
 }
-.svc {
-  border-radius: calc(var(--r) + 3px);
-  background: var(--bg2);
-  box-shadow: inset 0 0 0 1px var(--ln);
+.svc + .svc {
+  border-top: 1px solid var(--ln2);
 }
-.svc[open] {
-  box-shadow: inset 0 0 0 1px var(--ln2);
-}
-.svc summary {
+.svc > summary {
   list-style: none;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 9px 10px;
+  gap: 12px;
+  min-height: 46px;
+  padding: 7px 10px;
   cursor: pointer;
-  border-radius: inherit;
 }
-.svc summary::-webkit-details-marker {
+.svc > summary::-webkit-details-marker {
   display: none;
 }
-.svc summary:hover {
+.svc > summary:hover {
   background: var(--hov);
 }
 .obs-advanced > summary {
-  padding-inline: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 0;
+  cursor: pointer;
   color: var(--tx2);
   font-size: 12px;
 }
@@ -1817,18 +1800,17 @@ button.chip.is-active {
   margin-bottom: 10px;
 }
 .svc-ic {
-  width: 26px;
-  height: 26px;
-  border-radius: 7px;
+  width: 23px;
+  height: 23px;
   display: grid;
   place-items: center;
   flex: none;
-  color: var(--h);
-  background: color-mix(in srgb, var(--h) 15%, transparent);
+  color: var(--tx);
 }
 .svc-ic .i {
-  width: 15px;
-  height: 15px;
+  width: 20px;
+  height: 20px;
+  stroke-width: 1.6;
 }
 .svc-name {
   font-weight: 500;
@@ -2753,10 +2735,6 @@ button.chip.is-active {
   .library {
     width: 300px;
   }
-}
-.lib-tabs .tab .i {
-  width: 13px;
-  height: 13px;
 }
 .assistant {
   display: flex;
@@ -4216,29 +4194,6 @@ button.chip.is-active {
   font-size: 12.5px;
   color: var(--ok);
 }
-.tour-super {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.tour-super-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 14px;
-  border-radius: 12px;
-  background: var(--bg2);
-  border: 1px solid var(--ln);
-}
-.tour-super-item > .i {
-  color: var(--acc2);
-  margin-top: 2px;
-}
-.tour-super-item .grow {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
 .tour-end {
   flex: 1;
   min-height: 0;
@@ -5070,10 +5025,6 @@ button.lib-foot:focus-visible span {
   width: 100%;
   max-height: inherit;
   border-left: 0;
-}
-/* once set up, Profiles comes first (owner's pick 2a, 2026-10-16; docs/FLOWS.md difference 3) */
-.lib-tabs.is-set-up [data-guide="profiles"] {
-  order: -1;
 }
 .chooser-browse {
   margin: -4px 0 0;
