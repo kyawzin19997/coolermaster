@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.6
+
+- Resize icons from 50% to 150% in the key editor with a live preview. Appearance edits apply to the selected key.
+- Page tabs scroll within the deck header as you add pages. Select a tab and press Delete to remove its page after confirming.
+- Profiles and Get started share a consistent dialog size. The deck preview stays in place during layout editing.
+- Configure keys, dials, knobs, faders, and rollers before connecting them. The Get started guide walks through saving an action on an unattached module.
+- Custom screensavers fit the full image across the keys. Re-import the original file to replace an older cropped upload.
+- Removed Deck Builder, the AI assistant, and the Claude Code integration. Manage profiles from Profiles.
+
 ## 1.3.5
 
 - Plugins, Settings, and Updates open as separate pages. Returning to the deck restores the selected key and Actions search.
