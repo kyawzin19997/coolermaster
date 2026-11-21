@@ -8,7 +8,6 @@ import type { ControlRef, LiveState, ModuleKind } from "../deck";
 import { api, withUpright, type FrameCost, FX_OPTIONS, FX_TINT, fxName, GPU_KINDS, type FxKind, type FxLayer, SKIN_MOTION, type Skin, type Look, GAMES_ENABLED, pageReachable, setPreviewSalt, type AppInfo, type AppsState, type CrashReport, type LightSettings, LED_EFFECTS, METRICS, type EngineView, type GameSummary, type Imported, type Metric, type Moved, type PluginInfo, type LocalPlugin, type InstalledItem, type PresetSummary, type Profile, type ProfileSummary, type Screens, triedPresets, SAVER_SCENES, saverOf, knownScreens, screensChanged, saverEnd, useSaverShown, type CustomSaver, SAVER_FROM_LOOK, saverPreset, PRESETS_HIDDEN, THEMES, themeTitle, layersOf } from "../engine";
 import { Icon } from "./Icon";
 import { Thumb } from "./Thumb";
-import { DetachedModuleGuide } from "./WorkspaceGuide";
 import { InstalledPicker, pickImage } from "./Inspector";
 import { ModuleThumb } from "./DeckView";
 import { DiagnosticsSettings } from "./Diagnostics";
@@ -68,8 +67,9 @@ export function movedNote(moved: Moved[] | undefined, pages: Profile["pages"] = 
 export const Logo = () => <img className="logo" src={masterdeckIcon} alt="" />;
 
 export type LeftTab = "profiles" | "guide";
+type ShareProfile = (profile: Pick<ProfileSummary, "id" | "name">) => void;
 
-export function LeftPanel({ view, tab, onTab, onOpenProfile, onNewProfile, onGuide, onArrange, onTour }: {
+export function LeftPanel({ view, tab, onTab, onOpenProfile, onNewProfile, onGuide, onArrange, onTour, onShare }: {
   view: EngineView;
   tab: LeftTab;
   onTab: (tab: LeftTab) => void;
@@ -78,6 +78,7 @@ export function LeftPanel({ view, tab, onTab, onOpenProfile, onNewProfile, onGui
   onGuide: () => void;
   onArrange: () => void;
   onTour: () => void;
+  onShare: ShareProfile;
 }) {
   useLanguage();
   return (
@@ -89,7 +90,7 @@ export function LeftPanel({ view, tab, onTab, onOpenProfile, onNewProfile, onGui
         <button role="tab" aria-selected={tab === "guide"} className={tab === "guide" ? "tab is-active" : "tab"} onClick={() => onTab("guide")}>{t("profiles.getStarted")}</button>
       </div>
       {tab === "profiles" ? (
-        <ProfilesList view={view} onOpenProfile={onOpenProfile} onNewProfile={onNewProfile} />
+        <ProfilesList view={view} onOpenProfile={onOpenProfile} onNewProfile={onNewProfile} onShare={onShare} />
       ) : (
         <div className="profile-start-guide sectioned">
           <section className="sec">
@@ -102,7 +103,7 @@ export function LeftPanel({ view, tab, onTab, onOpenProfile, onNewProfile, onGui
           </section>
           <section className="sec">
             <h3 className="sec-title">{t("workshop.detachedTitle")}</h3>
-            <DetachedModuleGuide />
+            <p className="help">{t("workshop.detachedShort")}</p>
             <button type="button" className="tool align-start" onClick={onArrange}>{t("stage.editLayout")}</button>
           </section>
         </div>
@@ -306,7 +307,7 @@ async function editProfile(id: string, change: (p: Profile) => Profile) {
   await api.saveProfile(change(p));
 }
 
-async function exportProfileFile(profile: Pick<Profile, "id" | "name">, json = false) {
+export async function exportProfileFile(profile: Pick<Profile, "id" | "name">, json = false) {
   const name = profile.name.replace(/[<>:"/\\|?*\u0000-\u001f]/g, "-").replace(/[ .]+$/, "") || "MasterDeck profile";
   const extension = json ? "json" : "masterdeck";
   const path = await save({
@@ -439,7 +440,7 @@ function ProfileMenu({ profile, x, y, count, onSetHome, onClose }: { profile: Pr
 
 /** A control's right-click menu in the drawing, as Stream Deck's ("Right-click keys to copy,
  * delete or move them"; owner's 1a, 2026-10-20): what the shortcuts do, with the shortcuts shown. */
-export function ControlMenu({ title, x, y, isSet, canPaste, opensPage, onCopy, onPaste, onPasteLook, onClear, onOpenPage, onClose }: { title: string; x: number; y: number; isSet: boolean; canPaste: boolean; opensPage: boolean; onCopy: () => void; onPaste: () => void; onPasteLook: () => void; onClear: () => void; onOpenPage: () => void; onClose: () => void }) {
+export function ControlMenu({ title, x, y, isSet, canPaste, opensPage, onCopy, onPaste, onPasteLook, onClear, onOpenPage, onPickProfile, onClose }: { title: string; x: number; y: number; isSet: boolean; canPaste: boolean; opensPage: boolean; onCopy: () => void; onPaste: () => void; onPasteLook: () => void; onClear: () => void; onOpenPage: () => void; onPickProfile?: () => void; onClose: () => void }) {
   useLanguage();
   const ref = useRef<HTMLDivElement>(null);
   useDismiss(true, ref, onClose);
@@ -457,6 +458,7 @@ export function ControlMenu({ title, x, y, isSet, canPaste, opensPage, onCopy, o
     <div className="popover ctx-menu" role="menu" ref={ref} style={{ position: "fixed", left, top }}>
       <div className="pop-label">{title}</div>
       <div className="menu-list">
+        {onPickProfile && row("layers", t("profiles.switcher"), null, onPickProfile, true)}
         {opensPage && row("folder-open", t("ctl.openPage"), null, onOpenPage, true)}
         {row("copy", t("ctl.copy"), `${mod}C`, onCopy, isSet)}
         {row("clipboard-paste", t("ctl.paste"), `${mod}V`, onPaste, canPaste)}
@@ -468,7 +470,7 @@ export function ControlMenu({ title, x, y, isSet, canPaste, opensPage, onCopy, o
 }
 
 /** Every profile: search, switch, rename, duplicate, delete, show in the top bar. */
-function ProfilesList({ view, onOpenProfile, onNewProfile }: { view: EngineView; onOpenProfile: () => void; onNewProfile: () => void }) {
+function ProfilesList({ view, onOpenProfile, onNewProfile, onShare }: { view: EngineView; onOpenProfile: () => void; onNewProfile: () => void; onShare: ShareProfile }) {
   useLanguage();
   const state = view.state;
   const apps = useApps(state?.foreground);
@@ -524,6 +526,7 @@ function ProfilesList({ view, onOpenProfile, onNewProfile }: { view: EngineView;
                     </small>
                   </span>
                 </button>
+                <button className="icon-btn prow-share" type="button" title={t("profile.share")} aria-label={t("profile.shareNamed", { name: p.name })} onClick={() => onShare(p)}><Icon name="share" /></button>
                 <button
                   className="icon-btn prow-more"
                   type="button"
@@ -579,6 +582,7 @@ function ProfilesList({ view, onOpenProfile, onNewProfile }: { view: EngineView;
                         </small>
                       </span>
                     </button>
+                    <button className="icon-btn prow-share" type="button" title={t("profile.share")} aria-label={t("profile.shareNamed", { name: p.name })} onClick={() => onShare(p)}><Icon name="share" /></button>
                     <label className="bar-toggle" title={t("profiles.switchInHelp", { app: p.name })}>
                       <input type="checkbox" checked={p.switchIn !== false} aria-label={t("profiles.switchInFor", { app: p.name })} onChange={(e) => api.profileSwitchIn(p.id, e.target.checked).catch(() => {})} />
                     </label>
@@ -975,12 +979,11 @@ export function TopBar({
   );
 }
 
-export function DeckTools({ onArrange, onDisplay, onSaver, onGuide, onModulesGuide }: {
+export function DeckTools({ onArrange, onDisplay, onSaver, onGuide }: {
   onArrange: () => void;
   onDisplay: () => void;
   onSaver: () => void;
   onGuide: () => void;
-  onModulesGuide: () => void;
 }) {
   useLanguage();
   const [open, setOpen] = useState(false);
@@ -991,7 +994,6 @@ export function DeckTools({ onArrange, onDisplay, onSaver, onGuide, onModulesGui
     { label: t("settings.lightsScreens"), icon: "sun", run: onDisplay },
     { label: t("saver.title"), icon: "moon", run: onSaver },
     { label: t("stage.editLayout"), icon: "layout-grid", run: onArrange },
-    { label: t("workshop.modules"), icon: "app-window", run: onModulesGuide },
     { label: t("workshop.start"), icon: "compass", run: onGuide },
   ];
   return (
@@ -1242,18 +1244,24 @@ export function EffectFields({ idPrefix, effect, speed, onChange }: { idPrefix: 
 /** A panel over the window (For an app, Gallery, Games, a deck's settings): the editor on the right stays. Esc or a click outside closes it. */
 export function Sheet({ onClose, label, wide, className, children }: { onClose: () => void; label?: string; wide?: boolean; className?: string; children: React.ReactNode }) {
   const close = useRef(onClose);
+  const dialog = useRef<HTMLDivElement>(null);
   close.current = onClose;
   useEffect(() => {
     const on = (e: KeyboardEvent) => {
       // a popover inside closes first (its own Escape); the sheet only when nothing else is open
-      if (e.key === "Escape" && !e.defaultPrevented && !document.querySelector(".sheet .popover")) close.current();
+      if (e.key !== "Escape" || e.defaultPrevented) return;
+      const sheets = document.querySelectorAll(".sheet");
+      if (dialog.current === sheets[sheets.length - 1] && !dialog.current?.querySelector(".popover")) {
+        e.preventDefault();
+        close.current();
+      }
     };
     window.addEventListener("keydown", on);
     return () => window.removeEventListener("keydown", on);
   }, []);
   return (
     <div className="sheet-backdrop" onMouseDown={(e) => e.target === e.currentTarget && close.current()}>
-      <div className={["sheet", wide && "sheet-wide", className].filter(Boolean).join(" ")} role="dialog" aria-modal="true" aria-label={label}>
+      <div ref={dialog} className={["sheet", wide && "sheet-wide", className].filter(Boolean).join(" ")} role="dialog" aria-modal="true" aria-label={label}>
         {children}
       </div>
     </div>
@@ -1806,6 +1814,13 @@ function SaverPanel({ view }: { view: EngineView }) {
   const fromLook = effect === SAVER_FROM_LOOK || layersOf(draft.effects).length > 0;
   const extraPreset = effect !== SAVER_FROM_LOOK && !presets.some((theme) => "preset:" + theme.id === effect) ? saverPreset(effect) : undefined;
   const choices = (options: number[], stored: number) => [...new Set([...options, stored])].sort((a, b) => a - b);
+  const previews = [...scenes.map((scene) => scene.id), ...custom.map((item) => item.id), ...(fromLook ? [SAVER_FROM_LOOK] : []), ...presets.map((theme) => "preset:" + theme.id), ...(extraPreset ? [effect] : [])];
+  const pickPreview = (value: string) => {
+    setConfirmRemove(false);
+    setError(null);
+    setChosen(value);
+    if (previewing) void run(() => value ? api.saverTry(value, layersFor(value)) : saverEnd());
+  };
   const startImport = () => run(async () => {
     const path = await open({ multiple: false, filters: [{ name: t("saver.fileType"), extensions: ["gif", "webp", "png", "jpg", "jpeg"] }] });
     if (typeof path !== "string") return;
@@ -1820,11 +1835,7 @@ function SaverPanel({ view }: { view: EngineView }) {
       <section className="sec">
         <label className="field">
           <span className="label">{t("screens.saver")}</span>
-          <select className="input" value={effect} disabled={!!busy} onChange={(event) => {
-            setConfirmRemove(false);
-            setError(null);
-            setChosen(event.currentTarget.value);
-          }}>
+          <select className="input" value={effect} disabled={!!busy} onChange={(event) => pickPreview(event.currentTarget.value)}>
             <option value="">{t("screens.saverOff")}</option>
             <optgroup label={t("saver.scenes")}>
               {scenes.map((scene) => <option key={scene.id} value={scene.id}>{t(("saver.scene." + scene.id) as Key)}</option>)}
@@ -1839,6 +1850,7 @@ function SaverPanel({ view }: { view: EngineView }) {
             </optgroup>
           </select>
         </label>
+        <button className="tool small align-start" disabled={!!busy || !previews.length} onClick={() => pickPreview(previews[(previews.indexOf(effect) + 1) % previews.length])}>{t("saver.nextPreview")}<Icon name="chevron-right" /></button>
         {effect && <InlineSaverPreview key={effect} effect={effect} profile={draft.id} layers={layersFor(effect)} theme={draft.effects?.theme} />}
         <label className="field">
           <span className="label">{t("screens.saverAfter")}</span>
@@ -1920,7 +1932,7 @@ function SaverPanel({ view }: { view: EngineView }) {
   );
 }
 
-export function ProfilePanel({ view, onClose }: { view: EngineView; onClose: () => void }) {
+export function ProfilePanel({ view, onClose, onShare }: { view: EngineView; onClose: () => void; onShare: ShareProfile }) {
   useLanguage();
   const profile = view.profile;
   const state = view.state;
@@ -2004,7 +2016,7 @@ export function ProfilePanel({ view, onClose }: { view: EngineView; onClose: () 
       </section>
       <section className="sec">
         <h3 className="sec-title">{t("profile.transfer")}</h3>
-        <p className="help">{t("profile.transferHelp")}</p>
+        <button className="tool align-start" onClick={() => void writes.current.then(() => onShare({ id: profile.id, name: draft.name }))}><Icon name="share" />{t("profile.share")}</button>
         <div className="btn-grid">
           <button className="tool" onClick={() => void exportFile().catch(showError)}><Icon name="download" />{t("profile.export")}</button>
           <button className="tool" onClick={() => void importProfileFile().then((p) => {
@@ -2774,25 +2786,20 @@ const TURNS: (number | null)[] = [null, 0, 90, 180, 270];
 
 /** How the base lies on the desk. The sensor only tells "turned right" (90°) from the rest. */
 /** The right column while arranging modules: what to check and how to finish (no key editor). */
-export function ArrangePanel({ onDone, live, saved, onPlace }: { onDone: () => void; live: LiveState; saved: Record<string, Placement>; onPlace: (key: string, placement: Placement | null) => void }) {
+export function ArrangePanel({ live, saved, onPlace }: { live: LiveState; saved: Record<string, Placement>; onPlace: (key: string, placement: Placement | null) => void }) {
   useLanguage();
   return (
     <aside className="inspector sectioned side-panel layout-panel" aria-label={t("stage.editLayout")}>
       <PanelHead title={t("stage.editLayout")} icon="layout-grid" />
       <section className="sec">
-        <p className="help">{t("app.hintArranging")}</p>
+        <p className="help">{t("workshop.layoutShort")}</p>
         <BaseTurnPicker live={live} />
-        <button className="tool primary align-start" onClick={onDone}>
-          <Icon name="check" />
-          {t("stage.doneLayout")}
-        </button>
       </section>
       {/* modules owned but not attached: set up before they are on the base (from the old welcome) */}
       <section className="sec">
-        <h3 className="sec-title">{t("welcome.ownedTitle")}</h3>
-        <p className="help">{t("welcome.owned")}</p>
+        <h3 className="sec-title">{t("shelf.title")}</h3>
         <OwnedKinds live={live} saved={saved} onPlace={onPlace} />
-        <DetachedModuleGuide />
+        <p className="help">{t("workshop.detachedShort")}</p>
       </section>
     </aside>
   );

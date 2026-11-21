@@ -70,6 +70,25 @@ pub fn hide_main(app: &AppHandle) {
     });
 }
 
+static PICK_PROFILE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+pub fn open_profile_picker(app: &AppHandle) {
+    use tauri::Emitter;
+    PICK_PROFILE.store(true, std::sync::atomic::Ordering::Release);
+    let handle = app.clone();
+    let _ = app.run_on_main_thread(move || {
+        if crate::automation::get().is_none() {
+            show_main(&handle);
+        }
+        let _ = handle.emit("engine://pick-profile", ());
+    });
+}
+
+#[tauri::command]
+pub fn profile_picker_pending() -> bool {
+    PICK_PROFILE.swap(false, std::sync::atomic::Ordering::AcqRel)
+}
+
 pub fn show_main(app: &AppHandle) {
     HIDDEN.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
     HIDDEN_NOW.store(false, std::sync::atomic::Ordering::SeqCst);

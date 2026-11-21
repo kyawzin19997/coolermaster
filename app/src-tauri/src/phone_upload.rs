@@ -103,14 +103,14 @@ impl File {
     }
 }
 
-fn secret() -> String {
+pub(crate) fn secret() -> String {
     format!("{}{}", uuid::Uuid::new_v4().simple(), uuid::Uuid::new_v4().simple())
 }
 fn id() -> String {
     uuid::Uuid::new_v4().simple().to_string()
 }
 
-fn lan_ip() -> Option<Ipv4Addr> {
+pub(crate) fn lan_ip() -> Option<Ipv4Addr> {
     // A UDP connect selects the default interface without sending a packet. Interface
     // enumeration also covers Wi-Fi networks that have no gateway or Internet access.
     let route = UdpSocket::bind((Ipv4Addr::UNSPECIFIED, 0)).ok().and_then(|s| {
@@ -130,10 +130,13 @@ fn lan_ip() -> Option<Ipv4Addr> {
 }
 
 fn make_link(origin: &str, key: &str) -> Result<Link> {
-    use qrcode::render::svg;
     let url = format!("{origin}/#{key}");
-    let qr = qrcode::QrCode::with_error_correction_level(url.as_bytes(), qrcode::EcLevel::M).map_err(|e| e.to_string())?.render::<svg::Color>().min_dimensions(252, 252).build();
+    let qr = qr_svg(&url)?;
     Ok(Link { url, qr })
+}
+
+pub(crate) fn qr_svg(url: &str) -> Result<String> {
+    Ok(qrcode::QrCode::with_error_correction_level(url.as_bytes(), qrcode::EcLevel::M).map_err(|e| e.to_string())?.render::<qrcode::render::svg::Color>().min_dimensions(252, 252).build())
 }
 
 fn tunnel_origin(value: &str) -> Option<(String, String)> {
@@ -153,7 +156,7 @@ fn tunnel_origin(value: &str) -> Option<(String, String)> {
     Some((url.origin().ascii_serialization(), domain.into()))
 }
 
-fn listener(addr: SocketAddr) -> std::io::Result<TcpListener> {
+pub(crate) fn listener(addr: SocketAddr) -> std::io::Result<TcpListener> {
     let listener = TcpListener::bind(addr)?;
     listener.set_nonblocking(true)?;
     Ok(listener)

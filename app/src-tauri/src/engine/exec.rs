@@ -41,6 +41,7 @@ pub struct Feedback {
 pub struct Outcome {
     pub feedback: Option<Feedback>,
     pub switch_profile: Option<String>,
+    pub pick_profile: bool,
     /// Show this key page ("" = the main page).
     pub page: Option<String>,
     /// Go this many profiles forward (+) or back (-) in name order.
@@ -115,8 +116,20 @@ pub fn step_profile(ordered: &[String], current: Option<&str>, step: i32) -> Opt
 pub const NEXT_PAGE: &str = ":next";
 pub const PREVIOUS_PAGE: &str = ":previous";
 
-const TEST_COPY_RUNS: [&str; 11] =
-    ["core.page", "core.nextPage", "core.previousPage", "core.profile", "core.clock", "core.timer", "core.lighting", "core.deckBrightness", "core.dialGallery", "core.saver", "core.pet"];
+const TEST_COPY_RUNS: [&str; 12] = [
+    "core.page",
+    "core.nextPage",
+    "core.previousPage",
+    "core.profile",
+    "core.profilePicker",
+    "core.clock",
+    "core.timer",
+    "core.lighting",
+    "core.deckBrightness",
+    "core.dialGallery",
+    "core.saver",
+    "core.pet",
+];
 
 /// The app, to send keys, clicks and text from its main thread: on macOS 26 enigo's keyboard
 /// layout lookup (TSMGetInputSourceProperty) stops the app when called from any other thread
@@ -430,6 +443,7 @@ impl Executor {
                 }
             }
 
+            ("core.profilePicker", InputEvent::Press(true)) => out.pick_profile = true,
             ("core.profile", InputEvent::Press(true)) => match param_str(p, "which") {
                 "next" => out.profile_step = Some(1),
                 "previous" => out.profile_step = Some(-1),
@@ -936,6 +950,9 @@ mod tests {
         let mut x = Executor::default();
         let out = x.run(&binding("core.profile", json!({"profile": "abc"})), InputEvent::Press(true)).unwrap();
         assert_eq!(out.switch_profile.as_deref(), Some("abc"));
+        let picker = binding("core.profilePicker", json!({}));
+        assert!(x.run(&picker, InputEvent::Press(true)).unwrap().pick_profile);
+        assert!(!x.run(&picker, InputEvent::Press(false)).unwrap().pick_profile);
     }
 
     #[test]

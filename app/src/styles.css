@@ -868,8 +868,8 @@ select.input option {
   align-items: center;
   justify-content: center;
   flex: none;
-  color: var(--h, var(--acc2));
-  background: color-mix(in srgb, var(--h, var(--acc2)) 15%, transparent);
+  color: var(--tx);
+  background: color-mix(in srgb, var(--tx) 7%, transparent);
 }
 .library-icon .i {
   width: 14px;
@@ -2667,16 +2667,6 @@ button.chip.is-active {
   opacity: 0.4;
   pointer-events: none;
 }
-/* light theme: the group hues are made for a dark background; darker glyphs keep them readable */
-:root[data-theme="light"] .library-icon {
-  color: color-mix(in srgb, var(--h, var(--acc2)) 65%, #000);
-}
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme]) .library-icon {
-    color: color-mix(in srgb, var(--h, var(--acc2)) 65%, #000);
-  }
-}
-
 /* "+" menu: the app-or-game entry stands out; ready-made profiles in one line per group (1A) */
 .menu-row.is-primary {
   background: var(--accbg);

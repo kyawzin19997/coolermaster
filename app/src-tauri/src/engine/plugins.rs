@@ -144,6 +144,10 @@ pub fn actions() -> Vec<ActionDef> {
     ACTIONS.read().unwrap_or_else(|e| e.into_inner()).iter().filter(|a| a.id.split_once('/').is_none_or(|(id, _)| !held.contains(id))).cloned().collect()
 }
 
+pub(super) fn action_icon(id: &str) -> Option<&'static str> {
+    ACTIONS.read().unwrap_or_else(|e| e.into_inner()).iter().find(|a| a.id == id).map(|a| a.icon)
+}
+
 struct Plugin {
     manifest: Manifest,
     dir: PathBuf,

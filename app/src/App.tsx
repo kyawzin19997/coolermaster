@@ -11,7 +11,8 @@ import "./workspace.css";
 import "./theme";
 import { useDeck, type ControlRef } from "./deck";
 import type { LeftTab } from "./components/Panels";
-import { api, saverEnd, triedPresets, useEngine, useSaverShown } from "./engine";
+import { api, controlId, saverEnd, triedPresets, useEngine, useSaverShown, type ProfileSummary } from "./engine";
+import { invoke } from "@tauri-apps/api/core";
 import { DeckView } from "./components/DeckView";
 import { Inspector, type InspectorHandle } from "./components/Inspector";
 import { ActionLibrary } from "./components/ActionChooser";
@@ -21,11 +22,12 @@ import {
   LeftPanel, Notifications, PageBar, PluginFileSheet, PluginsPage, ProfilePanel, SettingsPage, Sheet, TopBar, UpdatesPage, keepImported,
 } from "./components/Panels";
 import { PhoneUpload } from "./components/PhoneUpload";
+import { ProfilePicker, ProfileShare } from "./components/ProfileShare";
 import { listen } from "@tauri-apps/api/event";
 import { Icon } from "./components/Icon";
-import { WorkspaceGuide, type GuideKind } from "./components/WorkspaceGuide";
+import { WorkspaceGuide } from "./components/WorkspaceGuide";
 import { CalibrationPanel } from "./components/Calibration";
-import { detachedKinds, isDetached, placeModules, placementKey, usePlacements } from "./layout";
+import { detachedKinds, placeModules, placementKey, usePlacements } from "./layout";
 import { clearIdentify, identifyModule } from "./identify";
 import { useEditing } from "./editing";
 import { BUILT_IN_LANGUAGES, setLanguage, storedLanguageFile, t, useLanguage, type Key } from "./i18n";
@@ -98,6 +100,15 @@ export default function App() {
 
   const [newRequest, setNewRequest] = useState(0);
   const [profileLibrary, setProfileLibrary] = useState<LeftTab | null>(null);
+  const [profilePicker, setProfilePicker] = useState(false);
+  const [shareProfile, setShareProfile] = useState<Pick<ProfileSummary, "id" | "name"> | null>(null);
+  useEffect(() => {
+    let active = true;
+    const pending = () => invoke<boolean>("profile_picker_pending").then((show) => { if (active && show) setProfilePicker(true); }, () => {});
+    const subscription = listen("engine://pick-profile", pending);
+    void subscription.then(pending, () => {});
+    return () => { active = false; void subscription.then((off) => off(), () => {}); };
+  }, []);
   const [forAppOpen, setForAppOpen] = useState(DEMO_PANEL === "forapp");
   const [displayPanel, setDisplayPanel] = useState<DeckDisplaySection | null>(null);
   const [livingOpen, setLivingOpen] = useState(false);
@@ -135,7 +146,7 @@ export default function App() {
   const kinds = useMemo(() => [...new Set([...live.deck.modules.filter((m) => m.kind !== "base").map((m) => m.kind), ...detached])], [live.deck.modules, detached]);
 
   const [tourOpen, setTourOpen] = useState(DEMO_PANEL === "tour-advanced");
-  const [guide, setGuide] = useState<GuideKind | null>(DEMO_PANEL === "tour" || DEMO_PANEL === "welcome" || demoParam("demo") === "welcome" ? "start" : null);
+  const [guide, setGuide] = useState(DEMO_PANEL === "tour" || DEMO_PANEL === "welcome" || demoParam("demo") === "welcome");
   // plugin files opened with MasterDeck (a double click, Open with) or dropped on the window: one at a
   // time, each asked about before it installs
   const [pluginFiles, setPluginFiles] = useState<PluginFile[]>(DEMO_PANEL === "pluginfile" ? [{ path: "AudioSwitcher.streamDeckPlugin" }] : []);
@@ -236,7 +247,7 @@ export default function App() {
 
   const closeTools = () => {
     setDisplayPanel(null);
-    setGuide(null);
+    setGuide(false);
   };
   const openDisplay = (section: DeckDisplaySection) => {
     closeTools();
@@ -257,13 +268,13 @@ export default function App() {
     if (section) setSettingsSection(section);
     openAppPage("settings");
   };
-  const openGuide = (kind: GuideKind) => {
+  const openGuide = () => {
     closeTools();
-    setGuide(kind);
+    setGuide(true);
   };
   const dismissGuide = () => {
-    setGuide(null);
-    if (guide === "start" && setupPending) api.onboardingDone().catch((error) => notify(String(error)));
+    setGuide(false);
+    if (setupPending) api.onboardingDone().catch((error) => notify(String(error)));
   };
   const tourShown = tourOpen && !arranging;
   // leaving arrange mode confirms every module as it is shown, touched or not
@@ -300,6 +311,7 @@ export default function App() {
       startTransition(() => {
         setSelected(touched);
         setProfileOpen(false);
+        if (touched.kind === "keys") closeTools();
       });
     }
   }, [live.lastTouched]);
@@ -329,7 +341,7 @@ export default function App() {
 
         onOpenForApp={() => (setForAppOpen(true), closeAppPage(), setProfileOpen(false))}
         onOpenProfileLibrary={() => setProfileLibrary("profiles")}
-        onOpenTour={() => (closeAppPage(), openGuide("start"))}
+        onOpenTour={() => (closeAppPage(), openGuide())}
         setupPending={setupPending && !guide && !tourOpen}
         onOpenSettings={() => appPage === "settings" ? closeAppPage() : openSettings()}
         onCheckUpdates={!appPage && (tourShown || calibrating || arranging || studio) ? undefined : () => {
@@ -382,8 +394,7 @@ export default function App() {
               onArrange={toggleArrange}
               onDisplay={() => openDisplay("lights")}
               onSaver={() => openDisplay("saver")}
-              onGuide={() => openGuide("start")}
-              onModulesGuide={() => openGuide("modules")}
+              onGuide={() => openGuide()}
             /></>}
           </div>
           <div className="deck-area">
@@ -392,7 +403,8 @@ export default function App() {
             selected={selected}
             onSelect={(c) => {
               setSelected(c);
-              if (isDetached(c.module)) closeTools();
+              setProfileOpen(false);
+              closeTools();
               // a click on the deck in the window is a touch: the screensaver ends
               if (saverOn) saverEnd();
             }}
@@ -411,7 +423,7 @@ export default function App() {
               if (dropAction(c, action, "tap", () => inspector.current?.flush())) {
                 inspector.current?.selectTrigger("tap");
                 setSelected(c);
-                if (isDetached(c.module)) closeTools();
+                closeTools();
               }
             }}
             onMoveKey={(from, to) => {
@@ -434,6 +446,7 @@ export default function App() {
               onPasteLook={() => pasteLook(ctlMenu.c)}
               onClear={() => clear(ctlMenu.c)}
               onOpenPage={() => openControl(ctlMenu.c)}
+              onPickProfile={view.profile?.controls[controlId(ctlMenu.c.kind, ctlMenu.c.index, view.state?.page ?? null)]?.action === "core.profilePicker" ? () => setProfilePicker(true) : undefined}
               onClose={() => setCtlMenu(null)}
             />
           )}
@@ -460,17 +473,14 @@ export default function App() {
             )}
           </div>
           {calibrating ? <CalibrationPanel onClose={() => setCalibrating(false)} /> :
-           arranging ? <ArrangePanel onDone={toggleArrange} live={live} saved={saved} onPlace={save} /> :
+           arranging ? <ArrangePanel live={live} saved={saved} onPlace={save} /> :
            displayPanel ? (
             <DeckDisplayPanel live={live} view={view} section={displayPanel} setSection={setDisplayPanel} onClose={closeTools}
               onCalibrate={() => { setDisplayPanel(null); setCalibrating(true); }} onOpenScenes={() => setLivingOpen(true)}
             />
           ) : guide && (
-            <WorkspaceGuide key={guide} kind={guide} live={live} selected={selected} onClose={dismissGuide}
-              onModules={() => openGuide("modules")}
+            <WorkspaceGuide onClose={dismissGuide}
               onArrange={toggleArrange}
-              onPersonalize={() => setTourOpen(true)}
-              onKeys={closeTools}
               onProfiles={() => setProfileLibrary("profiles")}
               onDisplay={() => openDisplay("lights")}
               onOBS={() => openSettings("connections")}
@@ -507,7 +517,7 @@ export default function App() {
             />
           </Sheet>
         )}
-        {studio && <Sheet wide label={t("workshop.editKey")} onClose={() => setStudio(null)}>
+        {studio && <Sheet wide className="key-studio-dialog" label={t("workshop.editKey")} onClose={() => setStudio(null)}>
           <KeyStudio key={`${view.profile?.id}/${studio}`} view={view} control={studio} onClose={() => setStudio(null)} />
         </Sheet>}
         {livingOpen && <Sheet wide label={t("settings.lightsScreens")} onClose={() => setLivingOpen(false)}>
@@ -530,11 +540,12 @@ export default function App() {
               view={view}
               tab={profileLibrary}
               onTab={setProfileLibrary}
-              onGuide={() => (setProfileLibrary(null), closeAppPage(), openGuide("start"))}
+              onGuide={() => (setProfileLibrary(null), closeAppPage(), openGuide())}
               onArrange={() => { setProfileLibrary(null); closeAppPage(); setArranging(true); }}
               onTour={() => (setProfileLibrary(null), setTourOpen(true))}
               onNewProfile={() => (setProfileLibrary(null), setNewRequest((n) => n + 1))}
               onOpenProfile={() => (setProfileLibrary(null), setProfileOpen(true), closeAppPage(), setForAppOpen(false))}
+              onShare={setShareProfile}
             />
           </div>
         </Sheet>
@@ -547,13 +558,15 @@ export default function App() {
           ) : gamesOpen ? (
             <GamesPanel view={view} onClose={() => setGamesOpen(false)} />
           ) : (
-            <ProfilePanel view={view} onClose={() => setProfileOpen(false)} />
+            <ProfilePanel view={view} onClose={() => setProfileOpen(false)} onShare={setShareProfile} />
           )}
         </Sheet>
       )}
-      <ConfirmHost />
       {phoneOpen && <PhoneUpload onClose={closePhone} onImport={importPhoneFile} />}
       {!phoneOpen && pluginFiles.length > 0 && <PluginFileSheet key={pluginFiles[0].path} path={pluginFiles[0].path} update={pluginFiles[0].update} onUse={usePlugin} onManage={openInstalledPlugins} onClose={() => setPluginFiles((now) => now.slice(1))} />}
+      {shareProfile && <ProfileShare profile={shareProfile} onClose={() => setShareProfile(null)} />}
+      {profilePicker && <ProfilePicker view={view} onClose={() => setProfilePicker(false)} />}
+      <ConfirmHost />
       {dropping && (
         <div className="drop-overlay" aria-hidden="true">
           <Icon name="plug" />

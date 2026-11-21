@@ -992,6 +992,15 @@ pub fn catalog() -> Vec<ActionDef> {
             icon: "arrow-left",
         },
         ActionDef {
+            id: "core.profilePicker",
+            name: "Profile Switcher",
+            group: "MasterDeck",
+            description: "Opens a list of profiles in MasterDeck. Select one to switch the deck.",
+            inputs: vec![Press],
+            params: vec![],
+            icon: "layers",
+        },
+        ActionDef {
             id: "core.profile",
             name: "Switch profile",
             group: "MasterDeck",

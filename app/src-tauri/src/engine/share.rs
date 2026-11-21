@@ -242,6 +242,10 @@ pub fn strip_secrets(profile: &mut Profile) {
 
 /// Write a profile as a package file.
 pub fn export_package(engine: &Engine, id: &str, path: &Path) -> Result<(), String> {
+    std::fs::write(path, package_bytes(engine, id)?).map_err(|e| e.to_string())
+}
+
+pub(crate) fn package_bytes(engine: &Engine, id: &str) -> Result<Vec<u8>, String> {
     let mut profile = engine.lock().store.profiles.get(id).cloned().ok_or_else(|| format!("no profile {id}"))?;
     // game covers from a launcher's cache stay on this PC: a game icon goes out instead
     for b in profile.controls.values_mut() {
@@ -252,8 +256,7 @@ pub fn export_package(engine: &Engine, id: &str, path: &Path) -> Result<(), Stri
     }
     strip_secrets(&mut profile);
     let images = engine.data_dir().join("images");
-    let bytes = pack(&profile, &mut |name| std::fs::read(images.join(name)).ok())?;
-    std::fs::write(path, bytes).map_err(|e| e.to_string())
+    pack(&profile, &mut |name| std::fs::read(images.join(name)).ok())
 }
 
 fn agent() -> ureq::Agent {

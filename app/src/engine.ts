@@ -1263,8 +1263,15 @@ export function newBinding(action: ActionDef): Binding {
   for (const p of action.params) params[p.key] = p.default;
   // a plugin's action (`<plugin>/<action>`) starts with no label, as in Stream Deck: it draws its
   // own picture, and a Stream Deck plugin gets the label as its title (owner's 1a, 2026-10-20)
-  if (action.id.includes("/")) return { action: action.id, params, look: { icon: action.icon } };
+  if (action.id.includes("/")) return { action: action.id, params, look: {} };
   return { action: action.id, params, look: { label: actionName(action).split(" ")[0], icon: actionIconName(action.id, action.icon) } };
+}
+
+/** Resolve a plugin's artwork for previews without storing manifest data in the profile. */
+export function actionLook(look: Look, action?: ActionDef): Look {
+  if (!action?.id.includes("/") || look.image || (look.icon !== undefined && !look.icon.startsWith("data:"))) return look;
+  const picture = action.icon.startsWith("data:image/") ? action.icon : look.icon ?? action.icon;
+  return picture.startsWith("data:image/") ? { ...look, icon: "plug", image: picture, fit: look.fit ?? "icon" } : { ...look, icon: "plug" };
 }
 
 export const inTauri = () => "__TAURI_INTERNALS__" in window;

@@ -5,7 +5,7 @@ import { open } from "../confirm";
 import { invoke } from "@tauri-apps/api/core";
 import type { ControlRef } from "../deck";
 import { KeyDesigner } from "./KeyDesigner";
-import { themeTitle, ADVANCED_PARAMS, api, BACKGROUNDS, COMMON_SHORTCUTS, controlId, hasState, inWindow, newBinding, pressable, TURN_PARAMS, usePreview, type ActionDef, type Binding, type DialFace, type EngineView, type Gesture, type AppInfo, type InstalledItem, type Look, type Mode, type ParamDef, type Step, STEP_CONDITIONS } from "../engine";
+import { themeTitle, ADVANCED_PARAMS, actionLook, api, BACKGROUNDS, COMMON_SHORTCUTS, controlId, hasState, inWindow, newBinding, pressable, TURN_PARAMS, usePreview, type ActionDef, type Binding, type DialFace, type EngineView, type Gesture, type AppInfo, type InstalledItem, type Look, type Mode, type ParamDef, type Step, STEP_CONDITIONS } from "../engine";
 import { actionName, localizeAction, specialKeyName, t, useLanguage, type Key } from "../i18n";
 import { Icon } from "./Icon";
 import { IconPicker } from "./IconPicker";
@@ -1002,8 +1002,8 @@ const ICON_TINTS = ["#8c79ec", "#79c6ec", "#79ecc6", "#ec798c", "#ecb279", HOUSE
 /**
  * Quick appearance edits for a key or the dial, with the full designer available for keys.
  */
-function LookEditor({ look, onChange, screen, view, idPrefix = "look", program, onOpenStudio }: { look: Look; onChange: (l: Look) => void; screen: "key" | "dial"; view: EngineView; idPrefix?: string; program?: string; onOpenStudio?: () => void }) {
-  const svg = usePreview(screen, look);
+function LookEditor({ look, action, onChange, screen, view, idPrefix = "look", program, onOpenStudio }: { look: Look; action?: ActionDef; onChange: (l: Look) => void; screen: "key" | "dial"; view: EngineView; idPrefix?: string; program?: string; onOpenStudio?: () => void }) {
+  const svg = usePreview(screen, actionLook(look, action));
   const [imageError, setImageError] = useState<string | null>(null);
   const [iconsOpen, setIconsOpen] = useState(false);
   const iconsRef = useRef<HTMLButtonElement>(null);
@@ -1432,6 +1432,7 @@ export function Inspector({ ref, selected, view, onDropAction, onOpenStudio, onC
       {draft && hasScreen && activeGesture === "tap" && (
         <LookEditor
           key={control}
+          action={action}
           program={draft.action === "core.launch" && /\.exe"?$/i.test(String(draft.params.target ?? "").trim()) ? String(draft.params.target) : undefined}
           look={draft.look}
           screen={selected.kind === "dial" ? "dial" : "key"}
@@ -1451,7 +1452,7 @@ export function Inspector({ ref, selected, view, onDropAction, onOpenStudio, onC
             {t("look.onOwn")}
           </label>
           <p className="help">{t("look.onHelp")}</p>
-          {draft.lookOn && <LookEditor idPrefix="look-on" look={draft.lookOn} screen={selected.kind === "dial" ? "dial" : "key"} view={view} onChange={(lookOn) => update({ ...draft, lookOn })} />}
+          {draft.lookOn && <LookEditor idPrefix="look-on" look={draft.lookOn} action={action} screen={selected.kind === "dial" ? "dial" : "key"} view={view} onChange={(lookOn) => update({ ...draft, lookOn })} />}
         </section>
       )}
         </div>

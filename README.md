@@ -15,21 +15,51 @@ Quit the official MasterHUB app before connecting the hardware. One application 
 
 ## Set up your deck
 
-1. Open **Deck tools → Getting Started** for guided lessons beside the live deck. **Your Deck, Your Modules** explains what each kind of control can do and opens the layout editor.
-2. Open **Profiles** to choose a starter layout or create your own. Click **+** by the page tabs to add a page. Drag **Switch profile** from the Actions panel to a key to jump between profiles.
-3. Drag an action onto a key. Dropping a different action replaces the key’s icon and keeps its colors and styling. To assign another gesture, select the key and drag onto **Hold** or **Double press** in **Key Settings**. To resize the icon, open **Appearance → Full editor → Position on the key**.
-4. To reuse a key, right-click and choose **Copy key**, then **Paste key** on the destination. You can also use Ctrl+C and Ctrl+V on Windows, or Cmd+C and Cmd+V on macOS. To delete a page, select its tab, press **Delete**, and confirm.
-5. Open **Deck tools → Lights and screens** beside the deck preview. Use **Settings → Connections** for OBS Studio, Spotify, Twitch, Streamlabs, and Home Assistant.
+1. Open **Deck tools → Getting Started** for a short walkthrough beside the deck.
+2. Drag an action from the right panel onto a key. Click the key to open **Key Settings**, then drag onto **Hold** or **Double press** to add another action.
+3. Open **Profiles** to start from a template or create a profile. Click **+** beside the page tabs to add a page. To delete one, select its tab and press **Delete**.
+4. Right-click a key to copy or paste it. Replacing an action also replaces its icon and keeps the key’s styling.
 
-**Everyday desk** covers media, editing, mic mute, and a focus timer. **My deck · faders** adds app launchers, a Fun page, and a clock you can double press to switch profiles. **Discord & meetings** groups call shortcuts by app and puts system mic mute on the Music key’s Hold gesture. **OBS streaming** provides scene keys, recording and streaming controls, and Studio Mode and Transition keys. Existing saved profiles keep their assignments.
+<details>
+<summary>See Getting Started</summary>
 
-## Set up an unattached module
+![Getting Started shows the first step next to the deck and Actions panel](docs/images/masterdeck-getting-started.png)
 
-Open **Deck tools → Edit layout**, tick the module you own, and click **Done**. The module appears beside or below the deck. Click a control and drag an action onto it. MasterDeck saves the assignment in the current profile and uses it when you connect the module.
+</details>
+
+## Customize a key
+
+Select a key and open **Appearance → Full editor**. Under **Choose icon or image**, use **Upload image** for a file from your computer, browse the icon library, or restore the action’s icon. Use **Position on the key** to resize or move the icon. Under **Styles and effects**, pick a preset and optional motion. **More style controls** opens the detailed editor.
+
+![Full Editor with a key preview, image upload, and icon library](docs/images/masterdeck-key-editor.png)
+
+## Switch profiles from a key
+
+Drag **Profile Switcher** from Actions onto a key. Press the physical key to open the profile list. You can try it from the preview by right-clicking the assigned key and choosing **Profile Switcher**. Use **Switch profile** to jump directly to a specific profile or cycle through them.
+
+![Profile Switcher with a search field and selectable profiles](docs/images/masterdeck-profile-switcher.png)
+
+## Match the layout to your desk
+
+Open **Deck tools → Edit layout**. Drag and rotate the connected modules until the drawing matches your desk. To configure a module before connecting it, select it under **My modules, not attached**, choose **Done**, and drag an action onto one of its controls below the deck.
+
+<details>
+<summary>See Edit layout</summary>
+
+![Edit layout beside the deck with rotation and unattached module controls](docs/images/masterdeck-edit-layout.png)
+
+</details>
 
 ## Set a screensaver
 
-Open **Deck tools → Screensaver**. Pick a built-in scene, use a deck look, or choose **Add screensaver** to import a GIF, WebP, PNG, or JPEG up to 15 MB. Imported images retain their proportions and fit across the keys. If you have an older cropped upload, import the original image again. The animation plays in the tab as you browse. Set the idle delay and choose **Apply screensaver** to save your choice. **Preview on the deck** shows it across the keys. **Advanced settings** lets you use a different screensaver for each profile and choose what the dial and lights do while it runs. MasterDeck keeps imported media on this computer. When moving a profile to another computer, add the image there and select it again.
+Open **Deck tools → Screensaver**, then use **Next preview** to browse before saving. Use **Add screensaver** to import a GIF, WebP, PNG, or JPEG up to 15 MB. Set the idle delay and select **Apply screensaver**. **Advanced settings** controls which profiles use it and what the dial and lights do. Click a key at any time to return to its settings.
+
+<details>
+<summary>See Screensaver settings</summary>
+
+![Screensaver panel with a live thumbnail, Next preview, and Apply screensaver](docs/images/masterdeck-screensaver.png)
+
+</details>
 
 ## Connect OBS Studio
 
@@ -39,11 +69,29 @@ In OBS Studio Mode, select a scene key and choose **Preview** to cue a scene or 
 
 ## Use a profile on another deck
 
-Open **Profile Settings → Use on another deck → Export**, or export straight from a profile’s three-dot menu. Copy the `.masterdeck` file to the other computer. There, open **Profiles → Import** to see what each supported format contains, then select **Choose profile file**. The `.masterdeck` package carries actions, pages, and included key pictures. Review plugin requirements, linked apps, credentials, and file paths on the destination. [Profile transfer guide](docs/profile-transfer.md)
+1. Open **Profiles** and click the **Share** icon beside a profile.
+2. Choose **System share** for your operating system’s share options, **Export** to save a file, or **Show QR code** to download it from another device on the same Wi-Fi. The QR link expires after 10 minutes.
+3. On the destination computer, open **Profiles → Import → Choose profile file** and select the `.masterdeck` file. Review plugin requirements, linked apps, and action paths. [Profile transfer guide](docs/profile-transfer.md)
+
+<details>
+<summary>See Share and Import</summary>
+
+![Share profile with system sharing, file export, and phone download](docs/images/masterdeck-profile-share.png)
+
+![Import a profile with supported file types and the file picker button](docs/images/masterdeck-profile-import.png)
+
+</details>
 
 ## Plugins and phone uploads
 
 Open **Plugins → Install Plugin** to review a compatible plugin package before installing it. Enable it from the installed list to make its actions available. **Upload from Phone** pairs a phone browser using a QR code and desktop approval. You can send profiles, plugins, and images over your local Wi-Fi. [Phone upload guide](docs/phone-uploads.md)
+
+<details>
+<summary>See the installed plugins list</summary>
+
+![Plugins page with status and enable or disable controls](docs/images/masterdeck-installed-plugins.png)
+
+</details>
 
 ## Work on MasterDeck
 

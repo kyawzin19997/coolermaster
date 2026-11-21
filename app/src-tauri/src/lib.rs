@@ -9,6 +9,7 @@ mod module_check;
 mod output;
 mod phone_upload;
 mod placements;
+mod profile_transfer;
 mod system;
 mod tray;
 mod update;
@@ -261,6 +262,7 @@ pub fn run() {
         .plugin(tauri_plugin_notification::init())
         .manage(Deck::default())
         .manage(phone_upload::Uploads::default())
+        .manage(profile_transfer::ProfileTransfers::default())
         .setup(move |app| {
             let _ = engine::exec::APP.set(app.handle().clone());
             log::info!("MasterDeck {} starting", app.package_info().version);
@@ -408,6 +410,9 @@ pub fn run() {
             engine::sdlocal::sd_opened,
             engine::sdlocal::sd_drop_file,
             phone_upload::phone_start,
+            profile_transfer::profile_share_link,
+            profile_transfer::profile_share_stop,
+            profile_transfer::profile_share_native,
             phone_upload::phone_status,
             phone_upload::phone_approve,
             phone_upload::phone_cancel,
@@ -527,6 +532,7 @@ pub fn run() {
             engine::commands::page_rename,
             engine::commands::page_delete,
             engine::commands::profile_export,
+            tray::profile_picker_pending,
             engine::commands::profile_import,
             engine::commands::profile_adapt
         ])

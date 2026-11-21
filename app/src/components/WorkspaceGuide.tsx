@@ -1,34 +1,12 @@
-import { useEffect, useState } from "react";
-import type { ControlRef, LiveState, ModuleKind } from "../deck";
+import { useState } from "react";
 import { t, useLanguage, type Key } from "../i18n";
 import { Icon } from "./Icon";
 
-export type GuideKind = "start" | "modules";
+const LESSONS = ["actions", "gestures", "profiles", "display", "modules", "obs", "plugins"] as const;
 
-const LESSONS = ["modules", "actions", "gestures", "profiles", "display", "obs", "plugins"] as const;
-type Lesson = (typeof LESSONS)[number];
-const MODULES = ["keys", "dial", "knobs", "faders", "rollers"] as const satisfies readonly ModuleKind[];
-
-export function DetachedModuleGuide() {
-  useLanguage();
-  return (
-    <ol className="detached-module-guide help">
-      <li>{t("workshop.detachedStep1")}</li>
-      <li>{t("workshop.detachedStep2")}</li>
-      <li>{t("workshop.detachedStep3")}</li>
-    </ol>
-  );
-}
-
-export function WorkspaceGuide({ kind, live, selected, onClose, onModules, onArrange, onPersonalize, onKeys, onProfiles, onDisplay, onOBS, onPlugins }: {
-  kind: GuideKind;
-  live: LiveState;
-  selected: ControlRef | null;
+export function WorkspaceGuide({ onClose, onArrange, onProfiles, onDisplay, onOBS, onPlugins }: {
   onClose: () => void;
-  onModules: () => void;
   onArrange: () => void;
-  onPersonalize: () => void;
-  onKeys: () => void;
   onProfiles: () => void;
   onDisplay: () => void;
   onOBS: () => void;
@@ -36,71 +14,33 @@ export function WorkspaceGuide({ kind, live, selected, onClose, onModules, onArr
 }) {
   useLanguage();
   const [step, setStep] = useState(0);
-  const [moduleAt, setModuleAt] = useState(0);
-  useEffect(() => {
-    const next = MODULES.findIndex((module) => module === selected?.kind);
-    if (next >= 0) setModuleAt(next);
-  }, [selected]);
-  const modules = kind === "modules";
   const current = LESSONS[step];
-  const module = MODULES[moduleAt];
-  const attached = live.deck.modules.some((entry) => entry.kind === module);
-  const title = t(modules ? "workshop.modules" : "workshop.start");
-  const routes: Record<Lesson, [Key, () => void]> = {
-    modules: ["workshop.modules", onModules],
-    actions: ["workshop.editKey", onKeys],
-    gestures: ["workshop.editKey", onKeys],
+  const next = step < LESSONS.length - 1;
+  const routes: Partial<Record<(typeof LESSONS)[number], [Key, () => void]>> = {
+    modules: ["stage.editLayout", onArrange],
     profiles: ["profiles.title", onProfiles],
     display: ["settings.lightsScreens", onDisplay],
     obs: ["settings.connections", onOBS],
     plugins: ["topbar.plugins", onPlugins],
   };
-  const [action, run] = routes[current];
-  const last = modules ? moduleAt === MODULES.length - 1 : step === LESSONS.length - 1;
+  const route = routes[current];
   return (
     <div className="workspace-guide">
       <header className="workspace-pane-head">
-        <h2>{title}</h2>
+        <h2>{t("workshop.start")}</h2>
         <button type="button" className="icon-btn" aria-label={t("profile.close")} onClick={onClose}><Icon name="x" /></button>
       </header>
       <div className="workspace-pane-scroll">
         <section className="sec">
-          {modules ? (
-            <>
-              <label className="field">
-                <span className="label">{t("workshop.module")}</span>
-                <select className="input" value={moduleAt} onChange={(event) => setModuleAt(Number(event.target.value))}>
-                  {MODULES.map((entry, index) => <option key={entry} value={index}>{t(`module.${entry}`)}</option>)}
-                </select>
-              </label>
-              <h3>{t(`module.${module}`)} {attached && <small className="guide-attached">{t("welcome.attached")}</small>}</h3>
-              <p>{t(`workshop.module.${module}` as Key)}</p>
-              {!attached && <DetachedModuleGuide />}
-              <div className="row wrap">
-                <button type="button" className="tool" onClick={onArrange}><Icon name="layout-grid" />{t("stage.editLayout")}</button>
-              </div>
-            </>
-          ) : (
-            <>
-              <label className="field">
-                <span className="label">{t("workshop.lesson")}</span>
-                <select className="input" value={step} onChange={(event) => setStep(Number(event.target.value))}>
-                  {LESSONS.map((entry, index) => <option key={entry} value={index}>{index + 1}. {t(`workshop.lesson.${entry}` as Key)}</option>)}
-                </select>
-              </label>
-              <p>{t(`workshop.lesson.${current}.body` as Key)}</p>
-              <button type="button" className="tool align-start" onClick={run}>{t(action)}</button>
-              {current === "profiles" && <button type="button" className="link-btn align-start" onClick={onPersonalize}>{t("workshop.personalize")}</button>}
-            </>
-          )}
+          <span className="muted">{t("workshop.step", { step: step + 1, total: LESSONS.length })}</span>
+          <h3>{t(`workshop.lesson.${current}`)}</h3>
+          <p>{t(`workshop.lesson.${current}.body`)}</p>
+          {route && <button type="button" className="tool align-start" onClick={route[1]}>{t(route[0])}</button>}
         </section>
       </div>
       <footer className="workspace-guide-nav">
-        <button type="button" className="tool ghost" disabled={(modules ? moduleAt : step) === 0}
-          onClick={() => modules ? setModuleAt(moduleAt - 1) : setStep(step - 1)}>{t("workshop.previous")}</button>
-        <button type="button" className="tool primary" onClick={() => last ? onClose() : modules ? setModuleAt(moduleAt + 1) : setStep(step + 1)}>
-          {t(last ? "workshop.finish" : "workshop.next")}
-        </button>
+        <button type="button" className="tool ghost" disabled={step === 0} onClick={() => setStep(step - 1)}>{t("workshop.previous")}</button>
+        <button type="button" className="tool primary" onClick={() => next ? setStep(step + 1) : onClose()}>{t(next ? "workshop.next" : "workshop.finish")}</button>
       </footer>
     </div>
   );

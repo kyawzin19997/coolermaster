@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.4.0
+
+- A smaller Full Editor puts image upload, icon placement, presets, and motion controls within reach. Advanced styles remain available.
+- Plugin icons fall back to valid state artwork or a standard plugin glyph. Custom artwork stays in place when a plugin updates its display.
+- Drag the built-in Profile Switcher to a key and press it to open a searchable list of profiles.
+- Share any profile through the system share dialog, export a file, or generate a temporary QR code for another device on the same Wi-Fi.
+- The Actions panel uses larger monochrome icons. Getting Started and Edit layout are simpler, and selecting a key closes Deck tools.
+- Use Next preview to compare screensavers before applying one.
+
 ## 1.3.6
 
 - Resize icons from 50% to 150% in the key editor with a live preview. Appearance edits apply to the selected key.

@@ -36,6 +36,7 @@ try {
   assert.ok(await editor.evaluate((node) => node.scrollWidth <= node.clientWidth + 1));
   await label.fill("Intro scene");
   await editor.getByText("Styles and effects", { exact: true }).click();
+  await editor.getByText("More style controls", { exact: true }).click();
   await editor.locator(".designer").getByRole("tab", { name: "Background", exact: true }).click();
   await editor.getByText("Position on the key", { exact: true }).click();
   await preview.press("ArrowRight");

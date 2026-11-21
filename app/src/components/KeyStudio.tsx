@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { api, inTauri, inWindow, usePreview, type EngineView, type Look } from "../engine";
+import { actionLook, api, inTauri, inWindow, usePreview, type EngineView, type Look } from "../engine";
 import { save as saveDialog } from "../confirm";
-import { looksLike, templateOf } from "../lookTemplates";
+import { BUILT_IN, looksLike, templateOf, withTemplate } from "../lookTemplates";
 import { actionName, t } from "../i18n";
 import { actionIconName } from "../actionIcons";
 import { ActionIcon } from "./ActionChooser";
@@ -9,6 +9,7 @@ import { Icon } from "./Icon";
 import { IconPicker } from "./IconPicker";
 import { IconSize, KeyDesigner } from "./KeyDesigner";
 import { LabelValues } from "./LookRules";
+import { pickImage } from "./Inspector";
 
 /** Sixteenths of a second in one cycle of each motion (the engine's own, `render.rs`). */
 const CYCLE: Record<string, (look: Look) => number> = {
@@ -66,12 +67,15 @@ export function KeyStudio({ view, control, onClose }: { view: EngineView; contro
   const profileId = profile?.id;
   const page = view.state?.page ?? null;
   const start = profile?.controls[control];
+  const action = view.catalog?.actions.find((a) => a.id === start?.action);
+  const plugin = start?.action.includes("/") ?? false;
   const [look, setLook] = useState<Look>(start?.look ?? {});
   const [moving, setMoving] = useState<"icon" | "label">("icon");
   const [iconsOpen, setIconsOpen] = useState(false);
   const [positionOpen, setPositionOpen] = useState(false);
   const [advancedOpen, setAdvancedOpen] = useState(false);
-  const svg = useLivePreview(look);
+  const [uploading, setUploading] = useState(false);
+  const svg = useLivePreview(actionLook(look, action));
   const pending = useRef<number | null>(null);
   const dirty = useRef(false);
   const writing = useRef(Promise.resolve(true));
@@ -101,7 +105,7 @@ export function KeyStudio({ view, control, onClose }: { view: EngineView; contro
   // save the key as a picture, or the page's keys as a Stream Deck icon pack
   const savePng = async () => {
     const path = await saveDialog({ defaultPath: `${(look.label ?? "key").replace(/[\\/:*?"<>|\n]/g, " ").trim() || "key"}.png`, filters: [{ name: "PNG", extensions: ["png"] }] });
-    if (path) api.keyPngSave(look, path).then(() => setNote(t("studio.pngSaved", { path })), (e) => setNote(String(e)));
+    if (path) api.keyPngSave(actionLook(look, action), path).then(() => setNote(t("studio.pngSaved", { path })), (e) => setNote(String(e)));
   };
   const savePack = async () => {
     if (!profile) return;
@@ -215,10 +219,18 @@ export function KeyStudio({ view, control, onClose }: { view: EngineView; contro
   const moved = !!(look.iconDx || look.iconDy || look.labelDx || look.labelDy);
 
   const number = Number(control.split(".").pop()) + 1;
-  const action = view.catalog?.actions.find((a) => a.id === start?.action);
-  const defaultIcon = action && actionIconName(action.id, action.icon);
+  const defaultIcon = action && !plugin ? actionIconName(action.id, action.icon) : undefined;
   const isDefaultIcon = defaultIcon === look.icon && !look.image;
   const stopDrag = () => { drag.current = null; holding.current = false; lastStep.current = Date.now(); };
+  const upload = async () => {
+    setUploading(true);
+    setNote(null);
+    try {
+      const image = await pickImage();
+      if (image) change({ ...latest.current, image, fit: "icon" });
+    } catch (e) { setNote(String(e)); }
+    finally { setUploading(false); }
+  };
 
   if (!start) {
     return (
@@ -260,7 +272,6 @@ export function KeyStudio({ view, control, onClose }: { view: EngineView; contro
         </section>
         <div className="studio-props">
           <section className="studio-basic" aria-label={t("studio.appearance")}>
-            <h2>{t("studio.appearance")}</h2>
             <label className="field">
               <span className="label">{t("look.label")}</span>
               <input className="input" value={look.label ?? ""} onChange={(e) => change({ ...look, label: e.target.value || undefined })} />
@@ -273,8 +284,16 @@ export function KeyStudio({ view, control, onClose }: { view: EngineView; contro
               <summary><Icon name="image" />{t("studio.chooseIcon")}<Icon name="chevron-down" /></summary>
               {iconsOpen && (
                 <div className="studio-section-body">
-                  {defaultIcon && <button type="button" className="tool small align-start" disabled={isDefaultIcon} onClick={() => change({ ...look, icon: defaultIcon, image: undefined })}>{t("studio.actionIcon")}</button>}
-                  <IconPicker value={look.icon} onChange={(icon) => change({ ...look, icon, image: undefined })} onPicture={(image) => change({ ...look, image })} view={view} />
+                  <div className="row wrap">
+                    <button type="button" className="tool small" disabled={uploading} onClick={() => void upload()}><Icon name="upload" />{t("studio.uploadImage")}</button>
+                    {action && <button type="button" className="tool small ghost" disabled={isDefaultIcon} onClick={() => change({ ...look, icon: defaultIcon, image: undefined, fit: undefined })}>{t("studio.actionIcon")}</button>}
+                  </div>
+                  {look.image && <label className="field"><span className="label">{t("studio.imageDisplay")}</span>
+                    <select className="input" value={look.fit ?? "icon"} onChange={(e) => change({ ...look, fit: e.target.value as Look["fit"] })}>
+                      <option value="icon">{t("look.icon")}</option><option value="fill">{t("studio.fillKey")}</option>
+                    </select>
+                  </label>}
+                  <IconPicker value={look.icon} onChange={(icon) => change({ ...look, icon: icon ?? (plugin ? "" : undefined), image: undefined, fit: undefined })} onPicture={(image) => change({ ...look, image, fit: "icon" })} view={view} />
                 </div>
               )}
             </details>
@@ -299,12 +318,26 @@ export function KeyStudio({ view, control, onClose }: { view: EngineView; contro
             <summary><Icon name="sliders-horizontal" />{t("studio.advanced")}<Icon name="chevron-down" /></summary>
             {advancedOpen && (
               <div className="studio-section-body">
-                <KeyDesigner look={look} onChange={change} showIconSize={false} />
-                <LabelValues label={look.label ?? ""} onChange={(label) => change({ ...look, label })} />
-                <label className="check" title={t("studio.styleHelp")}>
-                  <input type="checkbox" checked={styled} onChange={(e) => void setStyle(e.target.checked)} />
-                  {t("studio.style", { name: profile?.name ?? "" })}
+                <div className="row wrap" role="group" aria-label={t("designer.tab.templates")}>
+                  <button type="button" className="tool small" onClick={() => change(withTemplate(look, {}))}>{t("studio.plainStyle")}</button>
+                  {BUILT_IN.filter((preset) => ["night", "frame", "matte"].includes(preset.id)).map((preset) =>
+                    <button type="button" className="tool small" key={preset.id} aria-pressed={looksLike(look, preset.look)} onClick={() => change(withTemplate(look, preset.look))}>{t(`template.${preset.id}` as import("../i18n").Key)}</button>)}
+                </div>
+                <label className="field"><span className="label">{t("designer.motion")}</span>
+                  <select className="input" value={look.motion ?? ""} onChange={(e) => change({ ...look, motion: (e.target.value || undefined) as Look["motion"] })}>
+                    <option value="">{t("designer.finish.none")}</option>
+                    {[...new Set(["pulse", "glow", "shine", "sweep", "sparkle", "flow", ...(look.motion ? [look.motion] : [])])].map((motion) =>
+                      <option value={motion} key={motion}>{t(`designer.motion.${motion}` as import("../i18n").Key)}</option>)}
+                  </select>
                 </label>
+                <details className="studio-advanced-options"><summary>{t("studio.moreStyle")}</summary>
+                  <KeyDesigner look={look} onChange={change} showIconSize={false} />
+                  <LabelValues label={look.label ?? ""} onChange={(label) => change({ ...look, label })} />
+                  <label className="check" title={t("studio.styleHelp")}>
+                    <input type="checkbox" checked={styled} onChange={(e) => void setStyle(e.target.checked)} />
+                    {t("studio.style", { name: profile?.name ?? "" })}
+                  </label>
+                </details>
               </div>
             )}
           </details>

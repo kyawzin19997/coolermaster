@@ -188,6 +188,7 @@ const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
     else delete placements[key as string];
   },
   actions_list: () => ({ ...fixture.catalog, actions: [
+    { id: "core.profilePicker", name: "Profile Switcher", group: "MasterDeck", description: "Opens the profile list.", icon: "layers", inputs: ["press"], params: [] },
     ...fixture.catalog.actions.filter((action) => !action.id.startsWith("claude.")).map((action) => {
       if (action.id === "obs.scene" && !action.params.some((param) => param.key === "sceneTarget")) {
         return { ...action, params: [...action.params, { key: "sceneTarget", label: "Send scene to", type: "select", default: "program", options: [["program", "Program"], ["preview", "Preview"]] }] };

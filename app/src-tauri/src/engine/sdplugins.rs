@@ -153,22 +153,23 @@ fn plain_id(id: &str) -> bool {
 
 /// A manifest picture: the path has no extension; Stream Deck picks `@2x.png`, `.png`, `.svg`...
 pub fn image_uri(dir: &Path, rel: &str) -> Option<String> {
-    if rel.is_empty() {
-        return None;
-    }
-    let base = inside(dir, rel)?;
-    let candidates = [format!("{rel}@2x.png"), format!("{rel}.png"), format!("{rel}.svg"), format!("{rel}.jpg"), format!("{rel}.gif"), rel.to_string()];
-    for c in candidates {
-        let p = inside(dir, &c)?;
-        if p.is_file() {
-            return file_uri(&p);
-        }
-    }
-    let _ = base;
-    None
+    (!rel.is_empty()).then_some(())?;
+    let rel = rel.replace('\\', "/");
+    inside(dir, &rel)?;
+    let candidates = if Path::new(&rel).extension().and_then(|ext| ext.to_str()).is_some_and(|ext| ["png", "svg", "jpg", "jpeg", "gif", "webp"].contains(&ext.to_lowercase().as_str())) {
+        let (stem, ext) = rel.rsplit_once('.')?;
+        vec![format!("{stem}@2x.{ext}"), rel]
+    } else {
+        ["@2x.png", ".png", "@2x.svg", ".svg", ".webp", ".jpg", ".jpeg", ".gif", ""].into_iter().map(|ext| format!("{rel}{ext}")).collect()
+    };
+    candidates.iter().filter_map(|candidate| inside(dir, candidate)).find_map(|path| file_uri(&path))
 }
 
 fn file_uri(p: &Path) -> Option<String> {
+    let file = std::fs::metadata(p).ok()?;
+    if !file.is_file() || file.len() == 0 || file.len() > 2_900_000 {
+        return None;
+    }
     let bytes = std::fs::read(p).ok()?;
     let ext = p.extension().and_then(|e| e.to_str()).unwrap_or("").to_ascii_lowercase();
     let mime = match ext.as_str() {
@@ -179,6 +180,22 @@ fn file_uri(p: &Path) -> Option<String> {
         "webp" => "webp",
         _ => return None,
     };
+    if mime == "svg+xml" {
+        let mut options = resvg::usvg::Options::default();
+        options.image_href_resolver.resolve_string = Box::new(|_, _| None);
+        let tree = resvg::usvg::Tree::from_data(&bytes, &options).ok()?;
+        if tree.root().children().is_empty() {
+            return None;
+        }
+    } else {
+        let mut reader = image::ImageReader::new(std::io::Cursor::new(&bytes)).with_guessed_format().ok()?;
+        let mut limits = image::Limits::default();
+        limits.max_image_width = Some(4096);
+        limits.max_image_height = Some(4096);
+        limits.max_alloc = Some(64 * 1024 * 1024);
+        reader.limits(limits);
+        reader.decode().ok()?;
+    }
     Some(format!("data:image/{mime};base64,{}", base64::engine::general_purpose::STANDARD.encode(bytes)))
 }
 
@@ -254,14 +271,14 @@ pub fn read(v: &Value, dir: &Path) -> Result<SdManifest, String> {
                 .filter_map(|a| {
                     let uuid = a["UUID"].as_str()?.to_string();
                     let controllers: Vec<&str> = a["Controllers"].as_array().map(|c| c.iter().filter_map(Value::as_str).collect()).unwrap_or_else(|| vec!["Keypad"]);
-                    let states = a["States"]
+                    let states: Vec<(Option<String>, Option<String>)> = a["States"]
                         .as_array()
                         .map(|st| st.iter().map(|x| (x["Image"].as_str().and_then(|i| image_uri(dir, i)), x["Title"].as_str().map(str::to_string).filter(|t| !t.is_empty()))).collect())
                         .unwrap_or_else(|| vec![(None, None)]);
                     Some(SdAction {
                         name: a["Name"].as_str().unwrap_or(&uuid).to_string(),
                         tooltip: a["Tooltip"].as_str().unwrap_or("").to_string(),
-                        icon: a["Icon"].as_str().and_then(|i| image_uri(dir, i)),
+                        icon: a["Icon"].as_str().and_then(|i| image_uri(dir, i)).or_else(|| states.first().and_then(|(image, _)| image.clone())),
                         states,
                         keypad: controllers.contains(&"Keypad"),
                         encoder: controllers.contains(&"Encoder"),
@@ -1143,6 +1160,20 @@ pub fn install(bytes: &[u8], plugins_dir: &Path) -> Result<String, String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn an_unreadable_retina_icon_falls_back_to_valid_manifest_art() {
+        let dir = std::env::temp_dir().join(format!("masterdeck-art-{}.sdPlugin", uuid::Uuid::new_v4()));
+        std::fs::create_dir_all(dir.join("art")).unwrap();
+        std::fs::write(dir.join("art/icon@2x.png"), b"broken").unwrap();
+        let png = dir.join("art/icon.png");
+        image::RgbaImage::from_pixel(4, 4, image::Rgba([235, 235, 235, 255])).save(&png).unwrap();
+        let data = image_uri(&dir, r"art\icon.png").unwrap();
+        assert!(super::super::images::safe_data_uri(&data));
+        let manifest = serde_json::json!({"Name":"Artwork", "CodePath":"a.js", "Actions":[{"UUID":"art.key", "Icon":"missing", "States":[{"Image":"art/icon"}]}]});
+        assert_eq!(read(&manifest, &dir).unwrap().actions[0].icon.as_deref(), Some(data.as_str()));
+        std::fs::remove_dir_all(dir).unwrap();
+    }
 
     /// .NET plugins read it as a Version: dotted numbers, three or four (Windows Display Settings).
     #[test]

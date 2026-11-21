@@ -1,16 +1,10 @@
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 import type { ModuleKind } from "../deck";
 import { actionFits, type ActionDef, type EngineView } from "../engine";
-import { groupName, localizeAction, t, useLanguage } from "../i18n";
+import { localizeAction, t, useLanguage } from "../i18n";
 import { ACTION_MIME } from "./DeckView";
 import { Icon } from "./Icon";
 import { defaultActionIcon } from "../actionIcons";
-
-const GROUP_COLORS: Record<string, string> = {
-  System: "#b6adfa", Media: "#71d8aa", Audio: "#7fcff5", OBS: "#f395a3",
-  Spotify: "#75db9c", Twitch: "#c09afa", Streamlabs: "#77dfcd",
-  "Home Assistant": "#79c1fa", MIDI: "#efbf78", Joystick: "#efa683",
-};
 
 const SEARCH_ALIASES: Record<string, string> = {
   "core.launch": "open app file website url application program otwórz aplikację plik lub stronę",
@@ -23,18 +17,22 @@ const SEARCH_ALIASES: Record<string, string> = {
   "core.nextPage": "page folder strona",
   "core.previousPage": "page folder back strona wstecz",
   "core.profile": "switch profile change layout next previous navigation przełącz profil",
+  "core.profilePicker": "switch profile choose profile menu layout navigation",
 };
 
 type ActionSource = Pick<EngineView, "icons" | "catalog">;
 
+function ActionPicture({ src }: { src: string }) {
+  const [failed, setFailed] = useState(false);
+  return <span className="library-icon is-picture" aria-hidden="true">{failed ? <Icon name="plug" /> : <img src={src} alt="" onError={() => setFailed(true)} />}</span>;
+}
+
 export function ActionIcon({ action, icons }: { action: ActionDef; icons: EngineView["icons"] }) {
-  if (action.icon.startsWith("data:")) {
-    return <span className="library-icon is-picture" aria-hidden="true"><img src={action.icon} alt="" /></span>;
+  if (action.icon.startsWith("data:image/")) {
+    return <ActionPicture key={action.icon} src={action.icon} />;
   }
   const svg = defaultActionIcon(action.id) ?? icons.find((item) => item.name === action.icon)?.svg;
-  const color = GROUP_COLORS[action.group] ?? Object.entries(GROUP_COLORS).find(([group]) => groupName(group) === action.group)?.[1] ?? "#aebce7";
-  const style = { "--h": color } as React.CSSProperties;
-  return svg ? <span className="library-icon" aria-hidden="true" style={style} dangerouslySetInnerHTML={{ __html: svg }} /> : <span className="library-icon" aria-hidden="true" style={style}><Icon name="plug" /></span>;
+  return svg ? <span className="library-icon" aria-hidden="true" dangerouslySetInnerHTML={{ __html: svg }} /> : <span className="library-icon" aria-hidden="true"><Icon name="plug" /></span>;
 }
 
 /** Keep the query, expanded groups and scroll position as controls are edited. */
@@ -84,7 +82,7 @@ export const ActionLibrary = memo(function ActionLibrary({
   const matching = actions.filter(({ action, search: text }) =>
     (!compatibleOnly || !selectedKind || actionFits(action, selectedKind)) && words.every((word) => text.includes(word)));
   const groups = new Map<string, ActionDef[]>();
-  const profileSwitch = words.length === 0 ? matching.find(({ action }) => action.id === "core.profile")?.action : undefined;
+  const profileSwitch = words.length === 0 ? matching.find(({ action }) => action.id === "core.profilePicker")?.action : undefined;
   for (const { action } of matching) {
     if (action === profileSwitch) continue;
     const group = groups.get(action.group);
@@ -138,7 +136,7 @@ export const ActionLibrary = memo(function ActionLibrary({
                 return (
                   <section key={group} className="chooser-group" ref={group === focusGroup ? focusedGroup : undefined}>
                     <button type="button" className="chooser-group-head" aria-expanded={open} onClick={() => setExpanded((current) => open ? current.filter((item) => item !== group) : [...current, group])}>
-                      {image ? <span className="library-icon is-picture" aria-hidden="true"><img src={image} alt="" /></span> : <ActionIcon action={items[0]} icons={icons} />}
+                      {image ? <ActionPicture key={image} src={image} /> : <ActionIcon action={items[0]} icons={icons} />}
                       <span className="nm">{group}</span>
                       <Icon name={open ? "chevron-down" : "chevron-right"} />
                     </button>

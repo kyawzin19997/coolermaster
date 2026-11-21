@@ -2573,6 +2573,9 @@ impl Worker {
         }
         match result {
             Ok(out) => {
+                if out.pick_profile {
+                    crate::tray::open_profile_picker(&self.app);
+                }
                 if let Some(page) = out.page {
                     let page = if page == exec::NEXT_PAGE || page == exec::PREVIOUS_PAGE { self.page_beside(page == exec::NEXT_PAGE) } else { (!page.is_empty()).then_some(page) };
                     self.show_page(page);
@@ -2933,8 +2936,7 @@ impl Worker {
                             // nor is a key of two audio devices': both its icons say which one is in use
                             let pair = audio_pair(b);
                             let shown_state = if sdplugins::is_sd_action(&b.action) || pair.is_some() { None } else { state };
-                            let look = self.plugin_look(&id, self.now_playing_look(b, b.look_for(shown_state)));
-                            let look = self.sd_look(&id, b, look);
+                            let look = self.plugin_look(&id, b, self.now_playing_look(b, b.look_for(shown_state)));
                             let look = match pair {
                                 Some((first, second)) => Look { pair: Some((first, second, state == Some(true))), ..look },
                                 None => look,
@@ -3559,12 +3561,33 @@ impl Worker {
         }
     }
 
-    /// A control's look with what a plugin or the local API set on it.
-    fn plugin_look(&self, id: &str, look: Look) -> Look {
-        match self.plugin_looks.get(id) {
-            Some(p) => Look { label: p.title.clone().or(look.label), image: p.image.clone().or(look.image), ..look },
-            None => look,
+    /// A control's custom artwork, or what its plugin draws and supplies by default.
+    fn plugin_look(&self, id: &str, binding: &Binding, mut look: Look) -> Look {
+        let set = self.plugin_looks.get(id);
+        if !plugins::is_plugin_action(&binding.action) {
+            return match set {
+                Some(p) => Look { label: p.title.clone().or(look.label), image: p.image.clone().or(look.image), ..look },
+                None => look,
+            };
         }
+        let state = sdplugins::state_look(&binding.action, set.and_then(|p| p.state));
+        let (state_image, state_title) = state.unwrap_or_default();
+        let custom_icon = look.icon.as_deref().is_some_and(|icon| !icon.starts_with("data:"));
+        if look.image.is_some() || custom_icon {
+            return look;
+        }
+        look.label = if sdplugins::shows_title(&binding.action) { set.and_then(|p| p.title.clone()).or(look.label).or(state_title) } else { None };
+        let image = set.and_then(|p| p.image.as_deref()).or(state_image.as_deref());
+        let icon = plugins::action_icon(&binding.action).or(look.icon.as_deref());
+        if let Some(image) = image.filter(|image| images::safe_data_uri(image)) {
+            look.image = Some(image.to_string());
+            look.fit.get_or_insert_with(|| "fill".into());
+        } else if let Some(image) = icon.filter(|image| images::safe_data_uri(image)) {
+            look.image = Some(image.to_string());
+            look.fit.get_or_insert_with(|| "icon".into());
+        }
+        look.icon = Some(icon.filter(|icon| render::icon_svg(icon).is_some()).unwrap_or("plug").into());
+        look
     }
 
     /// What plugins show on the active profile's controls, for the window's drawing of the deck
@@ -3575,7 +3598,7 @@ impl Worker {
         let id = profile.as_ref().map(|p| p.id.clone()).unwrap_or_default();
         if let Some(p) = profile {
             for (id, b) in p.controls.iter().filter(|(_, b)| plugins::is_plugin_action(&b.action)) {
-                let look = self.sd_look(id, b, self.plugin_look(id, b.look_for(None)));
+                let look = self.plugin_look(id, b, b.look_for(None));
                 now.insert(id.clone(), look);
             }
             // keys whose look follows conditions or shows values (`rules.rs`): as the deck shows them
@@ -3599,19 +3622,6 @@ impl Worker {
             *sent = (id.clone(), now.clone());
             let _ = self.app.emit("engine://looks", serde_json::json!({"profile": id, "looks": now}));
         }
-    }
-
-    /// A Stream Deck action's look: what its plugin set, else its manifest's picture and title for
-    /// the current state (the whole key, as on a Stream Deck).
-    fn sd_look(&self, id: &str, binding: &Binding, look: Look) -> Look {
-        let index = self.plugin_looks.get(id).and_then(|p| p.state);
-        let Some((image, title)) = sdplugins::state_look(&binding.action, index) else { return look };
-        let set = self.plugin_looks.get(id);
-        let image = set.and_then(|p| p.image.clone()).or(look.image.clone()).or(image);
-        // a plugin that draws its own title (ShowTitle false) has the label in its picture already
-        let label = if sdplugins::shows_title(&binding.action) { set.and_then(|p| p.title.clone()).or(look.label.clone()).or(title) } else { None };
-        let fit = if image.is_some() && look.fit.is_none() { Some("fill".to_string()) } else { look.fit.clone() };
-        Look { image, label, fit, icon: None, ..look }
     }
 
     /// Tell plugins which of their controls are on screen now.
@@ -4832,10 +4842,7 @@ impl Worker {
             // the dial gallery draws the look it is on, as that look's own setting would
             let shown = stored.filter(|b| b.action == gallery::ACTION).map(|_| gallery::at(self.gallery));
             let binding = shown.as_ref().map(|f| &f.binding).or(stored);
-            let mut look = self.plugin_look(&dial_ctl, binding.map(|b| b.look_for(self.state_of(b))).unwrap_or_default());
-            if let Some(b) = binding {
-                look = self.sd_look(&dial_ctl, b, look);
-            }
+            let mut look = binding.map(|b| self.plugin_look(&dial_ctl, b, b.look_for(self.state_of(b)))).unwrap_or_default();
             // a Stream Deck encoder action on the dial: its feedback stays on the screen
             let sd_face = binding.filter(|b| plugins::is_plugin_action(&b.action)).and_then(|_| self.plugin_looks.get(dial_ctl.as_str())).and_then(|p| p.feedback.clone());
             // the plugin's own picture, or the dial's look set to the cover of what plays now

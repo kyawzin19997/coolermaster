@@ -101,16 +101,18 @@ for (const [label, viewport] of [['wide', { width: 1440, height: 900 }], ['half'
     await page.getByRole('menuitem', { name: label, exact: true }).click();
   };
   await step(page, `${label}: Getting Started keeps the deck and Actions in place`, async () => {
+    if (!await page.getByText('Drag an action from the panel on the right onto a key.', { exact: true }).isVisible()) return 'missing the first step';
     await page.locator('.workspace-guide').getByRole('button', { name: 'Next', exact: true }).click();
-    return await page.getByText('Search Actions on the right', { exact: false }).isVisible() && await layoutStays();
+    return await page.getByText('Click a key to edit it.', { exact: false }).isVisible() && await layoutStays();
   });
-  await step(page, `${label}: the module guide explains each control without moving the deck`, async () => {
-    await deckMenu('Your Deck, Your Modules');
-    await page.getByRole('combobox', { name: 'Module', exact: true }).selectOption('3');
-    return await page.getByText('Use faders for levels', { exact: false }).isVisible() && await layoutStays();
+  await step(page, `${label}: Deck tools offers layout editing without the separate module guide`, async () => {
+    await page.getByRole('button', { name: 'Deck tools', exact: true }).click();
+    const tools = page.getByRole('menu', { name: 'Deck tools', exact: true });
+    const compact = !(await tools.getByRole('menuitem', { name: 'Your Deck, Your Modules', exact: true }).count());
+    await tools.getByRole('menuitem', { name: 'Edit layout', exact: true }).click();
+    return compact && await layoutStays();
   });
-  await step(page, `${label}: Edit layout returns to the module guide with Actions still visible`, async () => {
-    await page.locator('.workspace-guide').getByRole('button', { name: 'Edit layout', exact: true }).click();
+  await step(page, `${label}: Edit layout stays beside the deck and Actions`, async () => {
     if (!await actionPane.isVisible()) return 'Actions disappeared';
     await page.locator('.layout-tool').click();
     return await visible(page, '.workspace-guide') && await layoutStays();
@@ -140,10 +142,16 @@ for (const [label, viewport] of [['wide', { width: 1440, height: 900 }], ['half'
     await page.evaluate(() => window.demoObsStudio(false));
     return !(await target.isVisible()) && await layoutStays();
   });
-  await step(page, `${label}: Switch profile is immediately available to drag`, async () => {
-    const row = actionPane.getByRole('button', { name: 'Switch profile', exact: true });
-    await row.dragTo(page.locator('.stable-workspace .dk-ctl[data-kind="keys"]').nth(12));
-    await page.locator('#action-name[data-action="core.profile"]').waitFor();
+  await step(page, `${label}: Profile Switcher assigns and opens a list`, async () => {
+    const row = actionPane.getByRole('button', { name: 'Profile Switcher', exact: true });
+    const key = page.locator('.stable-workspace .dk-ctl[data-kind="keys"]').nth(12);
+    await row.dragTo(key);
+    await page.locator('#action-name[data-action="core.profilePicker"]').waitFor();
+    await key.click({ button: 'right' });
+    await page.getByRole('menuitem', { name: 'Profile Switcher', exact: true }).click();
+    const dialog = page.getByRole('dialog', { name: 'Profile Switcher', exact: true });
+    await dialog.getByRole('button', { name: 'Everyday desk', exact: true }).waitFor();
+    await dialog.getByRole('button', { name: 'Close', exact: true }).click();
     return await layoutStays();
   });
   await step(page, `${label}: repeat drops keep the same action library and search`, async () => {
@@ -241,12 +249,15 @@ for (const [label, viewport] of [['wide', { width: 1440, height: 900 }], ['half'
     await apply.waitFor({ state: 'visible' });
     if (!await apply.isDisabled()) return 'the screensaver was not saved';
     const selected = await picker.inputValue();
+    await display.getByRole('button', { name: 'Next preview', exact: true }).click();
+    if (await picker.inputValue() === selected || await apply.isDisabled()) return 'Next did not preview another screensaver';
+    await picker.selectOption(selected);
     await display.getByText('Advanced settings', { exact: true }).click();
     const scope = display.getByRole('combobox', { name: 'Apply to', exact: true });
     await scope.selectOption('own');
     const ready = selected === 'aurora' && await display.getByRole('button', { name: 'Add screensaver' }).isVisible();
-    await display.getByRole('button', { name: 'Close' }).click();
-    return ready && await layoutStays();
+    await page.locator('.stable-workspace .dk-ctl[data-kind="keys"]').first().click();
+    return ready && !await display.isVisible() && await page.getByRole('complementary', { name: 'Key settings', exact: true }).isVisible() && await layoutStays();
   });
   await step(page, `${label}: Profiles and Get started use the same dialog size`, async () => {
     await profileTab('Profiles');
@@ -491,7 +502,7 @@ for (const [label, viewport] of [['wide', { width: 1440, height: 900 }], ['half'
     await profileTab('Get started');
     await profiles.getByRole('button', { name: 'Edit layout', exact: true }).click();
     const layout = page.getByRole('complementary', { name: 'Edit layout', exact: true });
-    await layout.getByText('Click one of its controls', { exact: false }).waitFor();
+    await layout.getByText('Select a module to configure it before connecting it.', { exact: true }).waitFor();
     if (!await layoutStays()) return 'Edit layout moved the deck before any changes';
     const faders = layout.getByRole('checkbox', { name: '5-fader module', exact: true });
     const detached = page.locator('.dk-shelf-item.is-faders');
