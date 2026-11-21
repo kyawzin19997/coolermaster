@@ -1,84 +1,77 @@
-// The README's and the site's screenshots, from the browser demo (sample deck and profiles, nothing
-// of the owner's): the main window with a key selected, the tour, Settings. 1440x900 at 1.5x, the
-// size the README had (2160x1350). Needs the Vite server (cd app && pnpm dev).
-//   node scripts/ui/readme-shots.mjs [out-dir]     # default docs/images
-import { chromium } from 'playwright-core';
-import fs from 'node:fs';
-import os from 'node:os';
-import path from 'node:path';
+// Capture the README screenshots from the browser demo with the sample deck and profiles.
+// Run against the Vite preview or development server.
+//   node scripts/ui/readme-shots.mjs [output-directory]
+import { mkdirSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { chromium } from "playwright-core";
 
-const root = path.resolve(path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1')), '..', '..');
-const out = process.argv[2] || path.join(root, 'docs', 'images');
-const base = process.env.MASTERDECK_URL || 'http://localhost:1460/';
+const target = process.argv[2] ?? fileURLToPath(new URL("../../docs/images/", import.meta.url));
+const url = process.env.MASTERDECK_URL ?? "http://localhost:1460/";
+mkdirSync(target, { recursive: true });
 
-function findChromium() {
-  if (process.env.CHROMIUM) return process.env.CHROMIUM;
-  const cache = process.platform === 'win32' ? path.join(os.homedir(), 'AppData', 'Local', 'ms-playwright') : process.platform === 'darwin' ? path.join(os.homedir(), 'Library', 'Caches', 'ms-playwright') : path.join(os.homedir(), '.cache', 'ms-playwright');
-  if (!fs.existsSync(cache)) return undefined;
-  for (const dir of fs.readdirSync(cache).filter((d) => d.startsWith('chromium')).sort().reverse()) {
-    const stack = [path.join(cache, dir)];
-    while (stack.length) {
-      const d = stack.pop();
-      for (const e of fs.readdirSync(d, { withFileTypes: true })) {
-        const p = path.join(d, e.name);
-        if (e.isDirectory() && !p.includes('.app/Contents/Frameworks')) stack.push(p);
-        else if (/^(chrome-headless-shell|chrome|Chromium|headless_shell)(\.exe)?$/.test(e.name)) return p;
-      }
-    }
-  }
-  return undefined;
+const browser = await chromium.launch({ executablePath: process.env.CHROMIUM });
+try {
+  const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+  const open = async (query = "?demo&tests=off") => {
+    await page.goto(url + query);
+    await page.locator(".dk-stage").waitFor();
+    await page.locator(".action-sidebar .library-item").first().waitFor();
+  };
+  const shot = async (name, selector = page) => {
+    await page.waitForTimeout(300);
+    await selector.screenshot({ path: path.join(target, `masterdeck-${name}.png`), animations: "disabled" });
+  };
+  const tools = async (name) => {
+    await page.getByRole("button", { name: "Deck tools", exact: true }).click();
+    await page.getByRole("menuitem", { name, exact: true }).click();
+  };
+  await open("?demo&tests=off&select=keys.0");
+  await page.locator(".chooser-group-head").getByText("OBS", { exact: true }).click();
+  await shot("workspace");
+  const settings = page.getByRole("complementary", { name: "Key settings" });
+  await settings.getByRole("button", { name: "Appearance", exact: true }).click();
+  await settings.getByRole("button", { name: "Full editor" }).click();
+  const editor = page.getByRole("region", { name: "Key editor" });
+  await editor.getByText("Choose icon or image", { exact: true }).click();
+  await editor.getByRole("button", { name: "Use action icon", exact: true }).click();
+  await editor.getByRole("button", { name: "Upload image", exact: true }).waitFor();
+  await shot("key-editor", editor);
+  await editor.getByRole("button", { name: "Done", exact: true }).click();
+  await tools("Screensaver");
+  const saver = page.getByRole("complementary", { name: "Lights and screens", exact: true });
+  await saver.getByRole("combobox", { name: "Screensaver", exact: true }).selectOption("aurora");
+  await saver.locator(".saver-preview img").waitFor();
+  await shot("screensaver");
+  await page.locator(".stable-workspace .dk-ctl[data-kind=keys]").first().click();
+  await tools("Edit layout");
+  await shot("edit-layout");
+  await page.locator(".layout-tool").click();
+  const profileKey = page.locator(".stable-workspace .dk-ctl[data-kind=keys]").nth(12);
+  await page.locator(".action-sidebar").getByRole("button", { name: "Profile Switcher", exact: true }).dragTo(profileKey);
+  await page.locator('#action-name[data-action="core.profilePicker"]').waitFor();
+  await profileKey.click({ button: "right" });
+  await page.getByRole("menuitem", { name: "Profile Switcher", exact: true }).click();
+  const picker = page.getByRole("dialog", { name: "Profile Switcher", exact: true });
+  await shot("profile-switcher", picker);
+  await picker.getByRole("button", { name: "Close", exact: true }).click();
+  await page.locator(".topbar").getByRole("button", { name: "Profiles", exact: true }).click();
+  const profiles = page.getByRole("dialog", { name: "Profiles", exact: true });
+  await shot("profile-library", profiles);
+  const share = profiles.getByRole("button", { name: "Share OBS streaming", exact: true });
+  await share.click();
+  await shot("profile-share", page.getByRole("dialog", { name: "Share OBS streaming", exact: true }));
+  await page.keyboard.press("Escape");
+  await profiles.getByRole("button", { name: "Import", exact: true }).click();
+  await shot("profile-import", page.getByRole("dialog", { name: "Import a profile", exact: true }));
+  await page.goto(url + "?demo&tests=off&panel=plugins");
+  await page.getByRole("main", { name: "Plugins", exact: true }).waitFor();
+  await shot("installed-plugins");
+  await open();
+  await page.locator(".topbar").getByRole("button", { name: "Settings", exact: true }).click();
+  await page.getByRole("navigation").getByRole("button", { name: "Connections", exact: true }).click();
+  await page.locator(".svc-list").waitFor();
+  await shot("connections");
+} finally {
+  await browser.close();
 }
-
-const browser = await chromium.launch({ executablePath: findChromium() });
-const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1.5, colorScheme: 'dark' });
-page.setDefaultTimeout(15000);
-const fresh = async () => {
-  await page.goto(`${base}?demo&tests=off`);
-  await page.locator('.dk-ctl').first().waitFor();
-  await page.waitForTimeout(1200);
-};
-const shot = (name) => page.screenshot({ path: path.join(out, `${name}.png`) });
-
-// the main window: a key selected, "What should it do?" with its ideas
-await fresh();
-await page.locator('.dk-ctl[aria-label^="Key 4"]').first().click({ force: true });
-await page.waitForTimeout(800);
-await shot('hubdeck-main');
-
-// Build a personalized profile
-await fresh();
-await page.waitForTimeout(500);
-await shot('hubdeck-start');
-// the tour itself: Show me on my deck, then its first question answered
-await page.getByText('Show me on my deck').click();
-await page.waitForTimeout(1000);
-await shot('hubdeck-tour-question');
-await page.getByRole('button', { name: 'Make my deck' }).click();
-await page.waitForTimeout(2500);
-await shot('hubdeck-tour');
-
-// Settings
-await fresh();
-await page.getByRole('button', { name: 'Settings' }).click();
-await page.waitForTimeout(500);
-// the plugin catalog says more than General
-await page.getByRole('button', { name: 'Plugins' }).first().click();
-await page.waitForTimeout(1500);
-await shot('hubdeck-settings');
-
-// the Plugins tab with the real catalog (logs/plugins-catalog.json, made by
-// scripts/plugins/catalog.mjs), tried and left-out plugins as the app has them now; the fields the
-// app fills in when the file leaves them out (sdcatalog.rs Entry)
-const catalogFile = path.join(root, 'logs', 'plugins-catalog.json');
-if (fs.existsSync(catalogFile)) {
-  const shared = JSON.parse(fs.readFileSync(path.join(root, 'app', 'src-tauri', 'src', 'engine', 'sdcatalog.json'), 'utf8'));
-  const plugins = JSON.parse(fs.readFileSync(catalogFile, 'utf8')).plugins.filter((p) => !shared.wontRun?.[p.id]).map((p) => ({ author: '', description: '', icon: '', aiAssisted: false, elgato: null, popular: null, stars: null, updated: null, category: null, dial: false, ...p, systems: p.systems ?? [], tried: shared.tried[p.id] ?? null }));
-  await page.addInitScript((list) => (window.__DEMO_CATALOG__ = list), plugins);
-  await fresh();
-  await page.getByRole('button', { name: 'Plugins' }).first().click();
-  await page.waitForTimeout(3000);
-  await shot('hubdeck-plugins');
-} else console.log('no logs/plugins-catalog.json: the Plugins tab is not shot');
-
-await browser.close();
-console.log(`screenshots in ${out}`);

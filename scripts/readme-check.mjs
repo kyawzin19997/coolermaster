@@ -1,7 +1,5 @@
 #!/usr/bin/env node
-// Is the public README ready? (owner's pick 2a, 2026-10-16: "Na pewno readme jest dopieszczone?",
-// after my "ready" a second look still found a dead link and an inside word.) Checks the exported
-// README (../hubdeck, what the public sees; run scripts/export-public.sh first):
+// Validate the published README's links, GitHub rendering, and screenshots.
 //   1. every relative link, picture and #anchor exists there
 //   2. every web link answers (Reddit blocks tools: 403 is fine; release downloads may 404 before
 //      a release is published: a warning)
@@ -9,17 +7,16 @@
 //   4. no word the window no longer uses (STALE)
 //   5. the window's screenshots are not older than the last change of the window's components
 //
-//   node scripts/readme-check.mjs [path to the exported repo, default ../hubdeck]
+//   node scripts/readme-check.mjs [repo path]
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
-const root = path.resolve(path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1")), "..");
-const repo = path.resolve(process.argv[2] || path.join(root, "..", "hubdeck"));
+const repo = path.resolve(process.argv[2] ?? fileURLToPath(new URL("../", import.meta.url)));
 const file = path.join(repo, "README.md");
 // names the window dropped (sessions 14-15): keep this list as names change
-const STALE = [/\bActions tab\b/i, /\bNew deck\b/, /\binspector\b/i, /\baction library\b/i, /Settings > Help and about fills/i, /\bkey editor\b/i];
-const SCREENSHOTS = ["docs/images/hubdeck-main.png", "docs/images/hubdeck-tour.png", "docs/images/hubdeck-settings.png"];
+const STALE = [/\bActions tab\b/i, /\bNew deck\b/, /\binspector\b/i, /\bGetting Started\b/i, /\bSuper Mode\b/i];
 
 const fails = [];
 const warns = [];
@@ -29,6 +26,7 @@ const md = fs.readFileSync(file, "utf8");
 const slug = (h) => h.toLowerCase().replace(/[^a-z0-9 -]/g, "").trim().replace(/ /g, "-");
 const anchors = new Set([...md.matchAll(/^#+ (.+)$/gm)].map((m) => slug(m[1])));
 const links = [...md.matchAll(/\]\(([^)\s]+)\)|(?:src|href)="([^"]+)"/g)].map((m) => m[1] || m[2]);
+const screenshots = links.filter((link) => /^docs\/images\/masterdeck-.*\.png$/.test(link));
 const web = new Set();
 for (const l of links) {
   if (/^https?:/.test(l)) web.add(l);
@@ -53,7 +51,7 @@ for (const u of web) {
 
 // 3. GitHub's render
 try {
-  const html = execFileSync("gh", ["api", "-X", "POST", "markdown", "-f", "mode=gfm", "-f", "context=Przemotar/hubdeck", "-F", `text=@${file}`], { encoding: "utf8", maxBuffer: 1 << 26 });
+  const html = execFileSync("gh", ["api", "-X", "POST", "markdown", "-f", "mode=gfm", "-f", "context=kyawzin19997/coolermaster", "-F", `text=@${file}`], { encoding: "utf8", maxBuffer: 1 << 26 });
   const raw = (html.match(/\*\*[A-Za-z]/g) || []).length + (html.match(/\|\s*---/g) || []).length;
   if (raw) fails.push(`${raw} bits of markdown left raw in GitHub's render`);
 } catch (e) {
@@ -69,13 +67,13 @@ for (const re of STALE) {
 // 5. screenshots against the window's last change
 const lastDate = (args) => {
   try {
-    return Number(execFileSync("git", ["-C", root, "log", "-1", "--format=%ct", "--", ...args], { encoding: "utf8" }).trim()) || 0;
+    return Number(execFileSync("git", ["-C", repo, "log", "-1", "--format=%ct", "--", ...args], { encoding: "utf8" }).trim()) || 0;
   } catch {
     return 0;
   }
 };
 const windowChanged = lastDate(["app/src/components", "app/src/App.tsx", "app/src/styles.css"]);
-for (const shot of SCREENSHOTS) {
+for (const shot of screenshots) {
   const at = lastDate([shot]);
   if (at && windowChanged - at > 3 * 86400) warns.push(`${shot} is ${Math.round((windowChanged - at) / 86400)} days older than the window: node scripts/ui/readme-shots.mjs`);
 }

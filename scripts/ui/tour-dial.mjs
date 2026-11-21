@@ -26,7 +26,8 @@ for (const [label, viewport, scheme] of [['half-dark', { width: 960, height: 760
   const page = await browser.newPage({ viewport, colorScheme: scheme });
   await page.goto(`${base}?demo`);
   await page.waitForSelector('.deck-area');
-  await page.getByRole('button', { name: /Show me on my deck/ }).click();
+  await page.locator('.topbar').getByRole('button', { name: 'Profiles', exact: true }).click();
+  await page.getByRole('dialog', { name: 'Profiles' }).getByRole('button', { name: 'Build a personalized profile' }).click();
   await page.getByRole('button', { name: 'Make my deck' }).click();
   await page.waitForTimeout(500);
   for (let i = 0; i < 12 && !(await page.locator('.tour-faces').isVisible()); i++) {
