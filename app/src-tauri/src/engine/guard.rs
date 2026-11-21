@@ -12,27 +12,16 @@ const REFUSED: [(&str, &str); 2] = [("core.run", "running commands"), ("ha.servi
 /// Actions that destroy or clear something on their own.
 const DESTRUCTIVE_ACTIONS: [&str; 1] = ["twitch.clearChat"];
 
-/// The user let the assistant reach further (Settings: more power): then it may also put commands
-/// on keys (`core.run`, for the user's own tools); set in the app and in the assistant's MCP server
-/// (`MASTERDECK_ASSISTANT_POWER`).
-static POWER: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
-
-pub fn set_power(on: bool) {
-    POWER.store(on, std::sync::atomic::Ordering::Relaxed);
-}
-
 /// Why the assistant may not put this action and params on `control` (None: fine). `apps` are
 /// the profile's programs (their shortcut packs say which shortcuts close or delete).
 fn refusal(control: &str, action: &str, params: &Value, apps: &[String], depth: usize) -> Option<String> {
-    let power = POWER.load(std::sync::atomic::Ordering::Relaxed);
-    if let Some((_, what)) = REFUSED.iter().find(|(a, _)| *a == action && !(power && *a == "core.run")) {
-        return Some(format!("{control}: {action} is not for the assistant ({what}); leave it to the user"));
+    if let Some((_, what)) = REFUSED.iter().find(|(a, _)| *a == action) {
+        return Some(format!("{control}: {action} ({what}) must be configured in the editor"));
     }
     if action == "core.launch"
-        && !power
         && let Some(why) = risky_target(super::actions::param_str(params, "target"))
     {
-        return Some(format!("{control}: opening {why} is not for the assistant; leave it to the user"));
+        return Some(format!("{control}: opening {why} must be configured in the editor"));
     }
     let on_hold = control.ends_with(":hold");
     if DESTRUCTIVE_ACTIONS.contains(&action) && !on_hold {
@@ -92,6 +81,7 @@ pub fn check(control: &str, b: &Binding, apps: &[String]) -> Result<(), String> 
 }
 
 /// The same for a binding as JSON (`{action, params}`), as tools and sketches send it.
+#[cfg(test)]
 pub fn check_json(control: &str, b: &Value, apps: &[String]) -> Result<(), String> {
     let action = b.get("action").and_then(Value::as_str).unwrap_or_default();
     refusal(control, action, b.get("params").unwrap_or(&Value::Null), apps, 0).map_or(Ok(()), Err)

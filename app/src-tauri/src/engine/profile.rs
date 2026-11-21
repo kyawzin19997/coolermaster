@@ -61,6 +61,9 @@ pub struct Look {
     /// A key icon's size: `small`, `large`; None = as the label leaves room for.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub icon_size: Option<String>,
+    /// Icon size as a percentage of its usual size (50..=150), overriding legacy icon_size.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub icon_scale: Option<u8>,
     /// The icon editor (owner's "1 a", 2026-10-25): a `gradient` key's second color, `#rrggbb`;
     /// None = a lighter and darker shade of `bg`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -759,17 +762,6 @@ pub struct Settings {
     /// owner's pick 1a, 2026-10-14); they switch in with their app only once switched on.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub ready: Vec<String>,
-    /// The deck assistant's model, as a Claude Code alias (`opus`, `sonnet`...); None = what
-    /// Claude Code uses by default (an alias follows its newest model after updates).
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub assistant_model: Option<String>,
-    /// The deck assistant's effort (`low` .. `max`); None = Claude Code's own setting.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub assistant_effort: Option<String>,
-    /// The deck assistant may read files, search, use the web and run commands, each command and
-    /// web fetch asked in the window first (owner, 2026-10-12: "dajmy mu więcej mocy"); off by default.
-    #[serde(default, skip_serializing_if = "is_false")]
-    pub assistant_power: bool,
     /// The user's own apps MasterDeck listens to (Settings > Connections > Your apps).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub apps: Vec<super::states::AppSource>,
@@ -881,9 +873,7 @@ impl Default for Settings {
             drafts: Vec::new(),
             trying: None,
             ready: Vec::new(),
-            assistant_model: None,
-            assistant_effort: None,
-            assistant_power: false,
+
             apps: Vec::new(),
             count_presses: false,
             app_icons: icon_mode(),

@@ -36,6 +36,7 @@ export interface Look {
   labelSize?: number;
   /** A key icon's size; absent = as the label leaves room for. */
   iconSize?: "small" | "large";
+  iconScale?: number;
   /** A gradient key's second color; absent = shades of `bg`. */
   bg2?: string;
   /** A gradient's direction in degrees as in CSS (0 toward the top); absent = 180. */
@@ -784,98 +785,12 @@ export interface ProfileSummary {
   apps: string[];
   /** Shown as a tab in the top bar (absent in old states: profiles without apps are). */
   inBar?: boolean;
-  /** A draft of the deck assistant: not in the bar, not switched to, until picked. */
+  /** A temporary profile, available after the user keeps it. */
   draft?: boolean;
   /** Made at once for an installed app ("Ready for your apps"). */
   ready?: boolean;
   /** Switches in when its app comes to the front (off for a ready profile until switched on). */
   switchIn?: boolean;
-}
-
-/** What the deck assistant's scan found and the text its first message sends. */
-export interface AssistantScan {
-  used: [string, number, number][];
-  /** Since when the time in front is counted (local, `2026-10-12 16:30`). */
-  since: string;
-  /** Installed apps MasterDeck has a shortcut pack or a preset for. */
-  known: string[];
-  modules: string[];
-  /** Owned but not attached now (the assistant builds for `modules`). */
-  detached: string[];
-  profiles: string[];
-  /** What goes with the first message: the apps used most, the deck, the taste notes. */
-  text: string;
-  /** The same without the app list ("Send without the app list"). */
-  deckText: string;
-}
-
-/** What the deck assistant runs on (read on this computer, nothing sent). */
-export interface AssistantInfo {
-  cli: string | null;
-  version: string | null;
-  loggedIn: boolean;
-  authMethod: string | null;
-  plan: string | null;
-  email: string | null;
-  model: string | null;
-  session: string | null;
-  /** Tokens in the conversation's context and the model's window (0 before the first answer). */
-  contextUsed: number;
-  contextWindow: number;
-  folder: string;
-  command: string;
-  rules: string;
-  /** Picked in MasterDeck; null = Claude Code's default. */
-  chosenModel: string | null;
-  chosenEffort: string | null;
-  /** Claude Code's own defaults from its settings. */
-  defaultModel: string | null;
-  defaultEffort: string | null;
-  /** More power: Claude Code's own tools, each command and web fetch asked in the window. */
-  power: boolean;
-}
-
-/** What a running answer of the deck assistant reports. */
-/** An idea the assistant proposes, shown as a card to pick. */
-export interface Idea {
-  title: string;
-  app: string;
-  pitch: string;
-  extras: string[];
-  /** A few sample keys to draw on the card. */
-  keys: { label: string; icon: string }[];
-  /** The whole deck sketched; MasterDeck makes a draft of it. */
-  deck?: unknown;
-}
-
-export type AssistantEvent =
-  | { kind: "context"; used: number; window: number }
-  | { kind: "model"; model: string }
-  | { kind: "text"; text: string; choices: string[]; ideas: Idea[] }
-  /** A piece of the message being written; the `text` event replaces it. */
-  | { kind: "delta"; text: string }
-  /** An idea (propose_idea, or a quick sketch MasterDeck made itself) with its draft. */
-  | { kind: "idea"; idea: Idea; draft: string | null; dropped: string[] }
-  /** Answers as buttons; with `multiple` the user ticks several (or all) and sends them together. */
-  | { kind: "choices"; choices: string[]; multiple: boolean }
-  | { kind: "remembered"; text: string }
-  /** More power: Claude Code wants to run a command, fetch a page...; the user answers. */
-  | { kind: "permission"; id: number; tool: string; detail: string }
-  | { kind: "tool"; name: string }
-  | { kind: "done" }
-  | { kind: "error"; message: string };
-
-/** A suggestion MasterDeck made on its own (an app without a deck, a new kind of module). */
-export interface Nudge {
-  subject: string;
-  kind: "app" | "module" | "unused";
-  /** The app's program, the module kind, or the control (`knobs.2`). */
-  exe: string;
-  name: string;
-  hours: number;
-  /** `unused`: the deck's name and the day it was kept. */
-  deck?: string;
-  since?: string;
 }
 
 /** An app of the user's that MasterDeck listens to. */
@@ -898,12 +813,6 @@ export interface AppsState {
   apps: AppSource[];
   /** By name, like `launcher.1`. */
   states: Record<string, AppItem>;
-}
-
-/** What the assistant remembers about the user's taste (`taste.json`, on this computer). */
-export interface Taste {
-  notes: { text: string; by: "assistant" | "user"; at: string }[];
-  history: { title: string; app: string; outcome: "kept" | "thrown"; at: string }[];
 }
 
 /** An app to link to a profile: open now or seen in front recently, with its icon. */
@@ -945,7 +854,6 @@ export interface EngineState {
   /** A draft that was on the deck for a try when MasterDeck stopped: the window offers it back. */
   interruptedTry?: string | null;
   /** Comparing drafts on the deck: [which one, of how many]. */
-  comparing?: [number, number] | null;
   /** Timers that ran out, wherever they are (another page or profile); the window can stop them. */
   ringing?: Ringing[];
   /** A call is on and the deck stays on its profile. */
@@ -1421,9 +1329,6 @@ export const api = {
   languageTemplate: (template: unknown) => invoke<string>("language_template", { template }),
   languagesOpenFolder: () => invoke("languages_open_folder"),
   dialGallery: () => invoke<DialFace[]>("dial_gallery"),
-  aiPrompt: (name: string, exe: string, target: string, picture: string | null, language: string) => invoke<string>("ai_prompt", { name, exe, target, picture, language }),
-  /** Runs Claude Code with MasterDeck's tools only; rejects with "no-cli" when it is not installed. */
-  aiBuild: (prompt: string) => invoke<string>("ai_build", { prompt }),
   suggestions: (profile: string, control: string) => invoke<Binding[]>("suggestions", { profile, control }),
   profileFill: (profile: string, page: string | null) => invoke<number>("profile_fill", { profile, page }),
   autoSet: (on: boolean) => invoke("auto_set", { on }),
@@ -1500,7 +1405,6 @@ export const api = {
   sdOpened: () => invoke<string[]>("sd_opened"),
   /** The tour: what MasterDeck suggests the deck is mostly for, from what it sees. */
   tourSuggest: (language: string) => invoke<TourSuggestion>("tour_suggest", { language }),
-  tourDone: () => invoke<boolean>("tour_done"),
   /** Make the deck for this focus and show it on the deck (a draft). */
   tourStart: (focus: TourFocus, language: string) => invoke<TourView>("tour_start", { focus, language }),
   /** Keep or leave out a part, or pick its look; the deck follows. */
@@ -1514,41 +1418,13 @@ export const api = {
   tourExit: () => invoke("tour_exit"),
   /** A Stream Deck action's settings page for a control, or null. */
   sdInspector: (control: string, action: string, settings: unknown) => invoke<string | null>("sd_inspector", { control, action, settings }),
-  assistantScan: () => invoke<AssistantScan>("assistant_scan"),
-  /** What the assistant runs on: Claude Code, the account and plan, the session, how it starts. */
-  assistantInfo: (language: string) => invoke<AssistantInfo>("assistant_info", { language }),
-  assistantSet: (model: string | null, effort: string | null) => invoke("assistant_set", { model, effort }),
-  assistantSend: (message: string, scan: string | null, language: string) => invoke("assistant_send", { message, scan, language }),
-  assistantStop: () => invoke("assistant_stop"),
-  assistantReset: () => invoke("assistant_reset"),
-  /** The personal tour as a draft, made at once; its id. */
-  assistantTour: (language: string) => invoke<string>("assistant_tour", { language }),
-  tasteGet: () => invoke<Taste>("taste_get"),
   /** The user's own apps MasterDeck listens to, and what they report now (docs/APP-CONTRACT.md). */
   appsState: () => invoke<AppsState>("apps_state"),
   appConnect: (url: string) => invoke<AppSource>("app_connect", { url }),
   appRemove: (id: string) => invoke("app_remove", { id }),
-  appContractPrompt: () => invoke<string>("app_contract_prompt"),
-  assistantPermit: (id: number, choice: "once" | "talk" | "deny") => invoke("assistant_permit", { id, choice }),
-  assistantPowerSet: (on: boolean) => invoke("assistant_power_set", { on }),
-  nudgeGet: () => invoke<Nudge | null>("nudge_get"),
-  nudgeAct: (subject: string, action: "later" | "never" | "off" | "done") => invoke("nudge_act", { subject, action }),
-  nudgeEnable: (on: boolean) => invoke("nudge_enable", { on }),
-  nudgeEnabled: () => invoke<boolean>("nudge_enabled"),
-  /** One app's quick sketch as a draft (a suggestion's "Show me a sketch"); its id. */
-  assistantSketchApp: (exe: string, name: string, language: string) => invoke<string>("assistant_sketch_app", { exe, name, language }),
-  tasteSet: (notes: string[]) => invoke<Taste>("taste_set", { notes }),
-  tasteForget: () => invoke<Taste>("taste_forget"),
   tryProfile: (id: string | null) => invoke("profile_try", { id }),
   /** Icons of linked programs also when they were not in front lately (game folders, covers). */
   appIcons: (exes: string[]) => invoke<Record<string, string | null>>("app_icons", { exes }),
-  /** Drafts from the assistant's sketches: (title, draft id) of each made. */
-  sketchesMake: (ideas: Idea[]) => invoke<[string, string][]>("sketches_make", { ideas }),
-  /** Compare drafts on the deck (the dial flips them); null stops. */
-  /** Put drafts on the deck to compare from the one at `at` (the dial flips them); null stops. */
-  compareDrafts: (ids: string[] | null, at = 0) => invoke("compare_drafts", { ids, at }),
-  /** "Use this" (keep: on the deck as home; a new version of one of the user's decks replaces
-   * it, `replaced` = its name) or throw the draft away. */
   /** "Switch in with the app" of a ready profile. */
   profileSwitchIn: (id: string, on: boolean) => invoke("profile_switch_in", { id, on }),
   settleDraft: (id: string, keep: boolean) => invoke<{ id: string; replaced: string | null } | null>("draft_settle", { id, keep }),

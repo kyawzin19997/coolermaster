@@ -248,17 +248,22 @@ fn limits() -> image::Limits {
     limits
 }
 
+fn fitted_frame(src: &DynamicImage, width: u32, height: u32) -> RgbImage {
+    let image = src.resize(width, height, image::imageops::FilterType::Triangle).into_rgba8();
+    let mut panel = RgbImage::new(width, height);
+    let left = (width - image.width()) / 2;
+    let top = (height - image.height()) / 2;
+    for (x, y, pixel) in image.enumerate_pixels() {
+        let [r, g, b, a] = pixel.0;
+        panel.put_pixel(left + x, top + y, image::Rgb([r, g, b].map(|c| (u16::from(c) * u16::from(a) / 255) as u8)));
+    }
+    panel
+}
+
 fn encode_frame(src: RgbaImage, directory: &Path, frame: usize) -> Result<usize, String> {
     let src = DynamicImage::ImageRgba8(src);
-    let fit = |w, h| {
-        let rgba = src.resize_to_fill(w, h, image::imageops::FilterType::Triangle).into_rgba8();
-        RgbImage::from_fn(w, h, |x, y| {
-            let [r, g, b, a] = rgba.get_pixel(x, y).0;
-            image::Rgb([r, g, b].map(|c| (u16::from(c) * u16::from(a) / 255) as u8))
-        })
-    };
-    let landscape = fit(PANEL_W, PANEL_H);
-    let portrait = fit(PANEL_H, PANEL_W);
+    let landscape = fitted_frame(&src, PANEL_W, PANEL_H);
+    let portrait = fitted_frame(&src, PANEL_H, PANEL_W);
     let pictures = [landscape.clone(), image::imageops::rotate90(&portrait), image::imageops::rotate180(&landscape), image::imageops::rotate270(&portrait)];
     let mut size = 0;
     for (rotation, picture) in pictures.iter().enumerate() {
@@ -526,6 +531,19 @@ pub fn clock() -> f32 {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn fitted_frames_keep_all_edges_in_portrait_and_landscape() {
+        for (width, height, panel_width, panel_height, x, y) in [(4, 2, 4, 6, 0, 2), (2, 4, 6, 4, 2, 0)] {
+            let src = DynamicImage::ImageRgba8(RgbaImage::from_fn(width, height, |x, y| image::Rgba([30 * x as u8 + 20, 30 * y as u8 + 20, 70, 255])));
+            let fitted = fitted_frame(&src, panel_width, panel_height);
+            assert_eq!(fitted.dimensions(), (panel_width, panel_height));
+            assert_eq!(*fitted.get_pixel(0, 0), image::Rgb([0, 0, 0]));
+            assert_eq!(*fitted.get_pixel(panel_width - 1, panel_height - 1), image::Rgb([0, 0, 0]));
+            assert_eq!(*fitted.get_pixel(x, y), image::Rgb([20, 20, 70]));
+            assert_eq!(*fitted.get_pixel(x + width - 1, y + height - 1), image::Rgb([30 * (width - 1) as u8 + 20, 30 * (height - 1) as u8 + 20, 70]));
+        }
+    }
 
     #[test]
     fn imports_and_loops_an_animated_image() {

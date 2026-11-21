@@ -328,7 +328,7 @@ pub fn discover() -> Profile {
             key("obs.stream", json!({}), ("OBS live", "OBS na żywo"), "radio", hue::MIC, "obs"),
             key("spotify.like", json!({}), ("Like song", "Polub"), "heart", hue::MEDIA, "spotify"),
             key("ha.toggle", json!({"entity": ""}), ("Desk light", "Lampka"), "lightbulb", hue::TOOL, "home-assistant"),
-            key(super::actions::AGENTS, json!({}), ("Claude Code", "Claude Code"), "bot", hue::SHOW, "claude"),
+            Binding { action: String::new(), params: json!({}), look: Look::default(), accel: false, look_on: None, swap_turns: false },
             key("core.launch", json!({"target": "steam://open/games"}), ("Steam", "Steam"), "gamepad-2", hue::GAME, "open-game"),
             Binding { action: String::new(), params: json!({}), look: Look::default(), accel: false, look_on: None, swap_turns: false },
             Binding { action: String::new(), params: json!({}), look: Look::default(), accel: false, look_on: None, swap_turns: false },

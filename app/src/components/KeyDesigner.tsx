@@ -11,10 +11,17 @@ const LABEL_SIZES = [8, 10, 12, 14, 16, 20, 24];
 const TABS = ["templates", "background", "icon", "label", "extras", "when"] as const;
 type Tab = (typeof TABS)[number];
 
-/** Another key of the page the look can go to ("Apply to other keys"). */
-export interface OtherKey {
-  id: string;
-  name: string;
+export function IconSize({ look, onChange }: { look: Look; onChange: (look: Look) => void }) {
+  const size = Math.max(50, Math.min(150, look.iconScale ?? (look.iconSize === "small" ? 70 : look.iconSize === "large" ? 130 : 100)));
+  return (
+    <label className="field icon-size">
+      <span className="row"><span className="label">{t("look.iconSize")}</span><span className="muted">{size}%</span></span>
+      <input className="range" type="range" min={50} max={150} step={5} value={size} style={{ "--fill": `${size - 50}%` } as React.CSSProperties} aria-label={t("look.iconSize")} aria-valuetext={`${size}%`} onChange={(e) => {
+        const value = e.currentTarget.valueAsNumber;
+        onChange({ ...look, iconSize: undefined, iconScale: value === 100 ? undefined : value });
+      }} />
+    </label>
+  );
 }
 
 /** One template drawn with the key's own label and icon; a click puts it on the key. */
@@ -77,12 +84,10 @@ function Seg<V extends string | undefined>({ label, value, options, onChange }: 
  * templates of C as its first tab): templates, background, icon, label and extras, in the key's
  * Look panel; the preview is the one above it and the key on the deck.
  */
-export function KeyDesigner({ look, onChange, others, onApplyTo, appIcon }: { look: Look; onChange: (l: Look) => void; others: OtherKey[]; onApplyTo: (ids: string[]) => Promise<unknown>; appIcon?: () => void }) {
+export function KeyDesigner({ look, onChange, appIcon, showIconSize = true }: { look: Look; onChange: (l: Look) => void; appIcon?: () => void; showIconSize?: boolean }) {
   const [tab, setTab] = useState<Tab>("templates");
   const [mine, setMine] = useState<LookTemplate[]>([]);
   const [naming, setNaming] = useState<string | null>(null);
-  const [picking, setPicking] = useState<Set<string> | null>(null);
-  const [applied, setApplied] = useState<string | null>(null);
   const [fonts, setFonts] = useState<string[]>([]);
   useEffect(() => {
     if (tab === "label" && fonts.length === 0) api.deckFonts().then(setFonts, () => {});
@@ -216,16 +221,7 @@ export function KeyDesigner({ look, onChange, others, onApplyTo, appIcon }: { lo
               {t("look.iconColor")}
             </label>
           </div>
-          <Seg
-            label={t("look.iconSize")}
-            value={look.iconSize}
-            options={[
-              [undefined, t("look.auto")],
-              ["small", t("look.size.small")],
-              ["large", t("look.size.large")],
-            ]}
-            onChange={(iconSize) => onChange({ ...look, iconSize })}
-          />
+          {showIconSize && <IconSize look={look} onChange={onChange} />}
           <label className="check">
             <input type="checkbox" checked={!!look.iconFlip} onChange={(e) => onChange({ ...look, iconFlip: e.target.checked || undefined })} />
             {t("look.iconFlip")}
@@ -363,57 +359,6 @@ export function KeyDesigner({ look, onChange, others, onApplyTo, appIcon }: { lo
 
       {tab === "when" && <LookRules look={look} onChange={onChange} />}
 
-      {/* the same look on other keys of the page: like Paste look, the label, icon and picture stay theirs */}
-      {others.length > 0 &&
-        (picking === null ? (
-          <>
-            <button className="tool small align-start" onClick={() => (setPicking(new Set()), setApplied(null))}>
-              {t("designer.applyOthers")}
-            </button>
-            {applied && (
-              <p className="help" role="status">
-                {applied}
-              </p>
-            )}
-          </>
-        ) : (
-          <div className="designer-apply" role="group" aria-label={t("designer.applyOthers")}>
-            <p className="help">{t("designer.applyHelp")}</p>
-            <div className="apply-list">
-              {others.map((o) => (
-                <label key={o.id} className="check">
-                  <input
-                    type="checkbox"
-                    checked={picking.has(o.id)}
-                    onChange={(e) => {
-                      const next = new Set(picking);
-                      if (e.target.checked) next.add(o.id);
-                      else next.delete(o.id);
-                      setPicking(next);
-                    }}
-                  />
-                  {o.name}
-                </label>
-              ))}
-            </div>
-            <div className="row">
-              <button className="tool small" disabled={picking.size === 0} onClick={() => {
-                  const ids = [...picking];
-                  setPicking(null);
-                  onApplyTo(ids).then(() => setApplied(t("designer.applied", { count: ids.length })), (e) => setApplied(String(e)));
-                }}
-              >
-                {t("designer.apply", { n: picking.size })}
-              </button>
-              <button className="tool small ghost" onClick={() => setPicking(new Set(others.map((o) => o.id)))}>
-                {t("designer.all")}
-              </button>
-              <button className="tool small ghost" onClick={() => setPicking(null)}>
-                {t("designer.cancel")}
-              </button>
-            </div>
-          </div>
-        ))}
     </div>
   );
 }

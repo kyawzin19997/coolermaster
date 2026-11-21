@@ -945,6 +945,7 @@ interface DeckViewProps extends Props {
   onSaver?: () => void;
   onMusic?: () => void;
   showShelf?: boolean;
+  showShelfControls?: boolean;
   showStrip?: boolean;
   /** A click on the drawing away from every control: nothing selected, as in Stream Deck. */
   onDeselect?: () => void;
@@ -1029,7 +1030,7 @@ export function DeckView(props: DeckViewProps) {
   // the first seconds after a start the hub is still taking the deck: "Connecting", then "No MasterHUB"
   const connecting = useConnecting(live.deck.lookingMs);
 
-  const showShelf = !arranging && props.showShelf !== false;
+  const showShelf = props.showShelf ?? !arranging;
   const shelf = showShelf ? <Shelf {...props} id={id} dropOn={dropOn} setDropOn={setDropOn} issues={issues} /> : null;
   if (!hasBase && placed.length === 0) {
     return (
@@ -1347,12 +1348,13 @@ function Shelf(props: DeckViewProps & { id: (n: string) => string; dropOn: strin
   const [picking, setPicking] = useState(false);
   const kinds = detachedKinds(live.deck.modules, saved);
   const attached = new Set(live.deck.modules.map((m) => m.kind));
-  const addable = MODULE_KINDS.filter((k) => !attached.has(k) && !kinds.includes(k));
+  const showControls = !props.arranging && props.showShelfControls !== false;
+  const addable = showControls ? MODULE_KINDS.filter((k) => !attached.has(k) && !kinds.includes(k)) : [];
   if (kinds.length === 0 && addable.length === 0) return null;
   return (
     <section className="dk-shelf" aria-label={t("shelf.title")}>
       {kinds.map((kind) => {
-        const ctx: Ctx = { ...props, m: detachedModule(kind), id: (n) => props.id(`s${kind}-${n}`), upright: 0, inert: false, muted: true, issues: props.issues, liveLooks: {} };
+        const ctx: Ctx = { ...props, m: detachedModule(kind), id: (n) => props.id(`s${kind}-${n}`), upright: 0, inert: !!props.arranging, muted: true, issues: props.issues, liveLooks: {} };
         return (
           <figure key={kind} className={`dk-shelf-item is-${kind}`}>
             <ModuleSvg ctx={ctx} className="dk-shelf-art" />
@@ -1360,11 +1362,11 @@ function Shelf(props: DeckViewProps & { id: (n: string) => string; dropOn: strin
               <b>{t(`module.${kind}`)}</b>
               <span>{t("shelf.notAttached")}</span>
             </figcaption>
-            <button className="dk-shelf-remove" aria-label={t("shelf.remove", { kind: t(`module.${kind}`) })} title={t("shelf.remove", { kind: t(`module.${kind}`) })} onClick={() => keysOfKind(saved, kind).forEach((k) => onPlace(k, null))}>
+            {showControls && <button className="dk-shelf-remove" aria-label={t("shelf.remove", { kind: t(`module.${kind}`) })} title={t("shelf.remove", { kind: t(`module.${kind}`) })} onClick={() => keysOfKind(saved, kind).forEach((k) => onPlace(k, null))}>
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M18 6 6 18M6 6l12 12" />
               </svg>
-            </button>
+            </button>}
           </figure>
         );
       })}

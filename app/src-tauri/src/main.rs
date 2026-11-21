@@ -2,21 +2,9 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-    // Claude Code hooks run this program with --claude-hook: report and exit, no window
-    if std::env::args().nth(1).as_deref() == Some("--claude-hook") {
-        return masterdeck_lib::claude_hook();
-    }
-    // an AI assistant (Claude Desktop, Claude Code...) starts it with --mcp: serve on stdio, no window
-    if std::env::args().nth(1).as_deref() == Some("--mcp") {
-        return masterdeck_lib::mcp();
-    }
-    // the same, with the deck's own tools (switched on per project)
-    if std::env::args().nth(1).as_deref() == Some("--mcp-deck") {
-        return masterdeck_lib::mcp_deck();
-    }
-    // MasterDeck's own deck assistant (its Claude Code session): drafts only
-    if std::env::args().nth(1).as_deref() == Some("--mcp-assistant") {
-        return masterdeck_lib::mcp_assistant();
+    // An existing external assistant configuration can call these retired entry points.
+    if matches!(std::env::args().nth(1).as_deref(), Some("--claude-hook" | "--mcp" | "--mcp-deck" | "--mcp-assistant")) {
+        return;
     }
     // the guard MasterDeck starts for itself: hands the deck back if MasterDeck dies (guard.rs)
     if std::env::args().nth(1).as_deref() == Some("--guard") {

@@ -1,6 +1,6 @@
 # Your app on the deck: the MasterDeck contract
 
-How any app (yours, a script, a tool you build with Claude Code) shows its state on the deck and
+How any app (including your own scripts) shows its state on the deck and
 offers actions for keys, without knowing anything about MasterDeck. MasterDeck listens; the app only
 publishes: the app publishes, MasterDeck subscribes, others can listen too.
 
@@ -53,7 +53,7 @@ MasterDeck subscribes while the app is connected, reconnects when the stream dro
 
 ## 3. What keys can do: `GET /masterdeck/manifest`
 
-The app describes itself once; MasterDeck and its assistant build keys from it:
+MasterDeck reads the app manifest to list the actions it provides.
 
 ```json
 {
@@ -103,16 +103,4 @@ app already connected is refreshed (a changed manifest is taken in); an app the 
 is refused (`400`) until they add it again by hand. `scripts/example-app.py` shows it.
 
 **By hand:** Settings > Connections > Your apps > Add: the address of its manifest (or of its
-status). The deck assistant can do it too (`connect_app`), for addresses on this computer.
-
-## 6. A prompt to add this to your app (for Claude Code in the app's repo)
-
-> Add a MasterDeck integration to this app, following https://github.com/kyawzin19997/coolermaster/blob/main/docs/APP-CONTRACT.md:
-> serve on the app's existing local port (or a new one on 127.0.0.1 only) `GET /masterdeck/status`
-> with one item per <session / job / thing worth seeing>, using the shared states (waiting when
-> it needs the user, working, done, error, idle, offline), `GET /masterdeck/events` as Server-Sent
-> Events with the items that changed, and `GET /masterdeck/manifest` listing the app's useful
-> actions as HTTP calls or deep links. On start, announce the manifest to MasterDeck
-> (`POST /api/apps/announce`, section 5; quiet when MasterDeck is not running). Keep it read-only
-> except for the actions; no auth beyond binding to 127.0.0.1. Add a test that the three endpoints
-> answer in the contract's shapes.
+status) on this computer.

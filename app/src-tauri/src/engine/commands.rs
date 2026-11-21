@@ -1315,25 +1315,6 @@ pub fn language_set(engine: State<'_, Engine>, language: String) -> Res<()> {
     Ok(())
 }
 
-/// Whether Claude Code reports to MasterDeck (MasterDeck's hooks are in `~/.claude/settings.json`).
-#[tauri::command]
-pub fn claude_status() -> bool {
-    super::agents::connected()
-}
-
-/// Connect (add MasterDeck's hooks to the user's Claude Code settings) or disconnect (remove them).
-/// The previous settings are kept as `settings.json.masterdeck-backup`.
-#[tauri::command]
-pub fn claude_connect(on: bool, approve: Option<bool>) -> Res<bool> {
-    super::agents::set_connected_with(on, approve.unwrap_or_else(super::agents::approving))
-}
-
-/// Whether permission prompts of safe tools are answered on the deck.
-#[tauri::command]
-pub fn claude_approving() -> bool {
-    super::agents::approving()
-}
-
 /// macOS: may MasterDeck send keys and type (Accessibility)? Elsewhere always yes.
 #[tauri::command]
 pub fn accessibility_ok() -> bool {

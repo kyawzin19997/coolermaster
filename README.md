@@ -17,15 +17,19 @@ Quit the official MasterHUB app before connecting the hardware. One application 
 
 1. Open **Deck tools → Getting Started** for guided lessons beside the live deck. **Your Deck, Your Modules** explains what each kind of control can do and opens the layout editor.
 2. Open **Profiles** to choose a starter layout or create your own. Click **+** by the page tabs to add a page. Drag **Switch profile** from the Actions panel to a key to jump between profiles.
-3. Drag an action onto a key. Dropping a different action replaces the key’s icon and keeps its colors and styling. To assign another gesture, select the key and drag onto **Hold** or **Double press** in **Key Settings**. Open **Appearance** to change the key’s face.
-4. To reuse a key, right-click and choose **Copy key**, then **Paste key** on the destination. You can also use Ctrl+C and Ctrl+V on Windows, or Cmd+C and Cmd+V on macOS.
+3. Drag an action onto a key. Dropping a different action replaces the key’s icon and keeps its colors and styling. To assign another gesture, select the key and drag onto **Hold** or **Double press** in **Key Settings**. To resize the icon, open **Appearance → Full editor → Position on the key**.
+4. To reuse a key, right-click and choose **Copy key**, then **Paste key** on the destination. You can also use Ctrl+C and Ctrl+V on Windows, or Cmd+C and Cmd+V on macOS. To delete a page, select its tab, press **Delete**, and confirm.
 5. Open **Deck tools → Lights and screens** beside the deck preview. Use **Settings → Connections** for OBS Studio, Spotify, Twitch, Streamlabs, and Home Assistant.
 
 **Everyday desk** covers media, editing, mic mute, and a focus timer. **My deck · faders** adds app launchers, a Fun page, and a clock you can double press to switch profiles. **Discord & meetings** groups call shortcuts by app and puts system mic mute on the Music key’s Hold gesture. **OBS streaming** provides scene keys, recording and streaming controls, and Studio Mode and Transition keys. Existing saved profiles keep their assignments.
 
+## Set up an unattached module
+
+Open **Deck tools → Edit layout**, tick the module you own, and click **Done**. The module appears beside or below the deck. Click a control and drag an action onto it. MasterDeck saves the assignment in the current profile and uses it when you connect the module.
+
 ## Set a screensaver
 
-Open **Deck tools → Screensaver**. Pick a built-in scene, use a deck look, or choose **Add screensaver** to import a GIF, WebP, PNG, or JPEG up to 15 MB. The animation plays in the tab as you browse. Set the idle delay and choose **Apply screensaver** to save your choice. **Preview on the deck** is available if you want to see it across the keys. **Advanced settings** lets you use a different screensaver for each profile and choose what the dial and lights do while it runs. MasterDeck keeps imported media on this computer. When moving a profile to another computer, add the image there and select it again.
+Open **Deck tools → Screensaver**. Pick a built-in scene, use a deck look, or choose **Add screensaver** to import a GIF, WebP, PNG, or JPEG up to 15 MB. Imported images retain their proportions and fit across the keys. If you have an older cropped upload, import the original image again. The animation plays in the tab as you browse. Set the idle delay and choose **Apply screensaver** to save your choice. **Preview on the deck** shows it across the keys. **Advanced settings** lets you use a different screensaver for each profile and choose what the dial and lights do while it runs. MasterDeck keeps imported media on this computer. When moving a profile to another computer, add the image there and select it again.
 
 ## Connect OBS Studio
 

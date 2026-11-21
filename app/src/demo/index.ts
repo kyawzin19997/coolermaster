@@ -7,7 +7,7 @@
 import { emit } from "@tauri-apps/api/event";
 import { mockIPC, mockWindows } from "@tauri-apps/api/mocks";
 import type { DeckSnapshot } from "../deck";
-import type { Binding, EngineState, LightSettings, PluginInfo, Profile, Screens } from "../engine";
+import type { Binding, EngineState, LightSettings, Look, PluginInfo, Profile, Screens } from "../engine";
 import { actionIconPath } from "../actionIcons";
 import { version } from "../../package.json";
 import fixture from "./fixture.json";
@@ -25,7 +25,9 @@ const UPDATE = {
 
 // `&tests=off` leaves out the fixture's "Test: …" profiles (the README's screenshots, 2026-10-31)
 const withTests = new URLSearchParams(location.search).get("tests") !== "off";
-const profiles = new Map<string, Profile>((fixture.profiles as unknown as Profile[]).filter((p) => withTests || !p.name.startsWith("Test:")).map((p) => [p.id, p]));
+const profiles = new Map<string, Profile>((fixture.profiles as unknown as Profile[])
+  .filter((p) => p.name !== "Claude Code" && (withTests || !p.name.startsWith("Test:")))
+  .map((p) => [p.id, { ...p, controls: Object.fromEntries(Object.entries(p.controls).filter(([, binding]) => !binding.action.startsWith("claude."))) }]));
 let screens: Screens = { brightness: 100, blankAfterMinutes: 0, blankWhenLocked: true };
 
 // the tour in the browser demo: the parts of a deck for the demo's kit (screenshots, flows)
@@ -100,8 +102,8 @@ const placements: Record<string, { col: number; row: number; rotation: number }>
 let active = demoParam("profile") ?? "demo-obs";
 let page: string | null = null;
 let beforeTour: string | null = null;
-let beforeBuilder: { active: string; page: string | null } | null = null;
-const builderDraft = "demo-builder-draft";
+let beforeTry: { active: string; page: string | null } | null = null;
+let trying: string | null = null;
 let onboarded = new URLSearchParams(location.search).get("demo") !== "welcome" && demoParam("panel") !== "welcome";
 let obsStudioMode = false;
 
@@ -125,16 +127,21 @@ const state = (): EngineState => ({
   onboarded,
   playing: false,
   obsStudioMode,
+  trying,
 });
 
 /** A plain key picture for looks the fixture does not have (edited in the demo). */
-function fallbackSvg(screen: string, look: { label?: string; bg?: string; fg?: string; icon?: string }) {
+function fallbackSvg(screen: string, look: Look) {
   const size = screen === "dial" ? 240 : 96;
   const label = (look.label ?? "").replace(/[<&>]/g, "");
   const icon = look.icon?.startsWith("action:") && actionIconPath(look.icon.slice(7));
   const safeColor = (value: string | undefined, fallback: string) => value && /^#[0-9a-f]{3}(?:[0-9a-f]{3})?$/i.test(value) ? value : fallback;
   const fg = safeColor(look.fg, "#fff");
-  const glyph = icon ? `<g transform="translate(${size / 4} ${size / 8}) scale(${size / 48})" fill="none" stroke="${fg}" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="${icon}"/></g>` : "";
+  const iconScale = look.iconScale ?? (look.iconSize === "small" ? 70 : look.iconSize === "large" ? 130 : 100);
+  const glyphSize = size * iconScale / 200;
+  const x = (size - glyphSize) / 2;
+  const y = 3 * size / 8 - glyphSize / 2;
+  const glyph = icon ? `<g transform="translate(${x} ${y}) scale(${glyphSize / 24})" fill="none" stroke="${fg}" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="${icon}"/></g>` : "";
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"><rect width="100%" height="100%" fill="${safeColor(look.bg, "#26232e")}"/>${glyph}<text x="50%" y="${icon ? 78 : 55}%" text-anchor="middle" font-family="IBM Plex Sans" font-size="${size / 6}" fill="${fg}">${label}</text></svg>`;
 }
 
@@ -181,7 +188,7 @@ const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
     else delete placements[key as string];
   },
   actions_list: () => ({ ...fixture.catalog, actions: [
-    ...fixture.catalog.actions.map((action) => {
+    ...fixture.catalog.actions.filter((action) => !action.id.startsWith("claude.")).map((action) => {
       if (action.id === "obs.scene" && !action.params.some((param) => param.key === "sceneTarget")) {
         return { ...action, params: [...action.params, { key: "sceneTarget", label: "Send scene to", type: "select", default: "program", options: [["program", "Program"], ["preview", "Preview"]] }] };
       }
@@ -192,7 +199,7 @@ const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
   ] }),
   icons_list: () => fixture.icons,
   // the real catalog, test presets included
-  presets_list: () => fixture.presets,
+  presets_list: () => fixture.presets.filter((preset) => preset.id !== "claude"),
   macro_record_start: () => null,
   macro_record_stop: () => [
     { action: "core.hotkey", params: { keys: "Ctrl+C", mode: "normal", hold: 30 }, delay: 0 },
@@ -341,7 +348,6 @@ const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
     changed();
     return p;
   },
-  claude_status: () => false,
   // `&leds=hub`: MasterDeck's own rainbow on the knobs and the edge, as on the owner's deck
   leds_get: () =>
     demoParam("leds") === "hub"
@@ -378,101 +384,36 @@ const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
           { action: "core.volume", params: { target: "mic" }, look: { label: "Mic level", icon: "mic" } },
           { action: "core.brightness", params: { monitor: "all" }, look: { label: "Brightness", icon: "sun" } },
         ],
-  mcp_info: () => ({
-    exe: "C:\\Program Files\\MasterDeck\\hubdeck.exe",
-    desktop: false,
-    codeCli: true,
-    codeCommand: 'claude mcp add --scope user masterdeck -- "C:\\Program Files\\MasterDeck\\hubdeck.exe" --mcp',
-    snippet: '{ "mcpServers": { "masterdeck": { "command": "C:\\\\Program Files\\\\MasterDeck\\\\hubdeck.exe", "args": ["--mcp"] } } }',
-  }),
   profile_adapt: () => [{ label: "Volume", from: "dial", to: ["knobs.0"] }],
   // a sample pack only when asked for (`&icons=pack:neon-shapes`), so other screenshots show no fake pack
   live_looks: () => ({ profile: "", looks: {} }),
-  builder_options: (args) =>
-    args.kind === "dial"
-      ? [
-          { id: "nowPlayingSeek", group: "Music", name: "What's playing", does: "Turn: move in the song · press: play or pause", source: "Built in, no setup", setup: false, binding: { action: "core.nowPlaying", params: { turn: "seek" }, look: { icon: "music" } }, svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240"><rect width="240" height="240" fill="#2a1a3a"/><text x="120" y="130" fill="#fff" font-size="28" text-anchor="middle" font-family="sans-serif">Song</text></svg>' },
-          { id: "volume", group: "One dial, many jobs", name: "Volume, big", does: "Turn: system volume · press: mute", source: "Built in, no setup", setup: false, binding: { action: "core.volume", params: { target: "system" }, look: { icon: "volume-2" } }, svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240"><rect width="240" height="240" fill="#1d1b2b"/><text x="120" y="135" fill="#fff" font-size="44" text-anchor="middle" font-family="sans-serif">45%</text></svg>' },
-          { id: "spotifySong", group: "Music", name: "Song with its cover", does: "Turn: move in the song · hold and turn: songs · press: play or pause", source: "Essentials for Spotify", setup: true, binding: { action: "x/y", params: {}, look: {} }, svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240"><rect width="240" height="240" fill="#7a2b8f"/></svg>' },
-        ]
-      : [
-          { id: "volume", group: "One dial, many jobs", name: "System volume", does: "Turn: volume · press: mute", source: "Built in, no setup", setup: false, binding: { action: "core.volume", params: {}, look: { icon: "volume-2" } }, svg: null },
-          { id: "tracks", group: "Music", name: "Songs", does: "Turn: next or previous song · press: play or pause", source: "Built in, no setup", setup: false, binding: { action: "core.nowPlaying", params: { turn: "tracks" }, look: { icon: "music" } }, svg: null },
-        ],
-  // the deck assistant: `&assistant=none` (no Claude Code) or `signin` (not signed in)
-  assistant_info: () => {
-    const how = demoParam("assistant");
-    return {
-      cli: how === "none" ? null : "/usr/local/bin/claude",
-      version: "2.1.0",
-      loggedIn: how !== "signin" && how !== "none",
-      authMethod: "claude.ai",
-      plan: "max",
-      email: "you@example.com",
-      model: null,
-      session: null,
-      contextUsed: 0,
-      contextWindow: 0,
-      folder: "",
-      command: "claude",
-      rules: "",
-      chosenModel: null,
-      chosenEffort: null,
-      defaultModel: "claude-opus-5-5",
-      defaultEffort: null,
-      power: false,
-    };
-  },
-  assistant_scan: () => {
-    const deck = "- Deck modules attached now (build for these): keys, dial, knobs, rollers\n- Owned but not attached now: faders\n- Profiles the user has now: Everyday desk, OBS streaming";
-    return {
-      used: [["Spotify", 6.2, 4], ["Visual Studio Code", 12.5, 5]],
-      since: "2026-10-12 16:30",
-      known: ["Discord", "Figma", "Spotify", "Visual Studio Code"],
-      modules: ["keys", "dial", "knobs", "rollers"],
-      detached: ["faders"],
-      profiles: ["Everyday desk", "OBS streaming"],
-      text: `What MasterDeck found on this computer (the user saw this before it was sent):\n- Apps used most (time in front, counted since 2026-10-12 16:30): Visual Studio Code (12.5 h on 5 days), Spotify (6.2 h on 4 days)\n- Installed apps MasterDeck has checked shortcuts or a preset for: Discord, Figma, Spotify, Visual Studio Code\n${deck}`,
-      deckText: `What MasterDeck found on this computer (the user saw this before it was sent):\n- Apps used most: the user chose not to send them\n${deck}`,
-    };
-  },
-  assistant_send: () => {
-    setTimeout(() => void emit("assistant://event", { kind: "text", text: "Here are two ideas for the dial (demo answer).", choices: [], ideas: [] }), 300);
-    setTimeout(() => void emit("assistant://event", { kind: "done" }), 400);
-    return null;
-  },
   profile_switch_in: ({ id, on }) => {
     if (ready.has(id as string)) ready.set(id as string, !!on);
     changed();
   },
   profile_try: ({ id }) => {
-    if (id === builderDraft) {
-      beforeBuilder ??= { active, page };
-      active = builderDraft;
+    if (typeof id === "string" && profiles.has(id)) {
+      beforeTry ??= { active, page };
+      active = id;
       page = null;
-    } else if (id == null && beforeBuilder) {
-      ({ active, page } = beforeBuilder);
-      beforeBuilder = null;
-    } else {
-      return;
+      trying = id;
+    } else if (id == null && beforeTry) {
+      ({ active, page } = beforeTry);
+      beforeTry = null;
+      trying = null;
     }
     changed();
   },
   draft_settle: ({ id, keep }) => {
-    if (id === builderDraft) {
-      const profile = profiles.get(builderDraft);
-      if (!keep) profiles.delete(builderDraft);
-      else if (profile) profile.inBar = true;
-      beforeBuilder = null;
+    const profile = profiles.get(String(id));
+    if (keep && profile) {
+      profile.inBar = true;
+      active = profile.id;
+      beforeTry = null;
+      trying = null;
       changed();
     }
     return keep ? { id, replaced: null } : null;
-  },
-  builder_draft: ({ from, name }) => {
-    const base = profiles.get(String(from)) ?? fixture.profiles[0];
-    const profile = { ...structuredClone(base), id: builderDraft, name: String(name), inBar: false } as Profile;
-    profiles.set(builderDraft, profile);
-    return profile;
   },
   onboarding_done: () => {
     onboarded = true;
@@ -487,7 +428,6 @@ const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
       uri: `data:image/svg+xml;utf8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72"><rect width="72" height="72" fill="#111"/><circle cx="36" cy="36" r="${14 + (i % 4) * 4}" fill="none" stroke="${c}" stroke-width="5"/></svg>`)}`,
     })),
   iconpack_use: () => "demo.png",
-  claude_connect: ({ on }) => Boolean(on),
   tour_suggest: () => ({ focus: "games", games: 12, obs: true, call: "discord", music: "Spotify", kit: FADERS_KIT ? "faders" : "dialKnobs", mac: false }),
   // the tour's deck: Everyday desk stands in for it on the drawing; Exit and Throw away go back
   tour_start: ({ focus }) => {
@@ -542,9 +482,6 @@ const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
     page = (id as string | null) ?? null;
     changed();
   },
-  // `&nudge=unused`: the next-day card about a control of the tour's deck nobody touched
-  tour_done: () => demoParam("tourdone") === "1",
-  nudge_get: () => (demoParam("nudge") === "unused" ? { subject: "unused:knobs.2", kind: "unused", exe: "knobs.2", name: "Music", hours: 0, deck: "My deck · dial and knobs", since: "2026-10-13" } : null),
   presses_counting: () => false,
   tour_finish: ({ keep }) => {
     if (!keep && beforeTour) active = beforeTour;

@@ -47,8 +47,6 @@ export function Tour({
   saved,
   onPlace,
   onClose,
-  onBuild,
-  onAsk,
   deskCheck = false,
   onArrange,
 }: {
@@ -58,8 +56,6 @@ export function Tour({
   onPlace: (key: string, p: Placement | null) => void;
   /** `home`: the deck was kept as the home deck ("Use as my home deck"). */
   onClose: (home?: boolean) => void;
-  onBuild: () => void;
-  onAsk: (message: string) => void;
   deskCheck?: boolean;
   onArrange?: () => void;
 }) {
@@ -71,7 +67,6 @@ export function Tour({
   const [at, setAt] = useState(0);
   const [tried, setTried] = useState<Record<string, boolean>>({});
   const [error, setError] = useState<string | null>(null);
-  const [ask, setAsk] = useState("");
   const done = useRef(false);
   // the next-day card ("knob 3 never turned, swap it?") needs counted presses: the user's yes
   const [counting, setCounting] = useState(false);
@@ -483,9 +478,6 @@ export function Tour({
               <Icon name="check" />
               {t("tour.useHome")}
             </button>
-            <button className="tool" onClick={() => finish(true, true, onBuild)}>
-              {t("tour.changeSteps")}
-            </button>
             <button className="tool ghost" onClick={() => finish(false, false, () => onClose())}>
               {t("tour.throwAway")}
             </button>
@@ -499,15 +491,6 @@ export function Tour({
           <p className="help">{t("tour.oldStays")}</p>
           {error && <p className="help catalog-err">{error}</p>}
         </div>
-        <aside className="tour-end-ask">
-          <span className="tour-label">{t("tour.askTitle")}</span>
-          <p className="help">{t("tour.askHelp")}</p>
-          <textarea className="input" rows={3} value={ask} placeholder={t("tour.askPlaceholder")} onChange={(e) => setAsk(e.target.value)} />
-          <button className="tool small align-start" disabled={!ask.trim()} onClick={() => finish(true, true, () => onAsk(ask.trim()))}>
-            <Icon name="sparkles" />
-            {t("tour.askSend")}
-          </button>
-        </aside>
       </div>
     </div>
   );

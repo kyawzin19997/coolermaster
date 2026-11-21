@@ -140,7 +140,6 @@ pub fn handle(app: &AppHandle, method: &str, path: &str, body: &str) -> Option<(
         ("POST", ["images"]) => body_json(body).and_then(|b| add_image(&b)),
         ("POST", ["app-picture"]) => body_json(body).and_then(|b| app_picture(&b)),
         ("POST", ["animations"]) => body_json(body).and_then(|b| add_animation(&b)),
-        // the deck assistant's ideas, answer buttons and taste notes go to its window
         // the user's own apps (docs/APP-CONTRACT.md)
         ("POST", ["state"]) => body_json(body).and_then(|b| super::states::push(&b).map(|n| json!({"ok": true, "items": n})).map_err(bad)),
         ("GET", ["states"]) => engine().map(|e| e.app_states()),
@@ -175,12 +174,6 @@ pub fn handle(app: &AppHandle, method: &str, path: &str, body: &str) -> Option<(
         }),
         ("POST", ["apps", "announce"]) => engine().and_then(|e| body_json(body).and_then(|b| e.announce_app(b["url"].as_str().unwrap_or_default()).map_err(bad))),
         ("POST", ["apps", id, "remove"]) => engine().and_then(|e| e.remove_app(id).map(|_| json!({"ok": true})).map_err(not_found)),
-        ("POST", ["assistant", "idea"]) => body_json(body).and_then(|b| super::assistant::api_idea(app, &b).map_err(bad)),
-        ("POST", ["assistant", "choices"]) => body_json(body).and_then(|b| super::assistant::api_choices(app, &b).map_err(bad)),
-        ("POST", ["assistant", "tour"]) => body_json(body).and_then(|b| super::assistant::api_tour(app, &b).map_err(bad)),
-        ("POST", ["assistant", "permission"]) => body_json(body).and_then(|b| super::assistant::api_permission(app, &b).map_err(bad)),
-        ("GET", ["assistant", "permission", id]) => id.parse().map(super::assistant::api_permission_answer).map_err(|_| bad("not an id")),
-        ("POST", ["assistant", "remember"]) => body_json(body).and_then(|b| super::assistant::api_remember(app, &b).map_err(bad)),
         // the living deck's reaction as at a press of key 0..15 (apps' events, films, walks)
         // the key panel's last picture (made while a window is open): what the deck shows
         ("GET", ["deck", "keys"]) => super::keys_shown().ok_or_else(|| bad("no key picture yet (it is made while a window is open)")),
@@ -246,26 +239,6 @@ fn catalog() -> Value {
     })
 }
 
-/// For the assistant: the kinds with more than one module attached and their numbers, as a line
-/// ("" with one module of each kind).
-pub fn same_kind_text(app: &AppHandle) -> String {
-    let Some(deck) = app.try_state::<Deck>() else { return String::new() };
-    let snapshot = deck.snapshot();
-    let mut parts = Vec::new();
-    for (kind, count) in [("knobs", 3u16), ("faders", 5), ("rollers", 2), ("keys", 15), ("dial", 1)] {
-        let mut firsts: Vec<u16> = snapshot.modules.iter().filter(|m| m.kind == kind).map(|m| m.first).collect();
-        if firsts.len() < 2 {
-            continue;
-        }
-        firsts.sort_unstable();
-        parts.push(match kind {
-            "dial" => format!("{} dials ({})", firsts.len(), firsts.iter().map(|f| crate::deck::dial_id(*f as u8)).collect::<Vec<_>>().join(", ")),
-            _ => format!("{} {kind} modules ({})", firsts.len(), firsts.iter().map(|f| format!("{kind}.{f} .. {kind}.{}", f + count - 1)).collect::<Vec<_>>().join(", ")),
-        });
-    }
-    if parts.is_empty() { String::new() } else { format!("\n- More than one module of a kind (each has its own controls; a sketch lists them on in the same list): {}", parts.join("; ")) }
-}
-
 /// Each attached module's first control number (see `sameKind`), e.g. `{"knobs": [0, 3]}`.
 fn numbering(app: &AppHandle) -> Value {
     let mut out = serde_json::Map::new();
@@ -296,20 +269,17 @@ fn modules(app: &AppHandle) -> Value {
     })
 }
 
-/// What is set up in MasterDeck, for the assistant (so it does not promise what is off): Claude Code
-/// sessions on keys, the light reactions, connected apps, the screensaver, modules, more power.
+/// Current hardware, lighting and connected apps for local API clients.
 fn hubdeck_state(app: &AppHandle, engine: &Engine) -> Value {
     let settings = engine.lock().store.settings.clone();
     let kinds = module_kinds(app);
     json!({
-        "claudeCodeSessionsOnKeys": super::agents::connected(),
         "lights": {"style": settings.lights.style, "color": settings.lights.color, "reactions": settings.lights.react},
         "apps": settings.apps.iter().map(|a| json!({"id": a.id, "name": a.name, "actions": a.actions.len()})).collect::<Vec<_>>(),
         "screensaver": if settings.saver.is_empty() { json!(null) } else { json!({"effect": settings.saver, "afterMinutes": settings.saver_after_minutes}) },
         "screensOffAfterMinutes": settings.blank_after_minutes,
         "modulesAttached": kinds.attached,
         "modulesOwned": kinds.owned,
-        "assistantMorePower": settings.assistant_power,
         "appIcons": settings.app_icons,
     })
 }
@@ -453,6 +423,9 @@ pub fn check_binding(id: &str, b: &Binding, pages: &[super::profile::Page], erro
         }
         if look.icon_size.as_deref().is_some_and(|z| z != "small" && z != "large") {
             errors.push(format!("{id}: look.iconSize is small or large"));
+        }
+        if look.icon_scale.is_some_and(|size| !(50..=150).contains(&size)) {
+            errors.push(format!("{id}: look.iconScale must be between 50 and 150"));
         }
         if look.angle.is_some_and(|a| a > 359) {
             errors.push(format!("{id}: look.angle is 0 to 359 degrees"));
@@ -682,7 +655,7 @@ fn set_control(engine: &Engine, id: &str, body: &Value) -> Answer {
                 give_bare_keys_an_icon(&mut p);
                 // a key the assistant fixes afterwards gets the app's real icon too, as the sketch's
                 // keys do (2026-10-19: its Spotify key, set again, kept a plain window icon)
-                super::assistant::with_real_apps(&mut p);
+                super::profile_helpers::with_real_apps(&mut p);
             }
             engine.lock().store.save_profile(p).map_err(|e| (500, e.to_string()))?;
             engine.changed();

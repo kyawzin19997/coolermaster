@@ -964,24 +964,6 @@ pub fn catalog() -> Vec<ActionDef> {
             icon: "gamepad-2",
         },
         ActionDef {
-            id: AGENT,
-            name: "Session",
-            group: "Claude Code",
-            description: "One Claude Code session per key, in the order they started: blue while it works, orange blinking when it needs your permission, green when it is your turn. A press says on the dial which session it is and what it waits for. Connect Claude Code in Settings first.",
-            inputs: vec![Press],
-            params: vec![p("slot", "Session number", ParamKind::Number { min: 1.0, max: 15.0, step: 1.0 }, json!(1))],
-            icon: "bot",
-        },
-        ActionDef {
-            id: AGENTS,
-            name: "All sessions",
-            group: "Claude Code",
-            description: "The dial (or a knob) goes through your Claude Code sessions: turn to pick one, the screen tells what it does and what it waits for.",
-            inputs: vec![Press, Turn],
-            params: vec![],
-            icon: "bot",
-        },
-        ActionDef {
             id: "core.page",
             name: "Go to page",
             group: "MasterDeck",
@@ -1272,10 +1254,6 @@ pub const SAVER: &str = "core.saver";
 
 /// Id of the now playing action; the engine draws the cover on its key or the dial.
 pub const NOW_PLAYING: &str = "core.nowPlaying";
-/// One Claude Code session on a key (`agents.rs`).
-pub const AGENT: &str = "claude.session";
-/// Every Claude Code session on the dial.
-pub const AGENTS: &str = "claude.sessions";
 
 /// Id of the action that starts game mode.
 pub const GAMES: &str = "core.games";

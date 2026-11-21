@@ -9,14 +9,24 @@ const LESSONS = ["modules", "actions", "gestures", "profiles", "display", "obs",
 type Lesson = (typeof LESSONS)[number];
 const MODULES = ["keys", "dial", "knobs", "faders", "rollers"] as const satisfies readonly ModuleKind[];
 
-export function WorkspaceGuide({ kind, live, selected, onClose, onModules, onArrange, onBuild, onPersonalize, onKeys, onProfiles, onDisplay, onOBS, onPlugins }: {
+export function DetachedModuleGuide() {
+  useLanguage();
+  return (
+    <ol className="detached-module-guide help">
+      <li>{t("workshop.detachedStep1")}</li>
+      <li>{t("workshop.detachedStep2")}</li>
+      <li>{t("workshop.detachedStep3")}</li>
+    </ol>
+  );
+}
+
+export function WorkspaceGuide({ kind, live, selected, onClose, onModules, onArrange, onPersonalize, onKeys, onProfiles, onDisplay, onOBS, onPlugins }: {
   kind: GuideKind;
   live: LiveState;
   selected: ControlRef | null;
   onClose: () => void;
   onModules: () => void;
   onArrange: () => void;
-  onBuild: () => void;
   onPersonalize: () => void;
   onKeys: () => void;
   onProfiles: () => void;
@@ -65,9 +75,9 @@ export function WorkspaceGuide({ kind, live, selected, onClose, onModules, onArr
               </label>
               <h3>{t(`module.${module}`)} {attached && <small className="guide-attached">{t("welcome.attached")}</small>}</h3>
               <p>{t(`workshop.module.${module}` as Key)}</p>
+              {!attached && <DetachedModuleGuide />}
               <div className="row wrap">
                 <button type="button" className="tool" onClick={onArrange}><Icon name="layout-grid" />{t("stage.editLayout")}</button>
-                <button type="button" className="tool" onClick={onBuild}>{t("builder.title")}</button>
               </div>
             </>
           ) : (

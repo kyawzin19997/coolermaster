@@ -50,7 +50,8 @@ async function step(page, name, check) {
     ok = r === true;
     if (typeof r === 'string') note = r;
   } catch (e) {
-    note = String(e.message || e).split('\n')[0];
+    const details = String(e.message || e).split('\n');
+    note = [details[0], details.find((line) => line.trim().startsWith('- waiting for '))?.trim()].filter(Boolean).join(' ');
   }
   const errs = page.hubdeckErrors?.splice(0) ?? [];
   if (errs.length) {
@@ -247,12 +248,15 @@ for (const [label, viewport] of [['wide', { width: 1440, height: 900 }], ['half'
     await display.getByRole('button', { name: 'Close' }).click();
     return ready && await layoutStays();
   });
-  await step(page, `${label}: the profile dialog switches between Profiles and Get started`, async () => {
+  await step(page, `${label}: Profiles and Get started use the same dialog size`, async () => {
+    await profileTab('Profiles');
+    const size = await profiles.boundingBox();
     for (const tab of ['Profiles', 'Get started']) {
       await profileTab(tab);
       await page.waitForTimeout(200);
       const sel = await page.locator('.lib-tabs [role="tab"][aria-selected="true"]').innerText();
       if (!sel.includes(tab)) return `tab ${tab} not selected`;
+      if (JSON.stringify(await profiles.boundingBox()) !== JSON.stringify(size)) return 'the profile dialog resized';
     }
     await closeProfiles();
     return true;
@@ -347,31 +351,21 @@ for (const [label, viewport] of [['wide', { width: 1440, height: 900 }], ['half'
     await updates.getByRole('button', { name: 'Back to the deck', exact: true }).click();
     return await layoutStays() && await visible(page, '.stable-workspace .workspace-key-pane > .control-inspector');
   });
-  await step(page, `${label}: Deck Builder opens from Deck tools, a card can be picked, Back returns`, async () => {
+  await step(page, `${label}: Deck Builder and the assistant are absent`, async () => {
     await page.getByRole('button', { name: 'Deck tools', exact: true }).click();
-    await page.getByRole('menuitem', { name: 'Deck Builder', exact: true }).click();
-    await page.waitForTimeout(500);
-    if (!(await visible(page, '.builder-page'))) return 'no builder page';
-    if ((await page.locator('.builder-card').count()) < 2) return 'no option cards';
-    await page.locator('.builder-card button', { hasText: 'Pick' }).first().click();
-    await page.waitForTimeout(300);
-    if (!(await page.locator('.builder-step.is-current', { hasText: 'Knob 1' }).isVisible())) return 'Pick did not move on to the knobs';
-    const draftKey = page.locator('.builder-canvas .dk-front .dk-ctl[data-kind="keys"]').nth(7);
-    await draftKey.click();
-    const library = page.locator('.builder-page .action-sidebar');
-    await library.locator('#library-search').fill('microphone');
-    const settings = page.locator('.builder-body > .control-inspector');
-    await library.getByRole('button', { name: 'Microphone mute', exact: true }).dragTo(settings.locator('[data-trigger="hold"]'));
-    await settings.locator('#action-name[data-action="core.mic"]').waitFor();
-    await page.getByRole('button', { name: /Back to the deck/ }).click();
-    await page.locator('.deck-area .dk-front .dk-ctl[data-kind="keys"]').nth(7).click();
-    await page.locator('.deck-workspace [data-trigger="hold"]').getByText('Drop an action').waitFor();
-    return (await visible(page, '.deck-area')) && !(await visible(page, '.builder-page'));
+    const tools = page.getByRole('menu', { name: 'Deck tools', exact: true });
+    if (await tools.getByRole('menuitem', { name: 'Deck Builder', exact: true }).count()) return 'old builder menu is visible';
+    await page.keyboard.press('Escape');
+    await profileTab('Get started');
+    await profiles.getByRole('heading', { name: 'Set up an unattached module' }).waitFor();
+    const removed = await profiles.locator('#as-know').count() === 0;
+    await closeProfiles();
+    return removed;
   });
   await step(page, `${label}: the tour: one question, the parts with Keep, the finale, the end, Exit back to the deck`, async () => {
     await profileTab('Get started');
     await page.waitForTimeout(200);
-    await page.getByRole('button', { name: /Show me on my deck/ }).click();
+    await profiles.getByRole('button', { name: 'Build a personalized profile', exact: true }).click();
     await page.waitForTimeout(400);
     if (await visible(page, '.tour-desk')) await page.locator('.tour-desk').getByRole('button', { name: 'Yes, make my deck' }).click();
     if (!(await visible(page, '.tour-tiles'))) return 'no question';
@@ -397,7 +391,7 @@ for (const [label, viewport] of [['wide', { width: 1440, height: 900 }], ['half'
   const tourToEnd = async () => {
     await profileTab('Get started');
     await page.waitForTimeout(200);
-    await page.getByRole('button', { name: /Show me on my deck/ }).click();
+    await profiles.getByRole('button', { name: 'Build a personalized profile', exact: true }).click();
     await page.waitForTimeout(400);
     if (await visible(page, '.tour-desk')) await page.locator('.tour-desk').getByRole('button', { name: 'Yes, make my deck' }).click();
     await page.getByRole('button', { name: 'Make my deck' }).click();
@@ -415,30 +409,13 @@ for (const [label, viewport] of [['wide', { width: 1440, height: 900 }], ['half'
     await page.locator('.deck-area').waitFor();
     return !(await visible(page, '.tour-page')) && (await visible(page, '.deck-area'));
   });
-  await step(page, `${label}: the assistant card sends with Enter, a short consent asks once, then never again`, async () => {
-    await page.evaluate(() => localStorage.removeItem('hubdeck.assistantConsent'));
-    await profileTab('Get started');
-    await page.waitForTimeout(400);
-    // examples come from the user's own deck, and only once a tour deck was kept
-    if ((await page.locator('.as-examples .chip').count()) > 2) return 'more than two examples';
-    await page.locator('#as-know').fill('Use my two free knobs');
-    await page.keyboard.press('Enter');
-    await page.waitForTimeout(500);
-    if (!(await page.locator('.as-consent .as-msg', { hasText: 'Use my two free knobs' }).isVisible())) return 'no consent with the message';
-    if (await page.locator('.as-starter').count()) return 'Start with buttons are back';
-    if (!(await page.locator('.as-consent input[type=checkbox]').isChecked())) return "Don't ask again is not checked";
-    await page.keyboard.press('Enter');
-    await page.waitForTimeout(700);
-    if (!(await page.locator('.as-body > .as-msg.is-user', { hasText: 'Use my two free knobs' }).isVisible()) || (await visible(page, '.as-consent'))) return 'Enter did not send';
-    await page.locator('.as-head .icon-btn').click();
-    await page.waitForTimeout(300);
-    await page.locator('#as-know').fill('A deck for meetings');
-    await page.keyboard.press('Enter');
-    await page.waitForTimeout(700);
-    const again = (await visible(page, '.as-body > .as-msg.is-user')) && !(await visible(page, '.as-consent'));
-    await page.locator('.as-head .icon-btn').click();
-    await closeProfiles();
-    return again || 'asked again';
+  await step(page, `${label}: Connections excludes the assistant and Claude Code`, async () => {
+    await page.getByRole('button', { name: /^Settings$/ }).first().click();
+    await settingsSection('Connections').click();
+    const removed = await settingsPage.getByText('Claude Code', { exact: true }).count() === 0 &&
+      await settingsPage.getByText('AI assistant', { exact: true }).count() === 0;
+    await settingsPage.getByRole('button', { name: 'Back to the deck', exact: true }).click();
+    return removed && await layoutStays();
   });
   await step(page, `${label}: Ready for your apps lists its profiles, off, and a switch turns one on`, async () => {
     await profileTab('Profiles');
@@ -509,6 +486,35 @@ for (const [label, viewport] of [['wide', { width: 1440, height: 900 }], ['half'
       return tab.left >= outer.left - 1 && tab.right <= outer.right + 1;
     });
     return revealed && await controlsStay() && await layoutStays();
+  });
+  await step(page, `${label}: Edit layout keeps its panel and unattached controls can be assigned`, async () => {
+    await profileTab('Get started');
+    await profiles.getByRole('button', { name: 'Edit layout', exact: true }).click();
+    const layout = page.getByRole('complementary', { name: 'Edit layout', exact: true });
+    await layout.getByText('Click one of its controls', { exact: false }).waitFor();
+    if (!await layoutStays()) return 'Edit layout moved the deck before any changes';
+    const faders = layout.getByRole('checkbox', { name: '5-fader module', exact: true });
+    const detached = page.locator('.dk-shelf-item.is-faders');
+    if (await faders.getAttribute('aria-checked') === 'true') {
+      await faders.click();
+      await detached.waitFor({ state: 'hidden' });
+    }
+    await faders.click();
+    await detached.waitFor();
+    const stageWithShelf = JSON.stringify(await deckStage.boundingBox());
+    await page.locator('.layout-tool').click();
+    if (JSON.stringify(await deckStage.boundingBox()) !== stageWithShelf) return 'finishing layout shifted the deck';
+    const fader = detached.locator('.dk-ctl[data-kind="faders"]').first();
+    await fader.click();
+    await actionPane.locator('#library-search').fill('Volume');
+    await actionPane.getByRole('button', { name: 'Volume', exact: true }).dragTo(fader);
+    await page.locator('.control-inspector #action-name[data-action="core.volume"]').waitFor();
+    return await page.evaluate(async () => {
+      const { invoke } = window.__TAURI_INTERNALS__;
+      const { active: id, page } = await invoke('engine_state');
+      const profile = await invoke('profile_get', { id });
+      return profile.controls['faders.0']?.action === 'core.volume' && page !== undefined;
+    });
   });
   await page.close();
 }

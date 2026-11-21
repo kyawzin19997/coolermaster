@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { api, controlId, inTauri, inWindow, usePreview, type Binding, type EngineView, type Look } from "../engine";
-import { withLook } from "../editing";
+import { api, inTauri, inWindow, usePreview, type EngineView, type Look } from "../engine";
 import { save as saveDialog } from "../confirm";
 import { looksLike, templateOf } from "../lookTemplates";
 import { actionName, t } from "../i18n";
@@ -8,7 +7,7 @@ import { actionIconName } from "../actionIcons";
 import { ActionIcon } from "./ActionChooser";
 import { Icon } from "./Icon";
 import { IconPicker } from "./IconPicker";
-import { KeyDesigner } from "./KeyDesigner";
+import { IconSize, KeyDesigner } from "./KeyDesigner";
 import { LabelValues } from "./LookRules";
 
 /** Sixteenths of a second in one cycle of each motion (the engine's own, `render.rs`). */
@@ -61,21 +60,6 @@ function useLivePreview(look: Look): string | null {
   return frame ?? still;
 }
 
-function KeyChip({ look, on, current, name, onToggle }: { look: Look; on: boolean; current: boolean; name: string; onToggle: () => void }) {
-  const svg = usePreview("key", look);
-  return (
-    <button
-      className={`studio-chip${on ? " is-on" : ""}${current ? " is-current" : ""}`}
-      aria-pressed={on}
-      title={name}
-      aria-label={name}
-      disabled={current}
-      onClick={onToggle}
-      dangerouslySetInnerHTML={{ __html: svg ?? "" }}
-    />
-  );
-}
-
 /** Common appearance settings with a live preview and expandable precision tools. */
 export function KeyStudio({ view, control, onClose }: { view: EngineView; control: string; onClose: () => void }) {
   const profile = view.profile;
@@ -83,19 +67,17 @@ export function KeyStudio({ view, control, onClose }: { view: EngineView; contro
   const page = view.state?.page ?? null;
   const start = profile?.controls[control];
   const [look, setLook] = useState<Look>(start?.look ?? {});
-  const [also, setAlso] = useState<Set<string>>(new Set());
   const [moving, setMoving] = useState<"icon" | "label">("icon");
   const [iconsOpen, setIconsOpen] = useState(false);
   const [positionOpen, setPositionOpen] = useState(false);
   const [advancedOpen, setAdvancedOpen] = useState(false);
-  const [applyOpen, setApplyOpen] = useState(false);
   const svg = useLivePreview(look);
   const pending = useRef<number | null>(null);
   const dirty = useRef(false);
   const writing = useRef(Promise.resolve(true));
   const [note, setNote] = useState<string | null>(null);
-  const latest = useRef({ look, also });
-  latest.current = { look, also };
+  const latest = useRef(look);
+  latest.current = look;
   const flush = useCallback(() => {
     if (pending.current !== null) window.clearTimeout(pending.current);
     pending.current = null;
@@ -106,12 +88,7 @@ export function KeyStudio({ view, control, onClose }: { view: EngineView; contro
       const current = await api.profile(profileId);
       const binding = current.controls[control];
       if (!binding) throw new Error(t("studio.gone"));
-      const changes: Record<string, Binding> = { [control]: { ...binding, look: snapshot.look } };
-      for (const id of snapshot.also) {
-        const other = current.controls[id];
-        if (other) changes[id] = { ...other, look: withLook(other.look, snapshot.look) };
-      }
-      await api.setBindings(profileId, changes);
+      await api.setBinding(profileId, control, { ...binding, look: snapshot });
       return true;
     }).catch((e) => {
       dirty.current = true;
@@ -152,7 +129,7 @@ export function KeyStudio({ view, control, onClose }: { view: EngineView; contro
   const holding = useRef(false);
   const [, setSteps] = useState(0);
   const apply = (next: Look) => {
-    latest.current = { look: next, also };
+    latest.current = next;
     dirty.current = true;
     setLook(next);
     if (pending.current !== null) window.clearTimeout(pending.current);
@@ -237,12 +214,6 @@ export function KeyStudio({ view, control, onClose }: { view: EngineView; contro
   };
   const moved = !!(look.iconDx || look.iconDy || look.labelDx || look.labelDy);
 
-  // the page's keys that do something: tick them to change them together
-  const keys = profile
-    ? Array.from({ length: 15 }, (_, i) => controlId("keys", i, page))
-        .filter((id) => profile.controls[id])
-        .map((id) => ({ id, n: Number(id.split(".").pop()) + 1, look: profile.controls[id].look ?? {} }))
-    : [];
   const number = Number(control.split(".").pop()) + 1;
   const action = view.catalog?.actions.find((a) => a.id === start?.action);
   const defaultIcon = action && actionIconName(action.id, action.icon);
@@ -321,39 +292,15 @@ export function KeyStudio({ view, control, onClose }: { view: EngineView; contro
                 </div>
                 <button className="tool small ghost" disabled={!moved} onClick={() => change({ ...look, iconDx: undefined, iconDy: undefined, labelDx: undefined, labelDy: undefined })}>{t("studio.resetPlace")}</button>
               </div>
+              <IconSize look={look} onChange={change} />
             </div>
           </details>
           <details className="studio-section" onToggle={(e) => setAdvancedOpen(e.currentTarget.open)}>
             <summary><Icon name="sliders-horizontal" />{t("studio.advanced")}<Icon name="chevron-down" /></summary>
             {advancedOpen && (
               <div className="studio-section-body">
-                <KeyDesigner look={look} onChange={change} others={[]} onApplyTo={() => Promise.resolve()} />
+                <KeyDesigner look={look} onChange={change} showIconSize={false} />
                 <LabelValues label={look.label ?? ""} onChange={(label) => change({ ...look, label })} />
-              </div>
-            )}
-          </details>
-          <details className="studio-section" onToggle={(e) => setApplyOpen(e.currentTarget.open)}>
-            <summary><Icon name="layers" />{t("studio.applyStyle")}<Icon name="chevron-down" /></summary>
-            {applyOpen && (
-              <div className="studio-section-body">
-                {keys.length > 1 && (
-                  <>
-                    <p className="help">{t("studio.togetherHelp", { count: also.size })}</p>
-                    <div className="studio-keys" role="group" aria-label={t("studio.together")}>
-                      {keys.map((k) => (
-                        <KeyChip key={k.id} look={k.id === control ? look : k.look} current={k.id === control} on={k.id === control || also.has(k.id)} name={k.look.label?.trim() ? (k.n + ". " + k.look.label) : t("studio.key", { n: k.n })}
-                          onToggle={() => setAlso((selected) => {
-                            const next = new Set(selected);
-                            if (next.has(k.id)) next.delete(k.id);
-                            else next.add(k.id);
-                            return next;
-                          })}
-                        />
-                      ))}
-                    </div>
-                    <button type="button" className="tool small align-start" disabled={!also.size} onClick={() => { dirty.current = true; void flush(); }}>{t("studio.applyNow")}</button>
-                  </>
-                )}
                 <label className="check" title={t("studio.styleHelp")}>
                   <input type="checkbox" checked={styled} onChange={(e) => void setStyle(e.target.checked)} />
                   {t("studio.style", { name: profile?.name ?? "" })}

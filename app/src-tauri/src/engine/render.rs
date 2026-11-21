@@ -1052,11 +1052,11 @@ fn key_parts_plain(look: &Look) -> (String, String, String) {
     }
     let emoji = look.icon.as_deref().and_then(|i| i.strip_prefix(EMOJI_PREFIX)).filter(|e| !e.trim().is_empty());
     let icon_name = look.icon.as_deref().filter(|n| icon_svg(n).is_some());
-    let scale = match look.icon_size.as_deref() {
+    let scale = look.icon_scale.map(|size| f32::from(size.clamp(50, 150)) / 100.0).unwrap_or(match look.icon_size.as_deref() {
         Some("small") => 0.7,
         Some("large") => 1.3,
         _ => 1.0,
-    };
+    });
     // the icon's square, made smaller or bigger around its own centre and kept on the key
     let mark = |x: f32, y: f32, size: f32| {
         let new = (size * scale).min(s - 4.0);
@@ -2052,6 +2052,20 @@ impl Renderer {
 #[cfg(test)]
 mod tests {
     use super::super::house;
+
+    #[test]
+    fn icon_scale_preserves_the_label_and_legacy_icon_size() {
+        let look = Look { icon: Some("volume-2".into()), label: Some("Volume".into()), ..Look::default() };
+        let (_, normal, _) = key_parts_plain(&look);
+        let (_, bigger, _) = key_parts_plain(&Look { icon_scale: Some(140), ..look.clone() });
+        let (_, smaller, _) = key_parts_plain(&Look { icon_scale: Some(50), ..look.clone() });
+        assert!(normal.contains("scale(1.25)"));
+        assert!(bigger.contains("scale(1.75)"));
+        assert!(smaller.contains("scale(0.625)"));
+        assert_eq!(normal.split_once("</g>").unwrap().1, bigger.split_once("</g>").unwrap().1);
+        assert_eq!(normal.split_once("</g>").unwrap().1, smaller.split_once("</g>").unwrap().1);
+        assert_eq!(key_svg(&Look { icon_size: Some("small".into()), ..look.clone() }, 0), key_svg(&Look { icon_scale: Some(70), ..look }, 0));
+    }
 
     /// Everything MasterDeck draws on the deck, as SVG files, for a look at all of it at once:
     /// Every weather sky on the dial in one picture: `MASTERDECK_OUT=<png> cargo test -p masterdeck weather_skies -- --ignored`.

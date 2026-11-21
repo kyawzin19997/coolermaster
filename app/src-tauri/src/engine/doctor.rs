@@ -5,7 +5,7 @@
 
 use std::fmt::Write as _;
 
-use super::mcp::Api;
+use super::local_client::Api;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Status {

@@ -115,22 +115,6 @@ pub fn status_board() -> Profile {
     p
 }
 
-/// "Claude Code": twelve session keys (blue working, orange asking, green your turn), all
-/// sessions on the dial, the rest as on the everyday desk.
-pub fn claude_code() -> Profile {
-    let screenshot = if cfg!(target_os = "macos") { "Cmd+Shift+4" } else { "PrintScreen" };
-    let mut p = everyday_desk();
-    p.name = "Claude Code".into();
-    for i in 0..12 {
-        p.controls.insert(format!("keys.{i}"), bind(super::actions::AGENT, json!({"slot": i + 1}), &format!("Agent {}", i + 1), "bot", "#1d2433"));
-    }
-    p.controls.insert("keys.12".into(), bind("core.media", json!({"command": "playPause"}), "Play", "play", MEDIA));
-    p.controls.insert("keys.13".into(), bind("core.hotkey", json!({"keys": "VolumeMute"}), "Mute", "volume-x", MEDIA));
-    p.controls.insert("keys.14".into(), bind("core.hotkey", json!({"keys": screenshot}), "Screenshot", "camera", MEDIA));
-    p.controls.insert("dial".into(), bind(super::actions::AGENTS, json!({}), "Sessions", "bot", "#1f1d26"));
-    p
-}
-
 const MEET: &str = "#2a1f33";
 const DANGER: &str = "#3a1f22";
 const TOOL: &str = "#1f2a33";
@@ -998,7 +982,7 @@ pub fn group(id: &str) -> &'static str {
         "photoshop" | "illustrator" | "lightroom" => "photo",
         "premiere" | "resolve" | "vegas" | "capcut" | "shotcut" => "video",
         "games" | "game" | "sim" => "games",
-        "claude" | "status" => "tools",
+        "status" => "tools",
         id if id.starts_with("showcase") => "showcase",
         id if id.starts_with("test-") => "test",
         id if games().iter().any(|g| g.id == id) => "games",
@@ -1107,13 +1091,6 @@ pub fn catalog() -> Vec<PresetInfo> {
         editor_info("vegas", vegas),
         editor_info("capcut", capcut),
         editor_info("shotcut", shotcut),
-        PresetInfo {
-            id: "claude",
-            name: "Claude Code",
-            description: "A key per Claude Code session showing whether it works, asks or waits for you; all sessions on the dial.",
-            build: claude_code,
-            test: false,
-        },
         PresetInfo { id: "game", name: "Game action bar", description: "Number and ability keys, zoom and item cycle, game chat and music volumes.", build: game_bar, test: false },
         PresetInfo {
             id: "sim",

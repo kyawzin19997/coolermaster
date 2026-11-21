@@ -194,7 +194,7 @@ fn exe_like(name: &str, any: &[&str]) -> bool {
 /// Look at this computer and deck (nothing leaves it).
 pub fn context(app: &AppHandle, focus: Option<Focus>, polish: bool) -> Ctx {
     let kinds = super::api::module_kinds(app).attached;
-    let apps = super::assistant::top_apps(&[], 12);
+    let apps = super::profile_helpers::top_apps(&[], 12);
     let installed = super::installed::list(false);
     let games: Vec<(String, String)> = installed.games.iter().map(|g| (g.name.clone(), g.target.clone())).collect();
     let names: Vec<String> = apps.iter().map(|(exe, name, _)| format!("{exe} {name}")).chain(installed.apps.iter().map(|a| format!("{} {}", a.exe, a.name))).collect();
@@ -593,7 +593,7 @@ fn build(ctx: &Ctx, choices: &Choices, id: &str) -> (Profile, Vec<Stop>) {
     }
     // the rainbow edge, or one calm color
     p.edge = if keep("superRainbow") { None } else { Some("#8B7CF6".into()) };
-    super::assistant::with_real_apps(&mut p);
+    super::profile_helpers::with_real_apps(&mut p);
     super::house::apply(&mut p);
     (p, stops)
 }
@@ -731,7 +731,6 @@ pub fn tour_finish(app: AppHandle, keep: bool, home: bool) -> Result<Option<Stri
     let engine = app.state::<Engine>();
     if keep {
         engine.settle_draft(&draft, true)?;
-        super::nudge::tour_kept(&draft);
         super::presses::forget_profile(&draft);
         if home {
             engine.activate(&draft)?;

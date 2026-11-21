@@ -3,13 +3,12 @@ import { readPreference, writePreference } from "../preferences";
 import { Fragment, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { askInWindow, confirmed, open, save, told } from "../confirm";
-import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import type { ControlRef, LiveState, ModuleKind } from "../deck";
 import { api, withUpright, type FrameCost, FX_OPTIONS, FX_TINT, fxName, GPU_KINDS, type FxKind, type FxLayer, SKIN_MOTION, type Skin, type Look, GAMES_ENABLED, pageReachable, setPreviewSalt, type AppInfo, type AppsState, type CrashReport, type LightSettings, LED_EFFECTS, METRICS, type EngineView, type GameSummary, type Imported, type Metric, type Moved, type PluginInfo, type LocalPlugin, type InstalledItem, type PresetSummary, type Profile, type ProfileSummary, type Screens, triedPresets, SAVER_SCENES, saverOf, knownScreens, screensChanged, saverEnd, useSaverShown, type CustomSaver, SAVER_FROM_LOOK, saverPreset, PRESETS_HIDDEN, THEMES, themeTitle, layersOf } from "../engine";
 import { Icon } from "./Icon";
 import { Thumb } from "./Thumb";
-import { AssistantPanel, refreshNudge, useNudge, useSetUp } from "./Assistant";
+import { DetachedModuleGuide } from "./WorkspaceGuide";
 import { InstalledPicker, pickImage } from "./Inspector";
 import { ModuleThumb } from "./DeckView";
 import { DiagnosticsSettings } from "./Diagnostics";
@@ -17,7 +16,7 @@ import { demoParam } from "../demo/params";
 import { setTheme, useTheme, type Theme } from "../theme";
 import { updates, useAppVersion, useUpdateAvailable, type UpdateInfo } from "../update";
 import { keysOfKind, MODULE_KINDS, ownedKey, type Placement } from "../layout";
-import { BUILT_IN_LANGUAGES, getLanguage, languageTemplate, localizeError, localizeGame, localizePreset, t, useLanguage, type Key } from "../i18n";
+import { BUILT_IN_LANGUAGES, languageTemplate, localizeError, localizeGame, localizePreset, t, useLanguage, type Key } from "../i18n";
 import masterdeckIcon from "../../src-tauri/icons/masterdeck-mark.svg";
 
 // macOS has no listening to the music yet (engine/beat.rs: Windows only)
@@ -68,66 +67,45 @@ export function movedNote(moved: Moved[] | undefined, pages: Profile["pages"] = 
 
 export const Logo = () => <img className="logo" src={masterdeckIcon} alt="" />;
 
-export type LeftTab = "profiles" | "assistant";
+export type LeftTab = "profiles" | "guide";
 
-/** Suggestions whose dot was seen (per viewer, a convenience: lost storage only brings a dot back). */
-function nudgeSeen(subject: string): boolean {
-  try {
-    return (JSON.parse(readPreference("nudgeSeen") ?? "[]") as string[]).includes(subject);
-  } catch {
-    return false;
-  }
-}
-function markNudgeSeen(subject: string) {
-  try {
-    const seen = JSON.parse(readPreference("nudgeSeen") ?? "[]") as string[];
-    writePreference("nudgeSeen", JSON.stringify([...seen.filter((s) => s !== subject), subject].slice(-50)));
-  } catch {
-    // not remembered: the dot may come back once
-  }
-}
-
-/**
- * The left column: Get started (the assistant) and the profiles list as two tabs. Actions are chosen
- * only in the right panel, where the control is known (owner's pick 1a, 2026-10-16, variant A).
- * Once set up, Profiles comes first and is open at start; Get started keeps the same places
- * (owner's pick 2a, 2026-10-16: "zawsze to samo" stays; docs/FLOWS.md difference 3).
- */
-export function LeftPanel({ view, tab, onTab, onOpenProfile, onNewProfile, onBuild, onTour }: { view: EngineView; tab: LeftTab; onTab: (tab: LeftTab) => void; onOpenProfile: () => void; onNewProfile: () => void; onBuild?: () => void; onTour?: () => void }) {
+export function LeftPanel({ view, tab, onTab, onOpenProfile, onNewProfile, onGuide, onArrange, onTour }: {
+  view: EngineView;
+  tab: LeftTab;
+  onTab: (tab: LeftTab) => void;
+  onOpenProfile: () => void;
+  onNewProfile: () => void;
+  onGuide: () => void;
+  onArrange: () => void;
+  onTour: () => void;
+}) {
   useLanguage();
-  const setUp = useSetUp(view);
-  // MasterDeck's own suggestion (an app without a deck): a dot on the Assistant tab, looked at now and then
-  const nudge = useNudge();
-  // the dot goes once the tab was looked at with that suggestion in it, as badges do
-  const [, seenNow] = useState(0);
-  useEffect(() => {
-    if (tab === "assistant" && nudge && !nudgeSeen(nudge.subject)) {
-      markNudgeSeen(nudge.subject);
-      seenNow((n) => n + 1);
-    }
-  }, [tab, nudge]);
-  useEffect(() => {
-    refreshNudge();
-    const timer = setInterval(refreshNudge, 15 * 60 * 1000);
-    return () => clearInterval(timer);
-  }, []);
   return (
-    // one width for every tab (owner, 2026-10-14: Get started widening the column looked odd);
-    // Get started comes first and is open at start
-    <aside data-guide="library" className="library" aria-label={tab === "profiles" ? t("profiles.title") : t("assistant.title")}>
-      <div className={`lib-tabs seg full${setUp ? " is-set-up" : ""}`} role="tablist">
-        <button role="tab" aria-selected={tab === "assistant"} className={`tab${tab === "assistant" ? " is-active" : ""}`} onClick={() => onTab("assistant")}>
-          {t("assistant.tab")}
-          {nudge && tab !== "assistant" && !nudgeSeen(nudge.subject) && <span className="tab-dot" aria-label={t("nudge.ask")} />}
-        </button>
-        <button role="tab" data-guide="profiles" aria-selected={tab === "profiles"} className={`tab${tab === "profiles" ? " is-active" : ""}`} onClick={() => onTab("profiles")}>
+    <aside data-guide="library" className="library" aria-label={tab === "profiles" ? t("profiles.title") : t("workshop.start")}>
+      <div className="lib-tabs seg full is-set-up" role="tablist">
+        <button role="tab" data-guide="profiles" aria-selected={tab === "profiles"} className={tab === "profiles" ? "tab is-active" : "tab"} onClick={() => onTab("profiles")}>
           {t("profiles.title")}
         </button>
+        <button role="tab" aria-selected={tab === "guide"} className={tab === "guide" ? "tab is-active" : "tab"} onClick={() => onTab("guide")}>{t("profiles.getStarted")}</button>
       </div>
       {tab === "profiles" ? (
         <ProfilesList view={view} onOpenProfile={onOpenProfile} onNewProfile={onNewProfile} />
       ) : (
-        <AssistantPanel view={view} onTour={onTour} onBuild={onBuild} />
+        <div className="profile-start-guide sectioned">
+          <section className="sec">
+            <h3 className="sec-title">{t("workshop.start")}</h3>
+            <p className="help">{t("workshop.lesson.actions.body")}</p>
+            <div className="row wrap">
+              <button type="button" className="tool primary" onClick={onGuide}>{t("workshop.start")}</button>
+              <button type="button" className="tool" onClick={onTour}>{t("workshop.personalize")}</button>
+            </div>
+          </section>
+          <section className="sec">
+            <h3 className="sec-title">{t("workshop.detachedTitle")}</h3>
+            <DetachedModuleGuide />
+            <button type="button" className="tool align-start" onClick={onArrange}>{t("stage.editLayout")}</button>
+          </section>
+        </div>
       )}
     </aside>
   );
@@ -642,42 +620,11 @@ export function ForAppPanel({ view, kinds, onClose, onMade }: { view: EngineView
   const open = useApps(view.state?.foreground);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [ai, setAi] = useState(false);
-  const [note, setNote] = useState<string | null>(null);
-  const [codeCli, setCodeCli] = useState<boolean | null>(null);
-  useEffect(() => {
-    invoke<{ codeCli: boolean }>("mcp_info").then((i) => setCodeCli(i.codeCli), () => setCodeCli(false));
-  }, []);
-  /** "Build with AI": Claude Code builds it with MasterDeck's tools; without Claude Code the request is copied. */
-  const buildWithAi = async (exe: string, name: string, target: string, picture: string | null) => {
-    const prompt = await api.aiPrompt(name, exe, target, picture, getLanguage());
-    const before = new Set((await api.state()).profiles.map((p) => p.id));
-    try {
-      const said = await api.aiBuild(prompt);
-      const file = (exe.split(/[\\/]/).pop() ?? exe).toLowerCase();
-      const fresh = (await api.state()).profiles.filter((p) => !before.has(p.id));
-      const made = fresh.find((p) => p.apps.some((a) => a.split(":")[0].toLowerCase() === file)) ?? fresh[0];
-      setBusy(null);
-      if (made) {
-        await api.activate(made.id);
-        onMade(made.id);
-      } else {
-        setNote(said || t("ai.nothing"));
-      }
-    } catch (e) {
-      setBusy(null);
-      if (String(e) !== "no-cli") throw e;
-      await navigator.clipboard.writeText(prompt).catch(() => {});
-      setNote(t("ai.copied"));
-    }
-  };
   const make = async (exe: string, name: string, target: string, item?: InstalledItem) => {
     setBusy(name);
     setError(null);
-    setNote(null);
     try {
       const picture = item ? await api.installedPicture(item).catch(() => null) : null;
-      if (ai) return await buildWithAi(exe, name, target, picture);
       const p = await api.profileForApp(exe, name, target, picture, kinds);
       await api.activate(p.id);
       onMade(p.id);
@@ -692,21 +639,10 @@ export function ForAppPanel({ view, kinds, onClose, onMade }: { view: EngineView
       <PanelHead title={t("forApp.title")} crumb={t("topbar.newDeck")} icon="app-window" onClose={onClose} />
       <section className="sec">
         <p className="help">{t("forApp.help")}</p>
-        <label className="check">
-          <input type="checkbox" checked={ai} disabled={!!busy} onChange={(e) => setAi(e.target.checked)} />
-          {t("ai.toggle")}
-        </label>
-        {ai && <p className="help">{codeCli === false ? t("ai.helpCopy") : t("ai.help")}</p>}
         {busy && (
           <p className="hint">
             <Icon name="sparkles" />
-            {ai ? t("ai.making", { app: busy }) : t("forApp.making", { app: busy })}
-          </p>
-        )}
-        {note && (
-          <p className="hint">
-            <Icon name="info" />
-            {note}
+            {t("forApp.making", { app: busy })}
           </p>
         )}
         {error && <p className="help">{error}</p>}
@@ -735,7 +671,7 @@ export function ForAppPanel({ view, kinds, onClose, onMade }: { view: EngineView
 }
 
 /** Profile tabs that fit the top bar; the rest go into a "More" menu (the active one always shows). */
-function ProfileTabs({ view, onOpenProfile, onOpenForApp, onOpenAssistant, onOpenTour, kinds, newRequest }: { view: EngineView; onOpenProfile: () => void; onOpenForApp: () => void; onOpenAssistant: () => void; onOpenTour: () => void; kinds?: string[]; newRequest?: number }) {
+function ProfileTabs({ view, onOpenProfile, onOpenForApp, kinds, newRequest }: { view: EngineView; onOpenProfile: () => void; onOpenForApp: () => void; kinds?: string[]; newRequest?: number }) {
   const state = view.state;
   const all = state?.profiles ?? [];
   // the bar: profiles shown in it, the home profile and the active one
@@ -867,21 +803,19 @@ function ProfileTabs({ view, onOpenProfile, onOpenForApp, onOpenAssistant, onOpe
             </button>
             {adding && (
               <div className="popover new-deck-pop" role="dialog" aria-label={t("topbar.newDeck")}>
-                {/* the one way into a new deck (owner's pick after the release audit, 2026-10-13) */}
                 <div className="pop-title">{t("topbar.newDeck")}</div>
                 <button
                   className="menu-row is-primary"
                   onClick={() => {
                     setAdding(false);
-                    onOpenTour();
+                    setNaming("");
                   }}
                 >
                   <span className="menu-ic">
-                    <Icon name="play" />
+                    <Icon name="file-plus" />
                   </span>
                   <span className="menu-text">
-                    <b>{t("newDeck.tour")}</b>
-                    <small>{t("newDeck.tourHelp")}</small>
+                    <b>{t("newDeck.empty")}</b>
                   </span>
                 </button>
                 <button
@@ -910,35 +844,6 @@ function ProfileTabs({ view, onOpenProfile, onOpenForApp, onOpenAssistant, onOpe
                   <Icon name={readyOpen ? "chevron-up" : "chevron-down"} />
                 </button>
                 {readyOpen && <PresetList kinds={kinds} onPicked={() => setAdding(false)} />}
-                <button
-                  className="menu-row"
-                  onClick={() => {
-                    setAdding(false);
-                    onOpenAssistant();
-                  }}
-                >
-                  <span className="menu-ic is-plain">
-                    <Icon name="sparkles" />
-                  </span>
-                  <span className="menu-text">
-                    <b>{t("assistant.menu")}</b>
-                    <small>{t("assistant.menuHelp")}</small>
-                  </span>
-                </button>
-                <button
-                  className="menu-row"
-                  onClick={() => {
-                    setAdding(false);
-                    setNaming("");
-                  }}
-                >
-                  <span className="menu-ic is-plain">
-                    <Icon name="file-plus" />
-                  </span>
-                  <span className="menu-text">
-                    <b>{t("newDeck.empty")}</b>
-                  </span>
-                </button>
               </div>
             )}
           </span>
@@ -1000,13 +905,11 @@ export function TopBar({
   onOpenForApp,
   kinds,
   newRequest,
-  onOpenAssistant,
   onOpenTour,
   setupPending,
 }: {
   kinds?: string[];
   newRequest?: number;
-  onOpenAssistant: () => void;
   onOpenTour: () => void;
   onOpenForApp: () => void;
   live: LiveState;
@@ -1034,7 +937,7 @@ export function TopBar({
         <Icon name="layers" />
         <span className="tb-label">{t("profiles.title")}</span>
       </button>
-      <ProfileTabs view={view} onOpenProfile={onOpenProfile} onOpenForApp={onOpenForApp} onOpenAssistant={onOpenAssistant} onOpenTour={onOpenTour} kinds={kinds} newRequest={newRequest} />
+      <ProfileTabs view={view} onOpenProfile={onOpenProfile} onOpenForApp={onOpenForApp} kinds={kinds} newRequest={newRequest} />
       {state?.autoApp && <TakeoverMark app={state.autoApp} focused={focused} />}
       {state && (
         <label className="check auto-switch" title={state.pinned ? t("topbar.autoOffHelp", { profile: state.profiles.find((p) => p.id === state.active)?.name ?? "" }) : t("topbar.autoOnHelp")}>
@@ -1072,10 +975,8 @@ export function TopBar({
   );
 }
 
-export function DeckTools({ canArrange, onArrange, onBuild, onDisplay, onSaver, onGuide, onModulesGuide }: {
-  canArrange: boolean;
+export function DeckTools({ onArrange, onDisplay, onSaver, onGuide, onModulesGuide }: {
   onArrange: () => void;
-  onBuild: () => void;
   onDisplay: () => void;
   onSaver: () => void;
   onGuide: () => void;
@@ -1089,8 +990,7 @@ export function DeckTools({ canArrange, onArrange, onBuild, onDisplay, onSaver, 
   const actions = [
     { label: t("settings.lightsScreens"), icon: "sun", run: onDisplay },
     { label: t("saver.title"), icon: "moon", run: onSaver },
-    { label: t("stage.editLayout"), icon: "layout-grid", run: onArrange, disabled: !canArrange },
-    { label: t("builder.title"), icon: "pencil", run: onBuild },
+    { label: t("stage.editLayout"), icon: "layout-grid", run: onArrange },
     { label: t("workshop.modules"), icon: "app-window", run: onModulesGuide },
     { label: t("workshop.start"), icon: "compass", run: onGuide },
   ];
@@ -1103,8 +1003,8 @@ export function DeckTools({ canArrange, onArrange, onBuild, onDisplay, onSaver, 
       </button>
       {open && (
         <div className="popover" role="menu" aria-label={t("stage.tools")}>
-          {actions.map(({ label, icon, run, disabled }) => (
-            <button key={icon} type="button" role="menuitem" className="menu-row compact" disabled={disabled} onClick={() => { close(); run(); }}>
+          {actions.map(({ label, icon, run }) => (
+            <button key={icon} type="button" role="menuitem" className="menu-row compact" onClick={() => { close(); run(); }}>
               <Icon name={icon} />
               {label}
             </button>
@@ -1340,7 +1240,7 @@ export function EffectFields({ idPrefix, effect, speed, onChange }: { idPrefix: 
 
 /** Title row of a side panel: icon, small caption, title, close. */
 /** A panel over the window (For an app, Gallery, Games, a deck's settings): the editor on the right stays. Esc or a click outside closes it. */
-export function Sheet({ onClose, label, wide, children }: { onClose: () => void; label?: string; wide?: boolean; children: React.ReactNode }) {
+export function Sheet({ onClose, label, wide, className, children }: { onClose: () => void; label?: string; wide?: boolean; className?: string; children: React.ReactNode }) {
   const close = useRef(onClose);
   close.current = onClose;
   useEffect(() => {
@@ -1353,7 +1253,7 @@ export function Sheet({ onClose, label, wide, children }: { onClose: () => void;
   }, []);
   return (
     <div className="sheet-backdrop" onMouseDown={(e) => e.target === e.currentTarget && close.current()}>
-      <div className={wide ? "sheet sheet-wide" : "sheet"} role="dialog" aria-modal="true" aria-label={label}>
+      <div className={["sheet", wide && "sheet-wide", className].filter(Boolean).join(" ")} role="dialog" aria-modal="true" aria-label={label}>
         {children}
       </div>
     </div>
@@ -2877,10 +2777,11 @@ const TURNS: (number | null)[] = [null, 0, 90, 180, 270];
 export function ArrangePanel({ onDone, live, saved, onPlace }: { onDone: () => void; live: LiveState; saved: Record<string, Placement>; onPlace: (key: string, placement: Placement | null) => void }) {
   useLanguage();
   return (
-    <aside className="inspector sectioned side-panel">
+    <aside className="inspector sectioned side-panel layout-panel" aria-label={t("stage.editLayout")}>
       <PanelHead title={t("stage.editLayout")} icon="layout-grid" />
       <section className="sec">
         <p className="help">{t("app.hintArranging")}</p>
+        <BaseTurnPicker live={live} />
         <button className="tool primary align-start" onClick={onDone}>
           <Icon name="check" />
           {t("stage.doneLayout")}
@@ -2891,6 +2792,7 @@ export function ArrangePanel({ onDone, live, saved, onPlace }: { onDone: () => v
         <h3 className="sec-title">{t("welcome.ownedTitle")}</h3>
         <p className="help">{t("welcome.owned")}</p>
         <OwnedKinds live={live} saved={saved} onPlace={onPlace} />
+        <DetachedModuleGuide />
       </section>
     </aside>
   );
@@ -2977,8 +2879,19 @@ export function PageBar({ view }: { view: EngineView }) {
     if (!name) return;
     api.renamePage(profile.id, editing.id, name).catch((e) => told(t("pages.title"), String(e)));
   };
+  const deleteCurrentPage = async () => {
+    if (!currentPage) return;
+    close();
+    if (!(await confirmed(t("pages.confirmDelete", { name: currentPage.name })))) return;
+    await api.deletePage(profile.id, currentPage.id).catch((e) => told(t("pages.title"), localizeError(String(e))));
+    tabs.current?.querySelector<HTMLButtonElement>('[aria-current="page"]')?.focus();
+  };
   return (
-    <nav className="page-bar" aria-label={t("pages.title")} ref={nav}>
+    <nav className="page-bar" aria-label={t("pages.title")} ref={nav} onKeyDown={(event) => {
+      if (event.key !== "Delete" || event.ctrlKey || event.metaKey || event.altKey || event.shiftKey || naming) return;
+      event.preventDefault();
+      if (!event.repeat) void deleteCurrentPage();
+    }}>
       <span className="label">{t("pages.keys")}</span>
       {naming ? (
         <form className="page-rename" onSubmit={(e) => (e.preventDefault(), submit())}>
@@ -3033,10 +2946,7 @@ export function PageBar({ view }: { view: EngineView }) {
               )}
               <div className="row wrap">
                 <button type="button" className="tool ghost small" onClick={() => { close(); setNaming({ id: currentPage.id, name: currentPage.name }); }}>{t("pages.rename")}</button>
-                <button type="button" className="tool danger small" onClick={() => {
-                  close();
-                  void confirmed(t("pages.confirmDelete", { name: currentPage.name })).then((yes) => yes && api.deletePage(profile.id, currentPage.id).catch((e) => told(t("pages.title"), localizeError(String(e)))));
-                }}>{t("pages.delete")}</button>
+                <button type="button" className="tool danger small" aria-keyshortcuts="Delete" onClick={() => void deleteCurrentPage()}>{t("pages.delete")} <kbd className="kbd" aria-hidden="true">Del</kbd></button>
               </div>
             </footer>
           )}
@@ -3283,8 +3193,6 @@ function Connections() {
         <TwitchConnection />
         <HomeAssistantConnection />
         <SpotifyConnection />
-        <ClaudeConnection />
-        <AssistantConnection />
         <YourApps />
       </div>
     </section>
@@ -3314,11 +3222,6 @@ function YourApps() {
       (e) => (setMessage(String(e)), setBusy(false)),
     );
   };
-  const copyPrompt = () =>
-    api
-      .appContractPrompt()
-      .then((p) => navigator.clipboard.writeText(p))
-      .then(() => setMessage(t("apps.promptCopied")), (e) => setMessage(String(e)));
   return (
     <Service icon="app-window" hue="#3b82f6" name={t("apps.title")} state={[apps.length > 0, apps.length ? t("apps.count", { count: apps.length }) : t("connections.stateOff")]}>
       <p className="help">{t("apps.help")}</p>
@@ -3349,9 +3252,6 @@ function YourApps() {
           </button>
         </div>
       </div>
-      <button className="link-btn align-start" onClick={copyPrompt}>
-        {t("apps.copyPrompt")}
-      </button>
       {message && <p className="help">{message}</p>}
     </Service>
   );
@@ -3462,121 +3362,6 @@ function ObsConnection() {
   );
 }
 
-/** Claude Code: MasterDeck's hooks in ~/.claude/settings.json, so session keys show each session's state. */
-function ClaudeConnection() {
-  useLanguage();
-  const [on, setOn] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
-  const [approve, setApprove] = useState(false);
-  useEffect(() => {
-    invoke<boolean>("claude_status").then((v) => setOn(!!v), () => {});
-    invoke<boolean>("claude_approving").then((v) => setApprove(!!v), () => {});
-  }, []);
-  return (
-    <Service icon="bot" hue="#d97757" name="Claude Code" state={[on, on ? t("connections.stateConnected") : t("connections.stateOff")]}>
-      <div className="row wrap">
-        <button
-          className={`tool${on ? " ghost" : ""}`}
-          disabled={busy}
-          onClick={() => {
-            setBusy(true);
-            setMessage(null);
-            invoke<boolean>("claude_connect", { on: !on }).then(
-              (v) => (setOn(!!v), setBusy(false)),
-              (e) => (setMessage(String(e)), setBusy(false)),
-            );
-          }}
-        >
-          <Icon name="link" />
-          {on ? t("connections.claudeDisconnect") : t("connections.claudeConnect")}
-        </button>
-      </div>
-      {on && (
-        <label className="check" title={t("connections.claudeApproveHelp")}>
-          <input
-            type="checkbox"
-            checked={approve}
-            disabled={busy}
-            onChange={(e) => {
-              const next = e.target.checked;
-              setBusy(true);
-              invoke<boolean>("claude_connect", { on: true, approve: next }).then(
-                () => (setApprove(next), setBusy(false)),
-                (err) => (setMessage(String(err)), setBusy(false)),
-              );
-            }}
-          />
-          {t("connections.claudeApprove")}
-        </label>
-      )}
-      <p className="help">{message ?? t("connections.claudeHelp")}</p>
-    </Service>
-  );
-}
-
-/** What `mcp_info` tells about connecting an AI assistant (`engine/mcp.rs`). */
-interface McpInfo {
-  exe: string;
-  desktop: boolean;
-  codeCli: boolean;
-  codeCommand: string;
-  deckCommand?: string;
-  snippet: string;
-}
-
-/** The user's own AI assistant builds profiles through `hubdeck --mcp` (docs/MCP.md). */
-function AssistantConnection() {
-  useLanguage();
-  const [info, setInfo] = useState<McpInfo | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
-  const load = () => invoke<McpInfo>("mcp_info").then(setInfo, () => {});
-  useEffect(() => {
-    load();
-  }, []);
-  const copy = (text: string) => navigator.clipboard.writeText(text).then(() => setMessage(t("connections.mcpCopied")), (e) => setMessage(String(e)));
-  const run = (job: Promise<string>) => {
-    setBusy(true);
-    setMessage(null);
-    job.then(
-      (m) => (setMessage(m), setBusy(false), load()),
-      (e) => (setMessage(String(e)), setBusy(false)),
-    );
-  };
-  return (
-    <Service icon="sparkles" hue="#8b7cf6" name={t("connections.mcpName")} state={[!!info?.desktop, info?.desktop ? t("connections.mcpDesktopOn") : t("connections.stateOff")]}>
-      <div className="row wrap">
-        <button
-          className="tool"
-          disabled={busy || !info}
-          onClick={() => run(invoke<string | null>("mcp_connect_desktop").then((backup) => t("connections.mcpDesktopDone", { backup: backup ?? "-" })))}
-        >
-          <Icon name="link" />
-          {t("connections.mcpDesktop")}
-        </button>
-        <button
-          className="tool"
-          disabled={busy || !info}
-          onClick={() => (info?.codeCli ? run(invoke<string>("mcp_connect_code").then(() => t("connections.mcpCodeDone"))) : info && copy(info.codeCommand))}
-        >
-          <Icon name={info?.codeCli ? "link" : "copy"} />
-          {info?.codeCli ? t("connections.mcpCode") : t("connections.mcpCodeCopy")}
-        </button>
-        <button className="tool ghost" disabled={!info} onClick={() => info && copy(info.snippet)}>
-          <Icon name="copy" />
-          {t("connections.mcpSnippet")}
-        </button>
-        <button className="tool ghost" disabled={!info?.deckCommand} title={t("connections.mcpDeckHelp")} onClick={() => info?.deckCommand && copy(info.deckCommand)}>
-          <Icon name="copy" />
-          {t("connections.mcpDeck")}
-        </button>
-      </div>
-      <p className="help">{message ?? t("connections.mcpHelp")}</p>
-    </Service>
-  );
-}
-
 /** Where Spotify sends the browser back after the sign-in (spotify.rs `REDIRECT`). */
 const SPOTIFY_REDIRECT = "http://127.0.0.1:43123/callback";
 
@@ -3646,7 +3431,7 @@ function SpotifyConnection() {
           <code className="input mono grow spotify-uri">{SPOTIFY_REDIRECT}</code>
           <button className="tool ghost" onClick={copyRedirect}>
             <Icon name={copied ? "check" : "copy"} />
-            {copied ? t("connections.mcpCopied") : t("connections.spotifyCopy")}
+            {copied ? t("connections.copied") : t("connections.spotifyCopy")}
           </button>
         </div>
       </div>

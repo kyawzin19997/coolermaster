@@ -4,8 +4,7 @@ import { createPortal } from "react-dom";
 import { open } from "../confirm";
 import { invoke } from "@tauri-apps/api/core";
 import type { ControlRef } from "../deck";
-import { KeyDesigner, type OtherKey } from "./KeyDesigner";
-import { withLook } from "../editing";
+import { KeyDesigner } from "./KeyDesigner";
 import { themeTitle, ADVANCED_PARAMS, api, BACKGROUNDS, COMMON_SHORTCUTS, controlId, hasState, inWindow, newBinding, pressable, TURN_PARAMS, usePreview, type ActionDef, type Binding, type DialFace, type EngineView, type Gesture, type AppInfo, type InstalledItem, type Look, type Mode, type ParamDef, type Step, STEP_CONDITIONS } from "../engine";
 import { actionName, localizeAction, specialKeyName, t, useLanguage, type Key } from "../i18n";
 import { Icon } from "./Icon";
@@ -1003,7 +1002,7 @@ const ICON_TINTS = ["#8c79ec", "#79c6ec", "#79ecc6", "#ec798c", "#ecb279", HOUSE
 /**
  * Quick appearance edits for a key or the dial, with the full designer available for keys.
  */
-function LookEditor({ look, onChange, screen, view, idPrefix = "look", program, others = [], onApplyTo, onOpenStudio }: { look: Look; onChange: (l: Look) => void; screen: "key" | "dial"; view: EngineView; idPrefix?: string; program?: string; others?: OtherKey[]; onApplyTo?: (ids: string[]) => Promise<unknown>; onOpenStudio?: () => void }) {
+function LookEditor({ look, onChange, screen, view, idPrefix = "look", program, onOpenStudio }: { look: Look; onChange: (l: Look) => void; screen: "key" | "dial"; view: EngineView; idPrefix?: string; program?: string; onOpenStudio?: () => void }) {
   const svg = usePreview(screen, look);
   const [imageError, setImageError] = useState<string | null>(null);
   const [iconsOpen, setIconsOpen] = useState(false);
@@ -1100,8 +1099,6 @@ function LookEditor({ look, onChange, screen, view, idPrefix = "look", program, 
           <KeyDesigner
             look={look}
             onChange={onChange}
-            others={others}
-            onApplyTo={onApplyTo ?? (() => Promise.resolve())}
             appIcon={
               program
                 ? () => {
@@ -1238,20 +1235,6 @@ export function Inspector({ ref, selected, view, onDropAction, onOpenStudio, onC
   const stored = control && profile ? profile.controls[control] ?? null : null;
   const [draft, setDraft] = useState<Binding | null>(stored);
   const [writeError, setWriteError] = useState("");
-  // the other keys of this page that do something: where "Apply this look to other keys" can go
-  const otherKeys: OtherKey[] =
-    selected?.kind === "keys" && profile
-      ? Array.from({ length: 15 }, (_, i) => controlId("keys", i, page))
-          .filter((id) => id !== control && profile.controls[id])
-          .map((id) => {
-            const b = profile.controls[id];
-            const n = Number(id.split(".").pop()) + 1;
-            const def = view.catalog?.actions.find((a) => a.id === b.action);
-            // a plugin's action is not in the catalog: the last word of its id ("…audiooutputswitch.toggle": Toggle)
-            const last = b.action.split(/[/.]/).pop() ?? b.action;
-            return { id, name: `${n}. ${b.look?.label?.trim() || (def ? actionName(def) : last.charAt(0).toUpperCase() + last.slice(1))}` };
-          })
-      : [];
   const [appearance, setAppearance] = useState(false);
   const saver = useDebouncedSave((b) => {
     if (profile && control) return api.setBinding(profile.id, control, b).then(() => setWriteError(""), (error) => setWriteError(String(error)));
@@ -1454,16 +1437,10 @@ export function Inspector({ ref, selected, view, onDropAction, onOpenStudio, onC
           screen={selected.kind === "dial" ? "dial" : "key"}
           view={view}
           onChange={(look) => update({ ...draft, look })}
-          others={selected.kind === "keys" ? otherKeys : []}
           onOpenStudio={selected.kind === "keys" && onOpenStudio && control ? async () => {
             await saver.flush();
             onOpenStudio(control);
           } : undefined}
-          onApplyTo={(ids) => {
-            if (!profile) return Promise.resolve();
-            const changes = Object.fromEntries(ids.filter((id) => profile.controls[id]).map((id) => [id, { ...profile.controls[id], look: withLook(profile.controls[id].look ?? {}, draft.look ?? {}) }]));
-            return api.setBindings(profile.id, changes);
-          }}
         />
       )}
 

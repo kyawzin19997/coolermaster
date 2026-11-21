@@ -13,7 +13,7 @@
 
 use serde_json::{Value, json};
 
-use super::mcp::{Api, Http};
+use super::local_client::{self, Api, Http};
 
 const HELP: &str = "hubdeck cli status | profiles | profile <name or id> | key <1-15> [--label TEXT] [--icon NAME] [--page ID] | lights <rainbow|color|profile|off> [#rrggbb] | doctor";
 
@@ -106,7 +106,7 @@ pub fn command(api: &dyn Api, args: &[String]) -> Result<String, String> {
 /// of its own, so it writes into the terminal it was started from).
 pub fn run(args: &[String]) -> i32 {
     attach_console();
-    let Some(dir) = super::agents::data_dir() else {
+    let Some(dir) = local_client::data_dir() else {
         eprintln!("hubdeck cli: no app data folder");
         return 1;
     };

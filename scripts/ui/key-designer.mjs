@@ -168,44 +168,9 @@ try {
   l = await look();
   check("the own template puts its look back (frame, matte) and keeps the badge text", l.ring === "#f5c542" && l.gloss === "matte" && l.badge === "3" && l.label === "Lubię to", JSON.stringify(l));
 
-  // the look on another key of the page
-  await win.getByRole("button", { name: "Apply this look to other keys" }).click();
-  await sleep(400);
-  await win.getByLabel("8. Oceń").check();
-  await shot("6-apply");
-  // what the user sees: the whole window, the list scrolled into view
-  await win.getByRole("button", { name: /Apply to selected/ }).scrollIntoViewIfNeeded();
-  await win.screenshot({ path: path.join(shots, "6-apply-window.png") });
-  await win.getByRole("listbox", { name: "Templates" }).scrollIntoViewIfNeeded();
-  await win.screenshot({ path: path.join(shots, "6-apply-window-top.png") });
-  // the list of keys open: names whole, and the panel not widened (a two-column list cut the
-  // Night template and the Label tab, session 30)
-  const cutOpen = (await clipped(win)).filter((x) => /\d+\. |Night|Label|Extras|Apply to selected/.test(x.text));
-  check("with the key list open nothing of the editor is cut", cutOpen.length === 0, cutOpen.map((x) => x.text).join(" | "));
-  // and nothing in it wider than the panel (the clip check reads text only; a wide child pushed the
-  // templates past the panel's edge)
-  const wide = await win.evaluate(() => {
-    // the panel's scrolling parent: what the user sees of it
-    let el = document.querySelector("section.look");
-    if (!el) return ["no section.look"];
-    while (el.parentElement && !/(auto|scroll|hidden)/.test(getComputedStyle(el.parentElement).overflowX + getComputedStyle(el.parentElement).overflowY)) el = el.parentElement;
-    const view = el.parentElement ?? el;
-    const r = view.getBoundingClientRect();
-    const box = { right: Math.min(r.right, r.left + view.clientWidth) };
-    return [document.querySelector("section.look"), ...document.querySelectorAll("section.look *")]
-      .filter((e) => e.getBoundingClientRect().right > box.right + 1 && e.getBoundingClientRect().width > 0)
-      .map((e) => `${e.tagName.toLowerCase()}.${[...e.classList].join(".")} right ${Math.round(e.getBoundingClientRect().right - box.right)}px w ${Math.round(e.getBoundingClientRect().width)}`)
-      .slice(0, 8);
-  });
-  check("with the key list open nothing sticks out of the panel", wide.length === 0, wide.join(" | "));
-  await win.getByRole("button", { name: /Apply to selected \(1\)/ }).click();
-  await sleep(1000);
   const other = await lookOf("keys.7");
-  check("key 8 takes the look and keeps its label, emoji and has no badge", other.ring === "#f5c542" && other.gloss === "matte" && other.label === "Oceń" && other.icon === "emoji:🔥" && !other.badge, JSON.stringify(other));
-  await sleep(1500);
-  await win.locator(".dk-keys, g.dk-ctl[data-kind=\"keys\"]").first().scrollIntoViewIfNeeded().catch(() => {});
-  await win.screenshot({ path: path.join(shots, "6-applied-deck.png"), clip: { x: box.x - 160, y: box.y - 110, width: 340, height: 200 } });
-  check("the window says it is done", await win.getByText("Look applied to 1 key", { exact: true }).isVisible());
+  check("an edited template leaves the other key alone", other.ring !== "#f5c542" && other.label === "Oceń" && other.icon === "emoji:🔥", JSON.stringify(other));
+  check("bulk styling is absent", (await win.getByRole("button", { name: "Apply this look to other keys" }).count()) === 0);
 
   // delete the own template
   await win.getByRole("button", { name: "Delete template Mój styl" }).click();

@@ -47,11 +47,10 @@ try {
   const before = await tabs();
   // the question is MasterDeck's own, in the window (owner's pick 1b, 2026-10-23)
   const question = page.getByRole("alertdialog");
-  await pageMenu.click();
-  await page.getByRole("button", { name: "Delete page" }).click();
+  await pageBar.getByRole("button", { name: "Walk", exact: true }).press("Delete");
   await page.waitForTimeout(500);
   const asked = (await question.innerText().catch(() => "")).replace(/\s+/g, " ");
-  check("Delete page asks first, in the window", asked.includes("Walk"), asked);
+  check("the Delete key asks first, in the window", asked.includes("Walk"), asked);
   await question.getByRole("button", { name: "Cancel" }).click().catch(() => {});
   await page.waitForTimeout(500);
   check("answered Cancel, the page stays", (await tabs()) === before && before > 0, `pages named Walk: ${before} -> ${await tabs()}`);

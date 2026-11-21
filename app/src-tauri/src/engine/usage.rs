@@ -120,11 +120,6 @@ fn write(data: &File) {
     }
 }
 
-/// Since when the time in front is counted (local, `2026-10-12 16:30`).
-pub fn since() -> String {
-    with(|s| s.file.since.clone())
-}
-
 /// The apps used most, most first: (exe, hours, days).
 pub fn top(n: usize) -> Vec<(String, f32, u32)> {
     // what was counted under a backup name before goes to its program too

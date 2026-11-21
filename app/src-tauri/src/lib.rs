@@ -166,28 +166,6 @@ fn migrate_old_data(data_dir: &std::path::Path) {
     }
 }
 
-#[cfg_attr(mobile, tauri::mobile_entry_point)]
-/// `hubdeck --claude-hook`: called by Claude Code hooks; reports the session state and exits.
-pub fn claude_hook() {
-    engine::agents::run_hook();
-}
-
-/// `hubdeck --mcp`: an MCP server on stdin/stdout for the user's AI assistant (talks to the
-/// running app over its local HTTP API); runs until the client closes stdin.
-pub fn mcp() {
-    engine::mcp::run();
-}
-
-/// `hubdeck --mcp-deck`: the deck tools for an assistant (notify, status, questions on the keys).
-pub fn mcp_deck() {
-    engine::mcp::run_deck();
-}
-
-/// `hubdeck --mcp-assistant`: the tools of MasterDeck's own deck assistant (drafts only).
-pub fn mcp_assistant() {
-    engine::mcp::run_assistant();
-}
-
 /// `hubdeck --guard <data dir> <log dir>`: hands the deck back and restarts MasterDeck if it ends
 /// without quitting (`guard.rs`).
 pub fn guard(args: &[String]) {
@@ -406,12 +384,6 @@ pub fn run() {
             engine::commands::bindings_set,
             engine::commands::actions_list,
             engine::commands::leds_get,
-            engine::commands::claude_status,
-            engine::commands::claude_approving,
-            engine::commands::claude_connect,
-            engine::mcp::mcp_info,
-            engine::mcp::mcp_connect_desktop,
-            engine::mcp::mcp_connect_code,
             engine::live::live_secret_set,
             engine::live::live_secret_saved,
             engine::live::weather_search,
@@ -443,7 +415,6 @@ pub fn run() {
             phone_upload::phone_save,
             phone_upload::phone_stop,
             engine::tour::tour_suggest,
-            engine::nudge::tour_done,
             engine::tour::tour_start,
             engine::tour::tour_set,
             engine::tour::tour_sound,
@@ -479,8 +450,6 @@ pub fn run() {
             engine::commands::call_switch_set,
             tray::autostart_get,
             tray::autostart_set,
-            engine::mcp::ai_prompt,
-            engine::mcp::ai_build,
             engine::suggest::profile_fill,
             engine::auto::auto_set,
             engine::iconpacks::iconpacks_list,
@@ -521,8 +490,6 @@ pub fn run() {
             engine::commands::plugin_stop,
             engine::commands::plugin_start,
             engine::commands::sd_install,
-            engine::builder::builder_options,
-            engine::builder::builder_draft,
             engine::commands::accessibility_ok,
             engine::commands::accessibility_ask,
             engine::live_looks,
@@ -548,33 +515,13 @@ pub fn run() {
             engine::commands::plugins_open_folder,
             engine::commands::open_link,
             engine::commands::app_icons,
-            engine::assistant::assistant_scan,
-            engine::assistant::assistant_info,
-            engine::assistant::sketches_make,
-            engine::assistant::compare_drafts,
-            engine::assistant::assistant_set,
-            engine::assistant::assistant_send,
-            engine::assistant::assistant_stop,
-            engine::assistant::assistant_reset,
-            engine::assistant::assistant_tour,
             engine::states::apps_state,
             engine::commands::presses_counting,
             engine::commands::presses_count_set,
             engine::states::app_connect,
             engine::states::app_remove,
-            engine::states::app_contract_prompt,
-            engine::assistant::assistant_permit,
-            engine::assistant::assistant_power_set,
-            engine::assistant::assistant_sketch_app,
-            engine::nudge::nudge_get,
-            engine::nudge::nudge_act,
-            engine::nudge::nudge_enable,
-            engine::nudge::nudge_enabled,
-            engine::taste::taste_get,
-            engine::taste::taste_set,
-            engine::taste::taste_forget,
-            engine::assistant::profile_try,
-            engine::assistant::draft_settle,
+            engine::profile_helpers::profile_try,
+            engine::profile_helpers::draft_settle,
             engine::commands::page_set,
             engine::commands::page_create,
             engine::commands::page_rename,

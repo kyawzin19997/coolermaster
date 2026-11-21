@@ -361,7 +361,7 @@ fn refresh(key: &str) {
 
 /// Commands the user allowed on this computer (a press on the key), in `<data>/live-commands.json`.
 fn allowed_file() -> Option<std::path::PathBuf> {
-    super::agents::data_dir().map(|d| d.join("live-commands.json"))
+    super::local_client::data_dir().map(|d| d.join("live-commands.json"))
 }
 
 fn allowed_list() -> Vec<String> {

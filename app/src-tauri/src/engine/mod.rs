@@ -2,24 +2,20 @@
 //! executor and the renderer; the device thread feeds it input, commands feed it changes.
 
 pub mod actions;
-pub mod agents;
 pub mod api;
 mod appicon;
 pub mod apps;
-pub mod assistant;
 pub mod audiodev;
 pub mod auto;
 pub mod backup;
 pub mod beat;
 mod brightness;
-pub mod builder;
 pub mod call;
 pub mod calls;
 pub mod canvas;
 pub mod check;
 pub mod cli;
 pub mod commands;
-pub mod deck_mcp;
 pub mod demo;
 pub mod diagnostics;
 pub mod doctor;
@@ -45,16 +41,15 @@ pub mod languages;
 mod leds;
 mod lhm;
 pub mod live;
+mod local_client;
 pub mod localize;
 #[cfg(target_os = "macos")]
 pub mod machw;
-pub mod mcp;
 mod media;
 pub mod mhz;
 pub mod midi;
 pub mod monitor;
 pub mod names;
-pub mod nudge;
 pub mod obs;
 mod obs_local;
 mod pet;
@@ -62,6 +57,7 @@ pub mod plugins;
 pub(crate) mod presets;
 pub mod presses;
 pub mod profile;
+pub mod profile_helpers;
 pub mod recorder;
 pub mod render;
 pub mod rules;
@@ -81,7 +77,6 @@ pub mod starter;
 pub mod states;
 pub mod streamlabs;
 pub mod suggest;
-pub mod taste;
 mod test_presets;
 mod timer;
 pub mod tour;
@@ -143,6 +138,7 @@ const KEYS_MOVING_EVERY: Duration = Duration::from_millis(50);
 /// The living deck's pictures at most this often: 24 a second, what the key screen shows at most
 /// (counted on film, 2026-10-26; owner: "ja bym powalczył o te 24 fps").
 const CANVAS_EVERY: Duration = Duration::from_micros(41_667);
+const STATUS_PULSE: Duration = Duration::from_millis(600);
 /// Mochi's resting frames kept as JPEG: one loop and a little (420 frames, ~6 KB each).
 const PET_FRAMES_KEPT: usize = 480;
 
@@ -481,8 +477,6 @@ pub struct EngineState {
     pub trying: Option<String>,
     /// A draft that was on the deck for a try when MasterDeck stopped (the window offers it back).
     pub interrupted_try: Option<String>,
-    /// Comparing drafts on the deck: (which one, of how many).
-    pub comparing: Option<(usize, usize)>,
     /// Timers that ran out (the window names them and can stop them).
     pub ringing: Vec<Ringing>,
     pub obs_studio_mode: bool,
@@ -546,8 +540,6 @@ pub(crate) struct Shared {
     pub call_hold: bool,
     /// A draft shown on the deck for a try: what to go back to afterwards.
     pub trying: Option<Trying>,
-    /// Drafts compared on the deck (the dial flips between them) and which one shows.
-    pub draft_compare: Option<(Vec<String>, usize)>,
     /// A screensaver shown on request for a moment (the tour's finale): its effect and until when.
     pub saver_preview: Option<(String, Instant)>,
     /// A preset's layers for that preview (`saver::preset`).
@@ -661,7 +653,6 @@ impl Shared {
                 .collect(),
             trying: self.trying.as_ref().map(|t| t.profile.clone()),
             interrupted_try: self.store.settings.trying.clone().filter(|id| self.trying.is_none() && self.store.settings.drafts.contains(id) && self.store.profiles.contains_key(id)),
-            comparing: self.draft_compare.as_ref().map(|(ids, i)| (i + 1, ids.len())),
             active: self.active.clone(),
             fallback: self.store.fallback_id(),
             home: self.home.clone(),
@@ -723,15 +714,12 @@ impl Engine {
         }));
         apps::init(data_dir);
         usage::init(data_dir);
-        taste::init(data_dir);
         presses::init(data_dir);
-        nudge::init(data_dir);
         installed::init(data_dir);
         backup::daily(data_dir);
         let mut store = Store::load(data_dir);
         render::set_app_icons(&store.settings.app_icons);
         render::set_deck_font(store.settings.deck_font.as_deref());
-        guard::set_power(store.settings.assistant_power);
         demo::set_language(&store.settings.language);
         if store.profiles.is_empty() {
             let desk = presets::everyday_desk();
@@ -760,7 +748,6 @@ impl Engine {
             levels: HashMap::new(),
             call_hold: false,
             trying: None,
-            draft_compare: None,
             saver_preview: None,
             saver_preview_layers: None,
             effects_trial: None,
@@ -832,8 +819,7 @@ impl Engine {
             integration: HashMap::new(),
             values: HashMap::new(),
             plugin_looks: HashMap::new(),
-            fleet: agents::Fleet::default(),
-            fleet_pulse: Instant::now(),
+            status_pulse: Instant::now(),
             saver_on: false,
             saver_next: 0,
             saver_dial_shown: String::new(),
@@ -842,7 +828,7 @@ impl Engine {
             keys_waiting: false,
             keys_moved: Instant::now(),
             perf: Perf::new(),
-            fleet_sweep: Instant::now(),
+            pulse_start: Instant::now(),
             plugin_leds: HashMap::new(),
             plugin_panel: None,
             toggles: load_toggles(data_dir),
@@ -987,9 +973,7 @@ impl Engine {
             }
             // a profile picked by hand during a try ends the try: the bar went on saying "Trying"
             // and a ready-made profile tried was never thrown away (2026-10-20)
-            if s.trying.take().is_some() {
-                s.draft_compare = None;
-            }
+            s.trying = None;
             // picked by hand: app profiles give back to it; MasterDeck still starts on the home profile,
             // set only by "Set as home" (owner, 2026-10-22: a click made the profile home)
             s.active = Some(id.to_string());
@@ -1028,10 +1012,6 @@ impl Engine {
                     s.page = None;
                 }
                 None => {
-                    // the end of a try ends a comparison too, and its note on the dial
-                    if s.draft_compare.take().is_some() {
-                        s.status = None;
-                    }
                     if s.store.settings.trying.take().is_some()
                         && let Err(e) = s.store.save_settings()
                     {
@@ -1054,34 +1034,7 @@ impl Engine {
         Ok(())
     }
 
-    /// Compare `ids` on the deck: the first shows, turning the dial flips to the next or the one
-    /// before, the dial says which ("2/3 · name"). Empty: stop and go back.
-    pub fn compare(&self, ids: Vec<String>, at: usize) -> Result<(), String> {
-        if ids.is_empty() {
-            return self.try_profile(None);
-        }
-        // from the one the window shows (owner's pick C: the window and the deck show the same)
-        let at = at.min(ids.len() - 1);
-        self.lock().draft_compare = Some((ids, at));
-        self.show_compared()
-    }
-
-    /// Show the compared draft that is current, with its place and name on the dial.
-    fn show_compared(&self) -> Result<(), String> {
-        let Some((ids, i)) = self.lock().draft_compare.clone() else { return Ok(()) };
-        let id = ids[i].clone();
-        self.try_profile(Some(&id))?;
-        let mut s = self.lock();
-        let name = s.store.profiles.get(&id).map(|p| p.name.clone()).unwrap_or_default();
-        s.draft_compare = Some((ids.clone(), i));
-        s.status = Some(DeckStatus { main: format!("{}/{}", i + 1, ids.len()), detail: Some(name), until: Some(Instant::now() + Duration::from_secs(4)) });
-        drop(s);
-        self.deck_ui();
-        Ok(())
-    }
-
-    /// The user picked a draft ("Use this": it becomes a normal profile) or threw it away.
-    /// The user's own apps and what they report now (the API, the assistant).
+    /// The user's own apps and what they report now.
     pub fn app_states(&self) -> serde_json::Value {
         let apps = self.lock().store.settings.apps.clone();
         serde_json::json!({"apps": apps, "states": states::snapshot()})
@@ -1966,9 +1919,8 @@ struct Worker {
     /// Titles, pictures and states set by plugins and the local API, per control id.
     plugin_looks: HashMap<String, PluginLook>,
     /// Claude Code sessions reported by the hooks.
-    fleet: agents::Fleet,
-    /// When the fleet keys last blinked, and when stale sessions were last dropped.
-    fleet_pulse: Instant,
+    /// When the status keys last blinked.
+    status_pulse: Instant,
     /// The screensaver runs (idle minutes passed; the first touch ends it).
     saver_on: bool,
     /// The next effect a "Screensaver: Next" key shows.
@@ -1983,7 +1935,7 @@ struct Worker {
     keys_moved: Instant,
     /// What the deck really gets while things move, noted in the log every 10 s.
     perf: Perf,
-    fleet_sweep: Instant,
+    pulse_start: Instant,
     /// LED colors set by plugins and the local API: `knobs.1`, `faders.0`, `base`.
     plugin_leds: HashMap<String, Rgb>,
     /// A picture for the whole key panel set by a plugin or the API (data URI).
@@ -2374,23 +2326,6 @@ impl Worker {
             };
             presses::record(&profile, control, trying.as_deref(), counting);
         }
-        // comparing drafts: the dial flips between them (its own job waits until one is picked)
-        let comparing = self.lock().draft_compare.as_ref().map(|(ids, i)| (ids.len(), *i));
-        if let Some((n, i)) = comparing
-            && control == "dial"
-        {
-            if let InputEvent::Turn(d) = event {
-                let next = (i as i64 + d.signum() as i64).rem_euclid(n as i64) as usize;
-                if let Some(c) = self.lock().draft_compare.as_mut() {
-                    c.1 = next;
-                }
-                let engine = self.app.state::<Engine>();
-                if let Err(e) = engine.show_compared() {
-                    log::warn!("compare: {e}");
-                }
-            }
-            return;
-        }
         // a question on the deck: a key with an option answers it, a dial press dismisses it
         let asking = self.lock().prompt.as_ref().filter(|p| p.waiting()).map(|p| p.options.len());
         if let Some(n) = asking
@@ -2571,10 +2506,6 @@ impl Worker {
         if let Some(says) = dry {
             self.feedback = Some((Feedback { value: None, caption: says.to_string() }, Instant::now()));
             self.dial_dirty = true;
-            return;
-        }
-        if binding.action == actions::AGENT || binding.action == actions::AGENTS {
-            self.agent_input(binding, event);
             return;
         }
         let (foreground, mapped) = {
@@ -3008,15 +2939,11 @@ impl Worker {
                                 Some((first, second)) => Look { pair: Some((first, second, state == Some(true))), ..look },
                                 None => look,
                             };
-                            if b.action == actions::AGENT {
-                                let slot = (actions::param_f64(&b.params, "slot", 1.0).max(1.0) as usize) - 1;
-                                return self.fleet.key_look(slot, &look, Instant::now(), self.fleet_sweep);
-                            }
                             if b.action == live::ACTION {
                                 return live::key_look(&b.params, look, live::value_key(&b.params).and_then(|k| self.values.get(&k)).map(String::as_str));
                             }
                             if b.action == states::ACTION {
-                                let blink = (Instant::now().duration_since(self.fleet_sweep).as_millis() / agents::PULSE.as_millis()) % 2 == 1;
+                                let blink = (Instant::now().duration_since(self.pulse_start).as_millis() / STATUS_PULSE.as_millis()) % 2 == 1;
                                 return states::key_look(&b.params, look, &self.values, blink);
                             }
                             match (self.monitor_value(&id, b), self.live_face(&id, b, Instant::now())) {
@@ -3613,14 +3540,6 @@ impl Worker {
                 self.redraw_keys();
                 return;
             }
-            "agent" => {
-                if self.fleet.report(&m, Instant::now()) {
-                    self.redraw_keys();
-                    self.update_leds();
-                    self.dial_dirty = true;
-                }
-                return;
-            }
             "playGames" => {
                 self.set_playing(m["on"].as_bool().unwrap_or(true));
                 return;
@@ -4046,32 +3965,6 @@ impl Worker {
         }
     }
 
-    /// A press on a session key says on the dial which session it is and what it waits for; the
-    /// sessions dial turns through them. It no longer pulls the terminal forward: that took a fake
-    /// Alt press past Windows' focus lock (owner, 2026-10-16: no workarounds).
-    fn agent_input(&mut self, binding: &Binding, event: InputEvent) {
-        let session = match (binding.action.as_str(), event) {
-            (actions::AGENTS, InputEvent::Turn(d)) => {
-                self.fleet.scroll(d as i32);
-                self.dial_dirty = true;
-                return;
-            }
-            (actions::AGENTS, InputEvent::Press(true)) => self.fleet.selected_session().map(|s| (s.project.clone(), s.state, s.tool.clone())),
-            (_, InputEvent::Press(true)) => {
-                let slot = (actions::param_f64(&binding.params, "slot", 1.0).max(1.0) as usize) - 1;
-                self.fleet.by_slot(slot).map(|s| (s.project.clone(), s.state, s.tool.clone()))
-            }
-            _ => return,
-        };
-        let caption = match session {
-            Some((project, state, Some(tool))) if state == agents::State::Permission => format!("{project}: {} ({tool})", state.word()),
-            Some((project, state, _)) => format!("{project}: {}", state.word()),
-            None => "No session here".to_string(),
-        };
-        self.feedback = Some((Feedback { value: None, caption }, Instant::now()));
-        self.dial_dirty = true;
-    }
-
     /// Advance animated GIFs whose next frame is due, and the panel clock once a minute.
     fn animate(&mut self, now: Instant) {
         self.update_highlight(now);
@@ -4088,15 +3981,9 @@ impl Worker {
             self.redraw_keys();
             self.update_leds();
         }
-        // sessions waiting for a permission blink; silent ones are dropped after hours
-        // sessions and app items waiting for the user pulse on their keys
-        if (self.fleet.pulsing() || states::any_waiting(&self.values)) && now.duration_since(self.fleet_pulse) >= agents::PULSE {
-            self.fleet_pulse = now;
+        if states::any_waiting(&self.values) && now.duration_since(self.status_pulse) >= STATUS_PULSE {
+            self.status_pulse = now;
             self.redraw_keys();
-        }
-        if now.duration_since(self.fleet_sweep) >= Duration::from_secs(60) && self.fleet.forget_stale(now) {
-            self.redraw_keys();
-            self.dial_dirty = true;
         }
         let running_timer = self.timers.values().any(|t| t.running()) || self.pomodoros.values().any(|p| p.timer.running());
         if self.saver_on && !self.blanked && self.arcade.is_none() {
@@ -4397,7 +4284,7 @@ impl Worker {
         let live = leds::Live {
             mic_muted: self.states.get("mic").copied().unwrap_or(false),
             on_air: on("obs:record") || on("obs:stream") || on("sl:record") || on("sl:stream"),
-            agent_waiting: self.fleet.pulsing() || states::any_waiting(&self.values),
+            agent_waiting: states::any_waiting(&self.values),
             // the edge only for a timer that ran out where it cannot be seen (another page or
             // profile): one on the deck blinks itself (owner's pick 1a, 2026-10-16)
             timer_done: {
@@ -4678,7 +4565,7 @@ impl Worker {
             if s.highlight.as_ref().is_some_and(|(_, _, until)| now >= *until) {
                 s.highlight = None;
             }
-            s.highlight.as_ref().map(|(c, from, _)| (c.clone(), (now.duration_since(*from).as_millis() / agents::PULSE.as_millis()).is_multiple_of(2)))
+            s.highlight.as_ref().map(|(c, from, _)| (c.clone(), (now.duration_since(*from).as_millis() / STATUS_PULSE.as_millis()).is_multiple_of(2)))
         };
         if want == self.highlight_shown {
             return;
@@ -5034,10 +4921,6 @@ impl Worker {
                     let b = binding.expect("checked");
                     let (main, second, color, _) = states::face(&b.params, &look, &self.values);
                     render::time_dial_svg(&Look { icon: None, image: None, fg: Some(color.to_string()), ..look.clone() }, &main, second.as_deref(), None, rotation)
-                }
-                (None, None) if value.is_none() && binding.is_some_and(|b| b.action == actions::AGENTS) => {
-                    let (main, second) = self.fleet.dial_text();
-                    render::time_dial_svg(&Look { icon: None, image: None, ..look.clone() }, &main, Some(&second), None, rotation)
                 }
                 (None, None) if value.is_none() && binding.is_some_and(|b| b.action == actions::NOW_PLAYING) => {
                     let cover = images::uri(images::COVER_REF);

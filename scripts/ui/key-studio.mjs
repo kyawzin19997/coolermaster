@@ -151,16 +151,14 @@ try {
   const f2 = await big.innerHTML();
   check("the pulse plays in the preview (its frames change)", f1 !== f2);
 
-  // key 8 ticked: a template goes to both, key 8 keeps its label and emoji
-  await studio.getByText("Apply style to other keys", { exact: true }).click();
-  await studio.getByRole("button", { name: "8. Oceń" }).click();
-  await sleep(300);
-  await studio.getByRole("tab", { name: "Templates", exact: true }).click();
-  await sleep(500);
+  const before = await lookOf("keys.7");
+  await advanced.getByRole("tab", { name: "Templates", exact: true }).click();
   await studio.getByRole("option", { name: "Forest" }).click();
   await sleep(1200);
   const other = await lookOf("keys.7");
-  check("the ticked key 8 takes the template and keeps its label and emoji", other.bg === "#0f766e" && other.label === "Oceń" && other.icon === "emoji:🔥", JSON.stringify(other));
+  check("the selected key gets the template", (await look()).bg === "#0f766e");
+  check("the other key stays as it was", JSON.stringify(other) === JSON.stringify(before));
+  check("bulk styling is absent", (await studio.getByText("Apply style to other keys", { exact: true }).count()) === 0);
   await win.screenshot({ path: path.join(shots, "2-edited.png") });
 
   // the profile's style: new keys start in this look
@@ -185,7 +183,7 @@ try {
     for (const name of ["Templates", "Background", "Icon", "Label", "Extras"]) {
       await advanced.getByRole("tab", { name, exact: true }).click();
       await sleep(250);
-      const cut = (await clipped(win)).filter((x) => /Key editor|Back|Done|Drag|Icon|Label|Back to its place|Font|Templates|Background|Extras|Motion|Pulse|keys ticked|key ticked|Save PNG|Export page|New keys in|Undo|Redo/.test(x.text));
+      const cut = (await clipped(win)).filter((x) => /Key editor|Back|Done|Drag|Icon|Label|Back to its place|Font|Templates|Background|Extras|Motion|Pulse|Icon size|Save PNG|Export page|New keys in|Undo|Redo/.test(x.text));
       check(`nothing of ${name} cut at ${w} wide`, cut.length === 0, cut.map((x) => x.text).join(" | "));
     }
     const out = await win.evaluate(() => [...document.querySelectorAll(".studio *")].filter((e) => e.getBoundingClientRect().right > window.innerWidth + 1).length);

@@ -39,6 +39,14 @@ try {
   await editor.locator(".designer").getByRole("tab", { name: "Background", exact: true }).click();
   await editor.getByText("Position on the key", { exact: true }).click();
   await preview.press("ArrowRight");
+  const size = editor.getByRole("slider", { name: "Icon size" });
+  await size.press("Home");
+  assert.equal(await size.getAttribute("aria-valuetext"), "50%");
+  await preview.locator("g[transform*='scale(1)']").waitFor();
+  await size.press("End");
+  assert.equal(await size.getAttribute("aria-valuetext"), "150%");
+  await preview.locator("g[transform*='scale(3)']").waitFor();
+  assert.equal(await editor.getByText("Apply style to other keys", { exact: true }).count(), 0);
   await editor.getByRole("button", { name: "Done", exact: true }).click();
   await editor.waitFor({ state: "hidden" });
   const look = await page.evaluate(async () => {
@@ -49,8 +57,9 @@ try {
   assert.equal(look.label, "Intro scene");
   assert.match(look.icon, /^action:/);
   assert.equal(look.iconDx, 1);
+  assert.equal(look.iconScale, 150);
   await page.setViewportSize({ width: 1200, height: 800 });
-  console.log("Key editor saved the label, default action glyph and positioning together.");
+  console.log("Key editor resized the icon in preview and saved its size, label and position.");
 
   await page.locator(".topbar").getByRole("button", { name: "Plugins", exact: true }).click();
   await page.getByRole("button", { name: "Install plugin", exact: true }).click();

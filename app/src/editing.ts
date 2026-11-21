@@ -198,7 +198,7 @@ export function useEditing(view: EngineView, selected: ControlRef | null, notify
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const { view, selected, notify, shortcutsEnabled } = now.current;
-      if (!shortcutsEnabled || inField(e) || !view.profile || document.querySelector('[aria-modal="true"]')) return;
+      if (e.defaultPrevented || !shortcutsEnabled || inField(e) || !view.profile || document.querySelector('[aria-modal="true"]')) return;
       const mod = e.ctrlKey || e.metaKey;
       const key = e.key.toLowerCase();
       if (mod && key === "z") {

@@ -17,23 +17,21 @@ import { Inspector, type InspectorHandle } from "./components/Inspector";
 import { ActionLibrary } from "./components/ActionChooser";
 import type { DeckDisplaySection, SettingsSection } from "./components/Panels";
 import {
-  AppPageHeader, ArrangePanel, BaseTurnPicker, ControlMenu, DeckDisplayPanel, DeckTools, ForAppPanel, GamesPanel,
+  AppPageHeader, ArrangePanel, ControlMenu, DeckDisplayPanel, DeckTools, ForAppPanel, GamesPanel,
   LeftPanel, Notifications, PageBar, PluginFileSheet, PluginsPage, ProfilePanel, SettingsPage, Sheet, TopBar, UpdatesPage, keepImported,
 } from "./components/Panels";
 import { PhoneUpload } from "./components/PhoneUpload";
 import { listen } from "@tauri-apps/api/event";
-import { askAssistant } from "./components/Assistant";
 import { Icon } from "./components/Icon";
 import { WorkspaceGuide, type GuideKind } from "./components/WorkspaceGuide";
 import { CalibrationPanel } from "./components/Calibration";
-import { detachedKinds, placeModules, placementKey, usePlacements } from "./layout";
+import { detachedKinds, isDetached, placeModules, placementKey, usePlacements } from "./layout";
 import { clearIdentify, identifyModule } from "./identify";
 import { useEditing } from "./editing";
 import { BUILT_IN_LANGUAGES, setLanguage, storedLanguageFile, t, useLanguage, type Key } from "./i18n";
 import { demoParam } from "./demo/params";
 import { askInWindow, open, told } from "./confirm";
 
-const Builder = lazy(() => import("./components/Builder").then(({ Builder }) => ({ default: Builder })));
 const DeckLook = lazy(() => import("./components/DeckLook").then(({ DeckLook }) => ({ default: DeckLook })));
 const KeyStudio = lazy(() => import("./components/KeyStudio").then(({ KeyStudio }) => ({ default: KeyStudio })));
 const PluginsTab = lazy(() => import("./components/PluginsTab").then(({ PluginsTab }) => ({ default: PluginsTab })));
@@ -112,7 +110,7 @@ export default function App() {
     window.clearTimeout(toastTimer.current);
     toastTimer.current = window.setTimeout(() => setToast(null), ms);
   }, []);
-  const { dropAction, moveKey, openControl, copy, paste, pasteLook, clear, isSet, canPaste, opensPage } = useEditing(view, selected, notify, () => inspector.current?.flush(), appPage === null);
+  const { dropAction, moveKey, openControl, copy, paste, pasteLook, clear, isSet, canPaste, opensPage } = useEditing(view, selected, notify, () => inspector.current?.flush(), appPage === null && !arranging && !calibrating);
   // a ready-made profile tried and left without Add (Back, or another profile picked) is thrown away
   const tried = useRef<string | null>(null);
   useEffect(() => {
@@ -133,11 +131,9 @@ export default function App() {
     if (m) setSelected({ module: m.id, kind: m.kind, index: Number(index ?? 0) } as ControlRef);
   }, [live.deck.modules, selected]);
   // module kinds the user has (attached and owned), so presets come adapted to them
-  const kinds = useMemo(() => [...new Set([...live.deck.modules.filter((m) => m.kind !== "base").map((m) => m.kind), ...detachedKinds(live.deck.modules, saved)])], [live.deck.modules, saved]);
+  const detached = useMemo(() => detachedKinds(live.deck.modules, saved), [live.deck.modules, saved]);
+  const kinds = useMemo(() => [...new Set([...live.deck.modules.filter((m) => m.kind !== "base").map((m) => m.kind), ...detached])], [live.deck.modules, detached]);
 
-  // "Build my deck step by step" (layout A): a page of its own
-  const [builderOpen, setBuilderOpen] = useState(DEMO_PANEL === "builder");
-  // the tour (show, then ask, then build): a page of its own
   const [tourOpen, setTourOpen] = useState(DEMO_PANEL === "tour-advanced");
   const [guide, setGuide] = useState<GuideKind | null>(DEMO_PANEL === "tour" || DEMO_PANEL === "welcome" || demoParam("demo") === "welcome" ? "start" : null);
   // plugin files opened with MasterDeck (a double click, Open with) or dropped on the window: one at a
@@ -269,7 +265,7 @@ export default function App() {
     setGuide(null);
     if (guide === "start" && setupPending) api.onboardingDone().catch((error) => notify(String(error)));
   };
-  const tourShown = tourOpen && !arranging && !builderOpen;
+  const tourShown = tourOpen && !arranging;
   // leaving arrange mode confirms every module as it is shown, touched or not
   const toggleArrange = () => {
     if (arranging) {
@@ -333,11 +329,10 @@ export default function App() {
 
         onOpenForApp={() => (setForAppOpen(true), closeAppPage(), setProfileOpen(false))}
         onOpenProfileLibrary={() => setProfileLibrary("profiles")}
-        onOpenAssistant={() => setProfileLibrary("assistant")}
         onOpenTour={() => (closeAppPage(), openGuide("start"))}
-        setupPending={setupPending && !guide && !tourOpen && !builderOpen}
+        setupPending={setupPending && !guide && !tourOpen}
         onOpenSettings={() => appPage === "settings" ? closeAppPage() : openSettings()}
-        onCheckUpdates={!appPage && (tourShown || builderOpen || calibrating || arranging || studio) ? undefined : () => {
+        onCheckUpdates={!appPage && (tourShown || calibrating || arranging || studio) ? undefined : () => {
           openAppPage("updates");
           setUpdateCheckRequest((n) => n + 1);
         }}
@@ -353,9 +348,7 @@ export default function App() {
           {view.state?.trying && (
             <Notice key={view.state.trying} onDismiss={() => api.tryProfile(null)}>
                 <Icon name="play" />
-                {view.state.comparing
-                  ? t("assistant.comparingBar", { n: view.state.comparing[0], count: view.state.comparing[1] })
-                  : t("assistant.tryingBar", { name: view.state.profiles.find((p) => p.id === view.state?.trying)?.name ?? "" })}
+                {t("try.notice", { name: view.state.profiles.find((p) => p.id === view.state?.trying)?.name ?? "" })}
                 {triedPresets.has(view.state.trying) && (
                   <button className="link-btn" onClick={() => {
                       // out of the tried set first: the end of the try must not throw it away
@@ -367,7 +360,7 @@ export default function App() {
                   </button>
                 )}
                 <button className="link-btn" onClick={() => api.tryProfile(null)}>
-                  {t("assistant.back")}
+                  {t("try.back")}
                 </button>
               </Notice>
           )}
@@ -377,7 +370,7 @@ export default function App() {
         <section className="center">
           <div className="workbench-title">
             <h1>MasterHUB</h1>
-            {!arranging && live.deck.modules.some((m) => m.kind === "keys") && <PageBar view={view} />}
+            {!arranging && kinds.includes("keys") && <PageBar view={view} />}
             <span className="spacer" />
             {arranging ? (
               <button className="tool primary layout-tool" onClick={toggleArrange}>
@@ -386,9 +379,7 @@ export default function App() {
               </button>
             ) : <>
             <DeckTools
-              canArrange={live.deck.modules.length > 0}
               onArrange={toggleArrange}
-              onBuild={() => setBuilderOpen(true)}
               onDisplay={() => openDisplay("lights")}
               onSaver={() => openDisplay("saver")}
               onGuide={() => openGuide("start")}
@@ -401,6 +392,7 @@ export default function App() {
             selected={selected}
             onSelect={(c) => {
               setSelected(c);
+              if (isDetached(c.module)) closeTools();
               // a click on the deck in the window is a touch: the screensaver ends
               if (saverOn) saverEnd();
             }}
@@ -409,7 +401,8 @@ export default function App() {
             arranging={arranging}
             onEdge={() => openDisplay("edge")}
             obsStudioMode={view.state?.obsStudioMode}
-            showShelf={false}
+            showShelf={detached.length > 0}
+            showShelfControls={false}
             showStrip={false}
             onDeselect={() => setSelected(null)}
             profile={view.profile}
@@ -418,6 +411,7 @@ export default function App() {
               if (dropAction(c, action, "tap", () => inspector.current?.flush())) {
                 inspector.current?.selectTrigger("tap");
                 setSelected(c);
+                if (isDetached(c.module)) closeTools();
               }
             }}
             onMoveKey={(from, to) => {
@@ -443,7 +437,6 @@ export default function App() {
               onClose={() => setCtlMenu(null)}
             />
           )}
-          {arranging && <BaseTurnPicker live={live} />}
           </div>
         </section>
 
@@ -476,7 +469,6 @@ export default function App() {
             <WorkspaceGuide key={guide} kind={guide} live={live} selected={selected} onClose={dismissGuide}
               onModules={() => openGuide("modules")}
               onArrange={toggleArrange}
-              onBuild={() => setBuilderOpen(true)}
               onPersonalize={() => setTourOpen(true)}
               onKeys={closeTools}
               onProfiles={() => setProfileLibrary("profiles")}
@@ -512,14 +504,9 @@ export default function App() {
           <Sheet wide label={t("workshop.personalize")} onClose={() => setTourOpen(false)}>
             <Tour live={live} view={view} saved={saved} onPlace={save} deskCheck={setupPending} onArrange={toggleArrange}
               onClose={() => setTourOpen(false)}
-              onBuild={() => (setTourOpen(false), setBuilderOpen(true))}
-              onAsk={(message) => (setTourOpen(false), setProfileLibrary("assistant"), askAssistant(message))}
             />
           </Sheet>
         )}
-        {builderOpen && <Sheet wide label={t("builder.title")} onClose={() => setBuilderOpen(false)}>
-          <Builder live={live} view={view} saved={saved} onPlace={save} onClose={() => setBuilderOpen(false)} />
-        </Sheet>}
         {studio && <Sheet wide label={t("workshop.editKey")} onClose={() => setStudio(null)}>
           <KeyStudio key={`${view.profile?.id}/${studio}`} view={view} control={studio} onClose={() => setStudio(null)} />
         </Sheet>}
@@ -533,7 +520,7 @@ export default function App() {
         </Sheet>}
       </Suspense>
       {profileLibrary && !tourShown && (
-        <Sheet label={t("profiles.title")} onClose={() => setProfileLibrary(null)}>
+        <Sheet className="profiles-dialog" label={t("profiles.title")} onClose={() => setProfileLibrary(null)}>
           <div className="profile-library-sheet">
             <div className="profile-library-header">
               <h2>{t("profiles.title")}</h2>
@@ -543,7 +530,8 @@ export default function App() {
               view={view}
               tab={profileLibrary}
               onTab={setProfileLibrary}
-              onBuild={() => (setProfileLibrary(null), setBuilderOpen(true))}
+              onGuide={() => (setProfileLibrary(null), closeAppPage(), openGuide("start"))}
+              onArrange={() => { setProfileLibrary(null); closeAppPage(); setArranging(true); }}
               onTour={() => (setProfileLibrary(null), setTourOpen(true))}
               onNewProfile={() => (setProfileLibrary(null), setNewRequest((n) => n + 1))}
               onOpenProfile={() => (setProfileLibrary(null), setProfileOpen(true), closeAppPage(), setForAppOpen(false))}
