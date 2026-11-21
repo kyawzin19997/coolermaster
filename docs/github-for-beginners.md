@@ -10,7 +10,7 @@ Your project lives in [kyawzin19997/coolermaster](https://github.com/kyawzin1999
 | [Actions](https://github.com/kyawzin19997/coolermaster/actions) | Builds and tests. Open a run, then open the failed step to read its log. |
 | [Releases](https://github.com/kyawzin19997/coolermaster/releases) | Published versions, release notes, and downloads. |
 | [Download for Windows](https://github.com/kyawzin19997/coolermaster/releases/latest/download/MasterDeck-windows-x64-setup.exe) | The latest Windows installer. This is the link to share with users. |
-| [Download for macOS](https://github.com/kyawzin19997/coolermaster/releases/download/v1.3.6/MasterDeck-macOS-Universal.dmg) | The universal disk image for MasterDeck 1.3.6. |
+| [Download for macOS](https://github.com/kyawzin19997/coolermaster/releases/download/v1.4.0/MasterDeck-macOS-Universal.dmg) | The universal disk image for MasterDeck 1.4.0. |
 
 A **commit** saves a group of changes in Git. A **push** sends commits to GitHub. The **main** branch is your normal line of work. A **tag** such as `v1.0.1` names the exact commit GitHub should build and publish. You only need a tag when you want a public installer.
 
@@ -43,31 +43,31 @@ Git may open GitHub in your browser the first time you push. Sign in to your own
 
 ## Publish the next Windows installer
 
-Choose the next unused version. After `1.3.5`, use `1.3.6` for fixes or `1.4.0` for new features. This example publishes `1.3.6`. Use the same version in every command and add a matching heading to `CHANGELOG.md` with a short summary of what users will notice.
+Choose the next unused version. After `1.4.0`, use `1.4.1` for fixes or `1.5.0` for new features. This example publishes `1.4.1`. Use the same version in every command and add a matching heading to `CHANGELOG.md` with a short summary of what users will notice.
 
 ```powershell
 git switch main
 git pull --ff-only origin main
-node scripts/windows-release.mjs prepare 1.3.6
-# Add the 1.3.6 release notes in CHANGELOG.md.
-node scripts/windows-release.mjs check v1.3.6
+node scripts/windows-release.mjs prepare 1.4.1
+# Add the 1.4.1 release notes in CHANGELOG.md.
+node scripts/windows-release.mjs check v1.4.1
 git add README.md CHANGELOG.md Cargo.toml Cargo.lock app/package.json app/src-tauri/tauri.conf.json
-git commit -m "Prepare MasterDeck v1.3.6"
+git commit -m "Prepare MasterDeck v1.4.1"
 git push origin main
 ```
 
 Wait for the **CI** run for that commit to pass under Actions. Then tag the same commit and push the tag.
 
 ```powershell
-git tag -a v1.3.6 -m "MasterDeck v1.3.6"
-git push origin refs/tags/v1.3.6
+git tag -a v1.4.1 -m "MasterDeck v1.4.1"
+git push origin refs/tags/v1.4.1
 ```
 
 Watch **Windows release** in Actions. When it passes, open **Releases** and download `MasterDeck-windows-x64-setup.exe`. The existing Download for Windows link will serve the latest release automatically. Users already running a GitHub Windows build can select **Updates** in the toolbar, then choose **Install and restart** if MasterDeck finds a new release.
 
 ## Add a Mac download to a release
 
-1. Open **Actions → Desktop installers → Run workflow**. Select `macos` under **Installer to build** and enter the published tag, such as `v1.3.6`, under **Git branch or tag to package**.
+1. Open **Actions → Desktop installers → Run workflow**. Select `macos` under **Installer to build** and enter the published tag, such as `v1.4.1`, under **Git branch or tag to package**.
 2. After the build passes, open the run and download **MasterDeck-macOS-Universal** under **Artifacts**. Extract the ZIP. Keep the `.dmg` filename and rename `SHA256.txt` to `SHA256-macos.txt`.
 3. Open the same version under **Releases**, choose **Edit**, attach the disk image and its checksum, then save. Update the macOS download links in the README to point to that version's disk image.
 
